@@ -685,7 +685,7 @@ void initiate_painting_warp(void) {
                 fadeout_music(398);
 #ifdef RUMBLE_FEEDBACK
                 queue_rumble_data(80, 70);
-                func_sh_8024C89C(1);
+                queue_rumble_decay(1);
 #endif
             }
         }

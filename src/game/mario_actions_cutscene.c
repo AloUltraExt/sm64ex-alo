@@ -1414,7 +1414,7 @@ s32 act_teleport_fade_out(struct MarioState *m) {
 #ifdef RUMBLE_FEEDBACK
     if (m->actionTimer == 0) {
         queue_rumble_data(30, 70);
-        func_sh_8024C89C(2);
+        queue_rumble_decay(2);
     }
 #endif
     m->flags |= MARIO_TELEPORTING;
@@ -1438,7 +1438,7 @@ s32 act_teleport_fade_in(struct MarioState *m) {
 #ifdef RUMBLE_FEEDBACK
     if (m->actionTimer == 0) {
         queue_rumble_data(30, 70);
-        func_sh_8024C89C(2);
+        queue_rumble_decay(2);
     }
 #endif
     if (m->actionTimer < 32) {

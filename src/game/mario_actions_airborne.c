@@ -1000,7 +1000,7 @@ s32 act_burning_jump(struct MarioState *m) {
         m->health = 0xFF;
     }
 #ifdef RUMBLE_FEEDBACK
-    reset_rumble_timers();
+    reset_rumble_timers_slip();
 #endif
     return FALSE;
 }
@@ -1022,7 +1022,7 @@ s32 act_burning_fall(struct MarioState *m) {
         m->health = 0xFF;
     }
 #ifdef RUMBLE_FEEDBACK
-    reset_rumble_timers();
+    reset_rumble_timers_slip();
 #endif
     return FALSE;
 }
@@ -1569,7 +1569,7 @@ s32 act_lava_boost(struct MarioState *m) {
 
     m->marioBodyState->eyeState = MARIO_EYES_DEAD;
 #ifdef RUMBLE_FEEDBACK
-    reset_rumble_timers();
+    reset_rumble_timers_slip();
 #endif
     return FALSE;
 }
@@ -1735,7 +1735,7 @@ s32 act_shot_from_cannon(struct MarioState *m) {
         m->particleFlags |= PARTICLE_DUST;
     }
 #ifdef RUMBLE_FEEDBACK
-    reset_rumble_timers();
+    reset_rumble_timers_slip();
 #endif
     return FALSE;
 }

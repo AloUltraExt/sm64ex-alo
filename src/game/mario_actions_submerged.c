@@ -555,7 +555,7 @@ static s32 act_breaststroke(struct MarioState *m) {
     }
 #ifdef RUMBLE_FEEDBACK
     if (m->actionTimer < 6) {
-        func_sh_8024CA04();
+        queue_rumble_submerged();
     }
 #endif
     set_mario_animation(m, MARIO_ANIM_SWIM_PART1);
@@ -1086,7 +1086,7 @@ static s32 act_caught_in_whirlpool(struct MarioState *m) {
     vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
     vec3s_set(m->marioObj->header.gfx.angle, 0, m->faceAngle[1], 0);
 #ifdef RUMBLE_FEEDBACK
-    reset_rumble_timers();
+    reset_rumble_timers_slip();
 #endif
     return FALSE;
 }

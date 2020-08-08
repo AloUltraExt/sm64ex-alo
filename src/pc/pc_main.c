@@ -50,7 +50,7 @@ s8 gShowDebugText;
 
 s32 gRumblePakPfs;
 struct RumbleData gRumbleDataQueue[3];
-struct StructSH8031D9B0 gCurrRumbleSettings;
+struct RumbleSettings gCurrRumbleSettings;
 
 static struct AudioAPI *audio_api;
 static struct GfxWindowManagerAPI *wm_api;

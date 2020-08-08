@@ -41,7 +41,7 @@ void water_level_pillar_undrained(void) {
                 gEnvironmentLevels[0] =
                     (s32) approach_f32_symmetric(gEnvironmentLevels[0], -2450.0f, 5.0f);
 #ifdef RUMBLE_FEEDBACK
-                reset_rumble_timers_2(2);
+                reset_rumble_timers_viblate(2);
 #endif
             } else
                 o->oAction++;

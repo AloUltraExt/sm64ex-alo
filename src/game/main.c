@@ -53,7 +53,7 @@ OSMesg gRumbleThreadVIMesgBuf[1];
 
 s32 gRumblePakPfs; // Actually an OSPfs but we don't have that header yet
 struct RumbleData gRumbleDataQueue[3];
-struct StructSH8031D9B0 gCurrRumbleSettings;
+struct RumbleSettings gCurrRumbleSettings;
 #endif
 
 struct VblankHandler *gVblankHandler1 = NULL;
