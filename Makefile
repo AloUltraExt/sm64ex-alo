@@ -48,6 +48,8 @@ TEXTSAVES ?= 0
 EXTERNAL_DATA ?= 0
 # Enable Discord Rich Presence
 DISCORDRPC ?= 0
+# Enable rumble functions (Originally in Shindou)
+RUMBLE_FEEDBACK ?= 1
 
 # Various workarounds for weird toolchains
 
@@ -562,6 +564,12 @@ endif
 ifeq ($(DISCORDRPC),1)
   CC_CHECK += -DDISCORDRPC
   CFLAGS += -DDISCORDRPC
+endif
+
+# Check for Rumble option
+ifeq ($(RUMBLE_FEEDBACK),1)
+  CC_CHECK += -DRUMBLE_FEEDBACK
+  CFLAGS += -DRUMBLE_FEEDBACK
 endif
 
 # Check for texture fix option
