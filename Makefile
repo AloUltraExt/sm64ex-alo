@@ -20,6 +20,8 @@ GRUCODE ?= f3dex2e
 COMPARE ?= 1
 # If NON_MATCHING is 1, define the NON_MATCHING and AVOID_UB macros when building (recommended)
 NON_MATCHING ?= 1
+# Sane default until N64 build scripts rm'd
+TARGET_N64 = 0
 
 # Build and optimize for Raspberry Pi(s)
 TARGET_RPI ?= 0
