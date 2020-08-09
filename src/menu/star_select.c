@@ -15,6 +15,7 @@
 #include "game/save_file.h"
 #include "game/segment2.h"
 #include "game/segment7.h"
+#include "game/thread6.h"
 #include "sm64.h"
 #include "star_select.h"
 #include "text_strings.h"
@@ -427,6 +428,10 @@ s32 lvl_update_obj_and_load_act_button_actions(UNUSED s32 arg, UNUSED s32 unused
             play_sound(SOUND_MENU_STAR_SOUND, gDefaultSoundArgs);
 #else
             play_sound(SOUND_MENU_STAR_SOUND_LETS_A_GO, gDefaultSoundArgs);
+#endif
+#ifdef RUMBLE_FEEDBACK
+            queue_rumble_data(60, 70);
+            queue_rumble_decay(1);
 #endif
             if (sInitSelectedActNum >= sSelectedActIndex + 1) {
                 sLoadedActNum = sSelectedActIndex + 1;
