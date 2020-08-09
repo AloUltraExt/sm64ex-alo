@@ -168,8 +168,10 @@ void clear_viewport(Vp *viewport, s32 color) {
     s16 vpLrx = (viewport->vp.vtrans[0] + viewport->vp.vscale[0]) / 4 - 2;
     s16 vpLry = (viewport->vp.vtrans[1] + viewport->vp.vscale[1]) / 4 - 2;
 
+#ifdef WIDESCREEN
     vpUlx = GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(vpUlx);
     vpLrx = GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(SCREEN_WIDTH - vpLrx);
+#endif
 
     gDPPipeSync(gDisplayListHead++);
 

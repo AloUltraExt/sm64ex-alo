@@ -1063,6 +1063,7 @@ void reset_painting(struct Painting *painting) {
 
     gRipplingPainting = NULL;
 
+#ifdef NO_SEGMENTED_MEMORY
     // Make sure all variables are reset correctly.
     // With segmented memory the segments that contain the relevant
     // Painting structs are reloaded from ROM upon level load.
@@ -1079,6 +1080,7 @@ void reset_painting(struct Painting *painting) {
         // that moves the painting stops during level unload.
         painting->posX = 3456.0f;
     }
+#endif
 }
 
 /**

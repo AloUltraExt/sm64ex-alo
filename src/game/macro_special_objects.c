@@ -328,6 +328,7 @@ void spawn_special_objects(s16 areaIndex, s16 **specialObjList) {
     }
 }
 
+#ifdef NO_SEGMENTED_MEMORY
 // PC Port, so always use below
 u32 get_special_objects_size(s16 *data) {
     s16 *startPos = data;
@@ -372,3 +373,4 @@ u32 get_special_objects_size(s16 *data) {
 
     return data - startPos;
 }
+#endif

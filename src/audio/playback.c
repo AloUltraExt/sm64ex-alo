@@ -151,6 +151,11 @@ struct Drum *get_drum(s32 bankId, s32 drumId) {
         gAudioErrorFlags = ((bankId << 8) + drumId) + 0x4000000;
         return 0;
     }
+#ifndef NO_SEGMENTED_MEMORY
+    if ((uintptr_t) gCtlEntries[bankId].drums < 0x80000000U) {
+        return 0;
+    }
+#endif
     drum = gCtlEntries[bankId].drums[drumId];
     if (drum == NULL) {
         gAudioErrorFlags = ((bankId << 8) + drumId) + 0x5000000;
@@ -244,6 +249,11 @@ void process_notes(void) {
 #ifdef VERSION_EU
         playbackState = (struct NotePlaybackState *) &note->priority;
         if (note->parentLayer != NO_LAYER) {
+#ifndef NO_SEGMENTED_MEMORY
+            if ((uintptr_t) playbackState->parentLayer < 0x7fffffffU) {
+                continue;
+            }
+#endif
             if (!playbackState->parentLayer->enabled && playbackState->priority >= NOTE_PRIORITY_MIN) {
                 goto c;
             } else if (playbackState->parentLayer->seqChannel->seqPlayer == NULL) {

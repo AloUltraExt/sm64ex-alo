@@ -1,5 +1,7 @@
 #include <ultra64.h>
+#ifdef NO_SEGMENTED_MEMORY
 #include <string.h>
+#endif
 
 #include "sm64.h"
 #include "audio/external.h"
@@ -601,6 +603,9 @@ static void level_cmd_set_gamma(void) {
 
 static void level_cmd_set_terrain_data(void) {
     if (sCurrAreaIndex != -1) {
+#ifndef NO_SEGMENTED_MEMORY
+        gAreas[sCurrAreaIndex].terrainData = segmented_to_virtual(CMD_GET(void *, 4));
+#else
         Collision *data;
         u32 size;
 
@@ -609,6 +614,7 @@ static void level_cmd_set_terrain_data(void) {
         size = get_area_terrain_size(data) * sizeof(Collision);
         gAreas[sCurrAreaIndex].terrainData = alloc_only_pool_alloc(sLevelPool, size);
         memcpy(gAreas[sCurrAreaIndex].terrainData, data, size);
+#endif
     }
     sCurrentCmd = CMD_NEXT;
 }
@@ -622,6 +628,9 @@ static void level_cmd_set_rooms(void) {
 
 static void level_cmd_set_macro_objects(void) {
     if (sCurrAreaIndex != -1) {
+#ifndef NO_SEGMENTED_MEMORY
+        gAreas[sCurrAreaIndex].macroObjects = segmented_to_virtual(CMD_GET(void *, 4));
+#else
         // The game modifies the macro object data (for example marking coins as taken),
         // so it must be reset when the level reloads.
         MacroObject *data = segmented_to_virtual(CMD_GET(void *, 4));
@@ -631,6 +640,7 @@ static void level_cmd_set_macro_objects(void) {
         }
         gAreas[sCurrAreaIndex].macroObjects = alloc_only_pool_alloc(sLevelPool, len * sizeof(MacroObject));
         memcpy(gAreas[sCurrAreaIndex].macroObjects, data, len * sizeof(MacroObject));
+#endif
     }
     sCurrentCmd = CMD_NEXT;
 }

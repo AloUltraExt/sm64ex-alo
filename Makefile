@@ -22,6 +22,8 @@ COMPARE ?= 1
 NON_MATCHING ?= 1
 # Sane default until N64 build scripts rm'd
 TARGET_N64 = 0
+# Compiler to use in N64 (ido or gcc)
+COMPILER_N64 ?= ido
 
 # Build and optimize for Raspberry Pi(s)
 TARGET_RPI ?= 0
@@ -141,14 +143,6 @@ TARGET := sm64.$(VERSION)
 VERSION_CFLAGS := -D$(VERSION_DEF) -D_LANGUAGE_C
 VERSION_ASFLAGS := --defsym $(VERSION_DEF)=1
 
-# Stuff for showing the git hash in the intro on nightly builds
-# From https://stackoverflow.com/questions/44038428/include-git-commit-hash-and-or-branch-name-in-c-c-source
-ifeq ($(shell git rev-parse --abbrev-ref HEAD),nightly)
-  GIT_HASH=`git rev-parse --short HEAD`
-  COMPILE_TIME=`date -u +'%Y-%m-%d %H:%M:%S UTC'`
-  VERSION_CFLAGS += -DNIGHTLY -DGIT_HASH="\"$(GIT_HASH)\"" -DCOMPILE_TIME="\"$(COMPILE_TIME)\""
-endif
-
 # Microcode
 
 ifeq ($(GRUCODE),f3dex) # Fast3DEX
@@ -257,7 +251,11 @@ BUILD_DIR_BASE := build
 ifeq ($(TARGET_WEB),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_web
 else
+ifeq ($(TARGET_N64),1)
+  BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)
+else
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_pc
+endif
 endif
 
 LIBULTRA := $(BUILD_DIR)/libultra.a
@@ -275,8 +273,13 @@ EXE := $(BUILD_DIR)/$(TARGET).html
 			EXE := $(BUILD_DIR)/$(TARGET)
 		endif
 	endif
+else
+ifeq ($(TARGET_N64),1)
+  EXE := $(BUILD_DIR)/$(TARGET)
+endif
 endif
 
+ROM := $(BUILD_DIR)/$(TARGET).z64
 ELF := $(BUILD_DIR)/$(TARGET).elf
 LD_SCRIPT := sm64.ld
 MIO0_DIR := $(BUILD_DIR)/bin
@@ -288,8 +291,14 @@ LEVEL_DIRS := $(patsubst levels/%,%,$(dir $(wildcard levels/*/header.h)))
 # Directories containing source files
 
 # Hi, I'm a PC
-SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers actors levels bin data assets src/pc src/pc/gfx src/pc/audio src/pc/controller src/pc/fs src/pc/fs/packtypes
-ASM_DIRS :=
+SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers actors levels bin bin/$(VERSION) data assets
+ASM_DIRS := lib
+ifeq ($(TARGET_N64),1)
+  ASM_DIRS := asm $(ASM_DIRS)
+else
+  SRC_DIRS := $(SRC_DIRS)  src/pc src/pc/gfx src/pc/audio src/pc/controller src/pc/fs src/pc/fs/packtypes
+  ASM_DIRS :=
+endif
 
 ifeq ($(DISCORDRPC),1)
   SRC_DIRS += src/pc/discord
@@ -306,6 +315,10 @@ GODDARD_SRC_DIRS := src/goddard src/goddard/dynlists
 MIPSISET := -mips2
 MIPSBIT := -32
 
+ifeq ($(COMPILER_N64),gcc)
+  MIPSISET := -mips3
+endif
+
 ifeq ($(DEBUG),1)
   OPT_FLAGS := -g
 else
@@ -317,6 +330,10 @@ OPT_FLAGS += $(BITS)
 
 ifeq ($(TARGET_WEB),1)
   OPT_FLAGS := -O2 -g4 --source-map-base http://localhost:8080/
+endif
+
+ifeq ($(COMPILER_N64),gcc)
+OPT_FLAGS := -O2
 endif
 
 ifeq ($(TARGET_RPI),1)
@@ -360,9 +377,14 @@ CXX_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 S_FILES := $(foreach dir,$(ASM_DIRS),$(wildcard $(dir)/*.s))
 GODDARD_C_FILES := $(foreach dir,$(GODDARD_SRC_DIRS),$(wildcard $(dir)/*.c))
 
+ifeq ($(TARGET_N64),1)
+  ULTRA_S_FILES := $(foreach dir,$(ULTRA_ASM_DIRS),$(wildcard $(dir)/*.s))
+endif
+
 GENERATED_C_FILES := $(BUILD_DIR)/assets/mario_anim_data.c $(BUILD_DIR)/assets/demo_data.c \
   $(addprefix $(BUILD_DIR)/bin/,$(addsuffix _skybox.c,$(notdir $(basename $(wildcard textures/skyboxes/*.png)))))
 
+ifneq ($(TARGET_N64),1)
 ULTRA_C_FILES := \
   alBnkfNew.c \
   guLookAtRef.c \
@@ -374,6 +396,7 @@ ULTRA_C_FILES := \
   guScaleF.c \
   guTranslateF.c \
   ldiv.c
+endif
 
 C_FILES := $(filter-out src/game/main.c,$(C_FILES))
 ULTRA_C_FILES := $(addprefix lib/src/,$(ULTRA_C_FILES))
@@ -426,6 +449,13 @@ endif
 # Automatic dependency files
 DEP_FILES := $(O_FILES:.o=.d) $(ULTRA_O_FILES:.o=.d) $(GODDARD_O_FILES:.o=.d) $(BUILD_DIR)/$(LD_SCRIPT).d
 
+# Files with GLOBAL_ASM blocks
+ifeq ($(NON_MATCHING),0)
+GLOBAL_ASM_C_FILES != grep -rl 'GLOBAL_ASM(' $(wildcard src/**/*.c)
+GLOBAL_ASM_O_FILES = $(foreach file,$(GLOBAL_ASM_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
+GLOBAL_ASM_DEP = $(BUILD_DIR)/src/audio/non_matching_dep
+endif
+
 # Segment elf files
 SEG_FILES := $(SEGMENT_ELF_FILES) $(ACTOR_ELF_FILES) $(LEVEL_ELF_FILES)
 
@@ -433,7 +463,77 @@ SEG_FILES := $(SEGMENT_ELF_FILES) $(ACTOR_ELF_FILES) $(LEVEL_ELF_FILES)
 INCLUDE_CFLAGS := -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I .
 ENDIAN_BITWIDTH := $(BUILD_DIR)/endian-and-bitwidth
 
-# Huge deleted N64 section was here
+ifeq ($(TARGET_N64),1)
+IRIX_ROOT := tools/ido5.3_compiler
+
+ifeq ($(shell type mips-linux-gnu-ld >/dev/null 2>/dev/null; echo $$?), 0)
+  CROSS := mips-linux-gnu-
+else ifeq ($(shell type mips64-linux-gnu-ld >/dev/null 2>/dev/null; echo $$?), 0)
+  CROSS := mips64-linux-gnu-
+else
+  CROSS := mips64-elf-
+endif
+
+# check that either QEMU_IRIX is set or qemu-irix package installed
+ifeq ($(COMPILER),ido)
+  ifndef QEMU_IRIX
+    QEMU_IRIX := $(shell which qemu-irix 2>/dev/null)
+    ifeq (, $(QEMU_IRIX))
+      $(error Please install qemu-irix package or set QEMU_IRIX env var to the full qemu-irix binary path)
+    endif
+  endif
+endif
+
+AS        := $(CROSS)as
+CC        := $(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/bin/cc
+CPP       := cpp -P -Wno-trigraphs
+LD        := $(CROSS)ld
+AR        := $(CROSS)ar
+OBJDUMP   := $(CROSS)objdump
+OBJCOPY   := $(CROSS)objcopy
+PYTHON    := python3
+
+# change the compiler to gcc, to use the default, install the gcc-mips-linux-gnu package
+ifeq ($(COMPILER),gcc)
+  CC        := $(CROSS)gcc
+endif
+
+ifeq ($(TARGET_N64),1)
+  TARGET_CFLAGS := -nostdinc -I include/libc -DTARGET_N64 -D_LANGUAGE_C
+  CC_CFLAGS := -fno-builtin
+endif
+
+INCLUDE_CFLAGS := -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I .
+
+# Check code syntax with host compiler
+CC_CHECK := gcc
+CC_CHECK_CFLAGS := -fsyntax-only -fsigned-char $(CC_CFLAGS) $(TARGET_CFLAGS) $(INCLUDE_CFLAGS) -std=gnu90 -Wall -Wextra -Wno-format-security -Wno-main -DNON_MATCHING -DAVOID_UB $(VERSION_CFLAGS) $(GRUCODE_CFLAGS)
+
+COMMON_CFLAGS = $(OPT_FLAGS) $(TARGET_CFLAGS) $(INCLUDE_CFLAGS) $(VERSION_CFLAGS) $(MATCH_CFLAGS) $(MIPSISET) $(GRUCODE_CFLAGS)
+
+ASFLAGS := -march=vr4300 -mabi=32 -I include -I $(BUILD_DIR) $(VERSION_ASFLAGS) $(MATCH_ASFLAGS) $(GRUCODE_ASFLAGS)
+CFLAGS = -Wab,-r4300_mul -non_shared -G 0 -Xcpluscomm -Xfullwarn -signed $(COMMON_CFLAGS) $(MIPSBIT)
+OBJCOPYFLAGS := --pad-to=0x800000 --gap-fill=0xFF
+SYMBOL_LINKING_FLAGS := $(addprefix -R ,$(SEG_FILES))
+LDFLAGS := -T undefined_syms.txt -T $(BUILD_DIR)/$(LD_SCRIPT) -Map $(BUILD_DIR)/sm64.$(VERSION).map --no-check-sections $(SYMBOL_LINKING_FLAGS)
+ENDIAN_BITWIDTH := $(BUILD_DIR)/endian-and-bitwidth
+
+ifeq ($(COMPILER),gcc)
+  CFLAGS := -march=vr4300 -mfix4300 -mabi=32 -mno-shared -G 0 -mhard-float -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -I include -I src/ -I $(BUILD_DIR)/include -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra $(COMMON_CFLAGS)
+endif
+
+ifeq ($(shell getconf LONG_BIT), 32)
+  # Work around memory allocation bug in QEMU
+  export QEMU_GUEST_BASE := 1
+else
+  # Ensure that gcc treats the code as 32-bit
+  CC_CHECK_CFLAGS += -m32
+endif
+
+# Prevent a crash with -sopt
+export LANG := C
+
+else # TARGET_N64
 
 AS := $(CROSS)as
 
@@ -644,6 +744,8 @@ endif # End of LDFLAGS
 # Prevent a crash with -sopt
 export LANG := C
 
+endif
+
 ####################### Other Tools #########################
 
 # N64 conversion tools
@@ -670,7 +772,14 @@ ZEROTERM = $(PYTHON) $(TOOLS_DIR)/zeroterm.py
 
 ######################## Targets #############################
 
+ifeq ($(TARGET_N64),1)
+all: $(ROM)
+ifeq ($(COMPARE),1)
+	@$(SHA1SUM) -c $(TARGET).sha1 || (echo 'The build succeeded, but did not match the official ROM. This is expected if you are making changes to the game.\nTo silence this message, use "make COMPARE=0"'. && false)
+endif
+else
 all: $(EXE)
+endif
 
 # thank you apple very cool
 ifeq ($(HOST_OS),Darwin)
@@ -844,6 +953,38 @@ endif
 
 # compressed segment generation
 
+ifeq ($(TARGET_N64),1)
+# TODO: ideally this would be `-Trodata-segment=0x07000000` but that doesn't set the address
+
+$(BUILD_DIR)/bin/%.elf: $(BUILD_DIR)/bin/%.o
+	$(LD) -e 0 -Ttext=$(SEGMENT_ADDRESS) -Map $@.map -o $@ $<
+$(BUILD_DIR)/actors/%.elf: $(BUILD_DIR)/actors/%.o
+	$(LD) -e 0 -Ttext=$(SEGMENT_ADDRESS) -Map $@.map -o $@ $<
+
+# Override for level.elf, which otherwise matches the above pattern
+.SECONDEXPANSION:
+$(BUILD_DIR)/levels/%/leveldata.elf: $(BUILD_DIR)/levels/%/leveldata.o $(BUILD_DIR)/bin/$$(TEXTURE_BIN).elf
+	$(LD) -e 0 -Ttext=$(SEGMENT_ADDRESS) -Map $@.map --just-symbols=$(BUILD_DIR)/bin/$(TEXTURE_BIN).elf -o $@ $<
+
+$(BUILD_DIR)/bin/%.bin: $(BUILD_DIR)/bin/%.elf
+	$(EXTRACT_DATA_FOR_MIO) $< $@
+
+$(BUILD_DIR)/actors/%.bin: $(BUILD_DIR)/actors/%.elf
+	$(EXTRACT_DATA_FOR_MIO) $< $@
+
+$(BUILD_DIR)/levels/%/leveldata.bin: $(BUILD_DIR)/levels/%/leveldata.elf
+	$(EXTRACT_DATA_FOR_MIO) $< $@
+
+$(BUILD_DIR)/%.mio0: $(BUILD_DIR)/%.bin
+	$(MIO0TOOL) $< $@
+
+$(BUILD_DIR)/%.mio0.o: $(BUILD_DIR)/%.mio0.s
+	$(AS) $(ASFLAGS) -o $@ $<
+
+$(BUILD_DIR)/%.mio0.s: $(BUILD_DIR)/%.mio0
+	printf ".section .data\n\n.incbin \"$<\"\n" > $@
+endif
+
 # PC Area
 $(BUILD_DIR)/%.table: %.aiff
 	$(AIFF_EXTRACT_CODEBOOK) $< >$@
@@ -910,6 +1051,7 @@ $(BUILD_DIR)/assets/mario_anim_data.c: $(wildcard assets/anims/*.inc.c)
 $(BUILD_DIR)/assets/demo_data.c: assets/demo_data.json $(wildcard assets/demos/*.bin)
 	$(PYTHON) tools/demo_data_converter.py assets/demo_data.json $(VERSION_CFLAGS) > $@
 
+ifeq ($(COMPILER_N64),ido)
 # Source code
 $(BUILD_DIR)/levels/%/leveldata.o: OPT_FLAGS := -g
 $(BUILD_DIR)/actors/%.o: OPT_FLAGS := -g
@@ -957,6 +1099,7 @@ $(BUILD_DIR)/src/audio/%.copt: $(BUILD_DIR)/src/audio/%.acpp
 	$(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/lib/copt -signed -I=$< -CMP=$@ -cp=i -scalaroptimize=1
 
 endif
+endif
 
 # Rebuild files with 'GLOBAL_ASM' if the NON_MATCHING flag changes.
 $(GLOBAL_ASM_O_FILES): $(GLOBAL_ASM_DEP).$(NON_MATCHING)
@@ -981,9 +1124,30 @@ $(BUILD_DIR)/%.o: %.s
 	$(AS) $(ASFLAGS) -MD $(BUILD_DIR)/$*.d -o $@ $<
 
 
+ifeq ($(TARGET_N64),1)
+$(BUILD_DIR)/$(LD_SCRIPT): $(LD_SCRIPT)
+	$(CPP) $(VERSION_CFLAGS) -MMD -MP -MT $@ -MF $@.d -I include/ -I . -DBUILD_DIR=$(BUILD_DIR) -o $@ $<
 
+$(BUILD_DIR)/libultra.a: $(ULTRA_O_FILES)
+	$(AR) rcs -o $@ $(ULTRA_O_FILES)
+	tools/patch_libultra_math $@
+
+$(BUILD_DIR)/libgoddard.a: $(GODDARD_O_FILES)
+	$(AR) rcs -o $@ $(GODDARD_O_FILES)
+
+$(ELF): $(O_FILES) $(MIO0_OBJ_FILES) $(SOUND_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) undefined_syms.txt $(BUILD_DIR)/libultra.a $(BUILD_DIR)/libgoddard.a
+	$(LD) -L $(BUILD_DIR) $(LDFLAGS) -o $@ $(O_FILES)$(LIBS) -lultra -lgoddard
+
+$(ROM): $(ELF)
+	$(OBJCOPY) $(OBJCOPYFLAGS) $< $(@:.z64=.bin) -O binary
+	$(N64CKSUM) $(@:.z64=.bin) $@
+
+$(BUILD_DIR)/$(TARGET).objdump: $(ELF)
+	$(OBJDUMP) -D $< > $@
+else
 $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
 	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
+endif
 
 .PHONY: all clean distclean default diff test load libultra res
 .PRECIOUS: $(BUILD_DIR)/bin/%.elf $(SOUND_BIN_DIR)/%.ctl $(SOUND_BIN_DIR)/%.tbl $(SOUND_SAMPLE_TABLES) $(SOUND_BIN_DIR)/%.s $(BUILD_DIR)/%
