@@ -52,7 +52,11 @@ void bhv_big_bully_init(void) {
 }
 
 void bully_check_mario_collision(void) {
-    if (o->oInteractStatus & INT_STATUS_INTERACTED) {
+    if (
+#ifdef SH_CHANGES
+    o->oAction != BULLY_ACT_LAVA_DEATH && o->oAction != BULLY_ACT_DEATH_PLANE_DEATH &&
+#endif
+    o->oInteractStatus & INT_STATUS_INTERACTED) {
         if (o->oBehParams2ndByte == BULLY_BP_SIZE_SMALL)
             cur_obj_play_sound_2(SOUND_OBJ2_BULLY_ATTACKED);
         else
@@ -292,7 +296,7 @@ void big_bully_spawn_star(void) {
 }
 
 void bhv_big_bully_with_minions_loop(void) {
-#ifdef VERSION_EU
+#if defined (VERSION_EU) || defined (VERSION_SH)
     s32 collisionFlags;
 #else
     s16 collisionFlags;

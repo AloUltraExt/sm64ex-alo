@@ -346,7 +346,7 @@ void rotate_triangle_vertices(Vec3s vertex1, Vec3s vertex2, Vec3s vertex3, s16 p
 void append_snowflake_vertex_buffer(Gfx *gfx, s32 index, Vec3s vertex1, Vec3s vertex2, Vec3s vertex3) {
     s32 i = 0;
     Vtx *vertBuf = (Vtx *) alloc_display_list(15 * sizeof(Vtx));
-#ifdef VERSION_EU
+#if defined (VERSION_EU) || defined (VERSION_SH)
     Vtx *p;
 #endif
 
@@ -356,7 +356,7 @@ void append_snowflake_vertex_buffer(Gfx *gfx, s32 index, Vec3s vertex1, Vec3s ve
 
     for (i = 0; i < 15; i += 3) {
         vertBuf[i] = gSnowTempVtx[0];
-#ifdef VERSION_EU
+#if defined (VERSION_EU) || defined (VERSION_SH)
         p = vertBuf;
         p += i;
         p[0].v.ob[0] = gEnvFxBuffer[index + i / 3].xPos + vertex1[0];
@@ -369,7 +369,7 @@ void append_snowflake_vertex_buffer(Gfx *gfx, s32 index, Vec3s vertex1, Vec3s ve
 #endif
 
         vertBuf[i + 1] = gSnowTempVtx[1];
-#ifdef VERSION_EU
+#if defined (VERSION_EU) || defined (VERSION_SH)
         p = vertBuf;
         p += i;
         p[1].v.ob[0] = gEnvFxBuffer[index + i / 3].xPos + vertex2[0];
@@ -382,7 +382,7 @@ void append_snowflake_vertex_buffer(Gfx *gfx, s32 index, Vec3s vertex1, Vec3s ve
 #endif
 
         vertBuf[i + 2] = gSnowTempVtx[2];
-#ifdef VERSION_EU
+#if defined (VERSION_EU) || defined (VERSION_SH)
         p = vertBuf;
         p += i;
         p[2].v.ob[0] = gEnvFxBuffer[index + i / 3].xPos + vertex3[0];

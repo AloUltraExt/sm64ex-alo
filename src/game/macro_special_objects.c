@@ -245,7 +245,7 @@ void spawn_special_objects(s16 areaIndex, s16 **specialObjList) {
     s16 y;
     s16 z;
     s16 extraParams[4];
-#ifdef VERSION_EU
+#if defined (VERSION_EU) || defined (VERSION_SH)
     s16 model;
 #else
     u8 model;

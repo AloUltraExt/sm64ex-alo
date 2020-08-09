@@ -136,6 +136,9 @@ void bhv_treasure_chest_ship_loop(void) {
                     gEnvironmentRegions[6] = -335;
                     o->activeFlags = ACTIVE_FLAG_DEACTIVATED;
                 }
+#ifdef RUMBLE_FEEDBACK
+                reset_rumble_timers_viblate(2);
+#endif
             }
             break;
     }

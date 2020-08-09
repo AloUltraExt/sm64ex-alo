@@ -23,6 +23,8 @@
 #define BUGFIX_PIRANHA_PLANT_SLEEP_DAMAGE (0 || VERSION_US || VERSION_SH)
 /// Fixes bug where it shows a star when you grab a key in bowser battle stages
 #define BUGFIX_STAR_BOWSER_KEY (0 || VERSION_US || VERSION_EU)
+// Some Shindou Changes
+#define SH_CHANGES (1 || VERSION_SH)
 
 // Screen Size Defines
 #define SCREEN_WIDTH 320

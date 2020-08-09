@@ -412,7 +412,7 @@ void append_bubble_vertex_buffer(Gfx *gfx, s32 index, Vec3s vertex1, Vec3s verte
                                  Vtx *template) {
     s32 i = 0;
     Vtx *vertBuf = alloc_display_list(15 * sizeof(Vtx));
-#ifdef VERSION_EU
+#if defined (VERSION_EU) || defined (VERSION_SH)
     Vtx *p;
 #endif
 
@@ -422,7 +422,7 @@ void append_bubble_vertex_buffer(Gfx *gfx, s32 index, Vec3s vertex1, Vec3s verte
 
     for (i = 0; i < 15; i += 3) {
         vertBuf[i] = template[0];
-#ifdef VERSION_EU
+#if defined (VERSION_EU) || defined (VERSION_SH)
         p = vertBuf;
         p += i;
         p[0].v.ob[0] = gEnvFxBuffer[index + i / 3].xPos + vertex1[0];
@@ -435,7 +435,7 @@ void append_bubble_vertex_buffer(Gfx *gfx, s32 index, Vec3s vertex1, Vec3s verte
 #endif
 
         vertBuf[i + 1] = template[1];
-#ifdef VERSION_EU
+#if defined (VERSION_EU) || defined (VERSION_SH)
         p = vertBuf;
         p += i;
         p[1].v.ob[0] = gEnvFxBuffer[index + i / 3].xPos + vertex2[0];
@@ -448,7 +448,7 @@ void append_bubble_vertex_buffer(Gfx *gfx, s32 index, Vec3s vertex1, Vec3s verte
 #endif
 
         vertBuf[i + 2] = template[2];
-#ifdef VERSION_EU
+#if defined (VERSION_EU) || defined (VERSION_SH)
         p = vertBuf;
         p += i;
         p[2].v.ob[0] = gEnvFxBuffer[index + i / 3].xPos + vertex3[0];
