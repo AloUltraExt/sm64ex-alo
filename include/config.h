@@ -25,6 +25,8 @@
 #define BUGFIX_STAR_BOWSER_KEY (0 || VERSION_US || VERSION_EU)
 // Some Shindou Changes
 #define SH_CHANGES (1 || VERSION_SH)
+// Extra Z trig in Europe
+#define Z_TRIG_EXTRA_ACT (1 || VERSION_EU)
 
 // Screen Size Defines
 #define SCREEN_WIDTH 320
