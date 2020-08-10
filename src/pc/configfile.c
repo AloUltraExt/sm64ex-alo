@@ -1,5 +1,7 @@
 // configfile.c - handles loading and saving the configuration options
+#ifndef TARGET_N64
 #include <stdbool.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

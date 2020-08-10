@@ -245,8 +245,22 @@ u32 main_pool_pop_state(void) {
  */
 static void dma_read(u8 *dest, u8 *srcStart, u8 *srcEnd) {
     u32 size = ALIGN16(srcEnd - srcStart);
+#ifdef TARGET_N64
+    osInvalDCache(dest, size);
+    while (size != 0) {
+        u32 copySize = (size >= 0x1000) ? 0x1000 : size;
 
+        osPiStartDma(&gDmaIoMesg, OS_MESG_PRI_NORMAL, OS_READ, (uintptr_t) srcStart, dest, copySize,
+                     &gDmaMesgQueue);
+        osRecvMesg(&gDmaMesgQueue, &D_80339BEC, OS_MESG_BLOCK);
+
+        dest += copySize;
+        srcStart += copySize;
+        size -= copySize;
+    }
+#else
     memcpy(dest, srcStart, srcEnd - srcStart);
+#endif
 }
 
 /**

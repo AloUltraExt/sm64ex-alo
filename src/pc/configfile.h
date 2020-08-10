@@ -1,7 +1,9 @@
 #ifndef CONFIGFILE_H
 #define CONFIGFILE_H
 
+#ifndef TARGET_N64
 #include <stdbool.h>
+#endif
 
 #define CONFIGFILE_DEFAULT "sm64config.txt"
 

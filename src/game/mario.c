@@ -34,7 +34,9 @@
 #include "sound_init.h"
 #include "thread6.h"
 #include "pc/configfile.h"
+#ifdef CHEATS_ACTIONS
 #include "pc/cheats.h"
+#endif
 #ifdef BETTERCAMERA
 #include "bettercamera.h"
 #endif
@@ -1217,6 +1219,7 @@ void squish_mario_model(struct MarioState *m) {
         // If no longer squished, scale back to default.
         // Also handles the Tiny Mario and Huge Mario cheats.
         if (m->squishTimer == 0) {
+#ifdef CHEATS_ACTIONS
             if (Cheats.EnableCheats) {
                 if (Cheats.HugeMario) {
                     vec3f_set(m->marioObj->header.gfx.scale, 2.5f, 2.5f, 2.5f);
@@ -1229,9 +1232,11 @@ void squish_mario_model(struct MarioState *m) {
                 }
             }
             else {
+#endif
                 vec3f_set(m->marioObj->header.gfx.scale, 1.0f, 1.0f, 1.0f);
+#ifdef CHEATS_ACTIONS
             }
-            
+#endif      
         }
         // If timer is less than 16, rubber-band Mario's size scale up and down.
         else if (m->squishTimer <= 16) {
@@ -1414,12 +1419,14 @@ void update_mario_inputs(struct MarioState *m) {
 
     debug_print_speed_action_normal(m);
     
+#ifdef CHEATS_ACTIONS
     /* Moonjump cheat */
     while (Cheats.MoonJump == true && Cheats.EnableCheats == true && m->controller->buttonDown & L_TRIG ){
         m->vel[1] = 25;
         break;   // TODO: Unneeded break?
     }
     /*End of moonjump cheat */
+#endif
 
     if (gCameraMovementFlags & CAM_MOVE_C_UP_MODE) {
         if (m->action & ACT_FLAG_ALLOW_FIRST_PERSON) {
@@ -1745,6 +1752,7 @@ s32 execute_mario_action(UNUSED struct Object *o) {
     * Cheat stuff
     */
 
+#ifdef CHEATS_ACTIONS
     if (Cheats.EnableCheats)
     {
         if (Cheats.GodMode)
@@ -1759,6 +1767,7 @@ s32 execute_mario_action(UNUSED struct Object *o) {
     /**
     * End of cheat stuff
     */
+#endif    
     if (gMarioState->action) {
         gMarioState->marioObj->header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
         mario_reset_bodystate(gMarioState);

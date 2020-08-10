@@ -13,9 +13,8 @@
 #include "thread6.h"
 
 /**
- * WARNING!
- * This entry point is deprecated because TARGET_N64 is no longer required for building PC version.
- * The new entry point is located in 'pc/pc_main.c'
+ * This entry point is only used in TARGET_N64.
+ * In PC Port the new entry point is located in 'pc/pc_main.c'
  **/
 
 // Message IDs
@@ -234,7 +233,7 @@ void handle_vblank(void) {
 
     stub_main_3();
     sNumVblanks++;
-#ifdef VERSION_SH
+#ifdef SH_CHANGES
     if (gResetTimer > 0 && gResetTimer < 100) {
         gResetTimer++;
     }
@@ -269,9 +268,9 @@ void handle_vblank(void) {
             start_sptask(M_GFXTASK);
         }
     }
-
+#ifdef VERSION_SH
     rumble_thread_update_vi();
-
+#endif
     // Notify the game loop about the vblank.
     if (gVblankHandler1 != NULL) {
         osSendMesg(gVblankHandler1->queue, gVblankHandler1->msg, OS_MESG_NOBLOCK);

@@ -5,6 +5,8 @@
 #include "main.h"
 #include "thread6.h"
 
+#ifdef RUMBLE_FEEDBACK
+
 //static s8 D_SH_8030CCB4;
 static s32 sUnusedDisableRumble;
 static s32 sRumblePakThreadActive;
@@ -279,3 +281,5 @@ void rumble_thread_update_vi(void) {
 
     // osSendMesg(&gRumbleThreadVIMesgQueue, (OSMesg) 0x56525443, OS_MESG_NOBLOCK);
 }
+
+#endif

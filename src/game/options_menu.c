@@ -22,7 +22,9 @@
 #include "pc/configfile.h"
 #include "pc/controller/controller_api.h"
 
+#ifndef TARGET_N64
 #include <stdbool.h>
+#endif
 #include "../../include/libc/stdlib.h"
 
 u8 optmenu_open = 0;

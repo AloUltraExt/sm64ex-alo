@@ -1,5 +1,7 @@
 #include <ultra64.h>
+#ifndef TARGET_N64
 #include <stdbool.h>
+#endif
 
 #include "sm64.h"
 #include "seq_ids.h"
@@ -31,9 +33,11 @@
 #include "thread6.h"
 #include "../../include/libc/stdlib.h"
 
+#ifndef TARGET_N64
 #include "pc/pc_main.h"
 #include "pc/cliopts.h"
 #include "pc/configfile.h"
+#endif
 
 #define PLAY_MODE_NORMAL 0
 #define PLAY_MODE_PAUSED 2
@@ -1032,7 +1036,9 @@ s32 play_mode_paused(void) {
         // We should only be getting "int 3" to here
         initiate_warp(LEVEL_CASTLE, 1, 0x1F, 0);
         fade_into_special_warp(0, 0);
+#ifndef TARGET_N64
         game_exit();
+#endif
     }
 
     gCameraMovementFlags &= ~CAM_MOVE_PAUSE_SCREEN;
@@ -1196,6 +1202,7 @@ s32 init_level(void) {
         if (gCurrentArea != NULL) {
             reset_camera(gCurrentArea->camera);
 
+/**
             if (gCurrDemoInput != NULL) {
                 set_mario_action(gMarioState, ACT_IDLE, 0);
             } else if (gDebugLevelSelect == 0) {
@@ -1208,7 +1215,10 @@ s32 init_level(void) {
                     }
                 }
             }
+*/
+        set_mario_action(gMarioState, ACT_IDLE, 0);
         }
+
 
         if (val4 != 0) {
             play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 0x5A, 0xFF, 0xFF, 0xFF);
@@ -1270,7 +1280,7 @@ s32 lvl_init_from_save_file(UNUSED s16 arg0, s32 levelNum) {
 #endif
     sWarpDest.type = WARP_TYPE_NOT_WARPING;
     sDelayedWarpOp = WARP_OP_NONE;
-    gShouldNotPlayCastleMusic = !save_file_exists(gCurrSaveFileNum - 1) && gCLIOpts.SkipIntro == 0 && configSkipIntro == 0;
+    gShouldNotPlayCastleMusic = !save_file_exists(gCurrSaveFileNum - 1) /** && gCLIOpts.SkipIntro == 0 && configSkipIntro == 0 */;
 
     gCurrLevelNum = levelNum;
     gCurrCourseNum = COURSE_NONE;

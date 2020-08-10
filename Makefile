@@ -15,7 +15,7 @@ DEBUG ?= 0
 # Version of the game to build
 VERSION ?= us
 # Graphics microcode used
-GRUCODE ?= f3dex2e
+GRUCODE ?= f3dex2
 # If COMPARE is 1, check the output sha1sum when building 'all'
 COMPARE ?= 1
 # If NON_MATCHING is 1, define the NON_MATCHING and AVOID_UB macros when building (recommended)
@@ -260,6 +260,7 @@ endif
 
 LIBULTRA := $(BUILD_DIR)/libultra.a
 
+ifeq ($(TARGET_N64),0)
 ifeq ($(TARGET_WEB),1)
 EXE := $(BUILD_DIR)/$(TARGET).html
 	else
@@ -273,10 +274,11 @@ EXE := $(BUILD_DIR)/$(TARGET).html
 			EXE := $(BUILD_DIR)/$(TARGET)
 		endif
 	endif
-else
+endif
+endif
+
 ifeq ($(TARGET_N64),1)
   EXE := $(BUILD_DIR)/$(TARGET)
-endif
 endif
 
 ROM := $(BUILD_DIR)/$(TARGET).z64
@@ -373,6 +375,11 @@ include Makefile.split
 # Source code files
 LEVEL_C_FILES := $(wildcard levels/*/leveldata.c) $(wildcard levels/*/script.c) $(wildcard levels/*/geo.c)
 C_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c)) $(LEVEL_C_FILES)
+
+ifeq ($(TARGET_N64),1)
+ULTRA_C_FILES := $(foreach dir,$(ULTRA_SRC_DIRS),$(wildcard $(dir)/*.c))
+endif
+
 CXX_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 S_FILES := $(foreach dir,$(ASM_DIRS),$(wildcard $(dir)/*.s))
 GODDARD_C_FILES := $(foreach dir,$(GODDARD_SRC_DIRS),$(wildcard $(dir)/*.c))
@@ -396,10 +403,11 @@ ULTRA_C_FILES := \
   guScaleF.c \
   guTranslateF.c \
   ldiv.c
-endif
 
 C_FILES := $(filter-out src/game/main.c,$(C_FILES))
+
 ULTRA_C_FILES := $(addprefix lib/src/,$(ULTRA_C_FILES))
+endif
 
 # "If we're not N64, use the above"
 
@@ -475,7 +483,7 @@ else
 endif
 
 # check that either QEMU_IRIX is set or qemu-irix package installed
-ifeq ($(COMPILER),ido)
+ifeq ($(COMPILER_N64),ido)
   ifndef QEMU_IRIX
     QEMU_IRIX := $(shell which qemu-irix 2>/dev/null)
     ifeq (, $(QEMU_IRIX))
@@ -494,14 +502,12 @@ OBJCOPY   := $(CROSS)objcopy
 PYTHON    := python3
 
 # change the compiler to gcc, to use the default, install the gcc-mips-linux-gnu package
-ifeq ($(COMPILER),gcc)
+ifeq ($(COMPILER_N64),gcc)
   CC        := $(CROSS)gcc
 endif
 
-ifeq ($(TARGET_N64),1)
-  TARGET_CFLAGS := -nostdinc -I include/libc -DTARGET_N64 -D_LANGUAGE_C
-  CC_CFLAGS := -fno-builtin
-endif
+TARGET_CFLAGS := -nostdinc -I include/libc -DTARGET_N64 -D_LANGUAGE_C -DNO_LDIV
+CC_CFLAGS := -fno-builtin
 
 INCLUDE_CFLAGS := -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I .
 
@@ -518,7 +524,7 @@ SYMBOL_LINKING_FLAGS := $(addprefix -R ,$(SEG_FILES))
 LDFLAGS := -T undefined_syms.txt -T $(BUILD_DIR)/$(LD_SCRIPT) -Map $(BUILD_DIR)/sm64.$(VERSION).map --no-check-sections $(SYMBOL_LINKING_FLAGS)
 ENDIAN_BITWIDTH := $(BUILD_DIR)/endian-and-bitwidth
 
-ifeq ($(COMPILER),gcc)
+ifeq ($(COMPILER_N64),gcc)
   CFLAGS := -march=vr4300 -mfix4300 -mabi=32 -mno-shared -G 0 -mhard-float -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -I include -I src/ -I $(BUILD_DIR)/include -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra $(COMMON_CFLAGS)
 endif
 
@@ -765,6 +771,12 @@ LOADER = loader64
 LOADER_FLAGS = -vwf
 SHA1SUM = sha1sum
 ZEROTERM = $(PYTHON) $(TOOLS_DIR)/zeroterm.py
+
+ifeq (, $(shell which armips 2>/dev/null))
+  RSPASM := $(TOOLS_DIR)/armips
+else
+  RSPASM = armips
+endif
 
 ###################### Dependency Check #####################
 

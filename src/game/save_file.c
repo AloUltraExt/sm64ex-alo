@@ -16,6 +16,12 @@
 #define MENU_DATA_MAGIC 0x4849
 #define SAVE_FILE_MAGIC 0x4441
 
+#ifdef TARGET_N64 // saves of both endiannesses from PC Port
+#define BSAVE_FILE_PC 0
+#else
+#define BSAVE_FILE_PC 1
+#endif
+
 STATIC_ASSERT(sizeof(struct SaveBuffer) == EEPROM_SIZE, "eeprom buffer size must match");
 
 extern struct SaveBuffer gSaveBuffer;
@@ -57,6 +63,7 @@ static void stub_save_file_1(void) {
     UNUSED s32 pad;
 }
 
+#if BSAVE_FILE_PC
 /**
  * Byteswap all multibyte fields in a SaveBlockSignature.
  */
@@ -69,7 +76,8 @@ static inline void bswap_signature(struct SaveBlockSignature *data) {
  * Byteswap all multibyte fields in a MainMenuSaveData.
  */
 static inline void bswap_menudata(struct MainMenuSaveData *data) {
-    for (int i = 0; i < NUM_SAVE_FILES; ++i)
+    int i;
+    for (i = 0; i < NUM_SAVE_FILES; ++i)
         data->coinScoreAges[i] = BSWAP32(data->coinScoreAges[i]);
     data->soundMode = BSWAP16(data->soundMode);
 #ifdef VERSION_EU
@@ -88,6 +96,7 @@ static inline void bswap_savefile(struct SaveFile *data) {
     data->flags = BSWAP32(data->flags);
     bswap_signature(&data->signature);
 }
+#endif
 
 /**
  * Read from EEPROM to a given address.
@@ -103,10 +112,14 @@ static s32 read_eeprom_data(void *buffer, s32 size) {
         u32 offset = (u32)((u8 *) buffer - (u8 *) &gSaveBuffer) / 8;
 
         do {
+#ifdef RUMBLE_FEEDBACK
             block_until_rumble_pak_free();
+#endif
             triesLeft--;
             status = osEepromLongRead(&gSIEventMesgQueue, offset, buffer, size);
+#ifdef RUMBLE_FEEDBACK
             release_rumble_pak_control();
+#endif
         } while (triesLeft > 0 && status != 0);
     }
 
@@ -115,28 +128,40 @@ static s32 read_eeprom_data(void *buffer, s32 size) {
 
 /**
  * Write data to EEPROM.
- * The EEPROM address was originally computed using the offset of the source address from gSaveBuffer.
+ * The EEPROM address was originally (is in N64) computed using the offset of the source address from gSaveBuffer.
  * Try at most 4 times, and return 0 on success. On failure, return the status returned from
  * osEepromLongWrite. Unlike read_eeprom_data, return 1 if EEPROM isn't loaded.
  */
+#if BSAVE_FILE_PC
 static s32 write_eeprom_data(void *buffer, s32 size, const uintptr_t baseofs) {
+#else
+static s32 write_eeprom_data(void *buffer, s32 size) {
+#endif
     s32 status = 1;
 
     if (gEepromProbe != 0) {
         s32 triesLeft = 4;
+#if BSAVE_FILE_PC
         u32 offset = (u32)baseofs >> 3;
-
+#else
+        u32 offset = (u32)((u8 *) buffer - (u8 *) &gSaveBuffer) >> 3;
+#endif
         do {
+#ifdef RUMBLE_FEEDBACK
             block_until_rumble_pak_free();
+#endif
             triesLeft--;
             status = osEepromLongWrite(&gSIEventMesgQueue, offset, buffer, size);
+#ifdef RUMBLE_FEEDBACK
             release_rumble_pak_control();
+#endif
         } while (triesLeft > 0 && status != 0);
     }
 
     return status;
 }
 
+#if BSAVE_FILE_PC
 /**
  * Wrappers that byteswap the data on LE platforms before writing it to 'EEPROM'
  */
@@ -170,6 +195,7 @@ static inline s32 write_eeprom_menudata(const u32 slot, const u32 num) {
     return write_eeprom_data(&md, sizeof(md), ofs);
 #endif
 }
+#endif
 
 /**
  * Sum the bytes in data to data + size - 2. The last two bytes are ignored
@@ -222,7 +248,11 @@ static void restore_main_menu_data(s32 srcSlot) {
     bcopy(&gSaveBuffer.menuData[srcSlot], &gSaveBuffer.menuData[destSlot], sizeof(gSaveBuffer.menuData[destSlot]));
 
     // Write destination data to EEPROM
+#if BSAVE_FILE_PC
     write_eeprom_menudata(destSlot, 1);
+#else
+    write_eeprom_data(&gSaveBuffer.menuData[destSlot], sizeof(gSaveBuffer.menuData[destSlot]));
+#endif
 }
 
 static void save_main_menu_data(void) {
@@ -234,7 +264,11 @@ static void save_main_menu_data(void) {
         bcopy(&gSaveBuffer.menuData[0], &gSaveBuffer.menuData[1], sizeof(gSaveBuffer.menuData[1]));
 
         // Write to EEPROM
+#if BSAVE_FILE_PC
         write_eeprom_menudata(0, 2);
+#else
+        write_eeprom_data(gSaveBuffer.menuData, sizeof(gSaveBuffer.menuData));
+#endif
 
         gMainMenuDataModified = FALSE;
     }
@@ -310,18 +344,25 @@ static void restore_save_file_data(s32 fileIndex, s32 srcSlot) {
           sizeof(gSaveBuffer.files[fileIndex][destSlot]));
 
     // Write destination data to EEPROM
+#if BSAVE_FILE_PC
     write_eeprom_savefile(fileIndex, destSlot, 1);
+#else
+        write_eeprom_data(&gSaveBuffer.files[fileIndex][destSlot],
+                      sizeof(gSaveBuffer.files[fileIndex][destSlot]));
+#endif
 }
 
+#if BSAVE_FILE_PC
 /**
  * Check if the 'EEPROM' save has different endianness (e.g. it's from an actual N64).
  */
 static u8 save_file_need_bswap(const struct SaveBuffer *buf) {
     // check all signatures just in case
-    for (int i = 0; i < 2; ++i) {
+    int i, j;
+    for (i = 0; i < 2; ++i) {
         if (buf->menuData[i].signature.magic == BSWAP16(MENU_DATA_MAGIC))
             return TRUE;
-        for (int j = 0; j < NUM_SAVE_FILES; ++j) {
+        for (j = 0; j < NUM_SAVE_FILES; ++j) {
             if (buf->files[j][i].signature.magic == BSWAP16(SAVE_FILE_MAGIC))
                 return TRUE;
         }
@@ -333,13 +374,15 @@ static u8 save_file_need_bswap(const struct SaveBuffer *buf) {
  * Byteswap all multibyte fields in a SaveBuffer.
  */
 static void save_file_bswap(struct SaveBuffer *buf) {
+    int i;
     bswap_menudata(buf->menuData + 0);
     bswap_menudata(buf->menuData + 1);
-    for (int i = 0; i < NUM_SAVE_FILES; ++i) {
+    for (i = 0; i < NUM_SAVE_FILES; ++i) {
         bswap_savefile(buf->files[i] + 0);
         bswap_savefile(buf->files[i] + 1);
     }
 }
+#endif
 
 void save_file_do_save(s32 fileIndex) {
     if (fileIndex < 0 || fileIndex >= NUM_SAVE_FILES)
@@ -364,8 +407,11 @@ void save_file_do_save(s32 fileIndex) {
               sizeof(gSaveBuffer.files[fileIndex][1]));
 
         // Write to EEPROM
+#if BSAVE_FILE_PC
         write_eeprom_savefile(fileIndex, 0, 2);
-        
+#else
+        write_eeprom_data(gSaveBuffer.files[fileIndex], sizeof(gSaveBuffer.files[fileIndex]));
+#endif
         gSaveFileModified = FALSE;
     }
     save_main_menu_data();
@@ -398,7 +444,10 @@ BAD_RETURN(s32) save_file_copy(s32 srcFileIndex, s32 destFileIndex) {
 
 void save_file_load_all(void) {
     s32 file;
-
+#ifdef TARGET_N64
+    s32 validSlots;
+#endif
+    
     gMainMenuDataModified = FALSE;
     gSaveFileModified = FALSE;
 
@@ -411,11 +460,15 @@ void save_file_load_all(void) {
     gSaveFileModified = TRUE;
     gMainMenuDataModified = TRUE;
 #else
+#ifndef TARGET_N64
     s32 validSlots;
+#endif
     read_eeprom_data(&gSaveBuffer, sizeof(gSaveBuffer));
 
+#if BSAVE_FILE_PC
     if (save_file_need_bswap(&gSaveBuffer))
         save_file_bswap(&gSaveBuffer);
+#endif
 
     // Verify the main menu data and create a backup copy if only one of the slots is valid.
     validSlots = verify_save_block_signature(&gSaveBuffer.menuData[0], sizeof(gSaveBuffer.menuData[0]), MENU_DATA_MAGIC);

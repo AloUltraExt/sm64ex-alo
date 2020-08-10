@@ -35,6 +35,9 @@ typedef s32 ssize_t;
 typedef u32 uintptr_t;
 typedef s32 intptr_t;
 typedef s32 ptrdiff_t;
+typedef int bool;
+#define true 1
+#define false 0
 #else
 #include <stddef.h>
 #include <stdint.h>

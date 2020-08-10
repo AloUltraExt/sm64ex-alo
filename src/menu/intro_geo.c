@@ -188,13 +188,14 @@ Gfx *geo_intro_backdrop(s32 sp48, struct GraphNode *sp4c, UNUSED void *context) 
     Gfx *displayList;                // sp38
     Gfx *displayListIter;            // sp34
     s32 i;                           // sp30
+    f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
+	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+79)/80);
     graphNode = (struct GraphNodeMore *) sp4c;
     index = graphNode->unk18 & 0xff; // TODO: word at offset 0x18 of struct GraphNode
     backgroundTable = introBackgroundTables[index];
     displayList = NULL;
     displayListIter = NULL;
-    f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
-	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+79)/80);
+
 	
     if (sp48 == 1) {
         displayList = alloc_display_list(((num_tiles_h*3)+4) * sizeof(*displayList));
@@ -217,11 +218,11 @@ Gfx *geo_game_over_tile(s32 sp40, struct GraphNode *sp44, UNUSED void *context) 
     Gfx *displayListIter;        // sp34
     s32 j;                       // sp30
     s32 i;                       // sp2c
+    f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
+	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+79)/80);
     graphNode = sp44;
     displayList = NULL;
     displayListIter = NULL;
-    f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
-	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+79)/80);
 	
     if (sp40 != 1) {
         gGameOverFrameCounter = 0;

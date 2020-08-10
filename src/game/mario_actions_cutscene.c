@@ -263,7 +263,9 @@ void handle_save_menu(struct MarioState *m) {
             } else if (gSaveOptSelectIndex == SAVE_OPT_SAVE_EXIT_GAME) {
                 //initiate_warp(LEVEL_CASTLE, 1, 0x1F, 0);
                 fade_into_special_warp(0, 0);
+#ifndef TARGET_N64
                 game_exit();
+#endif
             }
         }
 

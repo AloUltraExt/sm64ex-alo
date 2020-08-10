@@ -1,7 +1,9 @@
 #ifndef _CHEATS_H
 #define _CHEATS_H
 
+#ifndef TARGET_N64
 #include <stdbool.h>
+#endif
 
 struct CheatList {
     bool         EnableCheats;

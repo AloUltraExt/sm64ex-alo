@@ -6,8 +6,10 @@
 #include "load.h"
 #include "seqplayer.h"
 
+#if defined(EXTERNAL_DATA) || !defined(TARGET_N64)
 #include "pc/platform.h"
 #include "pc/fs/fs.h"
+#endif
 
 #define ALIGN16(val) (((val) + 0xF) & ~0xF)
 

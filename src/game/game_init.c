@@ -567,9 +567,13 @@ static struct LevelCommand *levelCommandAddr;
 void thread5_game_loop(UNUSED void *arg) {
 
     setup_game_memory();
+#ifdef VERSION_SH
     init_rumble_pak_scheduler_queue();
+#endif
     init_controllers();
+#ifdef VERSION_SH
     create_thread_6();
+#endif
     save_file_load_all();
 
     set_vblank_handler(2, &gGameVblankHandler, &gGameVblankQueue, (OSMesg) 1);
@@ -589,7 +593,9 @@ void game_loop_one_iteration(void) {
     // if any controllers are plugged in, start read the data for when
     // read_controller_inputs is called later.
     if (gControllerBits) {
-        // block_until_rumble_pak_free();
+#ifdef RUMBLE_FEEDBACK
+        block_until_rumble_pak_free();
+#endif
         osContStartReadData(&gSIEventMesgQueue);
     }
 
