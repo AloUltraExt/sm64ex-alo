@@ -8,7 +8,11 @@
 #define MEMORY_POOL_LEFT  0
 #define MEMORY_POOL_RIGHT 1
 
-#define GFX_POOL_SIZE (512 * 1024)
+#ifdef TARGET_N64
+#define GFX_POOL_SIZE 6400
+#else
+#define GFX_POOL_SIZE (512 * 1024) // oh my...
+#endif
 
 struct AllocOnlyPool
 {

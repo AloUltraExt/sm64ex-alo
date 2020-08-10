@@ -225,7 +225,13 @@ void create_task_structure(void) {
     gGfxSPTask->msgqueue = &D_80339CB8;
     gGfxSPTask->msg = (OSMesg) 2;
     gGfxSPTask->task.t.type = M_GFXTASK;
-
+#if TARGET_N64
+    gGfxSPTask->task.t.ucode_boot = rspF3DBootStart;
+    gGfxSPTask->task.t.ucode_boot_size = ((u8 *) rspF3DBootEnd - (u8 *) rspF3DBootStart);
+    gGfxSPTask->task.t.flags = 0;
+    gGfxSPTask->task.t.ucode = rspF3DStart;
+    gGfxSPTask->task.t.ucode_data = rspF3DDataStart;
+#endif  
     gGfxSPTask->task.t.ucode_size = SP_UCODE_SIZE; // (this size is ignored)
     gGfxSPTask->task.t.ucode_data_size = SP_UCODE_DATA_SIZE;
     gGfxSPTask->task.t.dram_stack = (u64 *) gGfxSPTaskStack;
@@ -261,9 +267,33 @@ void end_master_display_list(void) {
     create_task_structure();
 }
 
-//void draw_reset_bars(void) { // TARGET_64 only
-// Stubbed. Only N64 target uses this
-// }
+void draw_reset_bars(void) {
+    s32 sp24;
+    s32 sp20;
+    s32 fbNum;
+    u64 *sp18;
+
+    if (gResetTimer != 0 && D_8032C648 < 15) {
+        if (sCurrFBNum == 0) {
+            fbNum = 2;
+        } else {
+            fbNum = sCurrFBNum - 1;
+        }
+
+        sp18 = (u64 *) PHYSICAL_TO_VIRTUAL(gPhysicalFrameBuffers[fbNum]);
+        sp18 += D_8032C648++ * (SCREEN_WIDTH / 4);
+
+        for (sp24 = 0; sp24 < ((SCREEN_HEIGHT / 16) + 1); sp24++) {
+            // Must be on one line to match -O2
+            for (sp20 = 0; sp20 < (SCREEN_WIDTH / 4); sp20++) *sp18++ = 0;
+            sp18 += ((SCREEN_WIDTH / 4) * 14);
+        }
+    }
+
+    osWritebackDCacheAll();
+    osRecvMesg(&gGameVblankQueue, &D_80339BEC, OS_MESG_BLOCK);
+    osRecvMesg(&gGameVblankQueue, &D_80339BEC, OS_MESG_BLOCK);
+}
 
 void rendering_init(void) {
     gGfxPool = &gGfxPools[0];
@@ -584,31 +614,49 @@ void thread5_game_loop(UNUSED void *arg) {
     play_music(SEQ_PLAYER_SFX, SEQUENCE_ARGS(0, SEQ_SOUND_PLAYER), 0);
     set_sound_mode(save_file_get_sound_mode());
 
+#ifdef TARGET_N64
+    rendering_init();
+
+    while (1) {
+#else
     gGlobalTimer++;
 }
 
 void game_loop_one_iteration(void) {
-    profiler_log_thread5_time(THREAD5_START);
-
-    // if any controllers are plugged in, start read the data for when
-    // read_controller_inputs is called later.
-    if (gControllerBits) {
-#ifdef RUMBLE_FEEDBACK
-        block_until_rumble_pak_free();
 #endif
-        osContStartReadData(&gSIEventMesgQueue);
-    }
+        // if the reset timer is active, run the process to reset the game.
+        if (gResetTimer) {
+            draw_reset_bars();
+#ifdef TARGET_N64
+            continue;
+#else
+            return;
+#endif
+        }
+        profiler_log_thread5_time(THREAD5_START);
 
-    audio_game_loop_tick();
-    config_gfx_pool();
-    read_controller_inputs();
-    levelCommandAddr = level_script_execute(levelCommandAddr);
-    display_and_vsync();
+        // if any controllers are plugged in, start read the data for when
+        // read_controller_inputs is called later.
+        if (gControllerBits) {
+#ifdef VERSION_SH
+            block_until_rumble_pak_free();
+#endif
+            osContStartReadData(&gSIEventMesgQueue);
+        }
 
-    // when debug info is enabled, print the "BUF %d" information.
-    if (gShowDebugText) {
-        // subtract the end of the gfx pool with the display list to obtain the
-        // amount of free space remaining.
-        print_text_fmt_int(180, 20, "BUF %d", gGfxPoolEnd - (u8 *) gDisplayListHead);
+        audio_game_loop_tick();
+        config_gfx_pool();
+        read_controller_inputs();
+        levelCommandAddr = level_script_execute(levelCommandAddr);
+        display_and_vsync();
+
+        // when debug info is enabled, print the "BUF %d" information.
+        if (gShowDebugText) {
+            // subtract the end of the gfx pool with the display list to obtain the
+            // amount of free space remaining.
+            print_text_fmt_int(180, 20, "BUF %d", gGfxPoolEnd - (u8 *) gDisplayListHead);
+        }
+#ifdef TARGET_N64
     }
+#endif
 }

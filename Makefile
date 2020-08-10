@@ -327,8 +327,10 @@ else
   OPT_FLAGS := -O2
 endif
 
+ifneq ($(TARGET_N64),1)
 # Set BITS (32/64) to compile for
 OPT_FLAGS += $(BITS)
+endif
 
 ifeq ($(TARGET_WEB),1)
   OPT_FLAGS := -O2 -g4 --source-map-base http://localhost:8080/
@@ -1148,7 +1150,7 @@ $(BUILD_DIR)/libgoddard.a: $(GODDARD_O_FILES)
 	$(AR) rcs -o $@ $(GODDARD_O_FILES)
 
 $(ELF): $(O_FILES) $(MIO0_OBJ_FILES) $(SOUND_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) undefined_syms.txt $(BUILD_DIR)/libultra.a $(BUILD_DIR)/libgoddard.a
-	$(LD) -L $(BUILD_DIR) $(LDFLAGS) -o $@ $(O_FILES)$(LIBS) -lultra -lgoddard
+	$(LD) -L $(BUILD_DIR) $(LDFLAGS) -o $@ $(O_FILES) $(LIBS) -lultra -lgoddard
 
 $(ROM): $(ELF)
 	$(OBJCOPY) $(OBJCOPYFLAGS) $< $(@:.z64=.bin) -O binary
