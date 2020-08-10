@@ -51,6 +51,7 @@ typedef long ssize_t;
 typedef ptrdiff_t ssize_t;
 #endif
 #endif
-#endif
 
 #endif // _ULTRA64_TYPES_H_
+
+#endif

@@ -54,6 +54,8 @@ EXTERNAL_DATA ?= 0
 DISCORDRPC ?= 0
 # Enable rumble functions (Originally in Shindou)
 RUMBLE_FEEDBACK ?= 1
+# Enable PC Port defines
+PC_PORT_DEFINES ?= 1
 
 # Various workarounds for weird toolchains
 
@@ -79,6 +81,12 @@ BASEPACK ?= base.zip
 # Automatic settings for PC port(s)
 
 WINDOWS_BUILD ?= 0
+
+ifeq ($(PC_PORT_DEFINES),1)
+GRUCODE := f3dex2e
+else
+GRUCODE := $(GRUCODE)
+endif
 
 # Attempt to detect OS
 
@@ -508,16 +516,16 @@ ifeq ($(COMPILER_N64),gcc)
   CC        := $(CROSS)gcc
 endif
 
-TARGET_CFLAGS := -nostdinc -I include/libc -DTARGET_N64 -D_LANGUAGE_C -DNO_LDIV
+N64_CFLAGS := -nostdinc -I include/libc -DTARGET_N64 -D_LANGUAGE_C -DNO_LDIV
 CC_CFLAGS := -fno-builtin
 
 INCLUDE_CFLAGS := -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I .
 
 # Check code syntax with host compiler
 CC_CHECK := gcc
-CC_CHECK_CFLAGS := -fsyntax-only -fsigned-char $(CC_CFLAGS) $(TARGET_CFLAGS) $(INCLUDE_CFLAGS) -std=gnu90 -Wall -Wextra -Wno-format-security -Wno-main -DNON_MATCHING -DAVOID_UB $(VERSION_CFLAGS) $(GRUCODE_CFLAGS)
+CC_CHECK_CFLAGS := -fsyntax-only -fsigned-char $(CC_CFLAGS) $(N64_CFLAGS) $(INCLUDE_CFLAGS) -std=gnu90 -Wall -Wextra -Wno-format-security -Wno-main -DNON_MATCHING -DAVOID_UB $(VERSION_CFLAGS) $(GRUCODE_CFLAGS)
 
-COMMON_CFLAGS = $(OPT_FLAGS) $(TARGET_CFLAGS) $(INCLUDE_CFLAGS) $(VERSION_CFLAGS) $(MATCH_CFLAGS) $(MIPSISET) $(GRUCODE_CFLAGS)
+COMMON_CFLAGS = $(OPT_FLAGS) $(N64_CFLAGS) $(INCLUDE_CFLAGS) $(VERSION_CFLAGS) $(MATCH_CFLAGS) $(MIPSISET) $(GRUCODE_CFLAGS)
 
 ASFLAGS := -march=vr4300 -mabi=32 -I include -I $(BUILD_DIR) $(VERSION_ASFLAGS) $(MATCH_ASFLAGS) $(GRUCODE_ASFLAGS)
 CFLAGS = -Wab,-r4300_mul -non_shared -G 0 -Xcpluscomm -Xfullwarn -signed $(COMMON_CFLAGS) $(MIPSBIT)
@@ -668,6 +676,12 @@ endif
 ifeq ($(NODRAWINGDISTANCE),1)
   CC_CHECK += -DNODRAWINGDISTANCE
   CFLAGS += -DNODRAWINGDISTANCE
+endif
+
+# Check for Rumble option
+ifeq ($(PC_PORT_DEFINES),1)
+  CC_CHECK += -DNO_SEGMENTED_MEMORY -DWIDESCREEN
+  CFLAGS += -DNO_SEGMENTED_MEMORY -DWIDESCREEN
 endif
 
 # Check for Discord Rich Presence option
@@ -1104,7 +1118,7 @@ $(BUILD_DIR)/src/audio/synthesis.o: OPT_FLAGS := -O2 -sopt,-scalaroptimize=1 -Wp
 
 # Add a target for build/eu/src/audio/*.copt to make it easier to see debug
 $(BUILD_DIR)/src/audio/%.acpp: src/audio/%.c
-	$(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/lib/acpp $(TARGET_CFLAGS) $(INCLUDE_CFLAGS) $(VERSION_CFLAGS) $(MATCH_CFLAGS) $(GRUCODE_CFLAGS) -D__sgi -+ $< > $@
+	$(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/lib/acpp $(N64_CFLAGS) $(INCLUDE_CFLAGS) $(VERSION_CFLAGS) $(MATCH_CFLAGS) $(GRUCODE_CFLAGS) -D__sgi -+ $< > $@
 
 $(BUILD_DIR)/src/audio/seqplayer.copt: $(BUILD_DIR)/src/audio/seqplayer.acpp
 	$(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/lib/copt -signed -I=$< -CMP=$@ -cp=i -scalaroptimize=1 -inline_manual
