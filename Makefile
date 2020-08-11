@@ -329,16 +329,15 @@ ifeq ($(COMPILER_N64),gcc)
   MIPSISET := -mips3
 endif
 
+# to get 32 bit working, use debug
 ifeq ($(DEBUG),1)
   OPT_FLAGS := -g
 else
   OPT_FLAGS := -O2
 endif
 
-ifneq ($(TARGET_N64),1)
 # Set BITS (32/64) to compile for
 OPT_FLAGS += $(BITS)
-endif
 
 ifeq ($(TARGET_WEB),1)
   OPT_FLAGS := -O2 -g4 --source-map-base http://localhost:8080/
@@ -678,7 +677,7 @@ ifeq ($(NODRAWINGDISTANCE),1)
   CFLAGS += -DNODRAWINGDISTANCE
 endif
 
-# Check for Rumble option
+# Check for PC Port Defines
 ifeq ($(PC_PORT_DEFINES),1)
   CC_CHECK += -DNO_SEGMENTED_MEMORY -DWIDESCREEN
   CFLAGS += -DNO_SEGMENTED_MEMORY -DWIDESCREEN
