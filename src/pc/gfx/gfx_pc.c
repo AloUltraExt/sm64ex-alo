@@ -1752,7 +1752,9 @@ void gfx_init(struct GfxWindowManagerAPI *wapi, struct GfxRenderingAPI *rapi, co
         0x03200200,
         0x09200200,
         0x0920038d,
-        0x09200045
+        0x09200045,
+        // Not used in the 120 star TAS, but discovered through testing
+        0x09200a00
     };
 
     for (size_t i = 0; i < sizeof(precomp_shaders) / sizeof(uint32_t); i++)
