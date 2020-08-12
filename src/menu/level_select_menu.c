@@ -46,7 +46,9 @@ int run_press_start_demo_timer(s32 timer) {
             if ((++gDemoCountdown) == PRESS_START_DEMO_TIMER) {
                 // start the demo. 800 frames has passed while
                 // player is idle on PRESS START screen.
-
+#ifndef VERSION_JP
+                D_U_801A7C34 = 1;
+#endif                                 
                 // start the Mario demo animation for the demo list.
                 load_patchable_table(&gDemo, gDemoInputListID);
 
@@ -163,7 +165,11 @@ int intro_default(void) {
 
 #ifndef VERSION_JP
     if (D_U_801A7C34 == 1) {
-        play_sound(SOUND_MARIO_HELLO, gDefaultSoundArgs);
+        if (gGlobalTimer < 0x81) {
+            play_sound(SOUND_MARIO_HELLO, gDefaultSoundArgs);
+        } else {
+            play_sound(SOUND_MARIO_PRESS_START_TO_PLAY, gDefaultSoundArgs);
+        }
         D_U_801A7C34 = 0;
     }
 #endif
@@ -172,7 +178,7 @@ int intro_default(void) {
     if (gPlayer1Controller->buttonPressed & START_BUTTON) {
         play_sound(SOUND_MENU_STAR_SOUND, gDefaultSoundArgs);
         sp1C = 100 + gDebugLevelSelect;
-#ifndef VERSION_JP        
+#ifndef VERSION_JP
         D_U_801A7C34 = 1;
 #endif
     }
