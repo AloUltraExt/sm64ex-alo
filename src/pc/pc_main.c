@@ -172,8 +172,8 @@ static void on_anim_frame(double time) {
 #endif
 
 void main_func(void) {
-    static u64 pool[0x165000/8 / 4 * sizeof(void *)];
-    main_pool_init(pool, pool + sizeof(pool) / sizeof(pool[0]));
+    static u8 pool[DOUBLE_SIZE_ON_64_BIT(0x165000)] __attribute__ ((aligned(16)));
+    main_pool_init(pool, pool + sizeof(pool));
     gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);
 
     const char *gamedir = gCLIOpts.GameDir[0] ? gCLIOpts.GameDir : FS_BASEDIR;
