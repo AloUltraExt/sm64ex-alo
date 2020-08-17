@@ -23,7 +23,7 @@ NON_MATCHING ?= 1
 # Sane default until N64 build scripts rm'd
 TARGET_N64 = 0
 # Compiler to use in N64 (ido or gcc)
-COMPILER_N64 ?= ido
+COMPILER_N64 ?= gcc
 
 # Build and optimize for Raspberry Pi(s)
 TARGET_RPI ?= 0
@@ -82,7 +82,7 @@ BASEPACK ?= base.zip
 
 WINDOWS_BUILD ?= 0
 
-ifeq ($(PC_PORT_DEFINES),1)
+ifeq ($(TARGET_N64),0)
 GRUCODE := f3dex2e
 else
 GRUCODE := $(GRUCODE)
