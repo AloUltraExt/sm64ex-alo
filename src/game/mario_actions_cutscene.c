@@ -1948,7 +1948,11 @@ static s32 jumbo_star_cutscene_flying(struct MarioState *m) {
     vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
     m->particleFlags |= PARTICLE_SPARKLES;
 
+#ifdef DEBUG_TEST_ENDCUTSCENE
+    if (m->actionTimer++ == 1) {
+#else
     if (m->actionTimer++ == 500) {
+#endif
         level_trigger_warp(m, WARP_OP_CREDITS_START);
     }
 
@@ -2481,7 +2485,11 @@ enum {
 static s32 act_end_peach_cutscene(struct MarioState *m) {
     switch (m->actionArg) {
         case END_PEACH_CUTSCENE_MARIO_FALLING:
+#if DEBUG_TEST_CREDITS
+            end_peach_cutscene_fade_out(m);
+#else
             end_peach_cutscene_mario_falling(m);
+#endif
             break;
         case END_PEACH_CUTSCENE_MARIO_LANDING:
             end_peach_cutscene_mario_landing(m);
@@ -2569,15 +2577,15 @@ static s32 act_credits_cutscene(struct MarioState *m) {
             m->actionState += 2;
         }
 
-        width = m->actionState * 640 / 100;
-        height = m->actionState * 480 / 100;
+        width = m->actionState * (SCREEN_WIDTH * 2) / 100;
+        height = m->actionState * (SCREEN_HEIGHT * 2) / 100;
 
-        sEndCutsceneVp.vp.vscale[0] = 640 - width;
-        sEndCutsceneVp.vp.vscale[1] = 480 - height;
+        sEndCutsceneVp.vp.vscale[0] = (SCREEN_WIDTH * 2) - width;
+        sEndCutsceneVp.vp.vscale[1] = (SCREEN_HEIGHT * 2) - height;
         sEndCutsceneVp.vp.vtrans[0] =
-            (gCurrCreditsEntry->unk02 & 0x10 ? width : -width) * 56 / 100 + 640;
+            (gCurrCreditsEntry->unk02 & 0x10 ? width : -width) * 56 / 100 + (SCREEN_WIDTH * 2);
         sEndCutsceneVp.vp.vtrans[1] =
-            (gCurrCreditsEntry->unk02 & 0x20 ? height : -height) * 66 / 100 + 480;
+            (gCurrCreditsEntry->unk02 & 0x20 ? height : -height) * 66 / 100 + (SCREEN_HEIGHT * 2);
 
         override_viewport_and_clip(&sEndCutsceneVp, 0, 0, 0, 0);
     }

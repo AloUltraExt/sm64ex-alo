@@ -23,10 +23,20 @@
 #define BUGFIX_PIRANHA_PLANT_SLEEP_DAMAGE (0 || VERSION_US || VERSION_SH)
 /// Fixes bug where it shows a star when you grab a key in bowser battle stages
 #define BUGFIX_STAR_BOWSER_KEY (0 || VERSION_US || VERSION_EU)
+
+// Misc Changes
 // Some Shindou Changes
 #define SH_CHANGES (1 || VERSION_SH)
 // Extra Z trig in Europe
 #define Z_TRIG_EXTRA_ACT (1 || VERSION_EU)
+// Skip Intro Cutscene
+#define SKIP_PEACH_CUTSCENE 0
+
+// Debug Defines
+// Test End Cutscene without beating Bowser 3
+#define DEBUG_TEST_ENDCUTSCENE 0
+// Test Credits without beating Bowser 3 (Recommended to use with TEST_ENDCUTSCENE)
+#define DEBUG_TEST_CREDITS 0
 
 // Screen Size Defines
 #define SCREEN_WIDTH 320

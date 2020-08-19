@@ -1170,6 +1170,10 @@ s32 update_level(void) {
     return changeLevel;
 }
 
+#if DEBUG_TEST_ENDCUTSCENE
+#define ACT_IDLE ACT_JUMBO_STAR_CUTSCENE
+#endif
+
 s32 init_level(void) {
     s32 val4 = 0;
 
@@ -1202,21 +1206,26 @@ s32 init_level(void) {
         if (gCurrentArea != NULL) {
             reset_camera(gCurrentArea->camera);
 
-/**
+#if !SKIP_PEACH_CUTSCENE
             if (gCurrDemoInput != NULL) {
                 set_mario_action(gMarioState, ACT_IDLE, 0);
             } else if (gDebugLevelSelect == 0) {
                 if (gMarioState->action != ACT_UNINITIALIZED) {
                     if (save_file_exists(gCurrSaveFileNum - 1)) {
                         set_mario_action(gMarioState, ACT_IDLE, 0);
-                    } else if (gCLIOpts.SkipIntro == 0 && configSkipIntro == 0) {
+                    } else
+#ifndef TARGET_N64
+                        if (gCLIOpts.SkipIntro == 0 && configSkipIntro == 0)
+#endif
+                        {
                         set_mario_action(gMarioState, ACT_INTRO_CUTSCENE, 0);
                         val4 = 1;
                     }
                 }
             }
-*/
+#else
         set_mario_action(gMarioState, ACT_IDLE, 0);
+#endif
         }
 
 
@@ -1294,7 +1303,11 @@ s32 lvl_init_from_save_file(UNUSED s16 arg0, s32 levelNum) {
     select_mario_cam_mode();
     set_yoshi_as_not_dead();
 
+#if DEBUG_TEST_ENDCUTSCENE
+    return LEVEL_BOWSER_3;
+#else
     return levelNum;
+#endif
 }
 
 s32 lvl_set_current_level(UNUSED s16 arg0, s32 levelNum) {
