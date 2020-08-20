@@ -52,12 +52,13 @@
 
 struct CreditsEntry
 {
-    /*0x00*/ u8 levelNum;
-    /*0x01*/ u8 areaIndex;
-    /*0x02*/ u8 unk02;
-    /*0x03*/ s8 marioAngle;
-    /*0x04*/ Vec3s marioPos;
-    /*0x0C*/ const char **unk0C;
+    u8 levelNum;
+    u8 areaIndex;
+    u8 posVpAndText;
+    u8 actNum;
+    s8 marioAngle;
+    Vec3s marioPos;
+    const char **string;
 };
 
 extern struct CreditsEntry *gCurrCreditsEntry;

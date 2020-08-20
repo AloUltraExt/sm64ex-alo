@@ -121,11 +121,11 @@ void print_displaying_credits_entry(void) {
 #endif
 
     if (sDispCreditsEntry != NULL) {
-        currStrPtr = (char **) sDispCreditsEntry->unk0C;
+        currStrPtr = (char **) sDispCreditsEntry->string;
         titleStr = *currStrPtr++;
         numLines = *titleStr++ - '0';
 
-        strY = (sDispCreditsEntry->unk02 & 0x20 ? 28 : 172) + (numLines == 1) * 16;
+        strY = (sDispCreditsEntry->posVpAndText & 32 ? 28 : 172) + (numLines == 1) * 16;
 #ifndef VERSION_JP
         lineHeight = 16;
 #endif
@@ -2583,9 +2583,9 @@ static s32 act_credits_cutscene(struct MarioState *m) {
         sEndCutsceneVp.vp.vscale[0] = (SCREEN_WIDTH * 2) - width;
         sEndCutsceneVp.vp.vscale[1] = (SCREEN_HEIGHT * 2) - height;
         sEndCutsceneVp.vp.vtrans[0] =
-            (gCurrCreditsEntry->unk02 & 0x10 ? width : -width) * 56 / 100 + (SCREEN_WIDTH * 2);
+            (gCurrCreditsEntry->posVpAndText & 16 ? width : -width) * 56 / 100 + (SCREEN_WIDTH * 2);
         sEndCutsceneVp.vp.vtrans[1] =
-            (gCurrCreditsEntry->unk02 & 0x20 ? height : -height) * 66 / 100 + (SCREEN_HEIGHT * 2);
+            (gCurrCreditsEntry->posVpAndText & 32 ? height : -height) * 66 / 100 + (SCREEN_HEIGHT * 2);
 
         override_viewport_and_clip(&sEndCutsceneVp, 0, 0, 0, 0);
     }
@@ -2601,8 +2601,6 @@ static s32 act_credits_cutscene(struct MarioState *m) {
     if (m->actionTimer++ == TIMER_CREDITS_WARP) {
         level_trigger_warp(m, 24);
     }
-
-    m->marioObj->header.gfx.angle[1] += (gCurrCreditsEntry->unk02 & 0xC0) << 8;
 
     return FALSE;
 }
