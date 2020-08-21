@@ -233,7 +233,7 @@ void handle_vblank(void) {
 
     stub_main_3();
     sNumVblanks++;
-#ifdef SH_CHANGES
+#if SH_CHANGES
     if (gResetTimer > 0 && gResetTimer < 100) {
         gResetTimer++;
     }

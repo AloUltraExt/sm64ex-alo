@@ -2661,7 +2661,7 @@ s16 render_pause_courses_and_castle(void) {
                 render_pause_course_options(99, 93, &gDialogLineNum, 15);
             }
 
-#ifdef Z_TRIG_EXTRA_ACT
+#if Z_TRIG_EXTRA_ACT
             if (gPlayer3Controller->buttonPressed & (A_BUTTON | Z_TRIG | START_BUTTON))
 #else
             if (gPlayer3Controller->buttonPressed & A_BUTTON
@@ -2688,7 +2688,7 @@ s16 render_pause_courses_and_castle(void) {
             render_pause_castle_menu_box(160, 143);
             render_pause_castle_main_strings(104, 60);
 
-#ifdef Z_TRIG_EXTRA_ACT
+#if Z_TRIG_EXTRA_ACT
             if (gPlayer3Controller->buttonPressed & (A_BUTTON | Z_TRIG | START_BUTTON))
 #else
             if (gPlayer3Controller->buttonPressed & A_BUTTON
@@ -3059,7 +3059,7 @@ s16 render_course_complete_screen(void) {
             if (gCourseDoneMenuTimer > 110
                 && (gPlayer3Controller->buttonPressed & A_BUTTON
                  || gPlayer3Controller->buttonPressed & START_BUTTON
-#ifdef VERSION_EU
+#if Z_TRIG_EXTRA_ACT
                  || gPlayer3Controller->buttonPressed & Z_TRIG
 #endif
                 )) {

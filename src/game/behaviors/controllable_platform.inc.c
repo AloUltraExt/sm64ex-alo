@@ -29,7 +29,7 @@ void bhv_controllable_platform_sub_loop(void) {
 
             if (gMarioObject->platform == o) {
                 D_80331694 = o->oBehParams2ndByte;
-#ifdef SH_CHANGES
+#if SH_CHANGES
                 o->parentObj->header.gfx.node.flags &= ~GRAPH_RENDER_CHILDREN_FIRST;
 #endif
                 o->oAction = 1;
