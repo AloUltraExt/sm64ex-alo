@@ -1036,7 +1036,11 @@ s32 play_mode_paused(void) {
         raise_background_noise(1);
         gCameraMovementFlags &= ~CAM_MOVE_PAUSE_SCREEN;
         set_play_mode(PLAY_MODE_NORMAL);
-    } else if (gPauseScreenMode == 2) {
+    } else
+#ifndef TARGET_N64
+        if (gPauseScreenMode == 2)
+#endif
+        {
         // Exit level
         if (gDebugLevelSelect) {
             fade_into_special_warp(-9, 1);
@@ -1045,16 +1049,17 @@ s32 play_mode_paused(void) {
             fade_into_special_warp(0, 0);
             gSavedCourseNum = COURSE_NONE;
         }
-    } else if (gPauseScreenMode == 3) {
+        
+        gCameraMovementFlags &= ~CAM_MOVE_PAUSE_SCREEN;
+    } 
+#ifndef TARGET_N64
+    else if (gPauseScreenMode == 3) {
         // We should only be getting "int 3" to here
         initiate_warp(LEVEL_CASTLE, 1, 0x1F, 0);
         fade_into_special_warp(0, 0);
-#ifndef TARGET_N64
         game_exit();
-#endif
     }
-
-    gCameraMovementFlags &= ~CAM_MOVE_PAUSE_SCREEN;
+#endif
 
     return 0;
 }

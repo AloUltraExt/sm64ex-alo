@@ -10,8 +10,6 @@ extern u8 gDecompressionHeap[];
 
 extern u8 gAudioHeap[];
 
-extern u8 gAudioSPTaskYieldBuffer[];
-
 extern u8 gUnusedThread2Stack[];
 
 extern u8 gIdleThreadStack[];

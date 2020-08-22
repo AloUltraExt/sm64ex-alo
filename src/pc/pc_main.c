@@ -69,7 +69,7 @@ void set_vblank_handler(s32 index, struct VblankHandler *handler, OSMesgQueue *q
 
 static bool inited = false;
 
-#include "game/display.h" // for gGlobalTimer
+#include "game/game_init.h" // for gGlobalTimer
 void send_display_list(struct SPTask *spTask) {
     if (!inited) return;
     gfx_run((Gfx *)spTask->task.t.data_ptr);

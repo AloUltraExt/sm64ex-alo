@@ -201,7 +201,7 @@ ifeq ($(OSX_BUILD),1) # Modify GFX & SDL2 for OSX GL
      VERSION_CFLAGS += -DOSX_BUILD
 endif
 
-VERSION_ASFLAGS := --defsym AVOID_UB=1
+VERSION_ASFLAGS := $(VERSION_ASFLAGS) --defsym AVOID_UB=1
 COMPARE := 0
 
 ifeq ($(TARGET_WEB),1)

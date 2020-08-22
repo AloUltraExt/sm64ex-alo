@@ -211,7 +211,7 @@ void create_dl_ortho_matrix(void) {
 }
 
 #if defined(VERSION_JP) || defined(VERSION_SH)
-static inline void alloc_ia8_text_from_i1(u8 *out, u16 *in, s16 width, s16 height) {
+static void alloc_ia8_text_from_i1(u8 *out, u16 *in, s16 width, s16 height) {
     s32 inPos;
     u16 bitMask;
     u16 inWord;
@@ -234,7 +234,7 @@ static inline void alloc_ia8_text_from_i1(u8 *out, u16 *in, s16 width, s16 heigh
     }
 }
 
-static inline u8 *convert_ia8_char(u8 c, u16 *tex, s16 w, s16 h) {
+static u8 *convert_ia8_char(u8 c, u16 *tex, s16 w, s16 h) {
 #ifdef EXTERNAL_DATA
     return (u8 *)tex; // the data's just a name
 #else
@@ -2956,15 +2956,33 @@ void render_course_complete_lvl_info_and_hud_str(void) {
 #define TXT_SAVEOPTIONS_X xOffset
 #endif
 #if defined(VERSION_JP) || defined(VERSION_SH)
-#define TXT_SAVECONT_Y 2
-#define TXT_SAVEQUIT_Y 18
-#define TXT_SAVE_EXIT_GAME_Y 38
-#define TXT_CONTNOSAVE_Y 54
+#define TXT_SAVECONT_Y +2-0
+#define TXT_SAVEQUIT_Y +2-20
+
+#ifndef TARGET_N64
+#define TXT_SAVE_EXIT_GAME_Y +2-40
+#define TXT_CONTNOSAVE_Y +2-60
+#else
+#define TXT_CONTNOSAVE_Y +2-40
+#endif
+
 #else
 #define TXT_SAVECONT_Y 0
 #define TXT_SAVEQUIT_Y 20
+
+#ifndef TARGET_N64
 #define TXT_SAVE_EXIT_GAME_Y 40
 #define TXT_CONTNOSAVE_Y 60
+#else
+#define TXT_CONTNOSAVE_Y 40
+#endif
+
+#endif
+
+#ifndef TARGET_N64
+#define SAVE_CONFIRM_INDEX 4 // Increased to '4' to handle Exit Game 
+#else
+#define SAVE_CONFIRM_INDEX 3
 #endif
 
 #ifdef VERSION_EU
@@ -2987,11 +3005,13 @@ void render_save_confirmation(s16 x, s16 y, s8 *index, s16 sp6e)
         { TEXT_SAVE_AND_QUIT_DE }
     };
 
-    u8 textSaveExitGame[][26] = { // New function to exit game
+#ifndef TARGET_N64
+    u8 textSaveExitGame[][28] = { // New function to exit game
         { TEXT_SAVE_EXIT_GAME },
         { TEXT_SAVE_EXIT_GAME_FR },
         { TEXT_SAVE_EXIT_GAME_DE }
     };
+#endif
 
     u8 textContinueWithoutSaveArr[][27] = {
         { TEXT_CONTINUE_WITHOUT_SAVING },
@@ -3001,24 +3021,30 @@ void render_save_confirmation(s16 x, s16 y, s8 *index, s16 sp6e)
 
 #define textSaveAndContinue textSaveAndContinueArr[gInGameLanguage]
 #define textSaveAndQuit textSaveAndQuitArr[gInGameLanguage]
+#ifndef TARGET_N64
 #define textSaveExitGame textSaveExitGame[gInGameLanguage]
+#endif
 #define textContinueWithoutSave textContinueWithoutSaveArr[gInGameLanguage]
     s16 xOffset = get_str_x_pos_from_center(160, textContinueWithoutSaveArr[gInGameLanguage], 12.0f);
 #else
     u8 textSaveAndContinue[] = { TEXT_SAVE_AND_CONTINUE };
     u8 textSaveAndQuit[] = { TEXT_SAVE_AND_QUIT };
+#ifndef TARGET_N64
     u8 textSaveExitGame[] = { TEXT_SAVE_EXIT_GAME };
+#endif
     u8 textContinueWithoutSave[] = { TEXT_CONTINUE_WITHOUT_SAVING };
 #endif
 
-    handle_menu_scrolling(MENU_SCROLL_VERTICAL, index, 1, 4); // Increased to '4' to handle Exit Game 
+    handle_menu_scrolling(MENU_SCROLL_VERTICAL, index, 1, SAVE_CONFIRM_INDEX);
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, gDialogTextAlpha);
 
     print_generic_string(TXT_SAVEOPTIONS_X, y + TXT_SAVECONT_Y, textSaveAndContinue);
     print_generic_string(TXT_SAVEOPTIONS_X, y - TXT_SAVEQUIT_Y, textSaveAndQuit);
+#ifndef TARGET_N64
     print_generic_string(TXT_SAVEOPTIONS_X, y - TXT_SAVE_EXIT_GAME_Y, textSaveExitGame);
+#endif
     print_generic_string(TXT_SAVEOPTIONS_X, y - TXT_CONTNOSAVE_Y, textContinueWithoutSave);
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
@@ -3030,6 +3056,7 @@ void render_save_confirmation(s16 x, s16 y, s8 *index, s16 sp6e)
 
     gSPPopMatrix(gDisplayListHead++, G_MTX_MODELVIEW);
 }
+#undef SAVE_CONFIRM_INDEX
 
 s16 render_course_complete_screen(void) {
     s16 num;
