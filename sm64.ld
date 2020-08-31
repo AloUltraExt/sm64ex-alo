@@ -91,7 +91,7 @@ SECTIONS
       BUILD_DIR/src/audio/load.o(.bss*);
       BUILD_DIR/src/audio/data.o(.bss*);
       BUILD_DIR/src/audio*.o(.bss*);
-
+      . = ALIGN(0x100);
       BUILD_DIR/src/buffers/gfx_output_buffer.o(.bss*);
    }
    END_NOLOAD(buffers)
@@ -720,6 +720,7 @@ SECTIONS
       BUILD_DIR/src/game/object_helpers.o(.bss*);
 #endif
       BUILD_DIR/src/engine*.o(.bss*);
+      . = ALIGN(0x100);
    }
    END_NOLOAD(engine)
 
@@ -729,6 +730,7 @@ SECTIONS
    BEGIN_NOLOAD(framebuffers)
    {
       BUILD_DIR/src/buffers/framebuffers.o(.bss*);
+      . = ALIGN(0x100);
    }
    END_NOLOAD(framebuffers)
 

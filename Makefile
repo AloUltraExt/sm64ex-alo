@@ -325,8 +325,11 @@ GODDARD_SRC_DIRS := src/goddard src/goddard/dynlists
 MIPSISET := -mips2
 MIPSBIT := -32
 
+ifeq ($(TARGET_N64),1)
 ifeq ($(COMPILER_N64),gcc)
-  MIPSISET := -mips3
+    MIPSISET := -mips3
+    OPT_FLAGS := -O2
+endif
 endif
 
 # to get 32 bit working, use debug
@@ -341,10 +344,6 @@ OPT_FLAGS += $(BITS)
 
 ifeq ($(TARGET_WEB),1)
   OPT_FLAGS := -O2 -g4 --source-map-base http://localhost:8080/
-endif
-
-ifeq ($(COMPILER_N64),gcc)
-OPT_FLAGS := -O2
 endif
 
 ifeq ($(TARGET_RPI),1)
