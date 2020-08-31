@@ -11,8 +11,11 @@
 #ifdef TARGET_N64
 #define GFX_POOL_SIZE 6400
 #else
-#define GFX_POOL_SIZE (512 * 1024) // oh my...
+#define GFX_POOL_SIZE (512 * 1024)
 #endif
+
+// Non-n64 only
+#define DEFAULT_POOL_SIZE (0x165000 * 8)
 
 struct AllocOnlyPool
 {

@@ -172,9 +172,9 @@ static void on_anim_frame(double time) {
 #endif
 
 void main_func(void) {
-    static u8 pool[DOUBLE_SIZE_ON_64_BIT(0x165000)] __attribute__ ((aligned(16)));
-    main_pool_init(pool, pool + sizeof(pool));
-    gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);
+    //static u8 pool[DOUBLE_SIZE_ON_64_BIT(0x165000)] __attribute__ ((aligned(16)));
+    //main_pool_init(pool, pool + sizeof(pool));
+    //gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);
 
     const char *gamedir = gCLIOpts.GameDir[0] ? gCLIOpts.GameDir : FS_BASEDIR;
     const char *userpath = gCLIOpts.SavePath[0] ? gCLIOpts.SavePath : sys_user_path();
@@ -186,6 +186,12 @@ void main_func(void) {
         configWindow.fullscreen = true;
     else if (gCLIOpts.FullScreen == 2)
         configWindow.fullscreen = false;
+
+    const size_t poolsize = gCLIOpts.PoolSize ? gCLIOpts.PoolSize : DEFAULT_POOL_SIZE;
+    u64 *pool = malloc(poolsize);
+    if (!pool) sys_fatal("Could not alloc %u bytes for main pool.\n", poolsize);
+    main_pool_init(pool, pool + poolsize / sizeof(pool[0]));
+    gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);
 
     #if defined(WAPI_SDL1) || defined(WAPI_SDL2)
     wm_api = &gfx_sdl;
