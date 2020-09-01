@@ -74,6 +74,7 @@
 #define TEXT_BIND_RIGHT    _("STICK RIGHT")
 #define TEXT_OPT_DEADZONE  _("STICK DEADZONE")
 #define TEXT_OPT_RUMBLE    _("RUMBLE STRENGTH")
+#define TEXT_OPT_N64FACE   _("N64 FACE BUTTONS")
 
 #define TEXT_OPT_CHEAT1    _("ENABLE CHEATS")
 #define TEXT_OPT_CHEAT2    _("MOONJUMP (PRESS L)")
@@ -138,6 +139,7 @@
 #define TEXT_BIND_RIGHT    _("Stick Right")
 #define TEXT_OPT_DEADZONE  _("Stick Deadzone")
 #define TEXT_OPT_RUMBLE    _("Rumble Strength")
+#define TEXT_OPT_N64FACE   _("N64 Face Buttons")
 
 #define TEXT_OPT_CHEAT1    _("Enable cheats")
 #define TEXT_OPT_CHEAT2    _("Moonjump (Press L)")

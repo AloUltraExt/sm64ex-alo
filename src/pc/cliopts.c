@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
-struct PCCLIOptions gCLIOpts;
+struct PCCLIOptions gCLIOpts = { 0 };
 
 static void print_help(void) {
     printf("Super Mario 64 PC Port\n");

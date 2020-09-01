@@ -41,6 +41,10 @@ struct ConfigOption {
 
 // Video/audio stuff
 ConfigWindow configWindow       = {
+#ifdef TARGET_WII_U
+    .reset = false,
+    .settings_changed = false,
+#else
     .x = WAPI_WIN_CENTERPOS,
     .y = WAPI_WIN_CENTERPOS,
     .w = DESIRED_SCREEN_WIDTH,
@@ -50,6 +54,7 @@ ConfigWindow configWindow       = {
     .fullscreen = false,
     .exiting_fullscreen = false,
     .settings_changed = false,
+#endif
 };
 unsigned int configFiltering    = 1;          // 0=force nearest, 1=linear, (TODO) 2=three-point
 unsigned int configMasterVolume = MAX_VOLUME; // 0 - MAX_VOLUME
@@ -57,6 +62,9 @@ unsigned int configMusicVolume = MAX_VOLUME;
 unsigned int configSfxVolume = MAX_VOLUME;
 unsigned int configEnvVolume = MAX_VOLUME;
 
+#ifdef TARGET_WII_U
+bool configN64FaceButtons = 0;
+#else
 // Keyboard mappings (VK_ values, by default keyboard/gamepad/mouse)
 unsigned int configKeyA[MAX_BINDS]          = { 0x002D,   0x1000,     0x1103     };
 unsigned int configKeyB[MAX_BINDS]          = { 0x002E,   0x1002,     0x1101     };
@@ -72,6 +80,7 @@ unsigned int configKeyStickUp[MAX_BINDS]    = { 0x0148,   VK_INVALID, VK_INVALID
 unsigned int configKeyStickDown[MAX_BINDS]  = { 0x0150,   VK_INVALID, VK_INVALID };
 unsigned int configKeyStickLeft[MAX_BINDS]  = { 0x014B,   VK_INVALID, VK_INVALID };
 unsigned int configKeyStickRight[MAX_BINDS] = { 0x014D,   VK_INVALID, VK_INVALID };
+#endif
 unsigned int configStickDeadzone = 16; // 16*DEADZONE_STEP=4960 (the original default deadzone)
 unsigned int configRumbleStrength = 50;
 #ifdef EXTERNAL_DATA
@@ -97,17 +106,22 @@ bool         configDiscordRPC    = true;
 #endif
 
 static const struct ConfigOption options[] = {
+#ifdef TARGET_WII_U
+    {.name = "n64_face_buttons",     .type = CONFIG_TYPE_BOOL, .boolValue = &configN64FaceButtons},
+#else
     {.name = "fullscreen",           .type = CONFIG_TYPE_BOOL, .boolValue = &configWindow.fullscreen},
     {.name = "window_x",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.x},
     {.name = "window_y",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.y},
     {.name = "window_w",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.w},
     {.name = "window_h",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.h},
     {.name = "vsync",                .type = CONFIG_TYPE_BOOL, .boolValue = &configWindow.vsync},
+#endif 
     {.name = "texture_filtering",    .type = CONFIG_TYPE_UINT, .uintValue = &configFiltering},
     {.name = "master_volume",        .type = CONFIG_TYPE_UINT, .uintValue = &configMasterVolume},
     {.name = "music_volume",         .type = CONFIG_TYPE_UINT, .uintValue = &configMusicVolume},
     {.name = "sfx_volume",           .type = CONFIG_TYPE_UINT, .uintValue = &configSfxVolume},
     {.name = "env_volume",           .type = CONFIG_TYPE_UINT, .uintValue = &configEnvVolume},
+#ifndef TARGET_WII_U
     {.name = "key_a",                .type = CONFIG_TYPE_BIND, .uintValue = configKeyA},
     {.name = "key_b",                .type = CONFIG_TYPE_BIND, .uintValue = configKeyB},
     {.name = "key_start",            .type = CONFIG_TYPE_BIND, .uintValue = configKeyStart},
@@ -124,6 +138,7 @@ static const struct ConfigOption options[] = {
     {.name = "key_stickright",       .type = CONFIG_TYPE_BIND, .uintValue = configKeyStickRight},
     {.name = "stick_deadzone",       .type = CONFIG_TYPE_UINT, .uintValue = &configStickDeadzone},
     {.name = "rumble_strength",      .type = CONFIG_TYPE_UINT, .uintValue = &configRumbleStrength},
+#endif
     #ifdef EXTERNAL_DATA
     {.name = "precache",             .type = CONFIG_TYPE_BOOL, .boolValue = &configPrecacheRes},
     #endif
