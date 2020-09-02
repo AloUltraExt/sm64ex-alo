@@ -20,26 +20,21 @@ GRUCODE ?= f3dex2
 COMPARE ?= 1
 # If NON_MATCHING is 1, define the NON_MATCHING and AVOID_UB macros when building (recommended)
 NON_MATCHING ?= 1
-# Sane default until N64 build scripts rm'd
-TARGET_N64 = 0
 # Compiler to use in N64 (ido or gcc)
 COMPILER_N64 ?= gcc
 
+# Build for original N64 (no pc code)
+TARGET_N64 = 0
 # Build and optimize for Raspberry Pi(s)
 TARGET_RPI ?= 0
-
 # Build for Emscripten/WebGL
 TARGET_WEB ?= 0
-
 # Build for the Wii U
 TARGET_WII_U ?= 0
-
 # Build for the 3DS
 TARGET_N3DS ?= 0
-
 # Makeflag to enable OSX fixes
 OSX_BUILD ?= 0
-
 # Specify the target you are building for, TARGET_BITS=0 means native
 TARGET_ARCH ?= native
 TARGET_BITS ?= 0
@@ -64,24 +59,21 @@ RUMBLE_FEEDBACK ?= 1
 PC_PORT_DEFINES ?= 1
 
 # Various workarounds for weird toolchains
-
 NO_BZERO_BCOPY ?= 0
 NO_LDIV ?= 0
-
 # Check if is compiling on a console
-
 TARGET_GAME_CONSOLE ?= 0
 
 # Backend selection
 
 # Renderers: GL, GL_LEGACY, D3D11, D3D12, WHB (forced if the target is Wii U), C3D (forced if the target is 3DS)
-RENDER_API ?= GL_LEGACY
+RENDER_API ?= GL
 # Window managers: SDL1, SDL2, DXGI (forced if D3D11 or D3D12 in RENDER_API), WHB (forced if the target is Wii U), 3DS (forced if the target is 3DS)
-WINDOW_API ?= SDL1
+WINDOW_API ?= SDL2
 # Audio backends: SDL1, SDL2 (forced if the target is Wii U), 3DS (forced if the target is 3DS)
-AUDIO_API ?= SDL1
+AUDIO_API ?= SDL2
 # Controller backends (can have multiple, space separated): SDL1, SDL2, WII_U (forced if the target is Wii U), 3DS (forced if the target is 3DS)
-CONTROLLER_API ?= SDL1
+CONTROLLER_API ?= SDL2
 
 ifeq ($(TARGET_WII_U),1)
   RENDER_API := WHB
