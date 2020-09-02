@@ -450,44 +450,83 @@ static void import_texture_i8(int tile) {
     gfx_rapi->upload_texture(rgba32_buf, width, height);
 }
 
-static void import_texture_ci4(int tile) {   
-    for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes * 2; i++) {
-        uint8_t byte = rdp.loaded_texture[tile].addr[i / 2];
-        uint8_t idx = (byte >> (4 - (i % 2) * 4)) & 0xf;
-        uint16_t col16 = (rdp.palette[idx * 2] << 8) | rdp.palette[idx * 2 + 1]; // Big endian load
-        uint8_t a = col16 & 1;
-        uint8_t r = col16 >> 11;
-        uint8_t g = (col16 >> 6) & 0x1f;
-        uint8_t b = (col16 >> 1) & 0x1f;
-        rgba32_buf[4*i + 0] = SCALE_5_8(r);
-        rgba32_buf[4*i + 1] = SCALE_5_8(g);
-        rgba32_buf[4*i + 2] = SCALE_5_8(b);
-        rgba32_buf[4*i + 3] = a ? 255 : 0;
+static void import_texture_ci4(int tile) {
+    uint32_t mode = (rdp.other_mode_h & (3U << G_MDSFT_TEXTLUT));
+
+    if (mode == G_TT_IA16) {
+        for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes * 2; i++) {
+            uint8_t byte = rdp.loaded_texture[tile].addr[i / 2];
+            uint8_t idx = (byte >> (4 - (i % 2) * 4)) & 0xf;
+            
+            uint8_t intensity = rdp.palette[idx * 2];
+            uint8_t alpha = rdp.palette[idx * 2 + 1];
+            uint8_t r = intensity;
+            uint8_t g = intensity;
+            uint8_t b = intensity;
+            rgba32_buf[4*i + 0] = r;
+            rgba32_buf[4*i + 1] = g;
+            rgba32_buf[4*i + 2] = b;
+            rgba32_buf[4*i + 3] = alpha;
+        }
+    } else { // G_TT_RGBA16
+        for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes * 2; i++) {
+            uint8_t byte = rdp.loaded_texture[tile].addr[i / 2];
+            uint8_t idx = (byte >> (4 - (i % 2) * 4)) & 0xf;
+            
+            uint16_t col16 = (rdp.palette[idx * 2] << 8) | rdp.palette[idx * 2 + 1]; // Big endian load
+            uint8_t a = col16 & 1;
+            uint8_t r = col16 >> 11;
+            uint8_t g = (col16 >> 6) & 0x1f;
+            uint8_t b = (col16 >> 1) & 0x1f;
+            rgba32_buf[4*i + 0] = SCALE_5_8(r);
+            rgba32_buf[4*i + 1] = SCALE_5_8(g);
+            rgba32_buf[4*i + 2] = SCALE_5_8(b);
+            rgba32_buf[4*i + 3] = a ? 255 : 0;
+        }
     }
-    
+
     uint32_t width = rdp.texture_tile.line_size_bytes * 2;
     uint32_t height = rdp.loaded_texture[tile].size_bytes / rdp.texture_tile.line_size_bytes;
-    
+
     gfx_rapi->upload_texture(rgba32_buf, width, height);
 }
 
 static void import_texture_ci8(int tile) {
-    for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes; i++) {
-        uint8_t idx = rdp.loaded_texture[tile].addr[i];
-        uint16_t col16 = (rdp.palette[idx * 2] << 8) | rdp.palette[idx * 2 + 1]; // Big endian load
-        uint8_t a = col16 & 1;
-        uint8_t r = col16 >> 11;
-        uint8_t g = (col16 >> 6) & 0x1f;
-        uint8_t b = (col16 >> 1) & 0x1f;
-        rgba32_buf[4*i + 0] = SCALE_5_8(r);
-        rgba32_buf[4*i + 1] = SCALE_5_8(g);
-        rgba32_buf[4*i + 2] = SCALE_5_8(b);
-        rgba32_buf[4*i + 3] = a ? 255 : 0;
+    uint32_t mode = (rdp.other_mode_h & (3U << G_MDSFT_TEXTLUT));
+
+    if (mode == G_TT_IA16) {
+        for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes; i++) {
+            uint8_t idx = rdp.loaded_texture[tile].addr[i];
+
+            uint8_t intensity = rdp.palette[idx * 2];
+            uint8_t alpha = rdp.palette[idx * 2 + 1];
+            uint8_t r = intensity;
+            uint8_t g = intensity;
+            uint8_t b = intensity;
+            rgba32_buf[4*i + 0] = r;
+            rgba32_buf[4*i + 1] = g;
+            rgba32_buf[4*i + 2] = b;
+            rgba32_buf[4*i + 3] = alpha;
+        }
+    } else { // G_TT_RGBA16
+        for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes; i++) {
+            uint8_t idx = rdp.loaded_texture[tile].addr[i];
+
+            uint16_t col16 = (rdp.palette[idx * 2] << 8) | rdp.palette[idx * 2 + 1]; // Big endian load
+            uint8_t a = col16 & 1;
+            uint8_t r = col16 >> 11;
+            uint8_t g = (col16 >> 6) & 0x1f;
+            uint8_t b = (col16 >> 1) & 0x1f;
+            rgba32_buf[4*i + 0] = SCALE_5_8(r);
+            rgba32_buf[4*i + 1] = SCALE_5_8(g);
+            rgba32_buf[4*i + 2] = SCALE_5_8(b);
+            rgba32_buf[4*i + 3] = a ? 255 : 0;
+        }
     }
-    
+
     uint32_t width = rdp.texture_tile.line_size_bytes;
     uint32_t height = rdp.loaded_texture[tile].size_bytes / rdp.texture_tile.line_size_bytes;
-    
+
     gfx_rapi->upload_texture(rgba32_buf, width, height);
 }
 
@@ -724,9 +763,9 @@ static void gfx_sp_matrix(uint8_t parameters, const int32_t *addr) {
 
 static void gfx_sp_pop_matrix(uint32_t count) {
     while (count--) {
-        if (rsp.modelview_matrix_stack_size > 0) {
+        if (rsp.modelview_matrix_stack_size > 1) {
             --rsp.modelview_matrix_stack_size;
-            if (rsp.modelview_matrix_stack_size > 0) {
+            if (rsp.modelview_matrix_stack_size > 1) {
                 gfx_matrix_mul(rsp.MP_matrix, rsp.modelview_matrix_stack[rsp.modelview_matrix_stack_size - 1], rsp.P_matrix);
             }
         }
@@ -765,9 +804,11 @@ static void gfx_sp_vertex(size_t n_vertices, size_t dest_index, const Vtx *verti
                 rsp.lights_changed = false;
             }
             
-            int r = rsp.current_lights[rsp.current_num_lights - 1].col[0];
-            int g = rsp.current_lights[rsp.current_num_lights - 1].col[1];
-            int b = rsp.current_lights[rsp.current_num_lights - 1].col[2];
+            const bool useFirstColor = (dest_index & 1) == 0;
+            const unsigned char* col = useFirstColor ? rsp.current_lights[rsp.current_num_lights - 1].col : rsp.current_lights[rsp.current_num_lights - 1].colc;
+            int r = col[0];
+            int g = col[1];
+            int b = col[2];
             
             for (int i = 0; i < rsp.current_num_lights - 1; i++) {
                 float intensity = 0;
@@ -776,9 +817,10 @@ static void gfx_sp_vertex(size_t n_vertices, size_t dest_index, const Vtx *verti
                 intensity += vn->n[2] * rsp.current_lights_coeffs[i][2];
                 intensity /= 127.0f;
                 if (intensity > 0.0f) {
-                    r += intensity * rsp.current_lights[i].col[0];
-                    g += intensity * rsp.current_lights[i].col[1];
-                    b += intensity * rsp.current_lights[i].col[2];
+                    col = useFirstColor ? rsp.current_lights[i].col : rsp.current_lights[i].colc;
+                    r += intensity * col[0];
+                    g += intensity * col[1];
+                    b += intensity * col[2];
                 }
             }
             
