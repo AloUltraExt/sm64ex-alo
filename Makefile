@@ -32,7 +32,10 @@ TARGET_RPI ?= 0
 TARGET_WEB ?= 0
 
 # Build for the Wii U
-TARGET_WII_U ?= 1
+TARGET_WII_U ?= 0
+
+# Build for the 3DS
+TARGET_N3DS ?= 0
 
 # Makeflag to enable OSX fixes
 OSX_BUILD ?= 0
@@ -65,15 +68,19 @@ PC_PORT_DEFINES ?= 1
 NO_BZERO_BCOPY ?= 0
 NO_LDIV ?= 0
 
+# Check if is compiling on a console
+
+TARGET_GAME_CONSOLE ?= 0
+
 # Backend selection
 
-# Renderers: GL, GL_LEGACY, D3D11, D3D12, WHB (forced if the target is Wii U)
+# Renderers: GL, GL_LEGACY, D3D11, D3D12, WHB (forced if the target is Wii U), C3D (forced if the target is 3DS)
 RENDER_API ?= GL_LEGACY
-# Window managers: SDL1, SDL2, DXGI (forced if D3D11 or D3D12 in RENDER_API), WHB (forced if the target is Wii U)
+# Window managers: SDL1, SDL2, DXGI (forced if D3D11 or D3D12 in RENDER_API), WHB (forced if the target is Wii U), 3DS (forced if the target is 3DS)
 WINDOW_API ?= SDL1
-# Audio backends: SDL1, SDL2 (forced if the target is Wii U)
+# Audio backends: SDL1, SDL2 (forced if the target is Wii U), 3DS (forced if the target is 3DS)
 AUDIO_API ?= SDL1
-# Controller backends (can have multiple, space separated): SDL1, SDL2, WII_U (forced if the target is Wii U)
+# Controller backends (can have multiple, space separated): SDL1, SDL2, WII_U (forced if the target is Wii U), 3DS (forced if the target is 3DS)
 CONTROLLER_API ?= SDL1
 
 ifeq ($(TARGET_WII_U),1)
@@ -83,9 +90,22 @@ ifeq ($(TARGET_WII_U),1)
   CONTROLLER_API := WII_U
 endif
 
-# Misc settings for EXTERNAL_DATA
+ifeq ($(TARGET_N3DS),1)
+  RENDER_API := C3D
+  WINDOW_API := 3DS
+  AUDIO_API := 3DS
+  CONTROLLER_API := 3DS
+endif
 
 ifeq ($(TARGET_WII_U),1)
+ifeq ($(TARGET_N3DS),1)
+  TARGET_GAME_CONSOLE := 1
+endif
+endif
+
+# Misc settings for EXTERNAL_DATA
+
+ifeq ($(TARGET_GAME_CONSOLE),1)
   BASEDIR ?= sm64ex_res
 else
   BASEDIR ?= res
@@ -116,7 +136,7 @@ else
 endif
 
 ifeq ($(TARGET_WEB),0)
-  ifeq ($(TARGET_WII_U),0)
+  ifeq ($(TARGET_GAME_CONSOLE),0)
     ifeq ($(HOST_OS),Windows)
       WINDOWS_BUILD := 1
     endif
@@ -253,6 +273,8 @@ ifeq ($(TARGET_WEB),1)
   VERSION_CFLAGS := $(VERSION_CFLAGS) -DTARGET_WEB -DUSE_GLES
 else ifeq ($(TARGET_WII_U),1)
   VERSION_CFLAGS := $(VERSION_CFLAGS) -DTARGET_WII_U
+else ifeq ($(TARGET_N3DS),1)
+  VERSION_CFLAGS := $(VERSION_CFLAGS) -DTARGET_N3DS
 endif
 
 # Check backends
@@ -309,6 +331,8 @@ else ifeq ($(TARGET_N64),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)
 else ifeq ($(TARGET_WII_U),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_wiiu
+else ifeq ($(TARGET_N3DS),1)
+  BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_3ds
 else
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_pc
 endif
@@ -321,6 +345,8 @@ ifeq ($(TARGET_WEB),1)
   EXE := $(BUILD_DIR)/$(TARGET).html
 else ifeq ($(TARGET_WII_U),1)
   EXE := $(BUILD_DIR)/$(TARGET).rpx
+else ifeq ($(TARGET_N3DS),1)
+  EXE := $(BUILD_DIR)/$(TARGET).3dsx
 else ifeq ($(WINDOWS_BUILD),1)
   EXE := $(BUILD_DIR)/$(TARGET).exe
 
@@ -609,6 +635,15 @@ CPP := powerpc-eabi-cpp -P
 OBJDUMP := powerpc-eabi-objdump
 SDLCONFIG :=
 
+else ifeq ($(TARGET_N3DS),1)
+  CPP := $(DEVKITARM)/bin/arm-none-eabi-cpp -P
+  OBJDUMP := $(DEVKITARM)/bin/arm-none-eabi-objdump
+  OBJCOPY := $(DEVKITARM)/bin/arm-none-eabi-objcopy
+  AS := $(DEVKITARM)/bin/arm-none-eabi-as
+  CC := $(DEVKITARM)/bin/arm-none-eabi-gcc
+  CXX := $(DEVKITARM)/bin/arm-none-eabi-g++
+  LD := $(CXX)
+  SDLCONFIG :=
 else
 
 AS := $(CROSS)as
@@ -669,7 +704,7 @@ BACKEND_LDFLAGS :=
 SDL1_USED := 0
 SDL2_USED := 0
 
-# for now, it's either SDL+GL, DXGI+DirectX or WHB, so choose based on WAPI
+# for now, it's either SDL+GL, DXGI+DirectX, WHB or C3D so choose based on WAPI
 ifeq ($(WINDOW_API),DXGI)
   DXBITS := `cat $(ENDIAN_BITWIDTH) | tr ' ' '\n' | tail -1`
   ifeq ($(RENDER_API),D3D12)
@@ -689,6 +724,8 @@ else ifeq ($(findstring SDL,$(WINDOW_API)),SDL)
   endif
 else ifeq ($(WINDOW_API),WHB)
   BACKEND_LDFLAGS += -lSDL2 -lwut
+else ifeq ($(WINDOW_API),C3D)
+  BACKEND_LDFLAGS +=
 endif
 
 ifneq (,$(findstring SDL2,$(AUDIO_API)$(WINDOW_API)$(CONTROLLER_API)))
@@ -713,7 +750,7 @@ else ifeq ($(SDL1_USED),1)
   BACKEND_CFLAGS += -DHAVE_SDL1=1
 endif
 
-ifeq ($(TARGET_WII_U),0)
+ifeq ($(TARGET_GAME_CONSOLE),0)
   ifneq ($(SDL1_USED)$(SDL2_USED),00)
     BACKEND_CFLAGS += `$(SDLCONFIG) --cflags`
     ifeq ($(WINDOWS_BUILD),1)
@@ -744,6 +781,14 @@ ifeq ($(TARGET_WII_U),1)
   CFLAGS += -ffunction-sections $(MACHDEP) -ffast-math -D__WIIU__ -D__WUT__ $(INCLUDE)
 endif
 
+ifeq ($(TARGET_N3DS),1)
+  CTRULIB  :=  $(DEVKITPRO)/libctru
+  LIBDIRS  := $(CTRULIB)
+  export LIBPATHS  :=  $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+  CC_CHECK += -mtp=soft -DARM11 -DosGetTime=n64_osGetTime -D_3DS -march=armv6k -mtune=mpcore -mfloat-abi=hard -mword-relocations -fomit-frame-pointer -ffast-math $(foreach dir,$(LIBDIRS),-I$(dir)/include)
+  CFLAGS += -mtp=soft -DARM11 -DosGetTime=n64_osGetTime -D_3DS -march=armv6k -mtune=mpcore -mfloat-abi=hard -mword-relocations -fomit-frame-pointer -ffast-math $(foreach dir,$(LIBDIRS),-I$(dir)/include)
+endif
+
 # Check for enhancement options
 
 # Check for Puppycam option
@@ -771,7 +816,7 @@ ifeq ($(PC_PORT_DEFINES),1)
 endif
 
 # Check for Discord Rich Presence option
-ifeq ($(TARGET_WII_U),0)
+ifeq ($(TARGET_GAME_CONSOLE),0)
   ifeq ($(DISCORDRPC),1)
     CC_CHECK += -DDISCORDRPC
     CFLAGS += -DDISCORDRPC
@@ -814,6 +859,12 @@ ifeq ($(LEGACY_GL),1)
   CFLAGS += -DLEGACY_GL
 endif
 
+# Use Console exclusive defines
+ifeq ($(TARGET_GAME_CONSOLE),1)
+  CC_CHECK += -DTARGET_GAME_CONSOLE
+  CFLAGS += -DTARGET_GAME_CONSOLE
+endif
+
 # Load external textures
 ifeq ($(EXTERNAL_DATA),1)
   CC_CHECK += -DEXTERNAL_DATA -DFS_BASEDIR="\"$(BASEDIR)\""
@@ -830,6 +881,9 @@ LDFLAGS := -lm -lGL -lSDL2 -no-pie -s TOTAL_MEMORY=20MB -g4 --source-map-base ht
 
 else ifeq ($(TARGET_WII_U),1)
 LDFLAGS := -lm -no-pie $(BACKEND_LDFLAGS) $(MACHDEP) $(RPXSPECS) $(LIBPATHS)
+
+else ifeq ($(TARGET_N3DS),1)
+LDFLAGS := $(LIBPATHS) -lcitro3d -lctru -lm -specs=3dsx.specs -g -marm -mthumb-interwork -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft # -Wl,-Map,$(notdir $*.map)
 
 else ifeq ($(WINDOWS_BUILD),1)
   LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -Llib -lpthread $(BACKEND_LDFLAGS) -static
@@ -1021,7 +1075,7 @@ $(BUILD_DIR)/src/menu/star_select.o: $(BUILD_DIR)/include/text_strings.h $(BUILD
 $(BUILD_DIR)/src/game/ingame_menu.o: $(BUILD_DIR)/include/text_strings.h $(BUILD_DIR)/bin/eu/translation_en.o $(BUILD_DIR)/bin/eu/translation_de.o $(BUILD_DIR)/bin/eu/translation_fr.o
 $(BUILD_DIR)/src/game/options_menu.o: $(BUILD_DIR)/include/text_strings.h $(BUILD_DIR)/bin/eu/translation_en.o $(BUILD_DIR)/bin/eu/translation_de.o $(BUILD_DIR)/bin/eu/translation_fr.o
 # O_FILES += $(BUILD_DIR)/bin/eu/translation_en.o $(BUILD_DIR)/bin/eu/translation_de.o $(BUILD_DIR)/bin/eu/translation_fr.o
-ifeq ($(TARGET_WII_U),0)
+ifeq ($(TARGET_GAME_CONSOLE),0)
   ifeq ($(DISCORDRPC),1)
     $(BUILD_DIR)/src/pc/discord/discordrpc.o: $(BUILD_DIR)/include/text_strings.h $(BUILD_DIR)/bin/eu/translation_en.o $(BUILD_DIR)/bin/eu/translation_de.o $(BUILD_DIR)/bin/eu/translation_fr.o
   endif
@@ -1031,7 +1085,7 @@ $(BUILD_DIR)/src/menu/file_select.o: $(BUILD_DIR)/include/text_strings.h
 $(BUILD_DIR)/src/menu/star_select.o: $(BUILD_DIR)/include/text_strings.h
 $(BUILD_DIR)/src/game/ingame_menu.o: $(BUILD_DIR)/include/text_strings.h
 $(BUILD_DIR)/src/game/options_menu.o: $(BUILD_DIR)/include/text_strings.h
-ifeq ($(TARGET_WII_U),0)
+ifeq ($(TARGET_GAME_CONSOLE),0)
   ifeq ($(DISCORDRPC),1)
     $(BUILD_DIR)/src/pc/discord/discordrpc.o: $(BUILD_DIR)/include/text_strings.h
   endif
@@ -1267,8 +1321,7 @@ $(ROM): $(ELF)
 
 $(BUILD_DIR)/$(TARGET).objdump: $(ELF)
 	$(OBJDUMP) -D $< > $@
-else
-ifeq ($(TARGET_WII_U),1)
+else ifeq ($(TARGET_WII_U),1)
 $(ELF):  $(O_FILES) $(MIO0_FILES:.mio0=.o) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
 	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
 $(EXE): $(ELF)
@@ -1277,10 +1330,19 @@ $(EXE): $(ELF)
 	$(SILENTCMD)elf2rpl $*.strip.elf $@ $(ERROR_FILTER)
 	@rm $*.strip.elf
 	@echo built ... $(notdir $@)
+else ifeq ($(TARGET_N3DS),1)
+# for building the vertex shader
+$(BUILD_DIR)/src/pc/gfx/shader.shbin.o : src/pc/gfx/shader.v.pica
+	$(eval CURBIN := $<.shbin)
+	$(DEVKITPRO)/tools/bin/picasso -o $(BUILD_DIR)/src/pc/gfx/shader.shbin $<
+	$(DEVKITPRO)/tools/bin/bin2s $(BUILD_DIR)/src/pc/gfx/shader.shbin | $(AS) -o $@
+
+$(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o
+	$(LD) -L $(BUILD_DIR) -o $@.elf $(O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
+	3dsxtool $@.elf $@
 else
 $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
 	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
-endif
 endif
 
 .PHONY: all clean distclean default diff test load libultra res

@@ -20,10 +20,13 @@
 #include "gfx/gfx_dxgi.h"
 #include "gfx/gfx_sdl.h"
 #include "gfx/gfx_whb.h"
+#include "gfx/gfx_3ds.h"
+#include "gfx/gfx_citro3d.h"
 
 #include "audio/audio_api.h"
 #include "audio/audio_sdl.h"
 #include "audio/audio_null.h"
+#include "audio/audio_3ds.h"
 
 #include "pc_main.h"
 #include "cliopts.h"
@@ -125,7 +128,7 @@ void game_deinit(void) {
     discord_shutdown();
 #endif
     configfile_save(configfile_name());
-#ifndef TARGET_WII_U
+#ifndef TARGET_GAME_CONSOLE
     controller_shutdown();
     audio_shutdown();
     gfx_shutdown();
@@ -134,7 +137,7 @@ void game_deinit(void) {
 }
 
 void game_exit(void) {
-#ifndef TARGET_WII_U
+#ifndef TARGET_GAME_CONSOLE
     game_deinit();
 #ifndef TARGET_WEB
     exit(0);
@@ -185,7 +188,9 @@ void main_func(void) {
     const char *userpath = gCLIOpts.SavePath[0] ? gCLIOpts.SavePath : sys_user_path();
     fs_init(sys_ropaths, gamedir, userpath);
 
+    #ifndef TARGET_N3DS
     configfile_load(configfile_name());
+    #endif
 
     #ifdef TARGET_WII_U
     configfile_save(configfile_name()); // Mount SD write now
@@ -197,7 +202,7 @@ void main_func(void) {
     #endif
 
     const size_t poolsize = 
-    #ifdef TARGET_WII_U
+    #ifndef TARGET_GAME_CONSOLE
     gCLIOpts.PoolSize ? gCLIOpts.PoolSize : 
     #endif
     DEFAULT_POOL_SIZE;
@@ -213,6 +218,8 @@ void main_func(void) {
     wm_api = &gfx_dxgi;
     #elif defined(WAPI_WHB)
     wm_api = &gfx_whb_window;
+    #elif defined(WAPI_3DS)
+    wm_api = &gfx_3ds;
     #else
     #error No window API!
     #endif
@@ -233,6 +240,9 @@ void main_func(void) {
     #elif defined(RAPI_WHB)
     rendering_api = &gfx_whb_api;
     # define RAPI_NAME "WHB - GX2"
+    #elif defined(RAPI_C3D)
+    rendering_api = &gfx_citro3d_api;
+    # define RAPI_NAME "3DS - C3D"
     #else
     #error No rendering API!
     #endif
@@ -245,13 +255,19 @@ void main_func(void) {
     ;
 
     gfx_init(wm_api, rendering_api, window_title);
-    #ifndef TARGET_WII_U
+    #ifndef TARGET_GAME_CONSOLE
     wm_api->set_keyboard_callbacks(keyboard_on_key_down, keyboard_on_key_up, keyboard_on_all_keys_up);
     #endif
 
     #if defined(AAPI_SDL1) || defined(AAPI_SDL2)
     if (audio_api == NULL && audio_sdl.init()) 
         audio_api = &audio_sdl;
+    #endif
+
+    #ifdef AAPI_3DS
+    if (audio_api == NULL && audio_3ds.init()) {
+        audio_api = &audio_3ds;
+    }
     #endif
 
     if (audio_api == NULL) {
@@ -278,10 +294,13 @@ void main_func(void) {
     discord_init();
 #endif
 
-#ifdef TARGET_WEB
+#if defined(TARGET_WEB)
     emscripten_set_main_loop(em_main_loop, 0, 0);
     request_anim_frame(on_anim_frame);
+#elif defined(TARGET_N3DS)
+    wm_api->main_loop(produce_one_frame);
 #else
+
     #ifdef TARGET_WII_U
     while (whb_window_is_running()) {
     #else
@@ -295,7 +314,7 @@ void main_func(void) {
 #endif
 }
 
-#ifdef TARGET_WII_U
+#ifdef TARGET_GAME_CONSOLE
 int main(UNUSED int argc, UNUSED char *argv[]) {
     main_func();
     return 0;

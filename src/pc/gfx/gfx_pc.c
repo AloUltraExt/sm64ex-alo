@@ -333,15 +333,9 @@ static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, co
 
 #ifndef EXTERNAL_DATA
 
-static void import_texture_rgba32(int tile) {
-    uint32_t width = rdp.texture_tile.line_size_bytes / 2;
-    uint32_t height = (rdp.loaded_texture[tile].size_bytes / 2) / rdp.texture_tile.line_size_bytes;
-    gfx_rapi->upload_texture(rdp.loaded_texture[tile].addr, width, height);
-}
+static uint8_t rgba32_buf[32768] __attribute__((aligned(32)));
 
 static void import_texture_rgba16(int tile) {
-    uint8_t rgba32_buf[8192];
-    
     for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes / 2; i++) {
         uint16_t col16 = (rdp.loaded_texture[tile].addr[2 * i] << 8) | rdp.loaded_texture[tile].addr[2 * i + 1];
         uint8_t a = col16 & 1;
@@ -360,9 +354,13 @@ static void import_texture_rgba16(int tile) {
     gfx_rapi->upload_texture(rgba32_buf, width, height);
 }
 
-static void import_texture_ia4(int tile) {
-    uint8_t rgba32_buf[32768];
-    
+static void import_texture_rgba32(int tile) {
+    uint32_t width = rdp.texture_tile.line_size_bytes / 2;
+    uint32_t height = (rdp.loaded_texture[tile].size_bytes / 2) / rdp.texture_tile.line_size_bytes;
+    gfx_rapi->upload_texture(rdp.loaded_texture[tile].addr, width, height);
+}
+
+static void import_texture_ia4(int tile) {   
     for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes * 2; i++) {
         uint8_t byte = rdp.loaded_texture[tile].addr[i / 2];
         uint8_t part = (byte >> (4 - (i % 2) * 4)) & 0xf;
@@ -383,9 +381,7 @@ static void import_texture_ia4(int tile) {
     gfx_rapi->upload_texture(rgba32_buf, width, height);
 }
 
-static void import_texture_ia8(int tile) {
-    uint8_t rgba32_buf[16384];
-    
+static void import_texture_ia8(int tile) {    
     for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes; i++) {
         uint8_t intensity = rdp.loaded_texture[tile].addr[i] >> 4;
         uint8_t alpha = rdp.loaded_texture[tile].addr[i] & 0xf;
@@ -405,8 +401,6 @@ static void import_texture_ia8(int tile) {
 }
 
 static void import_texture_ia16(int tile) {
-    uint8_t rgba32_buf[8192];
-    
     for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes / 2; i++) {
         uint8_t intensity = rdp.loaded_texture[tile].addr[2 * i];
         uint8_t alpha = rdp.loaded_texture[tile].addr[2 * i + 1];
@@ -426,8 +420,6 @@ static void import_texture_ia16(int tile) {
 }
 
 static void import_texture_i4(int tile) {
-    uint8_t rgba32_buf[32768];
-    
     for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes * 2; i++) {
         uint8_t byte = rdp.loaded_texture[tile].addr[i / 2];
         uint8_t intensity = (byte >> (4 - (i % 2) * 4)) & 0xf;
@@ -444,8 +436,6 @@ static void import_texture_i4(int tile) {
 }
 
 static void import_texture_i8(int tile) {
-    uint8_t rgba32_buf[16384];
-
     for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes; i++) {
         uint8_t intensity = rdp.loaded_texture[tile].addr[i];
         rgba32_buf[4*i + 0] = intensity;
@@ -460,9 +450,7 @@ static void import_texture_i8(int tile) {
     gfx_rapi->upload_texture(rgba32_buf, width, height);
 }
 
-static void import_texture_ci4(int tile) {
-    uint8_t rgba32_buf[32768];
-    
+static void import_texture_ci4(int tile) {   
     for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes * 2; i++) {
         uint8_t byte = rdp.loaded_texture[tile].addr[i / 2];
         uint8_t idx = (byte >> (4 - (i % 2) * 4)) & 0xf;
@@ -484,8 +472,6 @@ static void import_texture_ci4(int tile) {
 }
 
 static void import_texture_ci8(int tile) {
-    uint8_t rgba32_buf[16384];
-    
     for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes; i++) {
         uint8_t idx = rdp.loaded_texture[tile].addr[i];
         uint16_t col16 = (rdp.palette[idx * 2] << 8) | rdp.palette[idx * 2 + 1]; // Big endian load
