@@ -139,6 +139,10 @@ int test_vsync(void) {
 }
 
 static inline void gfx_sdl_set_vsync(const bool enabled) {
+    #ifdef TARGET_SWITCH
+    SDL_GL_SetSwapInterval(2); // change to 1 if 60 fps patch is applied
+    use_timer = false;
+    #else
     if (enabled) {
         // try to detect refresh rate
         SDL_GL_SetSwapInterval(1);
@@ -155,6 +159,7 @@ static inline void gfx_sdl_set_vsync(const bool enabled) {
 
     use_timer = true;
     SDL_GL_SetSwapInterval(0);
+    #endif
 }
 
 static void gfx_sdl_set_fullscreen(void) {
@@ -210,13 +215,30 @@ static void gfx_sdl_init(const char *window_title) {
     //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
+    #ifdef TARGET_SWITCH
+    configWindow.fullscreen = false;
+    // if docked, set 1920x1080
+    if (appletGetOperationMode() == 1) {
+        configWindow.w = 1920;
+        configWindow.h = 1080;
+    } else {
+        configWindow.w = 1280;
+        configWindow.h = 720;
+    }
+    int xpos = 0;
+    int ypos = 0;
+    #else
     int xpos = (configWindow.x == WAPI_WIN_CENTERPOS) ? SDL_WINDOWPOS_CENTERED : configWindow.x;
     int ypos = (configWindow.y == WAPI_WIN_CENTERPOS) ? SDL_WINDOWPOS_CENTERED : configWindow.y;
+    #endif
 
     wnd = SDL_CreateWindow(
         window_title,
         xpos, ypos, configWindow.w, configWindow.h,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
+        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
+    #ifndef TARGET_SWITCH
+        | SDL_WINDOW_RESIZABLE
+    #endif
     );
     ctx = SDL_GL_CreateContext(wnd);
 
@@ -347,7 +369,6 @@ static void gfx_sdl_swap_buffers_end(void) {
 static double gfx_sdl_get_time(void) {
     return 0.0;
 }
-
 
 static void gfx_sdl_shutdown(void) {
     if (SDL_WasInit(0)) {

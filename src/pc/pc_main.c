@@ -301,8 +301,10 @@ void main_func(void) {
     wm_api->main_loop(produce_one_frame);
 #else
 
-    #ifdef TARGET_WII_U
+    #if defined(TARGET_WII_U)
     while (whb_window_is_running()) {
+    #elif defined(TARGET_SWITCH)
+    while (appletMainLoop()) {
     #else
     while (true) {
     #endif

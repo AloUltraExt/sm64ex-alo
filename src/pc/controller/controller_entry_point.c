@@ -9,6 +9,7 @@
 #include "controller_sdl.h"
 #include "controller_wiiu.h"
 #include "controller_3ds.h"
+#include "controller_switch.h"
 
 // Analog camera movement by Pathétique (github.com/vrmiguel), y0shin and Mors
 // Contribute or communicate bugs at github.com/vrmiguel/sm64-analog-camera
@@ -19,6 +20,8 @@ static struct ControllerAPI *controller_implementations[] = {
     &controller_wiiu,
 #elif defined(CAPI_3DS)
     &controller_3ds,
+#elif defined(CAPI_SWITCH)
+    &controller_switch,
 #else
     #if defined(CAPI_SDL1) || defined(CAPI_SDL2)
     &controller_sdl,

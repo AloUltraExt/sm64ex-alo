@@ -33,6 +33,8 @@ TARGET_WEB ?= 0
 TARGET_WII_U ?= 0
 # Build for the 3DS
 TARGET_N3DS ?= 0
+# Build for Nintendo Switch
+TARGET_SWITCH ?= 1
 # Makeflag to enable OSX fixes
 OSX_BUILD ?= 0
 # Specify the target you are building for, TARGET_BITS=0 means native
@@ -72,7 +74,8 @@ RENDER_API ?= GL
 WINDOW_API ?= SDL2
 # Audio backends: SDL1, SDL2 (forced if the target is Wii U), 3DS (forced if the target is 3DS)
 AUDIO_API ?= SDL2
-# Controller backends (can have multiple, space separated): SDL1, SDL2, WII_U (forced if the target is Wii U), 3DS (forced if the target is 3DS)
+# Controller backends (can have multiple, space separated): SDL1, SDL2
+# WII_U (forced if the target is Wii U), 3DS (forced if the target is 3DS), SWITCH (forced if the target is SWITCH)
 CONTROLLER_API ?= SDL2
 
 ifeq ($(TARGET_WII_U),1)
@@ -89,10 +92,15 @@ ifeq ($(TARGET_N3DS),1)
   CONTROLLER_API := 3DS
 endif
 
-ifeq ($(TARGET_WII_U),1)
-ifeq ($(TARGET_N3DS),1)
-  TARGET_GAME_CONSOLE := 1
+ifeq ($(TARGET_SWITCH),1)
+  RENDER_API := GL
+  WINDOW_API := SDL2
+  AUDIO_API := SDL2
+  CONTROLLER_API := SWITCH
 endif
+
+ifeq ($(TARGET_N3DS)$(TARGET_WII_U)$(TARGET_SWITCH),111)
+  TARGET_GAME_CONSOLE := 1
 endif
 
 # Misc settings for EXTERNAL_DATA
@@ -252,22 +260,20 @@ VERSION_CFLAGS := $(VERSION_CFLAGS) -DNON_MATCHING -DAVOID_UB
 
 ifeq ($(TARGET_RPI),1) # Define RPi to change SDL2 title & GLES2 hints
       VERSION_CFLAGS += -DUSE_GLES
-endif
-
-ifeq ($(OSX_BUILD),1) # Modify GFX & SDL2 for OSX GL
+else ifeq ($(OSX_BUILD),1) # Modify GFX & SDL2 for OSX GL
      VERSION_CFLAGS += -DOSX_BUILD
-endif
-
-VERSION_ASFLAGS := $(VERSION_ASFLAGS) --defsym AVOID_UB=1
-COMPARE := 0
-
-ifeq ($(TARGET_WEB),1)
+else ifeq ($(TARGET_WEB),1)
   VERSION_CFLAGS := $(VERSION_CFLAGS) -DTARGET_WEB -DUSE_GLES
 else ifeq ($(TARGET_WII_U),1)
   VERSION_CFLAGS := $(VERSION_CFLAGS) -DTARGET_WII_U
 else ifeq ($(TARGET_N3DS),1)
   VERSION_CFLAGS := $(VERSION_CFLAGS) -DTARGET_N3DS
+else ifeq ($(TARGET_SWITCH),1)
+  VERSION_CFLAGS += $(VERSION_CFLAGS) -DUSE_GLES -DTARGET_SWITCH
 endif
+
+VERSION_ASFLAGS := $(VERSION_ASFLAGS) --defsym AVOID_UB=1
+COMPARE := 0
 
 # Check backends
 
@@ -325,6 +331,8 @@ else ifeq ($(TARGET_WII_U),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_wiiu
 else ifeq ($(TARGET_N3DS),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_3ds
+else ifeq ($(TARGET_SWITCH),1)
+  BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_nx
 else
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_pc
 endif
@@ -636,7 +644,32 @@ else ifeq ($(TARGET_N3DS),1)
   CXX := $(DEVKITARM)/bin/arm-none-eabi-g++
   LD := $(CXX)
   SDLCONFIG :=
+
 else
+
+ifeq ($(TARGET_SWITCH),1)
+  ifeq ($(strip $(DEVKITPRO)),)
+    $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
+  endif
+  export PATH := $(DEVKITPRO)/devkitA64/bin:$(PATH)
+  PORTLIBS ?= $(DEVKITPRO)/portlibs/switch
+  LIBNX ?= $(DEVKITPRO)/libnx
+  CROSS ?= aarch64-none-elf-
+  SDLCROSS :=
+  CC := $(CROSS)gcc
+  CXX := $(CROSS)g++
+  STRIP := $(CROSS)strip
+  NXARCH := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
+  APP_TITLE := Super Mario 64
+  APP_AUTHOR := Nintendo, n64decomp team, sm64pc team
+  APP_VERSION := 1_master_$(VERSION)
+  APP_ICON := nx_icon.jpg
+  INCLUDE_CFLAGS += -isystem$(LIBNX)/include -I$(PORTLIBS)/include
+  OPT_FLAGS := -g -O0 -std=gnu99
+endif
+
+# for some reason sdl-config in dka64 is not prefixed, while pkg-config is
+SDLCROSS ?= $(CROSS)
 
 AS := $(CROSS)as
 
@@ -680,7 +713,7 @@ else # Linux & other builds
   OBJDUMP := $(CROSS)objdump
 endif
 
-SDLCONFIG := $(CROSS)sdl2-config
+SDLCONFIG := $(SDLCROSS)sdl2-config
 
 endif
 
@@ -707,7 +740,8 @@ ifeq ($(WINDOW_API),DXGI)
 else ifeq ($(findstring SDL,$(WINDOW_API)),SDL)
   ifeq ($(WINDOWS_BUILD),1)
     BACKEND_LDFLAGS += -lglew32 -lglu32 -lopengl32
-  else ifeq ($(TARGET_RPI),1)
+ # else ifeq ($(TARGET_RPI),1)
+  else ifneq ($(TARGET_RPI)$(TARGET_SWITCH),00)
     BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(OSX_BUILD),1)
     BACKEND_LDFLAGS += -framework OpenGL `pkg-config --libs glew`
@@ -735,21 +769,19 @@ endif
 # SDL can be used by different systems, so we consolidate all of that shit into this
 
 ifeq ($(SDL2_USED),1)
-  SDLCONFIG := $(CROSS)sdl2-config
+  SDLCONFIG := $(SDLCROSS)sdl2-config
   BACKEND_CFLAGS += -DHAVE_SDL2=1
 else ifeq ($(SDL1_USED),1)
-  SDLCONFIG := $(CROSS)sdl-config
+  SDLCONFIG := $(SDLCROSS)sdl-config
   BACKEND_CFLAGS += -DHAVE_SDL1=1
 endif
 
-ifeq ($(TARGET_GAME_CONSOLE),0)
-  ifneq ($(SDL1_USED)$(SDL2_USED),00)
-    BACKEND_CFLAGS += `$(SDLCONFIG) --cflags`
-    ifeq ($(WINDOWS_BUILD),1)
-      BACKEND_LDFLAGS += `$(SDLCONFIG) --static-libs` -lsetupapi -luser32 -limm32 -lole32 -loleaut32 -lshell32 -lwinmm -lversion
-    else
-      BACKEND_LDFLAGS += `$(SDLCONFIG) --libs`
-    endif
+ifneq ($(SDL1_USED)$(SDL2_USED),00)
+  BACKEND_CFLAGS += `$(SDLCONFIG) --cflags`
+  ifeq ($(WINDOWS_BUILD),1)
+    BACKEND_LDFLAGS += `$(SDLCONFIG) --static-libs` -lsetupapi -luser32 -limm32 -lole32 -loleaut32 -lshell32 -lwinmm -lversion
+  else
+    BACKEND_LDFLAGS += `$(SDLCONFIG) --libs`
   endif
 endif
 
@@ -779,6 +811,11 @@ ifeq ($(TARGET_N3DS),1)
   export LIBPATHS  :=  $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
   CC_CHECK += -mtp=soft -DARM11 -DosGetTime=n64_osGetTime -D_3DS -march=armv6k -mtune=mpcore -mfloat-abi=hard -mword-relocations -fomit-frame-pointer -ffast-math $(foreach dir,$(LIBDIRS),-I$(dir)/include)
   CFLAGS += -mtp=soft -DARM11 -DosGetTime=n64_osGetTime -D_3DS -march=armv6k -mtune=mpcore -mfloat-abi=hard -mword-relocations -fomit-frame-pointer -ffast-math $(foreach dir,$(LIBDIRS),-I$(dir)/include)
+endif
+
+ifeq ($(TARGET_SWITCH),1)
+  CC_CHECK := $(CC) $(NXARCH) -fsyntax-only -fsigned-char $(BACKEND_CFLAGS) $(INCLUDE_CFLAGS) -Wall -Wextra -Wno-format-security $(VERSION_CFLAGS) $(GRUCODE_CFLAGS) -D__SWITCH__=1
+  CFLAGS := $(NXARCH) $(OPT_FLAGS) $(INCLUDE_CFLAGS) $(BACKEND_CFLAGS) $(VERSION_CFLAGS) $(GRUCODE_CFLAGS) -fno-strict-aliasing -ftls-model=local-exec -fPIE -fwrapv -D__SWITCH__=1
 endif
 
 # Check for enhancement options
@@ -877,6 +914,9 @@ LDFLAGS := -lm -no-pie $(BACKEND_LDFLAGS) $(MACHDEP) $(RPXSPECS) $(LIBPATHS)
 else ifeq ($(TARGET_N3DS),1)
 LDFLAGS := $(LIBPATHS) -lcitro3d -lctru -lm -specs=3dsx.specs -g -marm -mthumb-interwork -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft # -Wl,-Map,$(notdir $*.map)
 
+else ifeq ($(TARGET_SWITCH),1)
+  LDFLAGS := -specs=$(LIBNX)/switch.specs $(NXARCH) $(OPT_FLAGS) -L$(LIBNX)/lib $(BACKEND_LDFLAGS) -lstdc++ -lnx -lm
+
 else ifeq ($(WINDOWS_BUILD),1)
   LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -Llib -lpthread $(BACKEND_LDFLAGS) -static
   ifeq ($(CROSS),)
@@ -944,6 +984,10 @@ ifeq ($(COMPARE),1)
 endif
 else
 all: $(EXE)
+endif
+
+ifeq ($(TARGET_SWITCH),1)
+all: $(EXE).nro
 endif
 
 # thank you apple very cool
@@ -1335,6 +1379,23 @@ $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(
 else
 $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
 	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
+endif
+
+ifeq ($(TARGET_SWITCH), 1)
+
+# add `--icon=$(APP_ICON)` to this when we get a suitable icon
+%.nro: %.stripped %.nacp
+	@elf2nro $< $@ --nacp=$*.nacp
+	@echo built ... $(notdir $@)
+
+%.nacp:
+	@nacptool --create "$(APP_TITLE)" "$(APP_AUTHOR)" "$(APP_VERSION)" $@ $(NACPFLAGS)
+	@echo built ... $(notdir $@)
+
+%.stripped: %
+	@$(STRIP) -o $@ $<
+	@echo stripped ... $(notdir $<)
+
 endif
 
 .PHONY: all clean distclean default diff test load libultra res

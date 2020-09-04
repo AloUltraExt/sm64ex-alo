@@ -1,12 +1,17 @@
 #ifndef _ULTRA64_TYPES_H_
 #define _ULTRA64_TYPES_H_
 
+#define TRUE 1
+#define FALSE 0
+
+typedef float  f32;
+typedef double f64;
+
+#ifndef TARGET_SWITCH
+
 #ifndef NULL
 #define NULL    (void *)0
 #endif
-
-#define TRUE 1
-#define FALSE 0
 
 typedef signed char            s8;
 typedef unsigned char          u8;
@@ -25,9 +30,6 @@ typedef volatile s8   vs8;
 typedef volatile s16 vs16;
 typedef volatile s32 vs32;
 typedef volatile s64 vs64;
-
-typedef float  f32;
-typedef double f64;
 
 #ifdef TARGET_N64
 typedef u32 size_t;
@@ -51,6 +53,14 @@ typedef long ssize_t;
 typedef ptrdiff_t ssize_t;
 #endif
 #endif
+#endif
+
+#else // TARGET_SWITCH
+
+#include <stddef.h>
+#include <stdint.h>
+#include <switch.h>
+typedef ptrdiff_t ssize_t;
 #endif
 
 #endif // _ULTRA64_TYPES_H_

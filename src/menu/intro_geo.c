@@ -36,15 +36,21 @@ s32 gTitleFadeCounter;
 const Gfx *introBackgroundDlRows[] = { title_screen_bg_dl_0A000130, title_screen_bg_dl_0A000148,
                                        title_screen_bg_dl_0A000160, title_screen_bg_dl_0A000178 };
 
+/*
 // intro screen background texture X offsets
 float introBackgroundOffsetX[] = {
-    0.0, 80.0, 160.0, 240.0, 0.0, 80.0, 160.0, 240.0, 0.0, 80.0, 160.0, 240.0,
+    -80.0, 0.0, 80.0, 160.0,
+    -80.0, 0.0, 80.0, 160.0,
+    -80.0, 0.0, 80.0, 160.0,
 };
 
 // intro screen background texture Y offsets
 float introBackgroundOffsetY[] = {
-    160.0, 160.0, 160.0, 160.0, 80.0, 80.0, 80.0, 80.0, 0.0, 0.0, 0.0, 0.0,
+    160.0, 160.0, 160.0, 160.0, 
+    80.0, 80.0, 80.0, 80.0, 
+    0.0, 0.0, 0.0, 0.0,
 };
+*/
 
 // table that points to either the "Super Mario 64" or "Game Over" tables
 const u8 *const *introBackgroundTextureType[] = { mario_title_texture_table, game_over_texture_table };
@@ -154,6 +160,15 @@ Gfx *geo_fade_transition(s32 sp40, struct GraphNode *sp44, UNUSED void *context)
     return displayList;
 }
 
+// center tiles for these consoles
+#if defined(TARGET_SWITCH) || defined(TARGET_WII_U)
+#define CENTER_TILES_ASPECT (79*2*aspect)
+#define CENTER_TILES_POS (80*aspect)
+#else
+#define CENTER_TILES_ASPECT 79
+#define CENTER_TILES_POS 0
+#endif
+
 Gfx *intro_backdrop_one_image(s32 index, s8 *backgroundTable) {
     Mtx *mtx;                         // sp5c
     Gfx *displayList;                 // sp58
@@ -161,14 +176,14 @@ Gfx *intro_backdrop_one_image(s32 index, s8 *backgroundTable) {
     const u8 *const *vIntroBgTable;   // sp50
     s32 i;                            // sp4c
     f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
-	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+79)/80);
+	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+CENTER_TILES_ASPECT)/80);
 	float x_ofs = (SCREEN_WIDTH/2)-(aspect*SCREEN_HEIGHT/2);
-	
+
     mtx = alloc_display_list(sizeof(*mtx));
     displayList = alloc_display_list(36 * sizeof(*displayList));
     displayListIter = displayList;
     vIntroBgTable = segmented_to_virtual(introBackgroundTextureType[backgroundTable[0]]);
-    guTranslate(mtx, ((index%num_tiles_h)*80)+x_ofs, (index/num_tiles_h)*80, 0.0f);
+    guTranslate(mtx, (((index%num_tiles_h)*80)+x_ofs)-CENTER_TILES_POS, (index/num_tiles_h)*80, 0.0f);
     gSPMatrix(displayListIter++, mtx, G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_PUSH);
     gSPDisplayList(displayListIter++, &title_screen_bg_dl_0A000118);
     for (i = 0; i < 4; ++i) {
@@ -189,7 +204,7 @@ Gfx *geo_intro_backdrop(s32 sp48, struct GraphNode *sp4c, UNUSED void *context) 
     Gfx *displayListIter;            // sp34
     s32 i;                           // sp30
     f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
-	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+79)/80);
+	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+CENTER_TILES_ASPECT)/80);
     graphNode = (struct GraphNodeMore *) sp4c;
     index = graphNode->unk18 & 0xff; // TODO: word at offset 0x18 of struct GraphNode
     backgroundTable = introBackgroundTables[index];
@@ -219,7 +234,7 @@ Gfx *geo_game_over_tile(s32 sp40, struct GraphNode *sp44, UNUSED void *context) 
     s32 j;                       // sp30
     s32 i;                       // sp2c
     f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
-	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+79)/80);
+	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+CENTER_TILES_ASPECT)/80);
     graphNode = sp44;
     displayList = NULL;
     displayListIter = NULL;
@@ -260,3 +275,6 @@ Gfx *geo_game_over_tile(s32 sp40, struct GraphNode *sp44, UNUSED void *context) 
     }
     return displayList;
 }
+
+#undef CENTER_TILES_ASPECT
+#undef CENTER_TILES_POS
