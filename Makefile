@@ -15,9 +15,9 @@ DEBUG ?= 0
 # Version of the game to build
 VERSION ?= us
 # Graphics microcode used
-GRUCODE ?= f3dex2
+GRUCODE ?= f3dzex
 # If COMPARE is 1, check the output sha1sum when building 'all'
-COMPARE ?= 1
+COMPARE ?= 0
 # If NON_MATCHING is 1, define the NON_MATCHING and AVOID_UB macros when building (recommended)
 NON_MATCHING ?= 1
 # Compiler to use in N64 (ido or gcc)
@@ -34,7 +34,7 @@ TARGET_WII_U ?= 0
 # Build for the 3DS
 TARGET_N3DS ?= 0
 # Build for Nintendo Switch
-TARGET_SWITCH ?= 1
+TARGET_SWITCH ?= 0
 # Makeflag to enable OSX fixes
 OSX_BUILD ?= 0
 # Specify the target you are building for, TARGET_BITS=0 means native
@@ -241,7 +241,6 @@ ifeq ($(GRUCODE),f3d_new) # Fast3D 2.0H (Shindou)
   COMPARE := 0
 else
 ifeq ($(GRUCODE),f3dzex) # Fast3DZEX (2.0J / Animal Forest - Dōbutsu no Mori)
-  $(warning Fast3DZEX is experimental. Try at your own risk.)
   GRUCODE_DEF := F3DEX_GBI_2
   GRUCODE_ASFLAGS := --defsym F3DEX_GBI_SHARED=1
   TARGET := $(TARGET).f3dzex
