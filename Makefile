@@ -865,8 +865,8 @@ endif
 
 # Check for extended options menu option
 ifeq ($(EXT_OPTIONS_MENU),1)
-  CC_CHECK += -DEXT_OPTIONS_MENU
-  CFLAGS += -DEXT_OPTIONS_MENU
+  CC_CHECK += -DEXT_OPTIONS_MENU -DCHEATS_ACTIONS
+  CFLAGS += -DEXT_OPTIONS_MENU -DCHEATS_ACTIONS
 endif
 
 # Check for no bzero/bcopy workaround option
