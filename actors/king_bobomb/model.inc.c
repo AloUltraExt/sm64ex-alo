@@ -531,7 +531,11 @@ static const Vtx king_bobomb_seg5_vertex_0500B218[] = {
 const Gfx king_bobomb_seg5_dl_0500B278[] = {
     gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, king_bobomb_seg5_texture_05004878),
     gsDPLoadSync(),
+#ifdef TARGET_N64
     gsDPLoadBlock(G_TX_LOADTILE, 0, 0, 32 * 64 - 1, CALC_DXT(32, G_IM_SIZ_16b_BYTES)),
+#else
+    gsDPLoadBlock(G_TX_LOADTILE, 0, 0, 32 * 32 - 1, CALC_DXT(32, G_IM_SIZ_16b_BYTES)),
+#endif
     gsSPLight(&king_bobomb_seg5_lights_0500B200.l, 1),
     gsSPLight(&king_bobomb_seg5_lights_0500B200.a, 2),
     gsSPVertex(king_bobomb_seg5_vertex_0500B218, 6, 0),
@@ -548,7 +552,11 @@ const Gfx king_bobomb_seg5_dl_0500B2D0[] = {
     gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON),
     gsDPTileSync(),
     gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 8, 0, G_TX_RENDERTILE, 0, G_TX_CLAMP, 5, G_TX_NOLOD, G_TX_CLAMP, 5, G_TX_NOLOD),
+#ifdef TARGET_N64
+    gsDPSetTileSize(0, 0, 0, (32 - 1) << G_TEXTURE_IMAGE_FRAC, (32 - 1) << G_TEXTURE_IMAGE_FRAC),
+#else
     gsDPSetTileSize(0, 0, 0, (32 - 1) << G_TEXTURE_IMAGE_FRAC, (64 - 1) << G_TEXTURE_IMAGE_FRAC),
+#endif
     gsSPDisplayList(king_bobomb_seg5_dl_0500B278),
     gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_OFF),
     gsDPPipeSync(),
