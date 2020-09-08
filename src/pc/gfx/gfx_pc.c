@@ -82,6 +82,8 @@ struct TextureHashmapNode {
     const uint8_t *texture_addr;
     uint8_t fmt, siz;
     
+    uint8_t pallete;
+
     uint32_t texture_id;
     uint8_t cms, cmt;
     bool linear_filter;
@@ -126,7 +128,7 @@ static struct RSP {
 } rsp;
 
 static struct RDP {
-    const uint8_t *palette;
+    uint8_t *palette;
     struct {
         const uint8_t *addr;
         uint8_t siz;
@@ -287,7 +289,7 @@ static struct ColorCombiner *gfx_lookup_or_create_color_combiner(uint32_t cc_id)
     return prev_combiner = comb;
 }
 
-static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, const uint8_t *orig_addr, uint32_t fmt, uint32_t siz) {
+static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, const uint8_t *orig_addr, uint32_t fmt, uint32_t siz, uint8_t palette) {
     #ifdef EXTERNAL_DATA // hash and compare the data (i.e. the texture name) itself
     size_t hash = string_hash(orig_addr);
     #define CMPADDR(x, y) (x && !sys_strcasecmp((const char *)x, (const char *)y))
@@ -300,7 +302,7 @@ static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, co
 
     struct TextureHashmapNode **node = &gfx_texture_cache.hashmap[hash];
     while (*node != NULL && *node - gfx_texture_cache.pool < gfx_texture_cache.pool_pos) {
-        if (CMPADDR((*node)->texture_addr, orig_addr) && (*node)->fmt == fmt && (*node)->siz == siz) {
+        if (CMPADDR((*node)->texture_addr, orig_addr) && (*node)->fmt == fmt && (*node)->siz == siz && (*node)->palette == palette) {
             gfx_rapi->select_texture(tile, (*node)->texture_id);
             *n = *node;
             return true;
@@ -326,6 +328,7 @@ static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, co
     (*node)->texture_addr = orig_addr;
     (*node)->fmt = fmt;
     (*node)->siz = siz;
+    (*node)->palette = palette;
     *n = *node;
     return false;
     #undef CMPADDR
@@ -614,7 +617,7 @@ static bool preload_texture(void *user, const char *path) {
     assert(actualname);
 
     struct TextureHashmapNode *n;
-    if (!gfx_texture_cache_lookup(0, &n, actualname, fmt, siz))
+    if (!gfx_texture_cache_lookup(0, &n, actualname, fmt, siz, 0))
         load_texture(path); // new texture, load it
 
     return true;
@@ -625,6 +628,7 @@ static bool preload_texture(void *user, const char *path) {
 static void import_texture(int tile) {
     uint8_t fmt = rdp.texture_tile.fmt;
     uint8_t siz = rdp.texture_tile.siz;
+    uint8_t palette = rdp.palette; // should be const but it would still work
 
     if (!rdp.loaded_texture[tile].addr) {
         fprintf(stderr, "NULL texture: tile %d, format %d/%d, size %d\n",
@@ -632,7 +636,7 @@ static void import_texture(int tile) {
         return;
     }
 
-    if (gfx_texture_cache_lookup(tile, &rendering_state.textures[tile], rdp.loaded_texture[tile].addr, fmt, siz)) {
+    if (gfx_texture_cache_lookup(tile, &rendering_state.textures[tile], rdp.loaded_texture[tile].addr, fmt, siz, palette)) {
         return;
     }
 
