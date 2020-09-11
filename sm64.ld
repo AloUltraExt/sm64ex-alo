@@ -176,6 +176,7 @@ SECTIONS
       BUILD_DIR/libultra.a:string.o(.text);
       BUILD_DIR/libultra.a:_Printf.o(.text);
       BUILD_DIR/libultra.a:llmuldiv.o(.text);
+      BUILD_DIR/libultra.a:llmuldiv_gcc.o(.text);
       BUILD_DIR/libultra.a:osInitialize.o(.text);
       BUILD_DIR/libultra.a:osSetTime.o(.text);
       BUILD_DIR/libultra.a:osGetTime.o(.text);
@@ -228,6 +229,7 @@ SECTIONS
       BUILD_DIR/libultra.a:osAiSetNextBuffer.o(.text)
       BUILD_DIR/libultra.a:_Litob.o(.text)
       BUILD_DIR/libultra.a:_Ldtob.o(.text)
+      BUILD_DIR/libultra.a:kdebugserver.o(.text)
       BUILD_DIR/libultra.a:__osSetSR.o(.text)
       BUILD_DIR/libultra.a:__osGetSR.o(.text)
       BUILD_DIR/libultra.a:__osSetFpcCsr.o(.text)
@@ -270,6 +272,7 @@ SECTIONS
       BUILD_DIR/libultra.a:guNormalize.o(.text)
       BUILD_DIR/libultra.a:__osAiDeviceBusy.o(.text);
       BUILD_DIR/libultra.a:ldiv.o(.text)
+      BUILD_DIR/libultra.a:__osGetCause.o(.text);
       BUILD_DIR/libultra.a:__osSiDeviceBusy.o(.text);
       BUILD_DIR/libultra.a:osSetIntMask.o(.text)
       BUILD_DIR/libultra.a:osDestroyThread.o(.text)
@@ -459,6 +462,7 @@ SECTIONS
       BUILD_DIR/libultra.a:__osPiCreateAccessQueue.o(.data*);
       BUILD_DIR/libultra.a:__osSiCreateAccessQueue.o(.data*);
       BUILD_DIR/libultra.a:osViData.o(.data*);
+      BUILD_DIR/libultra.a:__osSyncPutChars.o(.data*);
 #else
       BUILD_DIR/libultra.a:osViTable.o(.data*);
       BUILD_DIR/libultra.a:osCreateViManager.o(.data*);
@@ -507,6 +511,7 @@ SECTIONS
       BUILD_DIR/src/game/object_helpers.o(.rodata*);
 #endif
       BUILD_DIR/src/game/behavior_actions.o(.rodata*);
+      BUILD_DIR/src/game/platform_displacement.o(.rodata*);
 #ifndef VERSION_EU
       BUILD_DIR/src/game/object_collision.o(.rodata*);
       BUILD_DIR/src/game/spawn_object.o(.rodata*);
@@ -543,18 +548,23 @@ SECTIONS
 #ifdef VERSION_EU
       BUILD_DIR/libultra.a:_Printf.o(.rodata*);
 #endif
-
+      BUILD_DIR/libultra.a:guOrthoF.o(.rodata*);
       BUILD_DIR/libultra.a:guPerspectiveF.o(.rodata*);
       BUILD_DIR/libultra.a:llconv.o(.rodata*);
       BUILD_DIR/libultra.a:cosf.o(.rodata*);
       BUILD_DIR/libultra.a:sinf.o(.rodata*);
       BUILD_DIR/libultra.a:guRotateF.o(.rodata*);
+      BUILD_DIR/libultra.a:guScaleF.o(.rodata*);
+      BUILD_DIR/libultra.a:osAiSetFrequency.o(.rodata*);
 
 #ifdef VERSION_EU
       BUILD_DIR/libultra.a:_Litob.o(.rodata*);
       BUILD_DIR/libultra.a:_Ldtob.o(.rodata*);
       BUILD_DIR/libultra.a:__osExceptionPreamble.o(.rodata*);
+      BUILD_DIR/libultra.a:__osViSwapContext.o(.rodata*);
       BUILD_DIR/libultra.a:__osDevMgrMain.o(.rodata*);
+      BUILD_DIR/libultra.a:guMtxF2L.o(.rodata*);
+      BUILD_DIR/libultra.a:guNormalize.o(.rodata*);
       BUILD_DIR/libultra.a:NaN.o(.rodata*);
 #else
       BUILD_DIR/libultra.a:_Printf.o(.rodata*);
@@ -596,7 +606,9 @@ SECTIONS
       BUILD_DIR/src/game/object_helpers.o(.bss*);
 #endif
       BUILD_DIR/src/game/behavior_actions.o(.bss*);
+      BUILD_DIR/src/game/platform_displacement.o(.bss*);
       BUILD_DIR/src/game/debug.o(.bss*);
+      BUILD_DIR/src/game/screen_transition.o(.bss*);
       BUILD_DIR/src/game/shadow.o(.bss*);
       BUILD_DIR/src/game/skybox.o(.bss*);
       BUILD_DIR/src/game/moving_texture.o(.bss*);
@@ -631,6 +643,8 @@ SECTIONS
       BUILD_DIR/libultra.a:__osSiCreateAccessQueue.o(.bss*);
       BUILD_DIR/libultra.a:osEepromWrite.o(.bss*);
       BUILD_DIR/libultra.a:kdebugserver.o(.bss*);
+      BUILD_DIR/libultra.a:__osViInit.o(.bss*)
+      BUILD_DIR/libultra.a:__osSyncPutChars.o(.bss*);
       BUILD_DIR/libultra.a:osLeoDiskInit.o(.bss*)
       BUILD_DIR/libultra.a:_Printf.o(.bss*);
       BUILD_DIR/libultra.a:osAiSetNextBuffer.o(.bss*);
@@ -674,6 +688,7 @@ SECTIONS
       BUILD_DIR/src/engine/surface_collision.o(.text);
       BUILD_DIR/src/engine/surface_load.o(.text);
       BUILD_DIR/src/engine/behavior_script.o(.text);
+      BUILD_DIR/src/engine/libc.o(.text); // for GCC support, stubbed out in IDO
 #ifdef VERSION_EU
       BUILD_DIR/src/game/object_collision.o(.text);
       BUILD_DIR/src/game/spawn_object.o(.text);
