@@ -82,7 +82,7 @@ struct TextureHashmapNode {
     const uint8_t *texture_addr;
     uint8_t fmt, siz;
     
-    uint8_t pallete;
+    uint8_t palette;
 
     uint32_t texture_id;
     uint8_t cms, cmt;
