@@ -147,7 +147,7 @@ static inline bool copy_userdata(const char *userdir) {
 }
 
 const char *sys_user_path(void) {
-    static char path[SYS_MAX_PATH] = { 0 };
+    static char path[SYS_MAX_PATH] = ".";
 
     // get the new pref path from SDL
     char *sdlpath = SDL_GetPrefPath("", "sm64ex");
@@ -171,7 +171,7 @@ const char *sys_user_path(void) {
 }
 
 const char *sys_exe_path(void) {
-    static char path[SYS_MAX_PATH] = { 0 };
+    static char path[SYS_MAX_PATH] = ".";
     char *sdlpath = SDL_GetBasePath();
     if (sdlpath && sdlpath[0]) {
         // use the SDL path if it exists
