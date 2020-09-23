@@ -2,7 +2,6 @@
 
 #include "sm64.h"
 #include "area.h"
-#include "audio/data.h"
 #include "audio/external.h"
 #include "camera.h"
 #include "engine/graph_node.h"
@@ -19,7 +18,7 @@
 #endif
 
 void play_flip_sounds(struct MarioState *m, s16 frame1, s16 frame2, s16 frame3) {
-    s32 animFrame = m->marioObj->header.gfx.unk38.animFrame;
+    s32 animFrame = m->marioObj->header.gfx.animInfo.animFrame;
     if (animFrame == frame1 || animFrame == frame2 || animFrame == frame3) {
         play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
     }
@@ -608,9 +607,9 @@ s32 act_side_flip(struct MarioState *m) {
         m->marioObj->header.gfx.angle[1] += 0x8000;
     }
 
-    // (this need to be on one line to match on PAL)
+    // This must be one line to match on -O2
     // clang-format off
-    if (m->marioObj->header.gfx.unk38.animFrame == 6) play_sound(SOUND_ACTION_SIDE_FLIP_UNK, m->marioObj->header.gfx.cameraToObject);
+    if (m->marioObj->header.gfx.animInfo.animFrame == 6) play_sound(SOUND_ACTION_SIDE_FLIP_UNK, m->marioObj->header.gfx.cameraToObject);
     // clang-format on
     return FALSE;
 }
@@ -941,7 +940,7 @@ s32 act_ground_pound(struct MarioState *m) {
         }
 
         m->actionTimer++;
-        if (m->actionTimer >= m->marioObj->header.gfx.unk38.curAnim->unk08 + 4) {
+        if (m->actionTimer >= m->marioObj->header.gfx.animInfo.curAnim->loopEnd + 4) {
             play_sound(SOUND_MARIO_GROUND_POUND_WAH, m->marioObj->header.gfx.cameraToObject);
             m->actionState = 1;
         }
@@ -1155,7 +1154,7 @@ s32 check_wall_kick(struct MarioState *m) {
 
 s32 act_backward_air_kb(struct MarioState *m) {
     if (check_wall_kick(m)) {
-        return 1;
+        return TRUE;
     }
 
 #ifndef VERSION_JP
@@ -1169,7 +1168,7 @@ s32 act_backward_air_kb(struct MarioState *m) {
 
 s32 act_forward_air_kb(struct MarioState *m) {
     if (check_wall_kick(m)) {
-        return 1;
+        return TRUE;
     }
 
 #ifndef VERSION_JP
@@ -1246,7 +1245,7 @@ s32 act_thrown_forward(struct MarioState *m) {
 
 s32 act_soft_bonk(struct MarioState *m) {
     if (check_wall_kick(m)) {
-        return 1;
+        return TRUE;
     }
 
 #ifndef VERSION_JP
@@ -1345,10 +1344,9 @@ s32 act_air_hit_wall(struct MarioState *m) {
     //! Missing return statement. The returned value is the result of the call
     // to set_mario_animation. In practice, this value is nonzero.
     // This results in this action "cancelling" into itself. It is supposed to
-    // execute three times, each on a separate frame, but instead it executes
-    // three times on the same frame.
+    // execute on two frames, but instead it executes twice on the same frame.
     // This results in firsties only being possible for a single frame, instead
-    // of three.
+    // of two.
 }
 
 s32 act_forward_rollout(struct MarioState *m) {
@@ -1427,7 +1425,7 @@ s32 act_backward_rollout(struct MarioState *m) {
             break;
     }
 
-    if (m->actionState == 1 && m->marioObj->header.gfx.unk38.animFrame == 2) {
+    if (m->actionState == 1 && m->marioObj->header.gfx.animInfo.animFrame == 2) {
         m->actionState = 2;
     }
     return FALSE;
@@ -1633,12 +1631,12 @@ s32 act_jump_kick(struct MarioState *m) {
 
     if (m->actionState == 0) {
         play_sound_if_no_flag(m, SOUND_MARIO_PUNCH_HOO, MARIO_ACTION_SOUND_PLAYED);
-        m->marioObj->header.gfx.unk38.animID = -1;
+        m->marioObj->header.gfx.animInfo.animID = -1;
         set_mario_animation(m, MARIO_ANIM_AIR_KICK);
         m->actionState = 1;
     }
 
-    animFrame = m->marioObj->header.gfx.unk38.animFrame;
+    animFrame = m->marioObj->header.gfx.animInfo.animFrame;
     if (animFrame == 0) {
         m->marioBodyState->punchState = (2 << 6) | 6;
     }
@@ -1799,7 +1797,7 @@ s32 act_flying(struct MarioState *m) {
             set_mario_animation(m, MARIO_ANIM_FLY_FROM_CANNON);
         } else {
             set_mario_animation(m, MARIO_ANIM_FORWARD_SPINNING_FLIP);
-            if (m->marioObj->header.gfx.unk38.animFrame == 1) {
+            if (m->marioObj->header.gfx.animInfo.animFrame == 1) {
                 play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
             }
         }
@@ -1985,7 +1983,7 @@ s32 act_flying_triple_jump(struct MarioState *m) {
     if (m->actionState == 0) {
         set_mario_animation(m, MARIO_ANIM_TRIPLE_JUMP_FLY);
 
-        if (m->marioObj->header.gfx.unk38.animFrame == 7) {
+        if (m->marioObj->header.gfx.animInfo.animFrame == 7) {
             play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
         }
 
@@ -1998,7 +1996,7 @@ s32 act_flying_triple_jump(struct MarioState *m) {
         }
     }
 
-    if (m->actionState == 1 && m->marioObj->header.gfx.unk38.animFrame == 1) {
+    if (m->actionState == 1 && m->marioObj->header.gfx.animInfo.animFrame == 1) {
         play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
     }
 
@@ -2064,7 +2062,7 @@ s32 act_vertical_wind(struct MarioState *m) {
     play_sound_if_no_flag(m, SOUND_MARIO_HERE_WE_GO, MARIO_MARIO_SOUND_PLAYED);
     if (m->actionState == 0) {
         set_mario_animation(m, MARIO_ANIM_FORWARD_SPINNING_FLIP);
-        if (m->marioObj->header.gfx.unk38.animFrame == 1) {
+        if (m->marioObj->header.gfx.animInfo.animFrame == 1) {
             play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
 #ifdef RUMBLE_FEEDBACK
             queue_rumble_data(8, 80);
