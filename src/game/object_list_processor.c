@@ -563,7 +563,11 @@ void clear_objects(void) {
 void update_terrain_objects(void) {
     gObjectCounter = update_objects_in_list(&gObjectLists[OBJ_LIST_SPAWNER]);
     //! This was meant to be +=
+    #ifdef QOL_FIXES
+    gObjectCounter += update_objects_in_list(&gObjectLists[OBJ_LIST_SURFACE]);
+    #else
     gObjectCounter = update_objects_in_list(&gObjectLists[OBJ_LIST_SURFACE]);
+    #endif
 }
 
 /**
