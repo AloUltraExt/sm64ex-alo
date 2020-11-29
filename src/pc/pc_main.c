@@ -16,12 +16,12 @@
 #include "gfx/gfx_opengl.h"
 #include "gfx/gfx_direct3d11.h"
 #include "gfx/gfx_direct3d12.h"
-
 #include "gfx/gfx_dxgi.h"
 #include "gfx/gfx_sdl.h"
 #include "gfx/gfx_whb.h"
 #include "gfx/gfx_3ds.h"
 #include "gfx/gfx_citro3d.h"
+#include "gfx/gfx_dummy.h"
 
 #include "audio/audio_api.h"
 #include "audio/audio_sdl.h"
@@ -180,9 +180,6 @@ static void on_anim_frame(double time) {
 #endif
 
 void main_func(void) {
-    //static u8 pool[DOUBLE_SIZE_ON_64_BIT(0x165000)] __attribute__ ((aligned(16)));
-    //main_pool_init(pool, pool + sizeof(pool));
-    //gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);
 
     const char *gamedir = gCLIOpts.GameDir[0] ? gCLIOpts.GameDir : FS_BASEDIR;
     const char *userpath = gCLIOpts.SavePath[0] ? gCLIOpts.SavePath : sys_user_path();
@@ -201,6 +198,10 @@ void main_func(void) {
         configWindow.fullscreen = false;
     #endif
 
+#ifdef USE_SYSTEM_MALLOC
+    main_pool_init();
+    gGfxAllocOnlyPool = alloc_only_pool_init();
+#else
     const size_t poolsize = 
     #ifndef TARGET_GAME_CONSOLE
     gCLIOpts.PoolSize ? gCLIOpts.PoolSize : 
@@ -210,6 +211,8 @@ void main_func(void) {
     u64 *pool = malloc(poolsize);
     if (!pool) sys_fatal("Could not alloc %u bytes for main pool.\n", poolsize);
     main_pool_init(pool, pool + poolsize / sizeof(pool[0]));
+#endif
+
     gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);
 
     #if defined(WAPI_SDL1) || defined(WAPI_SDL2)
@@ -220,6 +223,8 @@ void main_func(void) {
     wm_api = &gfx_whb_window;
     #elif defined(WAPI_3DS)
     wm_api = &gfx_3ds;
+    #elif defined(WAPI_DUMMY)
+    wm_api = &gfx_dummy_wm_api;
     #else
     #error No window API!
     #endif
@@ -243,6 +248,9 @@ void main_func(void) {
     #elif defined(RAPI_C3D)
     rendering_api = &gfx_citro3d_api;
     # define RAPI_NAME "3DS - C3D"
+    #elif defined(RAPI_DUMMY)
+    rendering_api = &gfx_dummy_renderer_api;
+    # define RAPI_NAME "DUMMY"
     #else
     #error No rendering API!
     #endif
