@@ -436,6 +436,8 @@ void *memmove(void *str1, const void *str2, size_t n);
                        L_TRIG     | R_TRIG     |                             \
                        U_CBUTTONS | D_CBUTTONS | L_CBUTTONS | R_CBUTTONS   )
 
+#define JPAD_BUTTONS  (U_JPAD     | D_JPAD     | L_JPAD     | R_JPAD)
+
 #define C_BUTTONS     (U_CBUTTONS | D_CBUTTONS | L_CBUTTONS | R_CBUTTONS   )
 
 #endif // SM64_H

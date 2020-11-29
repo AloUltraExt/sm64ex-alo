@@ -83,6 +83,10 @@ static void controller_sdl_bind(void) {
     controller_add_binds(L_CBUTTONS,   configKeyCLeft);
     controller_add_binds(D_CBUTTONS,   configKeyCDown);
     controller_add_binds(R_CBUTTONS,   configKeyCRight);
+    controller_add_binds(U_JPAD,       configKeyDUp);
+    controller_add_binds(L_JPAD,       configKeyDLeft);
+    controller_add_binds(D_JPAD,       configKeyDDown);
+    controller_add_binds(R_JPAD,       configKeyDRight);
     controller_add_binds(L_TRIG,       configKeyL);
     controller_add_binds(R_TRIG,       configKeyR);
     controller_add_binds(START_BUTTON, configKeyStart);

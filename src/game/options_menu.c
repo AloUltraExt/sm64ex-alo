@@ -123,6 +123,10 @@ static const u8 optBindStr[][32] = {
     { TEXT_BIND_C_DOWN },
     { TEXT_BIND_C_LEFT },
     { TEXT_BIND_C_RIGHT },
+    { TEXT_BIND_D_UP },
+    { TEXT_BIND_D_DOWN },
+    { TEXT_BIND_D_LEFT },
+    { TEXT_BIND_D_RIGHT },
     { TEXT_BIND_UP },
     { TEXT_BIND_DOWN },
     { TEXT_BIND_LEFT },
@@ -241,7 +245,7 @@ static struct Option optsCamera[] = {
 
 static struct Option optsControls[] = {
 #ifdef TARGET_WII_U
-    DEF_OPT_TOGGLE( optBindStr[18], &configN64FaceButtons ),
+    DEF_OPT_TOGGLE( optBindStr[22], &configN64FaceButtons ),
 #else
     DEF_OPT_BIND( optBindStr[ 2], configKeyA ),
     DEF_OPT_BIND( optBindStr[ 3], configKeyB ),
@@ -253,14 +257,18 @@ static struct Option optsControls[] = {
     DEF_OPT_BIND( optBindStr[ 9], configKeyCDown ),
     DEF_OPT_BIND( optBindStr[10], configKeyCLeft ),
     DEF_OPT_BIND( optBindStr[11], configKeyCRight ),
-    DEF_OPT_BIND( optBindStr[12], configKeyStickUp ),
-    DEF_OPT_BIND( optBindStr[13], configKeyStickDown ),
-    DEF_OPT_BIND( optBindStr[14], configKeyStickLeft ),
-    DEF_OPT_BIND( optBindStr[15], configKeyStickRight ),
+    DEF_OPT_BIND( optBindStr[12], configKeyDUp ),
+    DEF_OPT_BIND( optBindStr[13], configKeyDDown ),
+    DEF_OPT_BIND( optBindStr[14], configKeyDLeft ),
+    DEF_OPT_BIND( optBindStr[15], configKeyDRight ),
+    DEF_OPT_BIND( optBindStr[16], configKeyStickUp ),
+    DEF_OPT_BIND( optBindStr[17], configKeyStickDown ),
+    DEF_OPT_BIND( optBindStr[18], configKeyStickLeft ),
+    DEF_OPT_BIND( optBindStr[19], configKeyStickRight ),
     // max deadzone is 31000; this is less than the max range of ~32768, but this
     // way, the player can't accidentally lock themselves out of using the stick
-    DEF_OPT_SCROLL( optBindStr[16], &configStickDeadzone, 0, 100, 1 ),
-    DEF_OPT_SCROLL( optBindStr[17], &configRumbleStrength, 0, 100, 1)
+    DEF_OPT_SCROLL( optBindStr[20], &configStickDeadzone, 0, 100, 1 ),
+    DEF_OPT_SCROLL( optBindStr[21], &configRumbleStrength, 0, 100, 1)
 #endif
 };
 
