@@ -1,4 +1,4 @@
-#ifdef ENABLE_GFX_DUMMY
+#if defined(RAPI_DUMMY) || defined(WAPI_DUMMY)
 #include <time.h>
 #include <errno.h>
 
@@ -9,12 +9,6 @@ static void gfx_dummy_wm_init(const char *game_name, bool start_in_fullscreen) {
 }
 
 static void gfx_dummy_wm_set_keyboard_callbacks(bool (*on_key_down)(int scancode), bool (*on_key_up)(int scancode), void (*on_all_keys_up)(void)) {
-}
-
-static void gfx_dummy_wm_set_fullscreen_changed_callback(void (*on_fullscreen_changed)(bool is_now_fullscreen)) {
-}
-
-static void gfx_dummy_wm_set_fullscreen(bool enable) {
 }
 
 static void gfx_dummy_wm_main_loop(void (*run_one_game_iter)(void)) {
@@ -76,6 +70,9 @@ static void gfx_dummy_wm_swap_buffers_end(void) {
 
 static double gfx_dummy_wm_get_time(void) {
     return 0.0;
+}
+
+static void gfx_dummy_shutdown(void) {
 }
 
 static bool gfx_dummy_renderer_z_is_from_0_to_1(void) {
@@ -151,18 +148,20 @@ static void gfx_dummy_renderer_end_frame(void) {
 static void gfx_dummy_renderer_finish_render(void) {
 }
 
+static void gfx_dummy_renderer_shutdown(void) {
+}
+
 struct GfxWindowManagerAPI gfx_dummy_wm_api = {
     gfx_dummy_wm_init,
     gfx_dummy_wm_set_keyboard_callbacks,
-    gfx_dummy_wm_set_fullscreen_changed_callback,
-    gfx_dummy_wm_set_fullscreen,
     gfx_dummy_wm_main_loop,
     gfx_dummy_wm_get_dimensions,
     gfx_dummy_wm_handle_events,
     gfx_dummy_wm_start_frame,
     gfx_dummy_wm_swap_buffers_begin,
     gfx_dummy_wm_swap_buffers_end,
-    gfx_dummy_wm_get_time
+    gfx_dummy_wm_get_time,
+    gfx_dummy_shutdown
 };
 
 struct GfxRenderingAPI gfx_dummy_renderer_api = {
@@ -187,6 +186,7 @@ struct GfxRenderingAPI gfx_dummy_renderer_api = {
     gfx_dummy_renderer_on_resize,
     gfx_dummy_renderer_start_frame,
     gfx_dummy_renderer_end_frame,
-    gfx_dummy_renderer_finish_render
+    gfx_dummy_renderer_finish_render,
+    gfx_dummy_renderer_shutdown
 };
 #endif
