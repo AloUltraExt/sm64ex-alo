@@ -221,7 +221,7 @@ void unload_object(struct Object *obj) {
     obj->prevObj = NULL;
 
     obj->header.gfx.throwMatrix = NULL;
-    func_803206F8(obj->header.gfx.cameraToObject);
+    stop_sounds_from_source(obj->header.gfx.cameraToObject);
     geo_remove_child(&obj->header.gfx.node);
 #ifndef USE_SYSTEM_MALLOC
     geo_add_child(&gObjParentGraphNode, &obj->header.gfx.node);

@@ -86,10 +86,16 @@ SECTIONS
    {
       BUILD_DIR/src/buffers/buffers.o(.bss*);
       BUILD_DIR/src/audio/globals_start.o(.bss*);
+#ifndef VERSION_SH
       BUILD_DIR/src/audio/synthesis.o(.bss*);
       BUILD_DIR/src/audio/heap.o(.bss*);
+#endif
       BUILD_DIR/src/audio/load.o(.bss*);
+#ifdef VERSION_SH
+      BUILD_DIR/src/audio/unk_shindou_audio_file.o(.bss*);
+#else
       BUILD_DIR/src/audio/data.o(.bss*);
+#endif
       BUILD_DIR/src/audio*.o(.bss*);
       . = ALIGN(0x100);
       BUILD_DIR/src/buffers/gfx_output_buffer.o(.bss*);
@@ -114,7 +120,7 @@ SECTIONS
       BUILD_DIR/src/game/game_init.o(.text);
       BUILD_DIR/src/game/sound_init.o(.text);
 #ifdef VERSION_SH
-      BUILD_DIR/src/game/thread6.o(.text);
+      BUILD_DIR/src/game/rumble_init.o(.text);
 #endif
       BUILD_DIR/src/game/level_update.o(.text);
       BUILD_DIR/src/game/interaction.o(.text);
@@ -166,9 +172,15 @@ SECTIONS
       BUILD_DIR/src/audio/synthesis.o(.text);
       BUILD_DIR/src/audio/heap.o(.text);
       BUILD_DIR/src/audio/load.o(.text);
+#ifdef VERSION_SH
+      BUILD_DIR/src/audio/unk_shindou_audio_file.o(.text);
+#endif
       BUILD_DIR/src/audio/playback.o(.text);
       BUILD_DIR/src/audio/effects.o(.text);
       BUILD_DIR/src/audio/seqplayer.o(.text);
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:osDriveRomInit.o(.text);
+#endif
       BUILD_DIR/src/audio/external.o(.text);
       BUILD_DIR/src/audio/port_eu.o(.text);
 
@@ -208,6 +220,9 @@ SECTIONS
       BUILD_DIR/libultra.a:osContStartReadData.o(.text);
       BUILD_DIR/libultra.a:osContInit.o(.text);
       BUILD_DIR/libultra.a:osEepromProbe.o(.text);
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:motor.o(.text);
+#endif
       BUILD_DIR/libultra.a:osInvalDCache.o(.text);
       BUILD_DIR/libultra.a:osPiStartDma.o(.text);
       BUILD_DIR/libultra.a:bzero.o(.text)
@@ -224,12 +239,21 @@ SECTIONS
       BUILD_DIR/libultra.a:guRotateF.o(.text)
       BUILD_DIR/libultra.a:guScaleF.o(.text)
       BUILD_DIR/libultra.a:osAiSetFrequency.o(.text)
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:osCartRomInit.o(.text)
+      BUILD_DIR/libultra.a:epidma.o(.text)
+#else
       BUILD_DIR/libultra.a:alBnkfNew.o(.text)
+#endif
       BUILD_DIR/libultra.a:osAiGetLength.o(.text)
       BUILD_DIR/libultra.a:osAiSetNextBuffer.o(.text)
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:osGetCount.o(.text)
+      BUILD_DIR/libultra.a:__osDisableInt.o(.text)
+      BUILD_DIR/libultra.a:__osRestoreInt.o(.text)
+#endif
       BUILD_DIR/libultra.a:_Litob.o(.text)
       BUILD_DIR/libultra.a:_Ldtob.o(.text)
-      BUILD_DIR/libultra.a:kdebugserver.o(.text)
       BUILD_DIR/libultra.a:__osSetSR.o(.text)
       BUILD_DIR/libultra.a:__osGetSR.o(.text)
       BUILD_DIR/libultra.a:__osSetFpcCsr.o(.text)
@@ -243,9 +267,11 @@ SECTIONS
       BUILD_DIR/libultra.a:D_802F4380.o(.text)
       BUILD_DIR/libultra.a:func_802F4A20.o(.text)
       BUILD_DIR/libultra.a:osTimer.o(.text)
+#ifdef VERSION_EU
       BUILD_DIR/libultra.a:__osDisableInt.o(.text)
       BUILD_DIR/libultra.a:__osRestoreInt.o(.text)
       BUILD_DIR/libultra.a:osGetCount.o(.text)
+#endif
       BUILD_DIR/libultra.a:__osViInit.o(.text)
       BUILD_DIR/libultra.a:__osDequeueThread.o(.text)
       BUILD_DIR/libultra.a:osVirtualToPhysical.o(.text)
@@ -257,6 +283,9 @@ SECTIONS
       BUILD_DIR/libultra.a:osGetThreadPri.o(.text)
       BUILD_DIR/libultra.a:__osViGetCurrentContext.o(.text);
       BUILD_DIR/libultra.a:__osViSwapContext.o(.text)
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:osLeoDiskInit.o(.text)
+#endif
       BUILD_DIR/libultra.a:__osPiCreateAccessQueue.o(.text)
       BUILD_DIR/libultra.a:osPiRawStartDma.o(.text)
       BUILD_DIR/libultra.a:osEPiRawStartDma.o(.text)
@@ -265,6 +294,12 @@ SECTIONS
       BUILD_DIR/libultra.a:__osSiRawStartDma.o(.text)
       BUILD_DIR/libultra.a:osSetTimer.o(.text)
       BUILD_DIR/libultra.a:osEepromWrite.o(.text)
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:osPfsIsPlug.o(.text)
+      BUILD_DIR/libultra.a:crc.o(.text)
+      BUILD_DIR/libultra.a:contramwrite.o(.text)
+      BUILD_DIR/libultra.a:contramread.o(.text)
+#endif
       BUILD_DIR/libultra.a:osJamMesg.o(.text)
       BUILD_DIR/libultra.a:osPiGetCmdQueue.o(.text)
       BUILD_DIR/libultra.a:osEepromRead.o(.text)
@@ -274,16 +309,28 @@ SECTIONS
       BUILD_DIR/libultra.a:ldiv.o(.text)
       BUILD_DIR/libultra.a:__osGetCause.o(.text);
       BUILD_DIR/libultra.a:__osSiDeviceBusy.o(.text);
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:leointerrupt.o(.text)
+#endif
       BUILD_DIR/libultra.a:osSetIntMask.o(.text)
       BUILD_DIR/libultra.a:osDestroyThread.o(.text)
+#ifndef VERSION_SH
       BUILD_DIR/libultra.a:osLeoDiskInit.o(.text)
+#endif
       BUILD_DIR/libultra.a:__osSetCompare.o(.text)
-      BUILD_DIR/libultra.a:__osProbeTLB.o(.text)
       BUILD_DIR/libultra.a:__osDequeueThread.o(.text)
-      BUILD_DIR/libultra.a:guLookAtRef.o(.text); /* Fast3DEX2 only */
-      BUILD_DIR/libultra.a:func_802F7140.o(.text)
-      BUILD_DIR/libultra.a:func_802F71A0.o(.text)
+      BUILD_DIR/libultra.a:__osProbeTLB.o(.text)
+      BUILD_DIR/libultra.a:__osResetGlobalIntMask.o(.text)
+      BUILD_DIR/libultra.a:__osEPiRawWriteIo.o(.text)
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:__osEPiRawReadIo.o(.text)
+      BUILD_DIR/libultra.a:__osSetGlobalIntMask.o(.text)
+#endif
       BUILD_DIR/libultra.a:func_802F71F0.o(.text)
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:unk_shindou_file_3.o(.text)
+#endif
+      BUILD_DIR/libultra.a:guLookAtRef.o(.text); /* Fast3DEX2 only */
       BUILD_DIR/lib/rsp.o(.text);
 #else
       BUILD_DIR/src/game*.o(.text);
@@ -400,6 +447,9 @@ SECTIONS
       BUILD_DIR/src/game/main.o(.data*);
       BUILD_DIR/src/game/game_init.o(.data*);
       BUILD_DIR/src/game/sound_init.o(.data*);
+#ifdef VERSION_SH
+      BUILD_DIR/src/game/rumble_init.o(.data*);
+#endif
       BUILD_DIR/src/game/level_update.o(.data*);
       BUILD_DIR/src/game/interaction.o(.data*);
       BUILD_DIR/src/game/mario.o(.data*);
@@ -443,22 +493,34 @@ SECTIONS
 #endif
       BUILD_DIR/src/audio/synthesis.o(.data*);
       BUILD_DIR/src/audio/heap.o(.data*);
+#ifndef VERSION_SH
       BUILD_DIR/src/audio/load.o(.data*);
+#endif
       BUILD_DIR/src/audio/playback.o(.data*);
       BUILD_DIR/src/audio/effects.o(.data*);
       BUILD_DIR/src/audio/seqplayer.o(.data*);
+#ifdef VERSION_SH
+      BUILD_DIR/src/audio/data.o(.data*);
+      BUILD_DIR/src/audio/shindou_debug_prints.o(.data*);
+      BUILD_DIR/src/audio/unk_shindou_audio_file.o(.data*);
+      BUILD_DIR/src/audio/external.o(.data*);
+      BUILD_DIR/src/audio/audio_session_presets_sh.o(.data*);
+#else
       BUILD_DIR/src/audio/external.o(.data*);
       BUILD_DIR/src/audio/port_eu.o(.data*);
       BUILD_DIR/src/audio/data.o(.data*);
-      BUILD_DIR/src/audio*.o(.data*);
+#endif
 
-#ifdef VERSION_EU
+#if defined(VERSION_EU) || defined(VERSION_SH)
       BUILD_DIR/libultra.a:_Printf.o(.data*);
       BUILD_DIR/libultra.a:osInitialize.o(.data*);
       BUILD_DIR/libultra.a:osCreateViManager.o(.data*);
       BUILD_DIR/libultra.a:osViTable.o(.data*);
       BUILD_DIR/libultra.a:osCreatePiManager.o(.data*);
       BUILD_DIR/libultra.a:osContInit.o(.data*);
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:motor.o(.data*);
+#endif
       BUILD_DIR/libultra.a:osAiSetNextBuffer.o(.data*);
       BUILD_DIR/libultra.a:_Litob.o(.data*);
       BUILD_DIR/libultra.a:__osExceptionPreamble.o(.data*);
@@ -522,6 +584,8 @@ SECTIONS
       BUILD_DIR/src/game/object_collision.o(.rodata*);
       BUILD_DIR/src/game/spawn_object.o(.rodata*);
 #endif
+      BUILD_DIR/libultra.a:__osDisableInt.o(.text)
+      BUILD_DIR/libultra.a:__osRestoreInt.o(.text)
       BUILD_DIR/src/game/spawn_sound.o(.rodata*);
       BUILD_DIR/src/game/debug.o(.rodata*);
       BUILD_DIR/src/game/screen_transition.o(.rodata*);
@@ -538,12 +602,15 @@ SECTIONS
       BUILD_DIR/src/game/hud.o(.rodata*);
       BUILD_DIR/src/game/obj_behaviors.o(.rodata*);
       BUILD_DIR/src/game/obj_behaviors_2.o(.rodata*);
-#ifndef VERSION_EU
+#if defined(VERSION_JP) || defined(VERSION_US)
       BUILD_DIR/src/game*.o(.rodata*);
 #endif
       BUILD_DIR/src/audio/synthesis.o(.rodata*);
       BUILD_DIR/src/audio/heap.o(.rodata*);
       BUILD_DIR/src/audio/load.o(.rodata*);
+#ifdef VERSION_SH
+      BUILD_DIR/src/audio/unk_shindou_audio_file.o(.rodata*);
+#endif
       BUILD_DIR/src/audio/playback.o(.rodata*);
       BUILD_DIR/src/audio/effects.o(.rodata*);
       BUILD_DIR/src/audio/seqplayer.o(.rodata*);
@@ -551,7 +618,7 @@ SECTIONS
       BUILD_DIR/src/audio/port_eu.o(.rodata*);
       BUILD_DIR/src/audio*.o(.rodata*);
 
-#ifdef VERSION_EU
+#if defined(VERSION_EU) || defined(VERSION_SH)
       BUILD_DIR/libultra.a:_Printf.o(.rodata*);
 #endif
       BUILD_DIR/libultra.a:guOrthoF.o(.rodata*);
@@ -563,7 +630,7 @@ SECTIONS
       BUILD_DIR/libultra.a:guScaleF.o(.rodata*);
       BUILD_DIR/libultra.a:osAiSetFrequency.o(.rodata*);
 
-#ifdef VERSION_EU
+#if defined(VERSION_EU) || defined(VERSION_SH)
       BUILD_DIR/libultra.a:_Litob.o(.rodata*);
       BUILD_DIR/libultra.a:_Ldtob.o(.rodata*);
       BUILD_DIR/libultra.a:__osExceptionPreamble.o(.rodata*);
@@ -585,6 +652,9 @@ SECTIONS
 #ifndef VERSION_EU
       BUILD_DIR/libultra.a:*.o(.rodata*);
 #endif
+#ifdef VERSION_SH
+      BUILD_DIR/src/audio/load.o(.data*);
+#endif
       BUILD_DIR/lib/rsp.o(.rodata*);
    }
    END_SEG(main)
@@ -594,6 +664,9 @@ SECTIONS
       BUILD_DIR/src/game/main.o(.bss*);
       BUILD_DIR/src/game/game_init.o(.bss*);
       BUILD_DIR/src/game/sound_init.o(.bss*);
+#ifdef VERSION_SH
+      BUILD_DIR/src/game/rumble_init.o(.bss*);
+#endif
       BUILD_DIR/src/game/level_update.o(.bss*);
       BUILD_DIR/src/game/interaction.o(.bss*);
       BUILD_DIR/src/game/mario.o(.bss*);
@@ -632,9 +705,18 @@ SECTIONS
       BUILD_DIR/src/game*.o(.bss*);
 #endif
       BUILD_DIR/src/audio/external.o(.bss*);
-      BUILD_DIR/src/audio/port_eu.o(.bss*);
-
 #ifdef VERSION_EU
+      BUILD_DIR/src/audio/port_eu.o(.bss*);
+#endif
+#ifdef VERSION_SH
+      BUILD_DIR/src/audio/globals_start.o(.bss*);
+      BUILD_DIR/src/audio/synthesis.o(.bss*);
+      BUILD_DIR/src/audio/heap.o(.bss*);
+      BUILD_DIR/src/audio/load.o(.bss*);
+      BUILD_DIR/src/audio/data.o(.bss*);
+#endif
+
+#if defined(VERSION_EU) || defined(VERSION_SH)
       BUILD_DIR/libultra.a:osInitialize.o(.bss*);
       BUILD_DIR/libultra.a:osSetEventMesg.o(.bss*);
       BUILD_DIR/libultra.a:osSpTaskLoadGo.o(.bss*);
@@ -642,16 +724,35 @@ SECTIONS
       BUILD_DIR/libultra.a:osCreatePiManager.o(.bss*);
       BUILD_DIR/libultra.a:osContStartReadData.o(.bss*);
       BUILD_DIR/libultra.a:osContInit.o(.bss*);
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:motor.o(.bss*);
+#endif
       BUILD_DIR/libultra.a:guRotateF.o(.bss*);
-      BUILD_DIR/libultra.a:unk_stack_data.o(.bss*);
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:osCartRomInit.o(.bss*);
+#endif
+#ifndef VERSION_SH
+      BUILD_DIR/libultra.a:leointerrupt.o(.bss*);
+#endif
       BUILD_DIR/libultra.a:osTimer.o(.bss*);
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:osLeoDiskInit.o(.bss*)
+#endif
       BUILD_DIR/libultra.a:__osPiCreateAccessQueue.o(.bss*);
       BUILD_DIR/libultra.a:__osSiCreateAccessQueue.o(.bss*);
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:osPfsIsPlug.o(.bss*);
+#endif
       BUILD_DIR/libultra.a:osEepromWrite.o(.bss*);
       BUILD_DIR/libultra.a:kdebugserver.o(.bss*);
+#ifdef VERSION_SH
+      BUILD_DIR/libultra.a:leointerrupt.o(.bss*);
+#endif
+#ifndef VERSION_SH
+      BUILD_DIR/libultra.a:osLeoDiskInit.o(.bss*)
+#endif
       BUILD_DIR/libultra.a:__osViInit.o(.bss*)
       BUILD_DIR/libultra.a:__osSyncPutChars.o(.bss*);
-      BUILD_DIR/libultra.a:osLeoDiskInit.o(.bss*)
       BUILD_DIR/libultra.a:_Printf.o(.bss*);
       BUILD_DIR/libultra.a:osAiSetNextBuffer.o(.bss*);
       BUILD_DIR/libultra.a:EU_D_802f4330.o(.bss*);
@@ -669,11 +770,10 @@ SECTIONS
       BUILD_DIR/libultra.a:__osPiCreateAccessQueue.o(.bss*);
       BUILD_DIR/libultra.a:__osSiCreateAccessQueue.o(.bss*);
       BUILD_DIR/libultra.a:osEepromWrite.o(.bss*);
-      BUILD_DIR/libultra.a:unk_stack_data.o(.bss*);
+      BUILD_DIR/libultra.a:kdebugserver_stack.o(.bss*);
       BUILD_DIR/libultra.a:kdebugserver.o(.bss*);
-      BUILD_DIR/libultra.a:*.o(.bss*);
 #endif
-
+      BUILD_DIR/libultra.a:*.o(.bss*);
       . = ALIGN(0x8);
    }
    END_NOLOAD(main)
@@ -1007,3 +1107,5 @@ SECTIONS
       *(*);
    }
 }
+EXTERN(osPfsIsPlug)
+EXTERN(__osLeoInterrupt)

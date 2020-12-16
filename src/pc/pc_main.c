@@ -37,7 +37,7 @@
 
 #include "game/game_init.h"
 #include "game/main.h"
-#include "game/thread6.h"
+#include "game/rumble_init.h"
 
 #ifdef DISCORDRPC
 #include "pc/discord/discordrpc.h"
@@ -51,10 +51,6 @@ s8 D_8032C648;
 s8 gDebugLevelSelect;
 s8 gShowProfiler;
 s8 gShowDebugText;
-
-s32 gRumblePakPfs;
-struct RumbleData gRumbleDataQueue[3];
-struct RumbleSettings gCurrRumbleSettings;
 
 static struct AudioAPI *audio_api;
 static struct GfxWindowManagerAPI *wm_api;

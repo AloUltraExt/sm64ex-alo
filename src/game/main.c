@@ -10,7 +10,7 @@
 #include "buffers/buffers.h"
 #include "segments.h"
 #include "main.h"
-#include "thread6.h"
+#include "rumble_init.h"
 
 /**
  * This entry point is only used in TARGET_N64.
@@ -43,18 +43,6 @@ OSMesg gSIEventMesgBuf[1];
 OSMesg gIntrMesgBuf[16];
 OSMesg gUnknownMesgBuf[16];
 
-#ifdef VERSION_SH
-OSThread gRumblePakThread;
-OSMesgQueue gRumblePakSchedulerMesgQueue;
-OSMesgQueue gRumbleThreadVIMesgQueue;
-OSMesg gRumblePakSchedulerMesgBuf[1];
-OSMesg gRumbleThreadVIMesgBuf[1];
-
-s32 gRumblePakPfs; // Actually an OSPfs but we don't have that header yet
-struct RumbleData gRumbleDataQueue[3];
-struct RumbleSettings gCurrRumbleSettings;
-#endif
-
 struct VblankHandler *gVblankHandler1 = NULL;
 struct VblankHandler *gVblankHandler2 = NULL;
 struct SPTask *gActiveSPTask = NULL;
@@ -63,7 +51,7 @@ struct SPTask *sCurrentDisplaySPTask = NULL;
 struct SPTask *sNextAudioSPTask = NULL;
 struct SPTask *sNextDisplaySPTask = NULL;
 s8 sAudioEnabled = TRUE;
-u32 sNumVblanks = 0;
+u32 gNumVblanks = 0;
 s8 gResetTimer = 0;
 s8 D_8032C648 = 0;
 s8 gDebugLevelSelect = FALSE;
@@ -153,17 +141,17 @@ void create_thread(OSThread *thread, OSId id, void (*entry)(void *), void *arg, 
 }
 
 #ifdef VERSION_SH
-extern void func_sh_802F69CC(void);
+extern void func_sh_802f69cc(void);
 #endif
 
 void handle_nmi_request(void) {
     gResetTimer = 1;
     D_8032C648 = 0;
-    func_80320890();
-    sound_banks_disable(2, 0x037A);
+    stop_sounds_in_continuous_banks();
+    sound_banks_disable(SEQ_PLAYER_SFX, SOUND_BANKS_BACKGROUND);
     fadeout_music(90);
 #ifdef VERSION_SH
-    func_sh_802F69CC();
+    func_sh_802f69cc();
 #endif
 }
 
@@ -232,7 +220,7 @@ void handle_vblank(void) {
     UNUSED s32 pad; // needed to pad the stack
 
     stub_main_3();
-    sNumVblanks++;
+    gNumVblanks++;
 #if SH_CHANGES
     if (gResetTimer > 0 && gResetTimer < 100) {
         gResetTimer++;

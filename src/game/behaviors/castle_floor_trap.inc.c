@@ -27,7 +27,7 @@ void bhv_castle_floor_trap_open_detect(void) {
 void bhv_castle_floor_trap_open(void) {
     if (o->oTimer == 0)
 #ifdef QOL_FIXES
-        play_sound(SOUND_GENERAL_CASTLE_TRAP_OPEN, gDefaultSoundArgs);
+        play_sound(SOUND_GENERAL_CASTLE_TRAP_OPEN, gGlobalSoundSource);
 #else
         cur_obj_play_sound_2(SOUND_GENERAL_CASTLE_TRAP_OPEN);
 #endif

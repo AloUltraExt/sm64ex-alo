@@ -181,9 +181,9 @@ void bully_step(void) {
 
 void bully_spawn_coin(void) {
     struct Object *coin = spawn_object(o, MODEL_YELLOW_COIN, bhvMovingYellowCoin);
-#ifdef VERSION_JP //TODO: maybe move this ifdef logic to the header?
+#ifdef VERSION_JP // TODO: maybe move this ifdef logic to the header?
     cur_obj_play_sound_2(SOUND_GENERAL_COIN_SPURT);
-#elif VERSION_EU
+#elif defined(VERSION_EU) || defined(VERSION_SH)
     cur_obj_play_sound_2(SOUND_GENERAL_COIN_SPURT_EU);
 #else
     cur_obj_play_sound_2(SOUND_GENERAL_COIN_SPURT_2);
@@ -296,11 +296,7 @@ void big_bully_spawn_star(void) {
 }
 
 void bhv_big_bully_with_minions_loop(void) {
-#if defined (VERSION_EU) || defined (VERSION_SH)
-    s32 collisionFlags;
-#else
     s16 collisionFlags;
-#endif
 
     o->oBullyPrevX = o->oPosX;
     o->oBullyPrevY = o->oPosY;

@@ -11,8 +11,8 @@
 #include "level_update.h"
 #include "mario.h"
 #include "mario_step.h"
+#include "rumble_init.h"
 #include "save_file.h"
-#include "thread6.h"
 #ifdef BETTERCAMERA
 #include "bettercamera.h"
 #endif
@@ -1108,7 +1108,7 @@ u32 common_air_knockback_step(struct MarioState *m, u32 landAction, u32 hardFall
         case AIR_STEP_LANDED:
 #ifdef RUMBLE_FEEDBACK
             if (m->action != ACT_SOFT_BONK) {
-                queue_rumble_data(5, 80);
+                queue_rumble_data(5, 40);
             }
 #endif
             if (!check_fall_damage_or_get_stuck(m, hardFallAction)) {
@@ -1692,7 +1692,7 @@ s32 act_shot_from_cannon(struct MarioState *m) {
             }
 #endif
 #ifdef RUMBLE_FEEDBACK
-            queue_rumble_data(5, 80);
+            queue_rumble_data(5, 60);
 #endif
             break;
 

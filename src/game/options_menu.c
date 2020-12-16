@@ -514,7 +514,7 @@ void optmenu_draw_prompt(void) {
 void optmenu_toggle(void) {
     if (optmenu_open == 0) {
         #ifndef nosound
-        play_sound(SOUND_MENU_CHANGE_SELECT, gDefaultSoundArgs);
+        play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
         #endif
 
         // HACK: hide the last option in main if cheats are disabled
@@ -533,7 +533,7 @@ void optmenu_toggle(void) {
         l_counter = 0;
     } else {
         #ifndef nosound
-        play_sound(SOUND_MENU_MARIO_CASTLE_WARP2, gDefaultSoundArgs);
+        play_sound(SOUND_MENU_MARIO_CASTLE_WARP2, gGlobalSoundSource);
         #endif
         optmenu_open = 0;
         #ifdef BETTERCAMERA
@@ -549,7 +549,7 @@ void optmenu_check_buttons(void) {
         u32 key = controller_get_raw_key();
         if (key != VK_INVALID) {
             #ifndef nosound
-            play_sound(SOUND_MENU_CHANGE_SELECT, gDefaultSoundArgs);
+            play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
             #endif
             currentMenu->opts[currentMenu->select].uval[optmenu_bind_idx] = key;
             optmenu_binding = 0;
@@ -569,7 +569,7 @@ void optmenu_check_buttons(void) {
     if ((gPlayer1Controller->buttonPressed & L_TRIG) && !Cheats.EnableCheats) {
         if (l_counter == 2) {
                 Cheats.EnableCheats = true;
-                play_sound(SOUND_MENU_STAR_SOUND, gDefaultSoundArgs);
+                play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
                 l_counter = 0;
         } else {
             l_counter++;
@@ -594,7 +594,7 @@ void optmenu_check_buttons(void) {
     if (ABS(gPlayer1Controller->stickY) > 60) {
         if (allowInput) {
             #ifndef nosound
-            play_sound(SOUND_MENU_CHANGE_SELECT, gDefaultSoundArgs);
+            play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
             #endif
 
             if (gPlayer1Controller->stickY >= 60) {
@@ -615,7 +615,7 @@ void optmenu_check_buttons(void) {
     } else if (ABS(gPlayer1Controller->stickX) > 60) {
         if (allowInput) {
             #ifndef nosound
-            play_sound(SOUND_MENU_CHANGE_SELECT, gDefaultSoundArgs);
+            play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
             #endif
             if (gPlayer1Controller->stickX >= 60)
                 optmenu_opt_change(&currentMenu->opts[currentMenu->select], 1);
@@ -625,7 +625,7 @@ void optmenu_check_buttons(void) {
     } else if (gPlayer1Controller->buttonPressed & A_BUTTON) {
         if (allowInput) {
             #ifndef nosound
-            play_sound(SOUND_MENU_CHANGE_SELECT, gDefaultSoundArgs);
+            play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
             #endif
             optmenu_opt_change(&currentMenu->opts[currentMenu->select], 0);
         }
@@ -633,7 +633,7 @@ void optmenu_check_buttons(void) {
         if (allowInput) {
             if (currentMenu->prev) {
                 #ifndef nosound
-                play_sound(SOUND_MENU_CHANGE_SELECT, gDefaultSoundArgs);
+                play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
                 #endif
                 currentMenu = currentMenu->prev;
             } else {

@@ -10,6 +10,10 @@ default: all
 # These options can either be changed by modifying the makefile, or
 # by building with 'make SETTING=value'. 'make clean' may be required.
 
+# Makefile Refactor from Refresh 13 isn't included because how much
+# changes are in this Makefile in sm64ex, especially in this repo
+# However, the build clean output is there in it's own way
+
 # Build debug version
 DEBUG ?= 0
 # Version of the game to build
@@ -56,9 +60,9 @@ EXTERNAL_DATA ?= 0
 # Enable Discord Rich Presence
 DISCORDRPC ?= 0
 # Enable rumble functions (Originally in Shindou)
-RUMBLE_FEEDBACK ?= 1
+RUMBLE_FEEDBACK ?= 0
 # Enable PC Port defines
-PC_PORT_DEFINES ?= 1
+PC_PORT_DEFINES ?= 0
 
 # Various workarounds for weird toolchains
 NO_BZERO_BCOPY ?= 0
@@ -118,9 +122,11 @@ BASEPACK ?= base.zip
 WINDOWS_BUILD ?= 0
 
 ifeq ($(TARGET_N64),0)
-GRUCODE := f3dex2e
+  GRUCODE := f3dex2e
+  RUMBLE_FEEDBACK := 1
+  PC_PORT_DEFINES := 1
 else
-GRUCODE := $(GRUCODE)
+  GRUCODE := $(GRUCODE)
 endif
 
 # Attempt to detect OS
@@ -193,23 +199,21 @@ endif
 
 ifeq ($(VERSION),jp)
   VERSION_DEF := VERSION_JP
-else
-ifeq ($(VERSION),us)
+else ifeq ($(VERSION),us)
   VERSION_DEF := VERSION_US
-else
-ifeq ($(VERSION),eu)
+else ifeq ($(VERSION),eu)
   VERSION_DEF := VERSION_EU
-else
-ifeq ($(VERSION),sh)
-  $(warning Building SH is experimental and is prone to breaking. Try at your own risk.)
+else ifeq ($(VERSION),sh)
   VERSION_DEF := VERSION_SH
-# TODO: GET RID OF THIS!!! We should mandate assets for Shindou like EU but we dont have the addresses extracted yet so we'll just pretend you have everything extracted for now.
-  NOEXTRACT := 1
+  RUMBLE_FEEDBACK := 1
+  # Audio changed so much in SH that just fails building
+  ifeq ($(TARGET_N64),0)
+    $(error Shindou currently doesn't work on PC Port, wait for a dev until it's fixed.)
+  else
+    $(warning Shindou compiles but just hangs in a black screen. Try at your own risk.)
+  endif
 else
   $(error unknown version "$(VERSION)")
-endif
-endif
-endif
 endif
 
 TARGET := sm64.$(VERSION)
@@ -223,32 +227,24 @@ ifeq ($(GRUCODE),f3dex) # Fast3DEX
   GRUCODE_ASFLAGS := --defsym F3DEX_GBI_SHARED=1
   TARGET := $(TARGET).f3dex
   COMPARE := 0
-else
-ifeq ($(GRUCODE),f3dex2) # Fast3DEX2
+else ifeq ($(GRUCODE),f3dex2) # Fast3DEX2
   GRUCODE_DEF := F3DEX_GBI_2
   GRUCODE_ASFLAGS := --defsym F3DEX_GBI_SHARED=1
   TARGET := $(TARGET).f3dex2
   COMPARE := 0
-else
-ifeq ($(GRUCODE),f3dex2e) # Fast3DEX2 Extended (PC default)
+else ifeq ($(GRUCODE),f3dex2e) # Fast3DEX2 Extended (PC default)
   GRUCODE_DEF := F3DEX_GBI_2E
   TARGET := $(TARGET).f3dex2e
   COMPARE := 0
-else
-ifeq ($(GRUCODE),f3d_new) # Fast3D 2.0H (Shindou)
+else ifeq ($(GRUCODE),f3d_new) # Fast3D 2.0H (Shindou)
   GRUCODE_DEF := F3D_NEW
   TARGET := $(TARGET).f3d_new
   COMPARE := 0
-else
-ifeq ($(GRUCODE),f3dzex) # Fast3DZEX (2.0J / Animal Forest - Dōbutsu no Mori)
+else ifeq ($(GRUCODE),f3dzex) # Fast3DZEX (2.0J / Animal Forest - Dōbutsu no Mori)
   GRUCODE_DEF := F3DEX_GBI_2
   GRUCODE_ASFLAGS := --defsym F3DEX_GBI_SHARED=1
   TARGET := $(TARGET).f3dzex
   COMPARE := 0
-endif
-endif
-endif
-endif
 endif
 
 GRUCODE_CFLAGS := -D$(GRUCODE_DEF)
@@ -296,13 +292,15 @@ endif
 # on tools and assets, and we use directory globs further down
 # in the makefile that we want should cover assets.)
 
+PYTHON := python3
+
 ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(MAKECMDGOALS),distclean)
 
 # Make sure assets exist
 NOEXTRACT ?= 0
 ifeq ($(NOEXTRACT),0)
-DUMMY != ./extract_assets.py $(VERSION) >&2 || echo FAIL
+ DUMMY != $(PYTHON) extract_assets.py $(VERSION) >&2 || echo FAIL
 ifeq ($(DUMMY),FAIL)
   $(error Failed to extract assets)
 endif
@@ -453,6 +451,34 @@ ifeq ($(TARGET_RPI),1)
         endif
 endif
 
+# Whether to hide commands or not
+VERBOSE ?= 0
+ifeq ($(VERBOSE),0)
+  V := @
+endif
+
+# Whether to colorize build messages
+COLOR ?= 1
+
+# display selected options unless 'make clean' or 'make distclean' is run
+# TODO: Add Info for other targets
+ifeq ($(filter clean distclean,$(MAKECMDGOALS)),)
+  $(info ==== Build Options ====)
+  $(info Version:        $(VERSION))
+  $(info Microcode:      $(GRUCODE))
+  $(info Target:         $(TARGET))
+  $(info =======================)
+endif
+
+ifeq ($(COLOR),1)
+NO_COL  := \033[0m
+RED     := \033[0;31m
+GREEN   := \033[0;32m
+BLUE    := \033[0;34m
+YELLOW  := \033[0;33m
+BLINK   := \033[33;5m
+endif
+
 # File dependencies and variables for specific files
 include Makefile.split
 
@@ -495,19 +521,14 @@ endif
 
 # "If we're not N64, use the above"
 
-ifeq ($(VERSION),sh)
 SOUND_BANK_FILES := $(wildcard sound/sound_banks/*.json)
-SOUND_SEQUENCE_FILES := $(wildcard sound/sequences/jp/*.m64) \
-    $(wildcard sound/sequences/*.m64) \
-    $(foreach file,$(wildcard sound/sequences/jp/*.s),$(BUILD_DIR)/$(file:.s=.m64)) \
-    $(foreach file,$(wildcard sound/sequences/*.s),$(BUILD_DIR)/$(file:.s=.m64))
-else
-SOUND_BANK_FILES := $(wildcard sound/sound_banks/*.json)
-SOUND_SEQUENCE_FILES := $(wildcard sound/sequences/$(VERSION)/*.m64) \
-    $(wildcard sound/sequences/*.m64) \
-    $(foreach file,$(wildcard sound/sequences/$(VERSION)/*.s),$(BUILD_DIR)/$(file:.s=.m64)) \
-    $(foreach file,$(wildcard sound/sequences/*.s),$(BUILD_DIR)/$(file:.s=.m64))
-endif
+SOUND_SEQUENCE_DIRS := sound/sequences sound/sequences/$(VERSION)
+# all .m64 files in SOUND_SEQUENCE_DIRS, plus all .m64 files that are generated from .s files in SOUND_SEQUENCE_DIRS
+SOUND_SEQUENCE_FILES := \
+  $(foreach dir,$(SOUND_SEQUENCE_DIRS),\
+    $(wildcard $(dir)/*.m64) \
+    $(foreach file,$(wildcard $(dir)/*.s),$(BUILD_DIR)/$(file:.s=.m64)) \
+  )
 
 SOUND_SAMPLE_DIRS := $(wildcard sound/samples/*)
 SOUND_SAMPLE_AIFFS := $(foreach dir,$(SOUND_SAMPLE_DIRS),$(wildcard $(dir)/*.aiff))
@@ -549,9 +570,6 @@ GLOBAL_ASM_C_FILES != grep -rl 'GLOBAL_ASM(' $(wildcard src/**/*.c)
 GLOBAL_ASM_O_FILES = $(foreach file,$(GLOBAL_ASM_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
 GLOBAL_ASM_DEP = $(BUILD_DIR)/src/audio/non_matching_dep
 endif
-
-# Segment elf files
-SEG_FILES := $(SEGMENT_ELF_FILES) $(ACTOR_ELF_FILES) $(LEVEL_ELF_FILES)
 
 ##################### Compiler Options #######################
 INCLUDE_CFLAGS := -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I .
@@ -611,7 +629,7 @@ LDFLAGS := -T undefined_syms.txt -T $(BUILD_DIR)/$(LD_SCRIPT) -Map $(BUILD_DIR)/
 ENDIAN_BITWIDTH := $(BUILD_DIR)/endian-and-bitwidth
 
 ifeq ($(COMPILER_N64),gcc)
-  CFLAGS := -march=vr4300 -mfix4300 -mabi=32 -mno-shared -G 0 -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -I include -I src/ -I $(BUILD_DIR)/include -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra $(COMMON_CFLAGS)
+  CFLAGS := -march=vr4300 -mfix4300 -mabi=32 -mno-shared -G 0 $(COMMON_CFLAGS) -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I . -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra
 endif
 
 ifeq ($(shell getconf LONG_BIT), 32)
@@ -921,7 +939,7 @@ else ifeq ($(WINDOWS_BUILD),1)
   ifeq ($(CROSS),)
     LDFLAGS += -no-pie
   endif
-  ifeq ($(WINDOWS_CONSOLE),1)
+  ifeq ($(DEBUG),1)
     LDFLAGS += -mconsole
   endif
 
@@ -962,7 +980,13 @@ EMU_FLAGS = --noosd
 LOADER = loader64
 LOADER_FLAGS = -vwf
 SHA1SUM = sha1sum
+PRINT = printf
 ZEROTERM = $(PYTHON) $(TOOLS_DIR)/zeroterm.py
+
+# Common build print status function
+define print
+  @$(PRINT) "$(GREEN)$(1) $(YELLOW)$(2)$(GREEN) -> $(BLUE)$(3)$(NO_COL)\n"
+endef
 
 ifeq (, $(shell which armips 2>/dev/null))
   RSPASM := $(TOOLS_DIR)/armips
@@ -1049,20 +1073,28 @@ libultra: $(BUILD_DIR)/libultra.a
 
 $(BUILD_DIR)/asm/boot.o: $(IPL3_RAW_FILES)
 $(BUILD_DIR)/src/game/crash_screen.o: $(CRASH_TEXTURE_C_FILES)
+$(CRASH_TEXTURE_C_FILES): TEXTURE_ENCODING := u32
 
 $(BUILD_DIR)/lib/rsp.o: $(BUILD_DIR)/rsp/rspboot.bin $(BUILD_DIR)/rsp/fast3d.bin $(BUILD_DIR)/rsp/audio.bin
+
+ifeq ($(VERSION),sh)
+  $(BUILD_DIR)/src/audio/load.o: $(SOUND_BIN_DIR)/bank_sets.inc.c $(SOUND_BIN_DIR)/sequences_header.inc.c $(SOUND_BIN_DIR)/ctl_header.inc.c $(SOUND_BIN_DIR)/tbl_header.inc.c
+endif
 
 #Required so the compiler doesn't complain about this not existing.
 $(BUILD_DIR)/src/game/camera.o: $(BUILD_DIR)/include/text_strings.h
 
 $(BUILD_DIR)/include/text_strings.h: include/text_strings.h.in
-	$(TEXTCONV) charmap.txt $< $@
+	$(call print,Encoding:,$<,$@)
+	$(V)$(TEXTCONV) charmap.txt $< $@
 
 $(BUILD_DIR)/include/text_menu_strings.h: include/text_menu_strings.h.in
-	$(TEXTCONV) charmap_menu.txt $< $@
+	$(call print,Encoding:,$<,$@)
+	$(V)$(TEXTCONV) charmap_menu.txt $< $@
 
 $(BUILD_DIR)/include/text_options_strings.h: include/text_options_strings.h.in
-	$(TEXTCONV) charmap.txt $< $@
+	$(call print,Encoding:,$<,$@)
+	$(V)$(TEXTCONV) charmap.txt $< $@
 
 ifeq ($(VERSION),eu)
 TEXT_DIRS := text/de text/us text/fr
@@ -1090,10 +1122,12 @@ endif
 endif
 
 $(BUILD_DIR)/text/%/define_courses.inc.c: text/define_courses.inc.c text/%/courses.h
-	$(CPP) $(VERSION_CFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) charmap.txt - $@
+	@$(PRINT) "$(GREEN)Preprocessing: $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(CPP) $(VERSION_CFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) charmap.txt - $@
 
 $(BUILD_DIR)/text/%/define_text.inc.c: text/define_text.inc.c text/%/courses.h text/%/dialogs.h
-	$(CPP) $(VERSION_CFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) charmap.txt - $@
+	@$(PRINT) "$(GREEN)Preprocessing: $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(CPP) $(VERSION_CFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) charmap.txt - $@
 
 RSP_DIRS := $(BUILD_DIR)/rsp
 ALL_DIRS := $(BUILD_DIR) $(addprefix $(BUILD_DIR)/,$(SRC_DIRS) $(ASM_DIRS) $(GODDARD_SRC_DIRS) $(ULTRA_SRC_DIRS) $(ULTRA_ASM_DIRS) $(ULTRA_BIN_DIRS) $(BIN_DIRS) $(TEXTURE_DIRS) $(TEXT_DIRS) $(SOUND_SAMPLE_DIRS) $(addprefix levels/,$(LEVEL_DIRS)) include) $(MIO0_DIR) $(addprefix $(MIO0_DIR)/,$(VERSION)) $(SOUND_BIN_DIR) $(SOUND_BIN_DIR)/sequences/$(VERSION) $(RSP_DIRS)
@@ -1128,10 +1162,12 @@ endif
 endif
 
 ################################################################
-# TEXTURE GENERATION                                           #
+# Texture Generation                                           #
 ################################################################
 
-# RGBA32, RGBA16, IA16, IA8, IA4, IA1, I8, I4
+# Convert PNGs to RGBA32, RGBA16, IA16, IA8, IA4, IA1, I8, I4 binary files
+
+TEXTURE_ENCODING := u8
 
 ifeq ($(EXTERNAL_DATA),1)
 
@@ -1141,23 +1177,26 @@ $(BUILD_DIR)/%: %.png
 else
 
 $(BUILD_DIR)/%: %.png
-	$(N64GRAPHICS) -i $@ -g $< -f $(lastword $(subst ., ,$@))
+	$(call print,Converting:,$<,$@)
+	$(V)$(N64GRAPHICS) -s raw -i $@ -g $< -f $(lastword $(subst ., ,$@))
 
 endif
 
-$(BUILD_DIR)/%.inc.c: $(BUILD_DIR)/% %.png
-	hexdump -v -e '1/1 "0x%X,"' $< > $@
-	echo >> $@
+$(BUILD_DIR)/%.inc.c: %.png
+	$(call print,Converting:,$<,$@)
+	$(V)$(N64GRAPHICS) -s $(TEXTURE_ENCODING) -i $@ -g $< -f $(lastword ,$(subst ., ,$(basename $<)))
 
 ifeq ($(EXTERNAL_DATA),0)
 
 # Color Index CI8
 $(BUILD_DIR)/%.ci8: %.ci8.png
-	$(N64GRAPHICS_CI) -i $@ -g $< -f ci8
+	$(call print,Converting:,$<,$@)
+	$(V)$(N64GRAPHICS_CI) -i $@ -g $< -f ci8
 
 # Color Index CI4
 $(BUILD_DIR)/%.ci4: %.ci4.png
-	$(N64GRAPHICS_CI) -i $@ -g $< -f ci4
+	$(call print,Converting:,$<,$@)
+	$(V)$(N64GRAPHICS_CI) -i $@ -g $< -f ci4
 
 endif
 
@@ -1167,75 +1206,82 @@ endif
 
 ifeq ($(TARGET_N64),1)
 # TODO: ideally this would be `-Trodata-segment=0x07000000` but that doesn't set the address
-
-$(BUILD_DIR)/bin/%.elf: $(BUILD_DIR)/bin/%.o
-	$(LD) -e 0 -Ttext=$(SEGMENT_ADDRESS) -Map $@.map -o $@ $<
-$(BUILD_DIR)/actors/%.elf: $(BUILD_DIR)/actors/%.o
-	$(LD) -e 0 -Ttext=$(SEGMENT_ADDRESS) -Map $@.map -o $@ $<
-
+$(BUILD_DIR)/%.elf: $(BUILD_DIR)/%.o
+	$(call print,Linking ELF file:,$<,$@)
+	$(V)$(LD) -e 0 -Ttext=$(SEGMENT_ADDRESS) -Map $@.map -o $@ $<
 # Override for level.elf, which otherwise matches the above pattern
 .SECONDEXPANSION:
 $(BUILD_DIR)/levels/%/leveldata.elf: $(BUILD_DIR)/levels/%/leveldata.o $(BUILD_DIR)/bin/$$(TEXTURE_BIN).elf
-	$(LD) -e 0 -Ttext=$(SEGMENT_ADDRESS) -Map $@.map --just-symbols=$(BUILD_DIR)/bin/$(TEXTURE_BIN).elf -o $@ $<
+	$(call print,Linking ELF file:,$<,$@)
+	$(V)$(LD) -e 0 -Ttext=$(SEGMENT_ADDRESS) -Map $@.map --just-symbols=$(BUILD_DIR)/bin/$(TEXTURE_BIN).elf -o $@ $<
 
-$(BUILD_DIR)/bin/%.bin: $(BUILD_DIR)/bin/%.elf
-	$(EXTRACT_DATA_FOR_MIO) $< $@
-
-$(BUILD_DIR)/actors/%.bin: $(BUILD_DIR)/actors/%.elf
-	$(EXTRACT_DATA_FOR_MIO) $< $@
+$(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf
+	$(call print,Extracting compressionable data from:,$<,$@)
+	$(V)$(EXTRACT_DATA_FOR_MIO) $< $@
 
 $(BUILD_DIR)/levels/%/leveldata.bin: $(BUILD_DIR)/levels/%/leveldata.elf
-	$(EXTRACT_DATA_FOR_MIO) $< $@
+	$(call print,Extracting compressionable data from:,$<,$@)
+	$(V)$(EXTRACT_DATA_FOR_MIO) $< $@
 
+# Compress binary file
 $(BUILD_DIR)/%.mio0: $(BUILD_DIR)/%.bin
-	$(MIO0TOOL) $< $@
+	$(call print,Compressing:,$<,$@)
+	$(V)$(MIO0TOOL) $< $@
 
-$(BUILD_DIR)/%.mio0.o: $(BUILD_DIR)/%.mio0.s
-	$(AS) $(ASFLAGS) -o $@ $<
-
-$(BUILD_DIR)/%.mio0.s: $(BUILD_DIR)/%.mio0
-	printf ".section .data\n\n.incbin \"$<\"\n" > $@
+# convert binary mio0 to object file
+$(BUILD_DIR)/%.mio0.o: $(BUILD_DIR)/%.mio0
+	$(call print,Converting MIO0 to ELF:,$<,$@)
+	$(V)printf ".section .data\n\n.incbin \"$<\"\n" | $(AS) $(ASFLAGS) -o $@
 endif
 
 # PC Area
 $(BUILD_DIR)/%.table: %.aiff
-	$(AIFF_EXTRACT_CODEBOOK) $< >$@
+	$(call print,Extracting codebook:,$<,$@)
+	$(V)$(AIFF_EXTRACT_CODEBOOK) $< >$@
 
 $(BUILD_DIR)/%.aifc: $(BUILD_DIR)/%.table %.aiff
-	$(VADPCM_ENC) -c $^ $@
+	$(call print,Encoding VADPCM:,$<,$@)
+	$(V)$(VADPCM_ENC) -c $^ $@
 
+# Assemble RSP assembly code
 $(BUILD_DIR)/rsp/%.bin $(BUILD_DIR)/rsp/%_data.bin: rsp/%.s
-	$(RSPASM) -sym $@.sym -definelabel $(VERSION_DEF) 1 -definelabel $(GRUCODE_DEF) 1 -strequ CODE_FILE $(BUILD_DIR)/rsp/$*.bin -strequ DATA_FILE $(BUILD_DIR)/rsp/$*_data.bin $<
+	$(call print,Assembling:,$<,$@)
+	$(V)$(RSPASM) -sym $@.sym -definelabel $(VERSION_DEF) 1 -definelabel $(GRUCODE_DEF) 1 -strequ CODE_FILE $(BUILD_DIR)/rsp/$*.bin -strequ DATA_FILE $(BUILD_DIR)/rsp/$*_data.bin $<
 
 $(ENDIAN_BITWIDTH): tools/determine-endian-bitwidth.c
-	$(CC) -c $(CFLAGS) -o $@.dummy2 $< 2>$@.dummy1; true
-	grep -o 'msgbegin --endian .* --bitwidth .* msgend' $@.dummy1 > $@.dummy2
-	head -n1 <$@.dummy2 | cut -d' ' -f2-5 > $@
-	@rm $@.dummy1
-	@rm $@.dummy2
+	@$(PRINT) "$(GREEN)Generating endian-bitwidth $(NO_COL)\n"
+	$(V)$(CC) -c $(CFLAGS) -o $@.dummy2 $< 2>$@.dummy1; true
+	$(V)grep -o 'msgbegin --endian .* --bitwidth .* msgend' $@.dummy1 > $@.dummy2
+	$(V)head -n1 <$@.dummy2 | cut -d' ' -f2-5 > $@
+	@$(RM) $@.dummy1
+	@$(RM) $@.dummy2
 
 $(SOUND_BIN_DIR)/sound_data.ctl: sound/sound_banks/ $(SOUND_BANK_FILES) $(SOUND_SAMPLE_AIFCS) $(ENDIAN_BITWIDTH)
-	$(PYTHON) tools/assemble_sound.py $(BUILD_DIR)/sound/samples/ sound/sound_banks/ $(SOUND_BIN_DIR)/sound_data.ctl $(SOUND_BIN_DIR)/sound_data.tbl $(VERSION_CFLAGS) $$(cat $(ENDIAN_BITWIDTH))
+	@$(PRINT) "$(GREEN)Generating:  $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(PYTHON) $(TOOLS_DIR)/assemble_sound.py $(BUILD_DIR)/sound/samples/ sound/sound_banks/ $(SOUND_BIN_DIR)/sound_data.ctl $(SOUND_BIN_DIR)/ctl_header $(SOUND_BIN_DIR)/sound_data.tbl $(SOUND_BIN_DIR)/tbl_header $(VERSION_CFLAGS) $$(cat $(ENDIAN_BITWIDTH))
 
 $(SOUND_BIN_DIR)/sound_data.tbl: $(SOUND_BIN_DIR)/sound_data.ctl
 	@true
 
-ifeq ($(VERSION),sh)
-$(SOUND_BIN_DIR)/sequences.bin: $(SOUND_BANK_FILES) sound/sequences.json sound/sequences/ sound/sequences/jp/ $(SOUND_SEQUENCE_FILES) $(ENDIAN_BITWIDTH)
-	$(PYTHON) tools/assemble_sound.py --sequences $@ $(SOUND_BIN_DIR)/bank_sets sound/sound_banks/ sound/sequences.json $(SOUND_SEQUENCE_FILES) $(VERSION_CFLAGS) $$(cat $(ENDIAN_BITWIDTH))
-else
-$(SOUND_BIN_DIR)/sequences.bin: $(SOUND_BANK_FILES) sound/sequences.json sound/sequences/ sound/sequences/$(VERSION)/ $(SOUND_SEQUENCE_FILES) $(ENDIAN_BITWIDTH)
-	$(PYTHON) tools/assemble_sound.py --sequences $@ $(SOUND_BIN_DIR)/bank_sets sound/sound_banks/ sound/sequences.json $(SOUND_SEQUENCE_FILES) $(VERSION_CFLAGS) $$(cat $(ENDIAN_BITWIDTH))
-endif
+$(SOUND_BIN_DIR)/ctl_header: $(SOUND_BIN_DIR)/sound_data.ctl
+	@true
+
+$(SOUND_BIN_DIR)/tbl_header: $(SOUND_BIN_DIR)/sound_data.ctl
+	@true
+
+$(SOUND_BIN_DIR)/sequences.bin: $(SOUND_BANK_FILES) sound/sequences.json $(SOUND_SEQUENCE_DIRS) $(SOUND_SEQUENCE_FILES) $(ENDIAN_BITWIDTH)
+	@$(PRINT) "$(GREEN)Generating:  $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(PYTHON) $(TOOLS_DIR)/assemble_sound.py --sequences $@ $(SOUND_BIN_DIR)/sequences_header $(SOUND_BIN_DIR)/bank_sets sound/sound_banks/ sound/sequences.json $(SOUND_SEQUENCE_FILES) $(VERSION_CFLAGS) $$(cat $(ENDIAN_BITWIDTH))
 
 $(SOUND_BIN_DIR)/bank_sets: $(SOUND_BIN_DIR)/sequences.bin
 	@true
 
-$(SOUND_BIN_DIR)/%.m64: $(SOUND_BIN_DIR)/%.o
-	$(OBJCOPY) -j .rodata $< -O binary $@
+$(SOUND_BIN_DIR)/sequences_header: $(SOUND_BIN_DIR)/sequences.bin
+	@true
 
-$(SOUND_BIN_DIR)/%.o: $(SOUND_BIN_DIR)/%.s
-	$(AS) $(ASFLAGS) -o $@ $<
+$(SOUND_BIN_DIR)/%.m64: $(SOUND_BIN_DIR)/%.o
+	$(call print,Converting to M64:,$<,$@)
+	$(V)$(OBJCOPY) -j .rodata $< -O binary $@
 
 ifeq ($(EXTERNAL_DATA),1)
 
@@ -1245,8 +1291,9 @@ $(SOUND_BIN_DIR)/%.inc.c: $(SOUND_BIN_DIR)/%
 else
 
 $(SOUND_BIN_DIR)/%.inc.c: $(SOUND_BIN_DIR)/%
-	hexdump -v -e '1/1 "0x%X,"' $< > $@
-	echo >> $@
+	$(call print,Piping:,$<,$@)
+	$(V)hexdump -v -e '1/1 "0x%X,"' $< > $@
+	$(V)echo >> $@
 
 endif
 
@@ -1255,109 +1302,138 @@ $(SOUND_BIN_DIR)/sound_data.o: $(SOUND_BIN_DIR)/sound_data.ctl.inc.c $(SOUND_BIN
 $(BUILD_DIR)/levels/scripts.o: $(BUILD_DIR)/include/level_headers.h
 
 $(BUILD_DIR)/include/level_headers.h: levels/level_headers.h.in
-	$(CPP) -I . levels/level_headers.h.in | $(PYTHON) tools/output_level_headers.py > $(BUILD_DIR)/include/level_headers.h
+	$(call print,Preprocessing level headers:,$<,$@)
+	$(V)$(CPP) -I . levels/level_headers.h.in | $(PYTHON) tools/output_level_headers.py > $(BUILD_DIR)/include/level_headers.h
 
 $(BUILD_DIR)/assets/mario_anim_data.c: $(wildcard assets/anims/*.inc.c)
-	$(PYTHON) tools/mario_anims_converter.py > $@
+	@$(PRINT) "$(GREEN)Generating animation data $(NO_COL)\n"
+	$(V)$(PYTHON) tools/mario_anims_converter.py > $@
 
 $(BUILD_DIR)/assets/demo_data.c: assets/demo_data.json $(wildcard assets/demos/*.bin)
-	$(PYTHON) tools/demo_data_converter.py assets/demo_data.json $(VERSION_CFLAGS) > $@
+	@$(PRINT) "$(GREEN)Generating demo data $(NO_COL)\n"
+	$(V)$(PYTHON) tools/demo_data_converter.py assets/demo_data.json $(VERSION_CFLAGS) > $@
 
-ifeq ($(COMPILER_N64),ido)
-# Source code
-$(BUILD_DIR)/levels/%/leveldata.o: OPT_FLAGS := -g
-$(BUILD_DIR)/actors/%.o: OPT_FLAGS := -g
-$(BUILD_DIR)/bin/%.o: OPT_FLAGS := -g
-$(BUILD_DIR)/src/goddard/%.o: OPT_FLAGS := -g
-$(BUILD_DIR)/src/goddard/%.o: MIPSISET := -mips1
-$(BUILD_DIR)/lib/src/%.o: OPT_FLAGS :=
-$(BUILD_DIR)/lib/src/math/ll%.o: MIPSISET := -mips3 -32
-$(BUILD_DIR)/lib/src/math/%.o: OPT_FLAGS := -O2
-$(BUILD_DIR)/lib/src/math/ll%.o: OPT_FLAGS :=
-$(BUILD_DIR)/lib/src/ldiv.o: OPT_FLAGS := -O2
-$(BUILD_DIR)/lib/src/string.o: OPT_FLAGS := -O2
-$(BUILD_DIR)/lib/src/gu%.o: OPT_FLAGS := -O3
-$(BUILD_DIR)/lib/src/al%.o: OPT_FLAGS := -O3
+# Alternate compiler flags needed for matching
+ifeq ($(COMPILER),ido)
+  $(BUILD_DIR)/levels/%/leveldata.o: OPT_FLAGS := -g
+  $(BUILD_DIR)/actors/%.o:           OPT_FLAGS := -g
+  $(BUILD_DIR)/bin/%.o:              OPT_FLAGS := -g
+  $(BUILD_DIR)/src/goddard/%.o:      OPT_FLAGS := -g
+  $(BUILD_DIR)/src/goddard/%.o:      MIPSISET := -mips1
+  $(BUILD_DIR)/lib/src/%.o:          OPT_FLAGS :=
+  $(BUILD_DIR)/lib/src/math/%.o:     OPT_FLAGS := -O2
+  $(BUILD_DIR)/lib/src/math/ll%.o:   OPT_FLAGS :=
+  $(BUILD_DIR)/lib/src/math/ll%.o:   MIPSISET := -mips3 -32
+  $(BUILD_DIR)/lib/src/ldiv.o:       OPT_FLAGS := -O2
+  $(BUILD_DIR)/lib/src/string.o:     OPT_FLAGS := -O2
+  $(BUILD_DIR)/lib/src/gu%.o:        OPT_FLAGS := -O3
+  $(BUILD_DIR)/lib/src/al%.o:        OPT_FLAGS := -O3
+  # For the asm-processor, since it doesn't support -O3. Probably not actually compiled with these flags.
+  ifeq ($(VERSION),sh)
+    $(BUILD_DIR)/lib/src/unk_shindou_file.o: OPT_FLAGS := -O1
+    $(BUILD_DIR)/lib/src/func_sh_80304D20.o: OPT_FLAGS := -O1
+    $(BUILD_DIR)/lib/src/_Printf.o: OPT_FLAGS := -O3
+    $(BUILD_DIR)/lib/src/contramread.o: OPT_FLAGS := -O1
+    $(BUILD_DIR)/lib/src/osPfsIsPlug.o: OPT_FLAGS := -O1
+    $(BUILD_DIR)/lib/src/osAiSetFrequency.o: OPT_FLAGS := -O1
+    $(BUILD_DIR)/lib/src/contramwrite.o: OPT_FLAGS := -O1
+    $(BUILD_DIR)/lib/src/sprintf.o: OPT_FLAGS := -O3
+    $(BUILD_DIR)/lib/src/_Litob.o: OPT_FLAGS := -O3
+    $(BUILD_DIR)/lib/src/_Ldtob.o: OPT_FLAGS := -O3
+    $(BUILD_DIR)/lib/src/osDriveRomInit.o: OPT_FLAGS := -g
+  endif
+  ifeq ($(VERSION),eu)
+    $(BUILD_DIR)/lib/src/_Litob.o:   OPT_FLAGS := -O3
+    $(BUILD_DIR)/lib/src/_Ldtob.o:   OPT_FLAGS := -O3
+    $(BUILD_DIR)/lib/src/_Printf.o:  OPT_FLAGS := -O3
+    $(BUILD_DIR)/lib/src/sprintf.o:  OPT_FLAGS := -O3
 
-ifeq ($(VERSION),eu)
-$(BUILD_DIR)/lib/src/_Litob.o: OPT_FLAGS := -O3
-$(BUILD_DIR)/lib/src/_Ldtob.o: OPT_FLAGS := -O3
-$(BUILD_DIR)/lib/src/_Printf.o: OPT_FLAGS := -O3
-$(BUILD_DIR)/lib/src/sprintf.o: OPT_FLAGS := -O3
-
-# Enable loop unrolling except for external.c (external.c might also have used
-# unrolling, but it makes one loop harder to match).
-# For all audio files other than external.c and port_eu.c, put string literals
-# in .data. (In Shindou, the port_eu.c string literals also moved to .data.)
-$(BUILD_DIR)/src/audio/%.o: OPT_FLAGS := -O2 -use_readwrite_const
-$(BUILD_DIR)/src/audio/port_eu.o: OPT_FLAGS := -O2
-$(BUILD_DIR)/src/audio/external.o: OPT_FLAGS := -O2 -Wo,-loopunroll,0
-else
-
-$(BUILD_DIR)/src/audio/%.o: OPT_FLAGS := -O2 -Wo,-loopunroll,0
-$(BUILD_DIR)/src/audio/load.o: OPT_FLAGS := -O2 -framepointer -Wo,-loopunroll,0
-
-# The source-to-source optimizer copt is enabled for audio. This makes it use
-# acpp, which needs -Wp,-+ to handle C++-style comments.
-# All other files than external.c should really use copt, but only a few have
-# been matched so far.
-$(BUILD_DIR)/src/audio/effects.o: OPT_FLAGS := -O2 -Wo,-loopunroll,0 -sopt,-inline=sequence_channel_process_sound,-scalaroptimize=1 -Wp,-+
-$(BUILD_DIR)/src/audio/synthesis.o: OPT_FLAGS := -O2 -sopt,-scalaroptimize=1 -Wp,-+
-#$(BUILD_DIR)/src/audio/seqplayer.o: OPT_FLAGS := -O2 -sopt,-inline_manual,-scalaroptimize=1 -Wp,-+ #-Wo,-v,-bb,-l,seqplayer_list.txt
+    # Enable loop unrolling except for external.c (external.c might also have used
+    # unrolling, but it makes one loop harder to match).
+    # For all audio files other than external.c and port_eu.c, put string literals
+    # in .data. (In Shindou, the port_eu.c string literals also moved to .data.)
+    $(BUILD_DIR)/src/audio/%.o:        OPT_FLAGS := -O2 -use_readwrite_const
+    $(BUILD_DIR)/src/audio/port_eu.o:  OPT_FLAGS := -O2
+    $(BUILD_DIR)/src/audio/external.o: OPT_FLAGS := -O2 -Wo,-loopunroll,0
+  endif
+  ifeq ($(VERSION_JP_US),true)
+    $(BUILD_DIR)/src/audio/%.o:        OPT_FLAGS := -O2 -Wo,-loopunroll,0
+    $(BUILD_DIR)/src/audio/load.o:     OPT_FLAGS := -O2 -framepointer -Wo,-loopunroll,0
+  endif
+  ifeq ($(VERSION_JP_US),true)
+    # The source-to-source optimizer copt is enabled for audio. This makes it use
+    # acpp, which needs -Wp,-+ to handle C++-style comments.
+    # All other files than external.c should really use copt, but only a few have
+    # been matched so far.
+    $(BUILD_DIR)/src/audio/effects.o:   OPT_FLAGS := -O2 -Wo,-loopunroll,0 -sopt,-inline=sequence_channel_process_sound,-scalaroptimize=1 -Wp,-+
+    $(BUILD_DIR)/src/audio/synthesis.o: OPT_FLAGS := -O2 -sopt,-scalaroptimize=1 -Wp,-+
+  endif
 
 # Add a target for build/eu/src/audio/*.copt to make it easier to see debug
 $(BUILD_DIR)/src/audio/%.acpp: src/audio/%.c
-	$(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/lib/acpp $(N64_CFLAGS) $(INCLUDE_CFLAGS) $(VERSION_CFLAGS) $(MATCH_CFLAGS) $(GRUCODE_CFLAGS) -D__sgi -+ $< > $@
-
-$(BUILD_DIR)/src/audio/seqplayer.copt: $(BUILD_DIR)/src/audio/seqplayer.acpp
-	$(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/lib/copt -signed -I=$< -CMP=$@ -cp=i -scalaroptimize=1 -inline_manual
-
+	$(ACPP) $(TARGET_CFLAGS) $(DEF_INC_CFLAGS) -D__sgi -+ $< > $@
 $(BUILD_DIR)/src/audio/%.copt: $(BUILD_DIR)/src/audio/%.acpp
-	$(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/lib/copt -signed -I=$< -CMP=$@ -cp=i -scalaroptimize=1
+	$(COPT) -signed -I=$< -CMP=$@ -cp=i -scalaroptimize=1 $(COPTFLAGS)
+$(BUILD_DIR)/src/audio/seqplayer.copt: COPTFLAGS := -inline_manual
 
-endif
 endif
 
 # Rebuild files with 'GLOBAL_ASM' if the NON_MATCHING flag changes.
 $(GLOBAL_ASM_O_FILES): $(GLOBAL_ASM_DEP).$(NON_MATCHING)
 $(GLOBAL_ASM_DEP).$(NON_MATCHING):
-	@rm -f $(GLOBAL_ASM_DEP).*
-	touch $@
+	@$(RM) -f $(GLOBAL_ASM_DEP).*
+	$(V)touch $@
 
+# Compile C code
 $(BUILD_DIR)/%.o: %.cpp
+	$(call print,Compiling:,$<,$@)
 	@$(CXX) -fsyntax-only $(CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<
-	$(CXX) -c $(CFLAGS) -o $@ $<
+	$(V)$(CXX) -c $(CFLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.o: %.c
+	$(call print,Compiling:,$<,$@)
 	@$(CC_CHECK) $(CC_CHECK_CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<
-	$(CC) -c $(CFLAGS) -o $@ $<
-
+	$(V)$(CC) -c $(CFLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
+	$(call print,Compiling:,$<,$@)
 	@$(CC_CHECK) $(CC_CHECK_CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<
-	$(CC) -c $(CFLAGS) -o $@ $<
+	$(V)$(CC) -c $(CFLAGS) -o $@ $<
 
+# Assemble assembly code
 $(BUILD_DIR)/%.o: %.s
-	$(AS) $(ASFLAGS) -MD $(BUILD_DIR)/$*.d -o $@ $<
+	$(call print,Assembling:,$<,$@)
+	$(V)$(AS) $(ASFLAGS) -MD $(BUILD_DIR)/$*.d -o $@ $<
 
 
 ifeq ($(TARGET_N64),1)
+
+# Run linker script through the C preprocessor
 $(BUILD_DIR)/$(LD_SCRIPT): $(LD_SCRIPT)
-	$(CPP) $(VERSION_CFLAGS) -MMD -MP -MT $@ -MF $@.d -I include/ -I . -DBUILD_DIR=$(BUILD_DIR) -o $@ $<
+	$(call print,Preprocessing linker script:,$<,$@)
+	$(V)$(CPP) $(VERSION_CFLAGS) -MMD -MP -MT $@ -MF $@.d -I include/ -I . -DBUILD_DIR=$(BUILD_DIR) -o $@ $<
 
+# Link libultra
 $(BUILD_DIR)/libultra.a: $(ULTRA_O_FILES)
-	$(AR) rcs -o $@ $(ULTRA_O_FILES)
-	tools/patch_libultra_math $@
+	@$(PRINT) "$(GREEN)Linking libultra:  $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(AR) rcs -o $@ $(ULTRA_O_FILES)
+	$(V)$(TOOLS_DIR)/patch_libultra_math $@
 
+# Link libgoddard
 $(BUILD_DIR)/libgoddard.a: $(GODDARD_O_FILES)
-	$(AR) rcs -o $@ $(GODDARD_O_FILES)
+	@$(PRINT) "$(GREEN)Linking libgoddard:  $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(AR) rcs -o $@ $(GODDARD_O_FILES)
 
+# Link SM64 ELF file
 $(ELF): $(O_FILES) $(MIO0_OBJ_FILES) $(SOUND_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) undefined_syms.txt $(BUILD_DIR)/libultra.a $(BUILD_DIR)/libgoddard.a
-	$(LD) -L $(BUILD_DIR) $(LDFLAGS) -o $@ $(O_FILES) $(LIBS) -lultra -lgoddard
+	@$(PRINT) "$(GREEN)Linking ELF file:  $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(LD) -L $(BUILD_DIR) $(LDFLAGS) -o $@ $(O_FILES) $(LIBS) -lultra -lgoddard
 
+# Build ROM
 $(ROM): $(ELF)
-	$(OBJCOPY) $(OBJCOPYFLAGS) $< $(@:.z64=.bin) -O binary
-	$(N64CKSUM) $(@:.z64=.bin) $@
+	$(call print,Building ROM:,$<,$@)
+	$(V)$(OBJCOPY) $(OBJCOPYFLAGS) $< $(@:.z64=.bin) -O binary
+	$(V)$(N64CKSUM) $(@:.z64=.bin) $@
 
 $(BUILD_DIR)/$(TARGET).objdump: $(ELF)
 	$(OBJDUMP) -D $< > $@

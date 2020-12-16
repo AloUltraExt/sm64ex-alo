@@ -152,9 +152,15 @@ def main():
             )
             sys.exit(1)
 
+    make = "make"
+
+    for path in os.environ["PATH"].split(os.pathsep):
+        if os.path.isfile(os.path.join(path, "gmake")):
+            make = "gmake"
+
     # Make sure tools exist
     subprocess.check_call(
-        ["make", "-s", "-C", "tools/", "n64graphics", "skyconv", "mio0", "aifc_decode"]
+        [make, "-s", "-C", "tools/", "n64graphics", "skyconv", "mio0", "aifc_decode"]
     )
 
     # Go through the assets in roughly alphabetical order (but assets in the same
@@ -166,32 +172,28 @@ def main():
         assets = todo[key]
         lang, mio0 = key
         if mio0 == "@sound":
-            with tempfile.NamedTemporaryFile(prefix="ctl", delete=False) as ctl_file:
-                with tempfile.NamedTemporaryFile(prefix="tbl", delete=False) as tbl_file:
-                    rom = roms[lang]
-                    size, locs = asset_map["@sound ctl " + lang]
-                    offset = locs[lang][0]
-                    ctl_file.write(rom[offset : offset + size])
-                    ctl_file.close()
-                    size, locs = asset_map["@sound tbl " + lang]
-                    offset = locs[lang][0]
-                    tbl_file.write(rom[offset : offset + size])
-                    tbl_file.close()
-                    args = [
-                        "python3",
-                        "tools/disassemble_sound.py",
-                        ctl_file.name,
-                        tbl_file.name,
-                        "--only-samples",
-                    ]
-                    for (asset, pos, size, meta) in assets:
-                        print("extracting", asset)
-                        args.append(asset + ":" + str(pos))
-                    try:
-                        subprocess.run(args, check=True)
-                    finally:
-                        os.unlink(ctl_file.name)
-                        os.unlink(tbl_file.name)
+            rom = roms[lang]
+            args = [
+                "python3",
+                "tools/disassemble_sound.py",
+                "baserom." + lang + ".z64",
+            ]
+            def append_args(key):
+                size, locs = asset_map["@sound " + key + " " + lang]
+                offset = locs[lang][0]
+                args.append(str(offset))
+                args.append(str(size))
+            append_args("ctl")
+            append_args("tbl")
+            if lang == "sh":
+                args.append("--shindou-headers")
+                append_args("ctl header")
+                append_args("tbl header")
+            args.append("--only-samples")
+            for (asset, pos, size, meta) in assets:
+                print("extracting", asset)
+                args.append(asset + ":" + str(pos))
+            subprocess.run(args, check=True)
             continue
 
         if mio0 is not None:

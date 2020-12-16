@@ -19,7 +19,7 @@
 #include "print.h"
 #include "segment2.h"
 #include "segment_symbols.h"
-#include "thread6.h"
+#include "rumble_init.h"
 #include <prevent_bss_reordering.h>
 #ifdef BETTERCAMERA
 #include "bettercamera.h"
@@ -60,7 +60,7 @@ u32 gGlobalTimer = 0;
 
 static u16 sCurrFBNum = 0;
 u16 frameBufferIndex = 0;
-void (*D_8032C6A0)(void) = NULL;
+void (*gGoddardVblankCallback)(void) = NULL;
 struct Controller *gPlayer1Controller = &gControllers[0];
 struct Controller *gPlayer2Controller = &gControllers[1];
 // probably debug only, see note below
@@ -347,9 +347,9 @@ void config_gfx_pool(void) {
 void display_and_vsync(void) {
     profiler_log_thread5_time(BEFORE_DISPLAY_LISTS);
     osRecvMesg(&D_80339CB8, &D_80339BEC, OS_MESG_BLOCK);
-    if (D_8032C6A0 != NULL) {
-        D_8032C6A0();
-        D_8032C6A0 = NULL;
+    if (gGoddardVblankCallback != NULL) {
+        gGoddardVblankCallback();
+        gGoddardVblankCallback = NULL;
     }
     send_display_list(&gGfxPool->spTask);
     profiler_log_thread5_time(AFTER_DISPLAY_LISTS);
