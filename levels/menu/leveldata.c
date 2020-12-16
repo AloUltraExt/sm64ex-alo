@@ -104,7 +104,7 @@ static const Gfx dl_vertex_menu_save_button_front[] = {
 };
 
 // 0x07003258 - 0x07003298
-static const Vtx vertex_menu_save_button_back[] = {
+Vtx vertex_menu_save_button_back[] = {
     {{{   163,   -122,      0}, 0, {     0,    990}, {0x00, 0x00, 0x81, 0xff}}},
     {{{  -163,   -122,      0}, 0, {   990,    990}, {0x00, 0x00, 0x81, 0xff}}},
     {{{   163,    122,      0}, 0, {     0,      0}, {0x00, 0x00, 0x81, 0xff}}},
@@ -322,6 +322,107 @@ static const Gfx dl_vertex_menu_main_button[] = {
     gsSPEndDisplayList(),
 };
 
+#ifdef WIDESCREEN
+Vtx vertex_menu_main_button_dynamic_group1[] = {
+    {{{  -163,   -122,      0}, 0, {   990,      0}, {0xb6, 0x00, 0x66, 0xff}}},
+    {{{  -122,    -81,     30}, 0, {   862,    138}, {0xb6, 0x00, 0x66, 0xff}}},
+    {{{  -163,    122,      0}, 0, {   990,    990}, {0xb6, 0x00, 0x66, 0xff}}},
+    {{{  -143,    102,      0}, 0, {   926,    904}, {0x59, 0x00, 0xa7, 0xff}}},
+    {{{  -133,     92,     10}, 0, {   894,    862}, {0x59, 0x00, 0xa7, 0xff}}},
+    {{{  -133,    -92,     10}, 0, {   894,     96}, {0x59, 0x00, 0xa7, 0xff}}},
+    {{{  -133,     92,     10}, 0, {   894,    862}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{   133,    -92,     10}, 0, {    64,     96}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{  -133,    -92,     10}, 0, {   894,     96}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{   133,     92,     10}, 0, {    64,    862}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{   133,     92,     10}, 0, {    64,    862}, {0x00, 0xa7, 0xa7, 0xff}}},
+    {{{  -133,     92,     10}, 0, {   894,    862}, {0x00, 0xa7, 0xa7, 0xff}}},
+    {{{  -143,    102,      0}, 0, {   926,    904}, {0x00, 0xa7, 0xa7, 0xff}}},
+    {{{   143,   -102,      0}, 0, {    32,     54}, {0xa7, 0x00, 0xa7, 0xff}}},
+    {{{   133,     92,     10}, 0, {    64,    862}, {0xa7, 0x00, 0xa7, 0xff}}},
+    {{{   143,    102,      0}, 0, {    32,    904}, {0xa7, 0x00, 0xa7, 0xff}}},
+};
+
+Vtx vertex_menu_main_button_dynamic_group2[] = {
+    {{{   143,   -102,      0}, 0, {    32,     54}, {0xa7, 0x00, 0xa7, 0xff}}},
+    {{{   133,    -92,     10}, 0, {    64,     96}, {0xa7, 0x00, 0xa7, 0xff}}},
+    {{{   133,     92,     10}, 0, {    64,    862}, {0xa7, 0x00, 0xa7, 0xff}}},
+    {{{   133,     92,     10}, 0, {    64,    862}, {0x00, 0xa7, 0xa7, 0xff}}},
+    {{{  -143,    102,      0}, 0, {   926,    904}, {0x00, 0xa7, 0xa7, 0xff}}},
+    {{{   143,    102,      0}, 0, {    32,    904}, {0x00, 0xa7, 0xa7, 0xff}}},
+    {{{  -143,   -102,      0}, 0, {   926,     54}, {0x00, 0x59, 0xa7, 0xff}}},
+    {{{   133,    -92,     10}, 0, {    64,     96}, {0x00, 0x59, 0xa7, 0xff}}},
+    {{{   143,   -102,      0}, 0, {    32,     54}, {0x00, 0x59, 0xa7, 0xff}}},
+    {{{  -133,    -92,     10}, 0, {   894,     96}, {0x00, 0x59, 0xa7, 0xff}}},
+    {{{  -143,    102,      0}, 0, {   926,    904}, {0x59, 0x00, 0xa7, 0xff}}},
+    {{{  -133,    -92,     10}, 0, {   894,     96}, {0x59, 0x00, 0xa7, 0xff}}},
+    {{{  -143,   -102,      0}, 0, {   926,     54}, {0x59, 0x00, 0xa7, 0xff}}},
+    {{{   163,    122,      0}, 0, {     0,    990}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{  -143,    102,      0}, 0, {   926,    904}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{  -163,    122,      0}, 0, {   990,    990}, {0x00, 0x00, 0x81, 0xff}}},
+};
+
+Vtx vertex_menu_main_button_dynamic_group3[] = {
+    {{{   163,    122,      0}, 0, {     0,    990}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{   143,    102,      0}, 0, {    32,    904}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{  -143,    102,      0}, 0, {   926,    904}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{   143,   -102,      0}, 0, {    32,     54}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{   163,   -122,      0}, 0, {     0,      0}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{  -163,    122,      0}, 0, {   990,    990}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{  -143,   -102,      0}, 0, {   926,     54}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{  -163,   -122,      0}, 0, {   990,      0}, {0x00, 0x00, 0x81, 0xff}}},
+    {{{   163,   -122,      0}, 0, {     0,      0}, {0x00, 0xb6, 0x66, 0xff}}},
+    {{{   122,    -81,     30}, 0, {    96,    138}, {0x00, 0xb6, 0x66, 0xff}}},
+    {{{  -122,    -81,     30}, 0, {   862,    138}, {0x00, 0xb6, 0x66, 0xff}}},
+    {{{  -122,    -81,     30}, 0, {   862,    138}, {0xb6, 0x00, 0x66, 0xff}}},
+    {{{  -122,     81,     30}, 0, {   862,    820}, {0xb6, 0x00, 0x66, 0xff}}},
+    {{{  -163,    122,      0}, 0, {   990,    990}, {0xb6, 0x00, 0x66, 0xff}}},
+};
+
+Vtx vertex_menu_main_button_dynamic_group4[] = {
+    {{{  -122,     81,     30}, 0, {   862,    820}, {0x00, 0x00, 0x7f, 0xff}}},
+    {{{  -122,    -81,     30}, 0, {   862,    138}, {0x00, 0x00, 0x7f, 0xff}}},
+    {{{   122,    -81,     30}, 0, {    96,    138}, {0x00, 0x00, 0x7f, 0xff}}},
+    {{{  -163,   -122,      0}, 0, {   990,      0}, {0x00, 0xb6, 0x66, 0xff}}},
+    {{{   163,   -122,      0}, 0, {     0,      0}, {0x00, 0xb6, 0x66, 0xff}}},
+    {{{  -122,    -81,     30}, 0, {   862,    138}, {0x00, 0xb6, 0x66, 0xff}}},
+    {{{  -122,     81,     30}, 0, {   862,    820}, {0x00, 0x4a, 0x66, 0xff}}},
+    {{{   122,     81,     30}, 0, {    96,    820}, {0x00, 0x4a, 0x66, 0xff}}},
+    {{{   163,    122,      0}, 0, {     0,    990}, {0x00, 0x4a, 0x66, 0xff}}},
+    {{{  -163,    122,      0}, 0, {   990,    990}, {0x00, 0x4a, 0x66, 0xff}}},
+    {{{   122,     81,     30}, 0, {    96,    820}, {0x00, 0x00, 0x7f, 0xff}}},
+    {{{   163,    122,      0}, 0, {     0,    990}, {0x4a, 0x00, 0x66, 0xff}}},
+    {{{   122,     81,     30}, 0, {    96,    820}, {0x4a, 0x00, 0x66, 0xff}}},
+    {{{   163,   -122,      0}, 0, {     0,      0}, {0x4a, 0x00, 0x66, 0xff}}},
+    {{{   122,    -81,     30}, 0, {    96,    138}, {0x4a, 0x00, 0x66, 0xff}}},
+};
+
+// 0x07006038 - 0x07006150
+static const Gfx dl_vertex_menu_main_button_dynamic[] = {
+    gsSPLight(&lights_menu_main_button.l, 1),
+    gsSPLight(&lights_menu_main_button.a, 2),
+    gsSPVertex(vertex_menu_main_button_dynamic_group1, 16, 0),
+    gsSP2Triangles( 0,  1,  2, 0x0,  3,  4,  5, 0x0),
+    gsSP2Triangles( 6,  7,  8, 0x0,  6,  9,  7, 0x0),
+    gsSP2Triangles(10, 11, 12, 0x0, 13, 14, 15, 0x0),
+    gsSPVertex(vertex_menu_main_button_dynamic_group2, 16, 0),
+    gsSP2Triangles( 0,  1,  2, 0x0,  3,  4,  5, 0x0),
+    gsSP2Triangles( 6,  7,  8, 0x0,  6,  9,  7, 0x0),
+    gsSP2Triangles(10, 11, 12, 0x0, 13, 14, 15, 0x0),
+    gsSPVertex(vertex_menu_main_button_dynamic_group3, 14, 0),
+    gsSP2Triangles( 0,  1,  2, 0x0,  0,  3,  1, 0x0),
+    gsSP2Triangles( 0,  4,  3, 0x0,  5,  2,  6, 0x0),
+    gsSP2Triangles( 5,  6,  7, 0x0,  6,  3,  4, 0x0),
+    gsSP2Triangles( 6,  4,  7, 0x0,  8,  9, 10, 0x0),
+    gsSP1Triangle(11, 12, 13, 0x0),
+    gsSPVertex(vertex_menu_main_button_dynamic_group4, 15, 0),
+    gsSP2Triangles( 0,  1,  2, 0x0,  3,  4,  5, 0x0),
+    gsSP2Triangles( 6,  7,  8, 0x0,  9,  6,  8, 0x0),
+    gsSP2Triangles(10,  0,  2, 0x0, 11, 12, 13, 0x0),
+    gsSP1Triangle(12, 14, 13, 0x0),
+    gsSPEndDisplayList(),
+};
+#endif
+
 // 0x07006150 - 0x07006198
 static const Gfx dl_tex_block_menu_main_button[] = {
     gsDPPipeSync(),
@@ -336,7 +437,7 @@ static const Gfx dl_tex_block_menu_main_button[] = {
 };
 
 // 0x07006198 - 0x070061C8
-static const Gfx dl_menu_main_button[] = {
+const Gfx dl_menu_main_button[] = {
     gsSPDisplayList(dl_vertex_menu_main_button),
     gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_OFF),
     gsDPPipeSync(),
@@ -404,6 +505,71 @@ const Gfx dl_menu_generic_button[] = {
     gsSPDisplayList(dl_menu_main_button),
     gsSPEndDisplayList(),
 };
+
+#ifdef WIDESCREEN
+const Gfx dl_menu_main_button_dynamic[] = {
+    gsSPDisplayList(dl_vertex_menu_main_button_dynamic),
+    gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_OFF),
+    gsDPPipeSync(),
+    gsDPSetCombineMode(G_CC_SHADE, G_CC_SHADE),
+    gsSPSetGeometryMode(G_SHADING_SMOOTH),
+    gsSPEndDisplayList(),
+};
+
+const Gfx dl_menu_erase_button_dynamic[] = {
+    gsSPDisplayList(dl_tex_block_menu_main_button),
+    gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, texture_menu_erase),
+    gsDPLoadSync(),
+    gsDPLoadBlock(G_TX_LOADTILE, 0, 0, 32 * 32 - 1, CALC_DXT(32, G_IM_SIZ_16b_BYTES)),
+    gsSPDisplayList(dl_menu_main_button_dynamic),
+    gsSPEndDisplayList(),
+};
+
+const Gfx dl_menu_copy_button_dynamic[] = {
+    gsSPDisplayList(dl_tex_block_menu_main_button),
+    gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, texture_menu_copy),
+    gsDPLoadSync(),
+    gsDPLoadBlock(G_TX_LOADTILE, 0, 0, 32 * 32 - 1, CALC_DXT(32, G_IM_SIZ_16b_BYTES)),
+    gsSPDisplayList(dl_menu_main_button_dynamic),
+    gsSPEndDisplayList(),
+};
+
+const Gfx dl_menu_file_button_dynamic[] = {
+    gsSPDisplayList(dl_tex_block_menu_main_button),
+    gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, texture_menu_file),
+    gsDPLoadSync(),
+    gsDPLoadBlock(G_TX_LOADTILE, 0, 0, 32 * 32 - 1, CALC_DXT(32, G_IM_SIZ_16b_BYTES)),
+    gsSPDisplayList(dl_menu_main_button_dynamic),
+    gsSPEndDisplayList(),
+};
+
+const Gfx dl_menu_score_button_dynamic[] = {
+    gsSPDisplayList(dl_tex_block_menu_main_button),
+    gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, texture_menu_score),
+    gsDPLoadSync(),
+    gsDPLoadBlock(G_TX_LOADTILE, 0, 0, 32 * 32 - 1, CALC_DXT(32, G_IM_SIZ_16b_BYTES)),
+    gsSPDisplayList(dl_menu_main_button_dynamic),
+    gsSPEndDisplayList(),
+};
+
+const Gfx dl_menu_sound_button_dynamic[] = {
+    gsSPDisplayList(dl_tex_block_menu_main_button),
+    gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, texture_menu_sound),
+    gsDPLoadSync(),
+    gsDPLoadBlock(G_TX_LOADTILE, 0, 0, 32 * 32 - 1, CALC_DXT(32, G_IM_SIZ_16b_BYTES)),
+    gsSPDisplayList(dl_menu_main_button_dynamic),
+    gsSPEndDisplayList(),
+};
+
+const Gfx dl_menu_generic_button_dynamic[] = {
+    gsSPDisplayList(dl_tex_block_menu_main_button),
+    gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, texture_menu_stone),
+    gsDPLoadSync(),
+    gsDPLoadBlock(G_TX_LOADTILE, 0, 0, 32 * 32 - 1, CALC_DXT(32, G_IM_SIZ_16b_BYTES)),
+    gsSPDisplayList(dl_menu_main_button_dynamic),
+    gsSPEndDisplayList(),
+};
+#endif
 
 // 0x070062E8 - 0x07006328
 static const Vtx vertex_menu_hand[] = {
