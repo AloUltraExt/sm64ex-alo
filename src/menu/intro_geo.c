@@ -131,6 +131,7 @@ Gfx *geo_intro_tm_copyright(s32 state, struct GraphNode *node, UNUSED void *cont
     return dl;
 }
 
+#ifndef WIDESCREEN
 /**
  * Generates a display list for a single background tile
  *
@@ -270,6 +271,147 @@ Gfx *geo_intro_gameover_backdrop(s32 state, struct GraphNode *node, UNUSED void 
     }
     return dl;
 }
+#else
+
+#include "gfx_dimensions.h"
+
+Gfx *intro_backdrop_set_image(f32 x, f32 y, s8 index) {
+    // intro screen background display lists for each of four 80x20 textures
+    static const Gfx *introBackgroundDlRows[] = { title_screen_bg_dl_0A000130, title_screen_bg_dl_0A000148,
+                                                  title_screen_bg_dl_0A000160, title_screen_bg_dl_0A000178 };
+
+    // table that points to either the "Super Mario 64" or "Game Over" tables
+    static const u8 *const *textureTables[] = { mario_title_texture_table, game_over_texture_table };
+
+    Mtx *mtx;
+    Gfx *displayList;
+    Gfx *displayListIter;
+    const u8 *const *vIntroBgTable;
+    s32 i;
+    mtx = alloc_display_list(sizeof(*mtx));
+    displayList = alloc_display_list(36 * sizeof(*displayList));
+    displayListIter = displayList;
+    vIntroBgTable = segmented_to_virtual(textureTables[index]);
+    guTranslate(mtx, x, y, 0.0f);
+    gSPMatrix(displayListIter++, mtx, G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_PUSH);
+    gSPDisplayList(displayListIter++, &title_screen_bg_dl_0A000118);
+    for (i = 0; i < 4; ++i) {
+        gDPLoadTextureBlock(displayListIter++, vIntroBgTable[i], G_IM_FMT_RGBA, G_IM_SIZ_16b, 80, 20, 0, 
+                            G_TX_CLAMP, G_TX_CLAMP, 7, 6, G_TX_NOLOD, G_TX_NOLOD)    
+        gSPDisplayList(displayListIter++, introBackgroundDlRows[i]);
+    }
+    gSPPopMatrix(displayListIter++, G_MTX_MODELVIEW);
+    gSPEndDisplayList(displayListIter);
+    return displayList;
+}
+
+Gfx *geo_intro_regular_backdrop(s32 state, struct GraphNode *node, UNUSED void *context) {
+    struct GraphNodeMore *graphNode;
+    Gfx *displayList;
+    Gfx *displayListIter;
+    s32 w, x, y;
+
+    // Get how many horizontal tiles to draw (limit width to prevent segfault)
+    w = ((SCREEN_HEIGHT * GFX_DIMENSIONS_ASPECT_RATIO) + 79) / 80;
+    if (w > 50)
+        w = 50;
+
+    graphNode = (struct GraphNodeMore *) node;
+    displayList = NULL;
+    displayListIter = NULL;
+    if (state == 1) {
+        displayList = alloc_display_list((4 + w * 3) * sizeof(*displayList));
+        displayListIter = displayList;
+        graphNode->node.flags = (graphNode->node.flags & 0xFF) | (LAYER_OPAQUE << 8);
+        gSPDisplayList(displayListIter++, &dl_proj_mtx_fullscreen);
+        gSPDisplayList(displayListIter++, &title_screen_bg_dl_0A000100);
+        for (y = 0; y < 3; ++y) {
+            for (x = 0; x < w; ++x) {
+                gSPDisplayList(displayListIter++, intro_backdrop_set_image(80.0f * x + SCREEN_WIDTH / 2 - w * 40.0f, 160.0f - 80.0f * y, INTRO_BACKGROUND_SUPER_MARIO));
+            }
+        }
+        gSPDisplayList(displayListIter++, &title_screen_bg_dl_0A000190);
+        gSPEndDisplayList(displayListIter);
+    }
+    return displayList;
+}
+
+Gfx *geo_intro_gameover_backdrop(s32 state, struct GraphNode *node, UNUSED void *context) {
+    struct GraphNodeMore *graphNode;
+    Gfx *displayList;
+    Gfx *displayListIter;
+    s32 w, x, y;
+    s8 index;
+
+    // Get how many horizontal tiles to draw (limit width to prevent segfault)
+    w = ((SCREEN_HEIGHT * GFX_DIMENSIONS_ASPECT_RATIO) + 79) / 80;
+    if (w > 50)
+        w = 50;
+
+    graphNode = (struct GraphNodeMore *) node;
+    displayList = NULL;
+    displayListIter = NULL;
+    if (state != 1) {
+        sGameOverFrameCounter = 0;
+        sGameOverTableIndex = -1;
+    } else {
+        displayList = alloc_display_list((4 + w * 3) * sizeof(*displayList));
+        displayListIter = displayList;
+
+        // Wait 180 frames, then increment flipped tile index
+        if (sGameOverTableIndex == -1) {
+            if (sGameOverFrameCounter == 180) {
+                sGameOverTableIndex++;
+                sGameOverFrameCounter = 0;
+            } else {
+                sGameOverFrameCounter++;
+            }
+        }
+        else
+        {
+            if ((++sGameOverFrameCounter & 1) == 0) {
+                if (sGameOverTableIndex < 0x7FFFFFFF) {
+                    sGameOverTableIndex++;
+                }
+            }
+        }
+
+        graphNode->node.flags = (graphNode->node.flags & 0xFF) | 0x100;
+        gSPDisplayList(displayListIter++, &dl_proj_mtx_fullscreen);
+        gSPDisplayList(displayListIter++, &title_screen_bg_dl_0A000100);
+        for (y = 0; y < 3; ++y) {
+            for (x = 0; x < w; ++x) {
+                // Get if this tile should be a "Game Over" or "Super Mario 64" tile based off of the current flip index
+                index = INTRO_BACKGROUND_GAME_OVER;
+                switch (y)
+                {
+                    case 2:
+                        if (x > w - (sGameOverTableIndex - w)) {
+                            index = INTRO_BACKGROUND_SUPER_MARIO;
+                        }
+                        break;
+                    case 1:
+                        if ((x == w - 1 && sGameOverTableIndex > w) || (x < (sGameOverTableIndex - w * 2 - 1))) {
+                            index = INTRO_BACKGROUND_SUPER_MARIO;
+                        }
+                        break;
+                    case 0:
+                        if (x < sGameOverTableIndex) {
+                            index = INTRO_BACKGROUND_SUPER_MARIO;
+                        }
+                        break;
+                }
+
+                gSPDisplayList(displayListIter++, intro_backdrop_set_image(80.0f * x + SCREEN_WIDTH / 2 - w * 40.0f, 160.0f - 80.0f * y, index));
+            }
+        }
+        gSPDisplayList(displayListIter++, &title_screen_bg_dl_0A000190);
+        gSPEndDisplayList(displayListIter);
+    }
+    return displayList;
+}
+
+#endif
 
 #ifdef VERSION_SH
 extern Gfx title_screen_bg_dl_0A0065E8[];
