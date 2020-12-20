@@ -17,16 +17,21 @@
 #include "game/game_init.h"
 #include "game/ingame_menu.h"
 #include "game/options_menu.h"
-#include "pc/pc_main.h"
-#include "pc/cliopts.h"
-#include "pc/cheats.h"
-#include "pc/configfile.h"
-#include "pc/controller/controller_api.h"
 
 #ifndef TARGET_N64
+#include "pc/pc_main.h"
+#include "pc/cliopts.h"
+#include "pc/controller/controller_api.h"
+
 #include <stdbool.h>
-#endif
 #include "../../include/libc/stdlib.h"
+#endif
+
+#include "pc/configfile.h"
+
+#ifdef CHEATS_ACTIONS
+#include "cheats.h"
+#endif
 
 u8 optmenu_open = 0;
 
@@ -201,18 +206,24 @@ struct SubMenu {
     { .type = OPT_CHOICE, .label = lbl, .uval = uv, .choices = ch, .numChoices = sizeof(ch) / sizeof(ch[0]) }
 #define DEF_OPT_SUBMENU(lbl, nm) \
     { .type = OPT_SUBMENU, .label = lbl, .nextMenu = nm }
+
+#ifndef TARGET_N64
 #define DEF_OPT_BIND(lbl, uv) \
     { .type = OPT_BIND, .label = lbl, .uval = uv }
 #define DEF_OPT_BUTTON(lbl, act) \
     { .type = OPT_BUTTON, .label = lbl, .actionFn = act }
+#endif
+
 #define DEF_SUBMENU(lbl, opt) \
     { .label = lbl, .opts = opt, .numOpts = sizeof(opt) / sizeof(opt[0]) }
 
 /* button action functions */
 
+#ifndef TARGET_N64
 static void optmenu_act_exit(UNUSED struct Option *self, s32 arg) {
     if (!arg) game_exit(); // only exit on A press and not directions
 }
+#endif
 
 static void optvideo_reset_window(UNUSED struct Option *self, s32 arg) {
     if (!arg) {
@@ -232,7 +243,9 @@ static void optvideo_apply(UNUSED struct Option *self, s32 arg) {
 static struct Option optsCamera[] = {
     DEF_OPT_TOGGLE( optsCameraStr[9], &configEnableCamera ),
     DEF_OPT_TOGGLE( optsCameraStr[6], &configCameraAnalog ),
+#ifndef TARGET_N64
     DEF_OPT_TOGGLE( optsCameraStr[7], &configCameraMouse ),
+#endif
     DEF_OPT_TOGGLE( optsCameraStr[2], &configCameraInvertX ),
     DEF_OPT_TOGGLE( optsCameraStr[3], &configCameraInvertY ),
     DEF_OPT_SCROLL( optsCameraStr[0], &configCameraXSens, 1, 100, 1 ),
@@ -243,6 +256,7 @@ static struct Option optsCamera[] = {
 };
 #endif
 
+#ifndef TARGET_N64
 static struct Option optsControls[] = {
 #ifdef TARGET_WII_U
     DEF_OPT_TOGGLE( optBindStr[22], &configN64FaceButtons ),
@@ -282,6 +296,7 @@ static struct Option optsVideo[] = {
     DEF_OPT_BUTTON( optsVideoStr[4], optvideo_reset_window ),
     DEF_OPT_BUTTON( optsVideoStr[9], optvideo_apply ),
 };
+#endif
 
 static struct Option optsAudio[] = {
     DEF_OPT_SCROLL( optsAudioStr[0], &configMasterVolume, 0, MAX_VOLUME, 1 ),
@@ -290,6 +305,7 @@ static struct Option optsAudio[] = {
     DEF_OPT_SCROLL( optsAudioStr[3], &configEnvVolume, 0, MAX_VOLUME, 1),
 };
 
+#ifdef CHEATS_ACTIONS
 static struct Option optsCheats[] = {
     DEF_OPT_TOGGLE( optsCheatsStr[0], &Cheats.EnableCheats ),
     DEF_OPT_TOGGLE( optsCheatsStr[1], &Cheats.MoonJump ),
@@ -302,16 +318,24 @@ static struct Option optsCheats[] = {
     DEF_OPT_TOGGLE( optsCheatsStr[8], &Cheats.TinyMario ),
 
 };
+#endif
 
 /* submenu definitions */
 
 #ifdef BETTERCAMERA
 static struct SubMenu menuCamera   = DEF_SUBMENU( optMainStr[1], optsCamera );
 #endif
+
+#ifndef TARGET_N64
 static struct SubMenu menuControls = DEF_SUBMENU( optMainStr[2], optsControls );
 static struct SubMenu menuVideo    = DEF_SUBMENU( optMainStr[3], optsVideo );
+#endif
+
 static struct SubMenu menuAudio    = DEF_SUBMENU( optMainStr[4], optsAudio );
+
+#ifdef CHEATS_ACTIONS
 static struct SubMenu menuCheats   = DEF_SUBMENU( optMainStr[6], optsCheats );
+#endif
 
 /* main options menu definition */
 
@@ -319,12 +343,18 @@ static struct Option optsMain[] = {
 #ifdef BETTERCAMERA
     DEF_OPT_SUBMENU( optMainStr[1], &menuCamera ),
 #endif
+#ifndef TARGET_N64
     DEF_OPT_SUBMENU( optMainStr[2], &menuControls ),
     DEF_OPT_SUBMENU( optMainStr[3], &menuVideo ),
-    DEF_OPT_SUBMENU( optMainStr[4], &menuAudio ),
     DEF_OPT_BUTTON ( optMainStr[5], optmenu_act_exit ),
+#endif
+
+    DEF_OPT_SUBMENU( optMainStr[4], &menuAudio ),
+
+#ifdef CHEATS_ACTIONS
     // NOTE: always keep cheats the last option here because of the half-assed way I toggle them
     DEF_OPT_SUBMENU( optMainStr[6], &menuCheats )
+#endif
 };
 
 static struct SubMenu menuMain = DEF_SUBMENU( optMainStr[0], optsMain );
@@ -399,6 +429,7 @@ static void optmenu_draw_opt(const struct Option *opt, s16 x, s16 y, u8 sel) {
             optmenu_draw_text(x, y-13, buf, sel);
             break;
 
+#ifndef TARGET_N64
         case OPT_BIND:
             x = 112;
             for (u8 i = 0; i < MAX_BINDS; ++i, x += 48) {
@@ -415,6 +446,7 @@ static void optmenu_draw_opt(const struct Option *opt, s16 x, s16 y, u8 sel) {
                 }
             }
             break;
+#endif
 
         default: break;
     };
@@ -444,6 +476,7 @@ static void optmenu_opt_change(struct Option *opt, s32 val) {
                 opt->actionFn(opt, val);
             break;
 
+#ifndef TARGET_N64
         case OPT_BIND:
             if (val == 0xFF) {
                 // clear the bind
@@ -456,6 +489,7 @@ static void optmenu_opt_change(struct Option *opt, s32 val) {
                 optmenu_bind_idx = wrap_add(optmenu_bind_idx, val, 0, MAX_BINDS - 1);
             }
             break;
+#endif
 
         default: break;
     }
@@ -470,6 +504,7 @@ static inline s16 get_hudstr_centered_x(const s16 sx, const u8 *str) {
 
 //Options menu
 void optmenu_draw(void) {
+    u8 i;
     s16 scroll;
     s16 scrollpos;
     f32 sinpos;
@@ -489,7 +524,7 @@ void optmenu_draw(void) {
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
     gDPSetScissor(gDisplayListHead++, G_SC_NON_INTERLACE, 0, 80, SCREEN_WIDTH, SCREEN_HEIGHT);
     
-    for (u8 i = 0; i < currentMenu->numOpts; i++) {
+    for (i = 0; i < currentMenu->numOpts; i++) {
         scroll = 140 - 32 * i + currentMenu->scroll * 32;
         // FIXME: just start from the first visible option bruh
         if (scroll <= 140 && scroll > 32)
@@ -517,6 +552,7 @@ void optmenu_toggle(void) {
         play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
         #endif
 
+#ifdef CHEATS_ACTIONS
         // HACK: hide the last option in main if cheats are disabled
         menuMain.numOpts = sizeof(optsMain) / sizeof(optsMain[0]);
         if (!Cheats.EnableCheats) {
@@ -526,6 +562,7 @@ void optmenu_toggle(void) {
                 menuMain.scroll = 0;
             }
         }
+#endif
 
         currentMenu = &menuMain;
         optmenu_open = 1;
@@ -539,12 +576,15 @@ void optmenu_toggle(void) {
         #ifdef BETTERCAMERA
         newcam_init_settings(); // load bettercam settings from config vars
         #endif
+#ifndef TARGET_N64
         controller_reconfigure(); // rebind using new config values
         configfile_save(configfile_name());
+#endif
     }
 }
 
 void optmenu_check_buttons(void) {
+#ifndef TARGET_N64
     if (optmenu_binding) {
         u32 key = controller_get_raw_key();
         if (key != VK_INVALID) {
@@ -557,6 +597,7 @@ void optmenu_check_buttons(void) {
         }
         return;
     }
+#endif
 
     if (gPlayer1Controller->buttonPressed & R_TRIG) {
         optmenu_toggle();
@@ -565,7 +606,7 @@ void optmenu_check_buttons(void) {
     optmenu_sin_timer++;
 
     /* Enables cheats if the user press the L trigger 3 times while in the options menu. Also plays a sound. */
-    
+#ifdef CHEATS_ACTIONS
     if ((gPlayer1Controller->buttonPressed & L_TRIG) && !Cheats.EnableCheats) {
         if (l_counter == 2) {
                 Cheats.EnableCheats = true;
@@ -575,7 +616,8 @@ void optmenu_check_buttons(void) {
             l_counter++;
         }
     }
-    
+#endif
+
     if (!optmenu_open) return;
 
     u8 allowInput = 0;
@@ -641,10 +683,12 @@ void optmenu_check_buttons(void) {
                 optmenu_toggle();
             }
         }
+#ifndef TARGET_N64
     } else if (gPlayer1Controller->buttonPressed & Z_TRIG) {
         // HACK: clear binds with Z
         if (allowInput && currentMenu->opts[currentMenu->select].type == OPT_BIND)
             optmenu_opt_change(&currentMenu->opts[currentMenu->select], 0xFF);
+#endif
     } else if (gPlayer1Controller->buttonPressed & START_BUTTON) {
         if (allowInput) optmenu_toggle();
     } else {

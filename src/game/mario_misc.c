@@ -23,6 +23,9 @@
 #include "save_file.h"
 #include "skybox.h"
 #include "sound_init.h"
+#ifdef BETTERCAMERA
+#include "bettercamera.h"
+#endif
 
 #define TOAD_STAR_1_REQUIREMENT 12
 #define TOAD_STAR_2_REQUIREMENT 25
@@ -300,6 +303,8 @@ void bhv_unlock_door_star_loop(void) {
 static Gfx *make_gfx_mario_alpha(struct GraphNodeGenerated *node, s16 alpha) {
     Gfx *gfx;
     Gfx *gfxHead = NULL;
+    u8 alphaBias;
+    s32 flags = update_and_return_cap_flags(gMarioState);
 
     if (alpha == 255) {
         node->fnNode.node.flags = (node->fnNode.node.flags & 0xFF) | (LAYER_OPAQUE << 8);
@@ -309,9 +314,14 @@ static Gfx *make_gfx_mario_alpha(struct GraphNodeGenerated *node, s16 alpha) {
         node->fnNode.node.flags = (node->fnNode.node.flags & 0xFF) | (LAYER_TRANSPARENT << 8);
         gfxHead = alloc_display_list(3 * sizeof(*gfxHead));
         gfx = gfxHead;
-        gDPSetAlphaCompare(gfx++, G_AC_DITHER);
+        if (flags & MARIO_VANISH_CAP || gMarioState->flags & MARIO_TELEPORTING) {
+            gDPSetAlphaCompare(gfx++, G_AC_DITHER);
+        } else {
+            gDPSetAlphaCompare(gfx++, G_AC_NONE);
+        }
     }
-    gDPSetEnvColor(gfx++, 255, 255, 255, alpha);
+    alphaBias = min(alpha, newcam_xlu);
+    gDPSetEnvColor(gfx++, 255, 255, 255, alphaBias);
     gSPEndDisplayList(gfx);
     return gfxHead;
 }

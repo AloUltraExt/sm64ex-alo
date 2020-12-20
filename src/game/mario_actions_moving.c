@@ -13,8 +13,8 @@
 #include "behavior_data.h"
 #include "rumble_init.h"
 #include "pc/configfile.h"
-#ifdef CHEAT_ACTIONS
-#include "pc/cheats.h"
+#ifdef CHEATS_ACTIONS
+#include "cheats.h"
 #endif
 
 struct LandingAction {
@@ -463,7 +463,7 @@ void update_walking_speed(struct MarioState *m) {
         m->forwardVel = 48.0f;
     }
 
-#ifdef CHEAT_ACTIONS
+#ifdef CHEATS_ACTIONS
     /* Handles the "Super responsive controls" cheat. The content of the "else" is Mario's original code for turning around.*/
 
     if (Cheats.Responsive == true && Cheats.EnableCheats == true ) {
@@ -472,7 +472,7 @@ void update_walking_speed(struct MarioState *m) {
     else {
 #endif
          m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0x800, 0x800);
-#ifdef CHEAT_ACTIONS
+#ifdef CHEATS_ACTIONS
     } 
 #endif    
     apply_slope_accel(m);

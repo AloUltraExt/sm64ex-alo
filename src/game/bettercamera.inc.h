@@ -111,13 +111,28 @@ s16 newcam_degrade = 1;
 s16 newcam_analogue = 0; //Wether to accept inputs from a player 2 joystick, and then disables C button input.
 s16 newcam_distance_values[] = {750,1250,2000};
 u8 newcam_active = 0; // basically the thing that governs if newcam is on.
+#ifndef TARGET_N64
 u8 newcam_mouse = 0;
+#endif
 u16 newcam_mode;
 u16 newcam_intendedmode = 0; // which camera mode the camera's going to try to be in when not forced into another.
 u16 newcam_modeflags;
 
 s16 newcam_saved_mode = -1;
 s16 newcam_saved_defmode = -1;
+
+#ifdef TARGET_N64 // TODO: save to EEPROM
+unsigned int configCameraXSens   = 50;
+unsigned int configCameraYSens   = 50;
+unsigned int configCameraAggr    = 0;
+unsigned int configCameraPan     = 0;
+unsigned int configCameraDegrade = 10; // 0 - 100%
+int         configCameraInvertX = TRUE;
+int         configCameraInvertY = FALSE;
+int         configEnableCamera  = FALSE;
+int         configCameraAnalog  = TRUE;
+int         configCameraMouse   = FALSE;
+#endif
 
 ///This is called at every level initialisation.
 void newcam_init(struct Camera *c, u8 dv) {
@@ -189,7 +204,9 @@ void newcam_init_settings(void) {
     newcam_panlevel     = newcam_clamp(configCameraPan, 0, 100);
     newcam_invertX      = (s16)configCameraInvertX;
     newcam_invertY      = (s16)configCameraInvertY;
+#ifndef TARGET_N64
     newcam_mouse        = (u8)configCameraMouse;
+#endif    
     newcam_analogue     = (s16)configCameraAnalog;
     newcam_degrade      = (f32)configCameraDegrade;
 
@@ -378,10 +395,12 @@ static void newcam_rotate_button(void) {
             newcam_tilt_acc -= (newcam_tilt_acc*((f32)newcam_degrade/100));
     }
 
+#ifndef TARGET_N64
     if (newcam_mouse == 1) {
         newcam_yaw += ivrt(0) * mouse_x * 16;
         newcam_tilt += ivrt(1) * mouse_y * 16;
     }
+#endif
 }
 
 static void newcam_zoom_button(void) {
@@ -478,6 +497,7 @@ static void newcam_update_values(void) {
 }
 
 static void newcam_bounding_box(void) {
+    int i;
     Vec3f camdirs[NEW_CAM_BOUNDING_BOX_RAYS] = { 0 };
     Vec3f raypos[NEW_CAM_BOUNDING_BOX_RAYS] = { 0 };
     s16 antiYaw = newcam_yaw - 0x4000;
@@ -494,7 +514,7 @@ static void newcam_bounding_box(void) {
     camdirs[2][1] = -NEW_CAM_BOUNDING_BOX_VRADIUS;
     camdirs[3][1] =  NEW_CAM_BOUNDING_BOX_VRADIUS;
 
-    for (int i = 0; i < NEW_CAM_BOUNDING_BOX_RAYS; i++) {
+    for (i = 0; i < NEW_CAM_BOUNDING_BOX_RAYS; i++) {
         struct Surface* surf;
         Vec3f offset = { 0 };
 
@@ -510,7 +530,7 @@ static void newcam_bounding_box(void) {
     }
 
     Vec3f avg = { 0 };
-    for (int i = 0; i < NEW_CAM_BOUNDING_BOX_RAYS; i++) {
+    for (i = 0; i < NEW_CAM_BOUNDING_BOX_RAYS; i++) {
         vec3f_add(avg, raypos[i]);
     }
     vec3f_mul(avg, 1.0f / ((f32)NEW_CAM_BOUNDING_BOX_RAYS));

@@ -16,8 +16,12 @@
 #include "area.h"
 #include "save_file.h"
 #include "print.h"
+#ifdef EXT_OPTIONS_MENU
 #ifndef TARGET_N64
 #include "pc/configfile.h"
+#else
+int configHUD = TRUE;
+#endif
 #endif
 
 /* @file hud.c

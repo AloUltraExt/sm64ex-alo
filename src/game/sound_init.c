@@ -15,6 +15,7 @@
 #include "sm64.h"
 #include "sound_init.h"
 #include "rumble_init.h"
+#include "pc/configfile.h"
 
 #define MUSIC_NONE 0xFFFF
 
@@ -31,6 +32,14 @@ static u16 sCurrentCapMusic = MUSIC_NONE;
 static u8 sPlayingInfiniteStairs = FALSE;
 static u8 unused8032C6D8[16] = { 0 };
 static s16 sSoundMenuModeToSoundMode[] = { SOUND_MODE_STEREO, SOUND_MODE_MONO, SOUND_MODE_HEADSET };
+
+#ifdef TARGET_N64
+unsigned int configMasterVolume = MAX_VOLUME; // 0 - MAX_VOLUME
+unsigned int configMusicVolume = MAX_VOLUME;
+unsigned int configSfxVolume = MAX_VOLUME;
+unsigned int configEnvVolume = MAX_VOLUME;
+#endif
+
 // Only the 20th array element is used.
 static u32 sMenuSoundsExtra[] = {
     SOUND_MOVING_TERRAIN_SLIDE + (0 << 16),
@@ -358,5 +367,12 @@ void thread4_sound(UNUSED void *arg) {
             }
             profiler_log_thread4_time();
         }
+        
+#ifdef TARGET_N64 // TODO: save to EEPROM
+        const f32 master_mod = (f32)configMasterVolume / 127.0f;
+        set_sequence_player_volume(SEQ_PLAYER_LEVEL, (f32)configMusicVolume / 127.0f * master_mod);
+        set_sequence_player_volume(SEQ_PLAYER_SFX, (f32)configSfxVolume / 127.0f * master_mod);
+        set_sequence_player_volume(SEQ_PLAYER_ENV, (f32)configEnvVolume / 127.0f * master_mod);
+#endif
     }
 }

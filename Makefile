@@ -46,7 +46,7 @@ TARGET_ARCH ?= native
 TARGET_BITS ?= 0
 
 # Disable better camera by default
-BETTERCAMERA ?= 0
+BETTERCAMERA ?= 1
 # Disable no drawing distance by default
 NODRAWINGDISTANCE ?= 0
 # Disable QoL fixes by default (helps with them purists)
@@ -630,6 +630,19 @@ ENDIAN_BITWIDTH := $(BUILD_DIR)/endian-and-bitwidth
 
 ifeq ($(COMPILER_N64),gcc)
   CFLAGS := -march=vr4300 -mfix4300 -mabi=32 -mno-shared -G 0 $(COMMON_CFLAGS) -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I . -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra
+endif
+
+# Check for Puppycam option
+ifeq ($(BETTERCAMERA),1)
+  CC_CHECK += -DBETTERCAMERA
+  CFLAGS += -DBETTERCAMERA
+  EXT_OPTIONS_MENU := 1
+endif
+
+# Check for extended options menu option
+ifeq ($(EXT_OPTIONS_MENU),1)
+  CC_CHECK += -DEXT_OPTIONS_MENU -DCHEATS_ACTIONS
+  CFLAGS += -DEXT_OPTIONS_MENU -DCHEATS_ACTIONS
 endif
 
 ifeq ($(shell getconf LONG_BIT), 32)

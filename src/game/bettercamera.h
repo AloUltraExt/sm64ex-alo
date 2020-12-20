@@ -39,6 +39,8 @@ extern s16 newcam_aggression; //How much the camera tries to centre itself to Ma
 extern u8 newcam_active; // basically the thing that governs if newcam is on.
 extern s16 newcam_analogue;
 extern u16 newcam_intendedmode;
+extern s16 newcam_degrade;
+extern u8 newcam_xlu;
 
 extern u16 newcam_mode;
 extern s16 newcam_yaw;

@@ -24,7 +24,7 @@
 #include "types.h"
 #include "macros.h"
 #ifdef CHEATS_ACTIONS
-#include "pc/cheats.h"
+#include "cheats.h"
 #endif
 #ifdef BETTERCAMERA
 #include "bettercamera.h"

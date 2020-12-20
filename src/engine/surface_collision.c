@@ -873,21 +873,27 @@ void find_surface_on_ray_list(struct SurfaceNode *list, Vec3f orig, Vec3f dir, f
 void find_surface_on_ray_cell(s16 cellX, s16 cellZ, Vec3f orig, Vec3f normalized_dir, f32 dir_length, struct Surface **hit_surface, Vec3f hit_pos, f32 *max_length)
 {
 	// Skip if OOB
-	if (cellX >= 0 && cellX <= 0xF && cellZ >= 0 && cellZ <= 0xF)
+	if (cellX >= 0 && cellX <= NUM_CELLS_INDEX && cellZ >= 0 && cellZ <= NUM_CELLS_INDEX)
 	{
 		// Iterate through each surface in this partition
 		if (normalized_dir[1] > -0.99f)
 		{
-			find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
-			find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+			find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS].next, 
+                orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+			find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS].next, 
+                orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
 		}
 		if (normalized_dir[1] < 0.99f)
 		{
-			find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
-			find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+			find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX & NUM_CELLS_INDEX][SPATIAL_PARTITION_FLOORS].next, 
+                orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+			find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX & NUM_CELLS_INDEX][SPATIAL_PARTITION_FLOORS].next, 
+                orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
 		}
-		find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
-		find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+		find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next, 
+            orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+		find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next, 
+            orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
 	}
 }
 
@@ -925,7 +931,7 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
 	}
     
     // increase collision checking precision (normally 1)
-    f32 precision = gCheckingSurfaceCollisionsForCamera ? 3 : 1;
+    f32 precision = gCheckingSurfaceCollisionsForCamera ? 2 : 1;
 
     // Get cells we cross using DDA
     if (absx(dir[0]) >= absx(dir[2]))
