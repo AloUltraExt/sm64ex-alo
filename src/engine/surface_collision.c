@@ -777,6 +777,10 @@ s32 unused_resolve_floor_or_ceil_collisions(s32 checkCeil, f32 *px, f32 *py, f32
     return 0;
 }
 
+/**************************************************
+ *             BETTER CAMERA SECTION              *
+ **************************************************/
+
 /**
  * Raycast functions
  */
@@ -885,9 +889,9 @@ void find_surface_on_ray_cell(s16 cellX, s16 cellZ, Vec3f orig, Vec3f normalized
 		}
 		if (normalized_dir[1] < 0.99f)
 		{
-			find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX & NUM_CELLS_INDEX][SPATIAL_PARTITION_FLOORS].next, 
+			find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next, 
                 orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
-			find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX & NUM_CELLS_INDEX][SPATIAL_PARTITION_FLOORS].next, 
+			find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next, 
                 orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
 		}
 		find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next, 

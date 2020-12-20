@@ -44,6 +44,7 @@ struct newcam_hardpos {
     u8 newcam_hard_areaID;
     u8 newcam_hard_permaswap;
     u16 newcam_hard_modeset;
+    s32 *newcam_hard_script;
     s16 newcam_hard_X1;
     s16 newcam_hard_Y1;
     s16 newcam_hard_Z1;
@@ -58,18 +59,8 @@ struct newcam_hardpos {
     s16 newcam_hard_lookZ;
 };
 
-///This is the bit that defines where the angles happen. They're basically environment boxes that dictate camera behaviour.
-//Permaswap is a boolean that simply determines wether or not when the camera changes at this point it stays changed. 0 means it resets when you leave, and 1 means it stays changed.
-//The camera position fields accept "32767" as an ignore flag.
-struct newcam_hardpos newcam_fixedcam[] = {
-    {
-        /*Level ID*/ 16,/*Area ID*/ 1,/*Permaswap*/ 0,/*Mode*/ NC_MODE_FIXED_NOMOVE, //Standard params.
-        /*X begin*/ -540,/*Y begin*/ 800,/*Z begin*/ -3500, //Where the activation box begins
-        /*X end*/ 540,/*Y end*/ 2000,/*Z end*/ -1500, //Where the activation box ends.
-        /*Cam X*/ 0,/*Cam Y*/ 1500,/*Cam Z*/ -1000, //The position the camera gets placed for NC_MODE_FIXED and NC_MODE_FIXED_NOMOVE
-        /*Look X*/ 0,/*Look Y*/ 800,/*Look Z*/ -2500 //The position the camera looks at for NC_MODE_FIXED_NOMOVE
-    },
-};
+#include "bettercamera/scripts.inc.c"
+#include "bettercamera/angles.inc.c"
 
 
 #ifdef noaccel
@@ -89,7 +80,7 @@ f32 newcam_pos[3]; //Position the camera is in the world
 f32 newcam_lookat[3]; //Position the camera is looking at
 f32 newcam_framessincec[2];
 f32 newcam_extheight = 125;
-u8 newcam_centering = 0; // The flag that depicts wether the camera's goin gto try centering.
+u8 newcam_centering = 0; // The flag that depicts whether the camera's going to try centreing.
 s16 newcam_yaw_target; // The yaw value the camera tries to set itself to when the centre flag is active. Is set to Mario's face angle.
 f32 newcam_turnwait; // The amount of time to wait after landing before allowing the camera to turn again
 f32 newcam_pan_x;
@@ -108,9 +99,9 @@ s16 newcam_invertY;
 s16 newcam_panlevel; //How much the camera sticks out a bit in the direction you're looking.
 s16 newcam_aggression ; //How much the camera tries to centre itself to Mario's facing and movement.
 s16 newcam_degrade = 1;
-s16 newcam_analogue = 0; //Wether to accept inputs from a player 2 joystick, and then disables C button input.
+s16 newcam_analogue = 0; //Whether to accept inputs from a player 2 joystick, and then disables C button input.
 s16 newcam_distance_values[] = {750,1250,2000};
-u8 newcam_active = 0; // basically the thing that governs if newcam is on.
+u8 newcam_active = 0; // basically the thing that governs if puppycam is on. If you disable this by hand, you need to set the camera mode to the old modes, too.
 #ifndef TARGET_N64
 u8 newcam_mouse = 0;
 #endif
@@ -223,11 +214,11 @@ static s16 lengthdir_y(f32 length, s16 dir) {
 }
 
 void newcam_diagnostics(void) {
-    print_text_fmt_int(32,192,"Lv %d",gCurrLevelNum);
+    print_text_fmt_int(32,192,"L %d",gCurrLevelNum);
     print_text_fmt_int(32,176,"Area %d",gCurrAreaIndex);
-    print_text_fmt_int(32,160,"X %d",gMarioState->pos[0]);
-    print_text_fmt_int(32,144,"Y %d",gMarioState->pos[1]);
-    print_text_fmt_int(32,128,"Z %d",gMarioState->pos[2]);
+    print_text_fmt_int(32,160,"1 %d",gMarioState->pos[0]);
+    print_text_fmt_int(32,144,"2 %d",gMarioState->pos[1]);
+    print_text_fmt_int(32,128,"3 %d",gMarioState->pos[2]);
     print_text_fmt_int(32,112,"FLAGS %d",newcam_modeflags);
     print_text_fmt_int(180,112,"INTM %d",newcam_intendedmode);
     print_text_fmt_int(32,96,"TILT UP %d",newcam_tilt_acc);
@@ -625,8 +616,10 @@ static void newcam_position_cam(void) {
 //Nested if's baybeeeee
 static void newcam_find_fixed(void) {
     u8 i = 0;
+    void (*func)();
     newcam_mode = newcam_intendedmode;
     newcam_modeflags = newcam_mode;
+
     for (i = 0; i < sizeof(newcam_fixedcam) / sizeof(struct newcam_hardpos); i++) {
         if (newcam_fixedcam[i].newcam_hard_levelID == gCurrLevelNum && newcam_fixedcam[i].newcam_hard_areaID == gCurrAreaIndex) {
             if ((newcam_pos_target[0] > newcam_fixedcam[i].newcam_hard_X1)
@@ -655,6 +648,11 @@ static void newcam_find_fixed(void) {
                     newcam_lookat[2] = newcam_fixedcam[i].newcam_hard_lookZ;
 
                 newcam_yaw = atan2s(newcam_pos[0]-newcam_pos_target[0],newcam_pos[2]-newcam_pos_target[2]);
+                
+                if (newcam_fixedcam[i].newcam_hard_script != 0) {
+                    func = newcam_fixedcam[i].newcam_hard_script;
+                    (func)();
+                }
             }
         }
     }
