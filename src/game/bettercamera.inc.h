@@ -113,16 +113,15 @@ s16 newcam_saved_mode = -1;
 s16 newcam_saved_defmode = -1;
 
 #ifdef TARGET_N64 // TODO: save to EEPROM
-unsigned int configCameraXSens   = 50;
-unsigned int configCameraYSens   = 50;
+unsigned int configCameraXSens   = 25;
+unsigned int configCameraYSens   = 25;
 unsigned int configCameraAggr    = 0;
 unsigned int configCameraPan     = 0;
 unsigned int configCameraDegrade = 10; // 0 - 100%
 int         configCameraInvertX = TRUE;
 int         configCameraInvertY = FALSE;
-int         configEnableCamera  = FALSE;
-int         configCameraAnalog  = TRUE;
-int         configCameraMouse   = FALSE;
+int         configEnableCamera  = TRUE;
+int         configCameraAnalog  = FALSE;
 #endif
 
 ///This is called at every level initialisation.

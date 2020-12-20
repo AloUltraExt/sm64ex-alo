@@ -72,14 +72,14 @@ unsigned int configKeyStart[MAX_BINDS]      = { 0x001C,   0x1006,     VK_INVALID
 unsigned int configKeyL[MAX_BINDS]          = { 0x0010,   0x1009,     0x1104     };
 unsigned int configKeyR[MAX_BINDS]          = { 0x0012,   0x100A,     0x101B     };
 unsigned int configKeyZ[MAX_BINDS]          = { 0x002C,   0x1007,     0x101A     };
-unsigned int configKeyCUp[MAX_BINDS]        = { 0x0147,   VK_INVALID, VK_INVALID };
-unsigned int configKeyCDown[MAX_BINDS]      = { 0x014F,   VK_INVALID, VK_INVALID };
-unsigned int configKeyCLeft[MAX_BINDS]      = { 0x0153,   VK_INVALID, VK_INVALID };
-unsigned int configKeyCRight[MAX_BINDS]     = { 0x0151,   VK_INVALID, VK_INVALID };
-unsigned int configKeyDUp[MAX_BINDS]        = { 0x0011,   VK_INVALID, VK_INVALID };
-unsigned int configKeyDDown[MAX_BINDS]      = { 0x001F,   VK_INVALID, VK_INVALID };
-unsigned int configKeyDLeft[MAX_BINDS]      = { 0x001E,   VK_INVALID, VK_INVALID };
-unsigned int configKeyDRight[MAX_BINDS]     = { 0x0020,   VK_INVALID, VK_INVALID };
+unsigned int configKeyCUp[MAX_BINDS]        = { 0x0011,   VK_INVALID, VK_INVALID };
+unsigned int configKeyCDown[MAX_BINDS]      = { 0x001F,   VK_INVALID, VK_INVALID };
+unsigned int configKeyCLeft[MAX_BINDS]      = { 0x001E,   VK_INVALID, VK_INVALID };
+unsigned int configKeyCRight[MAX_BINDS]     = { 0x0020,   VK_INVALID, VK_INVALID };
+unsigned int configKeyDUp[MAX_BINDS]        = { 0x0014,   VK_INVALID, VK_INVALID };
+unsigned int configKeyDDown[MAX_BINDS]      = { 0x0022,   VK_INVALID, VK_INVALID };
+unsigned int configKeyDLeft[MAX_BINDS]      = { 0x0021,   VK_INVALID, VK_INVALID };
+unsigned int configKeyDRight[MAX_BINDS]     = { 0x0023,   VK_INVALID, VK_INVALID };
 unsigned int configKeyStickUp[MAX_BINDS]    = { 0x0148,   VK_INVALID, VK_INVALID };
 unsigned int configKeyStickDown[MAX_BINDS]  = { 0x0150,   VK_INVALID, VK_INVALID };
 unsigned int configKeyStickLeft[MAX_BINDS]  = { 0x014B,   VK_INVALID, VK_INVALID };
@@ -92,15 +92,15 @@ bool configPrecacheRes = true;
 #endif
 #ifdef BETTERCAMERA
 // BetterCamera settings
-unsigned int configCameraXSens   = 50;
-unsigned int configCameraYSens   = 50;
+unsigned int configCameraXSens   = 25;
+unsigned int configCameraYSens   = 25;
 unsigned int configCameraAggr    = 0;
 unsigned int configCameraPan     = 0;
 unsigned int configCameraDegrade = 10; // 0 - 100%
 bool         configCameraInvertX = true;
 bool         configCameraInvertY = false;
 bool         configEnableCamera  = false;
-bool         configCameraAnalog  = true;
+bool         configCameraAnalog  = false;
 bool         configCameraMouse   = false;
 #endif
 bool         configSkipIntro     = 0;
