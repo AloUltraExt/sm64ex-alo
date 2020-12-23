@@ -551,7 +551,7 @@ ULTRA_O_FILES := $(foreach file,$(ULTRA_S_FILES),$(BUILD_DIR)/$(file:.s=.o)) \
 GODDARD_O_FILES := $(foreach file,$(GODDARD_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
 
 RPC_LIBS :=
-ifeq ($(TARGET_WII_U),0)
+ifeq ($(TARGET_GAME_CONSOLE),0)
   ifeq ($(DISCORDRPC),1)
     ifeq ($(WINDOWS_BUILD),1)
       RPC_LIBS := lib/discord/libdiscord-rpc.dll
