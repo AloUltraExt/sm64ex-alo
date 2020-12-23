@@ -125,6 +125,7 @@ int         configCameraAnalog  = FALSE;
 #endif
 
 ///This is called at every level initialisation.
+///You can edit these if you plan to use custom levels
 void newcam_init(struct Camera *c, u8 dv) {
     newcam_tilt = 1500;
     newcam_distance_target = newcam_distance_values[dv];
