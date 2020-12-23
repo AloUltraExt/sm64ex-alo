@@ -1416,9 +1416,14 @@ void update_mario_inputs(struct MarioState *m) {
     
 #ifdef CHEATS_ACTIONS
     /* Moonjump cheat */
-    while (Cheats.MoonJump == true && Cheats.EnableCheats == true && m->controller->buttonDown & L_TRIG ){
-        m->vel[1] = 25;
-        break;   // TODO: Unneeded break?
+    if (Cheats.MoonJump == true && Cheats.EnableCheats == true) {        
+        if (m->controller->buttonPressed & L_TRIG) {
+            set_mario_action(m, ACT_JUMP, 0);
+        }
+
+        if (m->controller->buttonDown & L_TRIG) {
+            m->vel[1] = 25;
+        }
     }
     /*End of moonjump cheat */
 #endif
