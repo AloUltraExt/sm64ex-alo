@@ -584,7 +584,7 @@ static Gfx gd_dl_red_sparkle_4[] = {
     gsSPBranchList(gd_dl_sparkle),
 };
 
-#ifndef QOL_FIXES
+#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
 static Gfx gd_dl_red_sparkle_4_dup[] = {
     gsDPPipeSync(),
     gsSPDisplayList(gd_dl_sparkle_red_color),
@@ -635,7 +635,7 @@ static Gfx gd_dl_silver_sparkle_4[] = {
     gsSPBranchList(gd_dl_sparkle),
 };
 
-#ifndef QOL_FIXES
+#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
 static Gfx gd_dl_silver_sparkle_4_dup[] = {
     gsDPPipeSync(),
     gsSPDisplayList(gd_dl_sparkle_white_color),
@@ -662,7 +662,7 @@ static Gfx *gd_red_sparkle_dl_array[] = {
     gd_dl_red_sparkle_1,
     gd_dl_red_sparkle_0,
     gd_dl_red_sparkle_0,
-#ifndef QOL_FIXES
+#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
     gd_dl_red_sparkle_4_dup,
     gd_dl_red_sparkle_4_dup,
 #else
@@ -682,7 +682,7 @@ static Gfx *gd_silver_sparkle_dl_array[] = {
     gd_dl_silver_sparkle_1,
     gd_dl_silver_sparkle_0,
     gd_dl_silver_sparkle_0,
-#ifndef QOL_FIXES
+#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
     gd_dl_silver_sparkle_4_dup,
     gd_dl_silver_sparkle_4_dup,
 #else

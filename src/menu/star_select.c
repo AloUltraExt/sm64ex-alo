@@ -413,13 +413,14 @@ s32 lvl_init_act_selector_values_and_stars(UNUSED s32 arg, UNUSED s32 unused) {
 s32 lvl_update_obj_and_load_act_button_actions(UNUSED s32 arg, UNUSED s32 unused) {
     if (sActSelectorMenuTimer >= 11) {
         // If any of these buttons are pressed, play sound and go to course act
-#ifndef Z_TRIG_EXTRA_ACT
+#if !QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
         if ((gPlayer3Controller->buttonPressed & A_BUTTON)
          || (gPlayer3Controller->buttonPressed & START_BUTTON)
-         || (gPlayer3Controller->buttonPressed & B_BUTTON)) {
+         || (gPlayer3Controller->buttonPressed & B_BUTTON)) 
 #else
-        if ((gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | B_BUTTON | Z_TRIG))) {
+        if ((gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | B_BUTTON | Z_TRIG))) 
 #endif
+        {
 #if defined(VERSION_JP)
             play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
 #else

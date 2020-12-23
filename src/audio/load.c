@@ -1536,7 +1536,12 @@ void preload_sequence(u32 seqId, u8 preloadMask) {
 
     if (preloadMask & PRELOAD_SEQUENCE) {
         // @bug should be IS_SEQ_LOAD_COMPLETE
-        if (IS_BANK_LOAD_COMPLETE(seqId) == TRUE) {
+#if QOL_FIX_AUDIO_LOAD_BANK_NOT_SEQUENCE
+        if (IS_SEQ_LOAD_COMPLETE(seqId) == TRUE)
+#else
+        if (IS_BANK_LOAD_COMPLETE(seqId) == TRUE)
+#endif
+        {
             eu_stubbed_printf_1("SEQ  %d ALREADY CACHED\n", seqId);
             sequenceData = get_bank_or_seq(&gSeqLoadedPool, 2, seqId);
         } else {

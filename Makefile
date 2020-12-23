@@ -49,8 +49,6 @@ TARGET_BITS ?= 0
 BETTERCAMERA ?= 1
 # Disable no drawing distance by default
 NODRAWINGDISTANCE ?= 0
-# Disable QoL fixes by default (helps with them purists)
-QOL_FIXES ?= 0
 # Enable extended options menu by default
 EXT_OPTIONS_MENU ?= 1
 # Disable text-based save-files by default
@@ -63,6 +61,11 @@ DISCORDRPC ?= 0
 RUMBLE_FEEDBACK ?= 0
 # Enable PC Port defines
 PC_PORT_DEFINES ?= 0
+
+# Quality of life features
+QOL_FEATURES ?= 1
+# Quality of life fixes
+QOL_FIXES ?= 1
 
 # Various workarounds for weird toolchains
 NO_BZERO_BCOPY ?= 0
@@ -645,6 +648,18 @@ ifeq ($(EXT_OPTIONS_MENU),1)
   CFLAGS += -DEXT_OPTIONS_MENU -DCHEATS_ACTIONS
 endif
 
+# Check for QoL fixes option
+ifeq ($(QOL_FIXES),1)
+  CC_CHECK += -DQOL_FIXES
+  CFLAGS += -DQOL_FIXES
+endif
+
+# Check for QoL fixes option
+ifeq ($(QOL_FEATURES),1)
+  CC_CHECK += -DQOL_FEATURES
+  CFLAGS += -DQOL_FEATURES
+endif
+
 ifeq ($(shell getconf LONG_BIT), 32)
   # Work around memory allocation bug in QEMU
   export QEMU_GUEST_BASE := 1
@@ -892,6 +907,12 @@ endif
 ifeq ($(QOL_FIXES),1)
   CC_CHECK += -DQOL_FIXES
   CFLAGS += -DQOL_FIXES
+endif
+
+# Check for QoL fixes option
+ifeq ($(QOL_FEATURES),1)
+  CC_CHECK += -DQOL_FEATURES
+  CFLAGS += -DQOL_FEATURES
 endif
 
 # Check for extended options menu option

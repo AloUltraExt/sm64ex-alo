@@ -221,7 +221,7 @@ void handle_vblank(void) {
 
     stub_main_3();
     gNumVblanks++;
-#if SH_CHANGES
+#ifdef VERSION_SH
     if (gResetTimer > 0 && gResetTimer < 100) {
         gResetTimer++;
     }

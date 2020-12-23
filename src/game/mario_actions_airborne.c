@@ -1336,7 +1336,7 @@ s32 act_air_hit_wall(struct MarioState *m) {
         return set_mario_action(m, ACT_SOFT_BONK, 0);
     }
 
-#ifdef AVOID_UB
+#if QOL_FIX_HIT_WALL_ANIMATION
     return
 #endif
     set_mario_animation(m, MARIO_ANIM_START_WALLKICK);
@@ -2108,7 +2108,7 @@ s32 act_special_triple_jump(struct MarioState *m) {
 
     switch (perform_air_step(m, 0)) {
         case AIR_STEP_LANDED:
-            #ifdef QOL_FIXES
+            #if QOL_FEATURE_MORE_SPECIAL_TRIPLE_JUMP_ACTIONS
             if (m->actionState++ != 0) {
                 set_mario_action(m, ACT_FREEFALL_LAND_STOP, 0);
             }
@@ -2122,7 +2122,7 @@ s32 act_special_triple_jump(struct MarioState *m) {
             play_mario_landing_sound(m, SOUND_ACTION_TERRAIN_LANDING);
             break;
         
-        #ifdef QOL_FIXES
+        #if QOL_FEATURE_MORE_SPECIAL_TRIPLE_JUMP_ACTIONS
         case AIR_STEP_HIT_WALL:
             if (m->forwardVel > 16.0f) {
                 mario_bonk_reflection(m, FALSE);

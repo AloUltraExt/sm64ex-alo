@@ -29,7 +29,7 @@ void water_ring_init(void) {
 
     // Adding this code will alter the ring's graphical orientation to align with the faulty
     // collision orientation:
-#ifdef QOL_FIXES
+#if QOL_FIX_ALIGN_WATER_RING
     o->oFaceAngleYaw = 0;
     o->oFaceAngleRoll *= -1;
 #endif

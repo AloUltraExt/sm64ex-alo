@@ -814,9 +814,20 @@ s32 act_walking(struct MarioState *m) {
         return begin_braking_action(m);
     }
 
+#if QOL_FIX_TURN_AROUND_CIRCLE
+    if (analog_stick_held_back(m)) {
+        if (m->forwardVel >= 16.0f){
+            return set_mario_action(m, ACT_TURNING_AROUND, 0);
+        } else if ((m->forwardVel) < 10.0f && (m->forwardVel > 0.0f)){
+            m->faceAngle[1] = m->intendedYaw;
+            return set_mario_action(m, ACT_TURNING_AROUND, 0);
+        }
+    }
+#else
     if (analog_stick_held_back(m) && m->forwardVel >= 16.0f) {
         return set_mario_action(m, ACT_TURNING_AROUND, 0);
     }
+#endif
 
     if (m->input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_CROUCH_SLIDE, 0);
