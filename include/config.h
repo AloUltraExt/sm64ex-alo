@@ -95,6 +95,10 @@
 #define QOL_FIX_AUDIO_LOAD_BANK_NOT_SEQUENCE (0 || QOL_FIXES)
 /// Fixes halfcircle when starting to move
 #define QOL_FIX_TURN_AROUND_CIRCLE (0 || QOL_FIXES)
+/// Fixes drowing sound continously playing while Metal
+#define QOL_FIX_DROWING_SOUND_METAL (0 || QOL_FIXES)
+/// Fixes complete coins not giving lives every 50 coins after 150 coins
+#define QOL_FIX_COMPLETE_COURSE_50_COINS (0 || QOL_FIXES)
 
 // Debug Defines
 // Skip Intro Cutscene (N64)
