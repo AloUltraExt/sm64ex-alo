@@ -740,8 +740,6 @@ static void level_cmd_38(void) {
     sCurrentCmd = CMD_NEXT;
 }
 
-extern int gPressedStart;
-
 static void level_cmd_get_or_set_var(void) {
     if (CMD_GET(u8, 2) == 0) {
         switch (CMD_GET(u8, 3)) {
@@ -759,9 +757,6 @@ static void level_cmd_get_or_set_var(void) {
                 break;
             case 4:
                 gCurrAreaIndex = sRegister;
-                break;
-            case 5: 
-                gPressedStart = sRegister; 
                 break;
         }
     } else {
@@ -781,45 +776,9 @@ static void level_cmd_get_or_set_var(void) {
             case 4:
                 sRegister = gCurrAreaIndex;
                 break;
-            case 5: 
-                sRegister = gPressedStart; 
-                break;
         }
     }
 
-    sCurrentCmd = CMD_NEXT;
-}
-
-int gDemoLevels[7] = {
-    LEVEL_BOWSER_1,
-    LEVEL_WF,
-    LEVEL_CCM,
-    LEVEL_BBH,
-    LEVEL_JRB,
-    LEVEL_HMC,
-    LEVEL_PSS
-};
-
-int gDemoLevelID = 0;
-int gDemoInputListID_2 = 0;
-
-extern int start_demo(int);
-
-static void level_cmd_advdemo(void)
-{
-    start_demo(0);
-    if(gDemoLevelID == 6) {
-        sRegister = gDemoLevels[6];
-        gDemoLevelID = 0;
-    } else {
-        sRegister = gDemoLevels[gDemoLevelID++];
-    }
-    sCurrentCmd = CMD_NEXT;
-}
-
-static void level_cmd_cleardemoptr(void)
-{
-    gCurrDemoInput = NULL;
     sCurrentCmd = CMD_NEXT;
 }
 
@@ -885,8 +844,6 @@ static void (*LevelScriptJumpTable[])(void) = {
     /*3A*/ level_cmd_3A,
     /*3B*/ level_cmd_create_whirlpool,
     /*3C*/ level_cmd_get_or_set_var,
-    /*3D*/ level_cmd_advdemo,
-    /*3E*/ level_cmd_cleardemoptr,
 };
 
 struct LevelCommand *level_script_execute(struct LevelCommand *cmd) {
