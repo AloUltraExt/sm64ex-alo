@@ -143,7 +143,7 @@ ALIGNED8 static const Texture texture_hud_char_W[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_X[] = {
-#include "textures/segment2/segment2.04200.rgba16.inc.c"
+#include "textures/segment2/segment2.04200_custom.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_Y[] = {
@@ -151,7 +151,7 @@ ALIGNED8 static const Texture texture_hud_char_Y[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_Z[] = {
-#include "textures/segment2/segment2.04600.rgba16.inc.c"
+#include "textures/segment2/segment2.04200_custom.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_apostrophe[] = {

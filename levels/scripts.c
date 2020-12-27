@@ -131,7 +131,7 @@ static const LevelScript script_L1[] = {
 };
 
 static const LevelScript script_L2[] = {
-    EXIT_AND_EXECUTE(/*seg*/ 0x0E, _endingSegmentRomStart, _endingSegmentRomEnd, level_ending_entry),
+    EXIT_AND_EXECUTE(/*seg*/ 0x1A, _endingSegmentRomStart, _endingSegmentRomEnd, level_ending_entry),
 };
 
 static const LevelScript goto_mario_head_regular[] = {
@@ -161,7 +161,7 @@ static const LevelScript script_exec_level_table[] = {
 
 #define DEFINE_LEVEL(_0, _1, _2, folder, _4, _5, _6, _7, _8, _9, _10) \
 static const LevelScript script_exec_ ## folder [] = { \
-    EXECUTE(0x0E, _ ## folder ## SegmentRomStart, _ ## folder ## SegmentRomEnd, level_ ## folder ## _entry), \
+    EXECUTE(0x1A, _ ## folder ## SegmentRomStart, _ ## folder ## SegmentRomEnd, level_ ## folder ## _entry), \
     RETURN(), \
 };
 
