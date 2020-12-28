@@ -796,7 +796,7 @@ void cur_obj_unused_init_on_floor(void) {
     cur_obj_enable_rendering();
 
     o->oPosY = find_floor_height(o->oPosX, o->oPosY, o->oPosZ);
-    if (o->oPosY < -10000.0f) {
+    if (o->oPosY < FLOOR_LOWER_LIMIT_MISC) {
         cur_obj_set_pos_relative_to_parent(0, 0, -70);
         o->oPosY = find_floor_height(o->oPosX, o->oPosY, o->oPosZ);
     }
@@ -1076,7 +1076,7 @@ static void cur_obj_move_after_thrown_or_dropped(f32 forwardVel, f32 velY) {
 
     if (o->oFloorHeight > o->oPosY) {
         o->oPosY = o->oFloorHeight;
-    } else if (o->oFloorHeight < -10000.0f) {
+    } else if (o->oFloorHeight < FLOOR_LOWER_LIMIT_MISC) {
         //! OoB failsafe
         obj_copy_pos(o, gMarioObject);
         o->oFloorHeight = find_floor_height(o->oPosX, o->oPosY, o->oPosZ);
@@ -1224,7 +1224,7 @@ static s32 cur_obj_move_xz(f32 steepSlopeNormalY, s32 careAboutEdgesAndSteepSlop
         }
     }
 
-    if (intendedFloorHeight < -10000.0f) {
+    if (intendedFloorHeight < FLOOR_LOWER_LIMIT_MISC) {
         // Don't move into OoB
         o->oMoveFlags |= OBJ_MOVE_HIT_EDGE;
         return FALSE;
@@ -1685,7 +1685,7 @@ static s32 cur_obj_detect_steep_floor(s16 steepAngleDegrees) {
         intendedFloorHeight = find_floor(intendedX, o->oPosY, intendedZ, &intendedFloor);
         deltaFloorHeight = intendedFloorHeight - o->oFloorHeight;
 
-        if (intendedFloorHeight < -10000.0f) {
+        if (intendedFloorHeight < FLOOR_LOWER_LIMIT_MISC) {
             o->oWallAngle = o->oMoveAngleYaw + 0x8000;
             return 2;
         } else if (intendedFloor->normal.y < steepNormalY && deltaFloorHeight > 0
