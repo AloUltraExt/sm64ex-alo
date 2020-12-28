@@ -101,6 +101,10 @@
 #define QOL_FIX_COMPLETE_COURSE_50_COINS (0 || QOL_FIXES)
 /// Fixes impossible coins (also fixes impossible goomba since it's related)
 #define QOL_FIX_IMPOSSIBLE_COINS (0 || QOL_FIXES)
+/// Fixes cap cloning when Mario takes a fade warp
+#define QOL_FIX_HAT_CLONE_FADE (0 || QOL_FIXES)
+/// Fixes open door key cutscene on 90-270 degrees
+#define QOL_FIX_DOOR_KEY_CUTSCENE (0 || QOL_FIXES)
 
 // Debug Defines
 // Skip Intro Cutscene (N64)
