@@ -21,7 +21,7 @@ void water_ring_init(void) {
     //  This cause the ring's orientation for the purposes of collision to be
     //  different than the graphical orientation, which means that Mario won't
     //  necessarily collect a ring even if he appears to swim through it.
-#if QOL_FIX_ALIGN_WATER_RING
+#if QOL_FIX_WATER_RING
     o->oWaterRingNormalX = sins(o->oFaceAngleYaw)   * sins(o->oFaceAngleRoll);
     o->oWaterRingNormalY = coss(o->oFaceAnglePitch) * coss(o->oFaceAngleRoll);
     o->oWaterRingNormalZ = coss(o->oFaceAngleYaw)   * sins(o->oFaceAnglePitch);

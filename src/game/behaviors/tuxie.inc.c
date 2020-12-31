@@ -295,13 +295,16 @@ Gfx *geo_switch_tuxie_mother_eyes(s32 run, struct GraphNode *node, UNUSED Mat4 *
     struct Object *obj;
     struct GraphNodeSwitchCase *switchCase;
     s32 timer;
+#if QOL_FEATURE_TUXIES_MOTHER_SAD_EYES
+    int babyDelivered;
+#endif
 
     if (run == TRUE) {
         obj = (struct Object *) gCurGraphNodeObject;
         switchCase = (struct GraphNodeSwitchCase *) node;
 
         #if QOL_FEATURE_TUXIES_MOTHER_SAD_EYES
-        int babyDelivered = obj->oAction == 2;
+        babyDelivered = obj->oAction == 2;
         if (obj->behavior == segmented_to_virtual(bhvTuxiesMother)) {
             switchCase->selectedCase = babyDelivered ? 0 : 4;
         } else {

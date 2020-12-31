@@ -794,9 +794,9 @@ s32 act_unlocking_key_door(struct MarioState *m) {
 
 #if QOL_FIX_DOOR_KEY_CUTSCENE
     if (m->faceAngle[1] >= -0x4000 && m->faceAngle[1] <= 0x4000) {
-        angle -= 75.0f;
+        angle = -75.0f;
     } else {
-        angle += 75.0f;
+        angle = 75.0f;
     }
     
     m->pos[0] = m->usedObj->oPosX + coss(m->faceAngle[1]) * angle;

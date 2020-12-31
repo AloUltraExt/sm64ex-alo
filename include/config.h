@@ -61,8 +61,8 @@
 #define QOL_FIX_CASTLE_TRAP_SOUND (0 || QOL_FIXES)
 /// Fixes undefined anim return in the hit wall code, more info in the fix itself
 #define QOL_FIX_HIT_WALL_ANIMATION (0 || QOL_FIXES)
-/// Fixes or rather align manta's water rings to match where it looks
-#define QOL_FIX_ALIGN_WATER_RING (0 || QOL_FIXES)
+/// Fixes manta's water rings to match where it looks
+#define QOL_FIX_WATER_RING (0 || QOL_FIXES)
 /// Fixes object counter so it correctly gets proper value when updating objects
 #define QOL_FIX_OBJ_COUNT_LIST (0 || QOL_FIXES)
 /// Fixes duplicated red/white display list in goddard and properly uses the next ones
@@ -77,7 +77,7 @@
 #define QOL_FIX_US_FONT_TEXTURE_UV (0 || QOL_FIXES)
 /// Corrects hud texture fillter, only noticeable on N64 old plugins
 #define QOL_FIX_HUD_TEXTURE_FILTER (0 || QOL_FIXES)
-/// Fixes fake pole grab on the bottom of it, allowing to be grabbed anywhere
+/// Fixes fake pole grab on the bottom of it, allowing to be properly grabbed
 #define QOL_FIX_POLE_BOTTOM_GRAB (0 || QOL_FIXES)
 /// Fixes an oddly defined interaction sub type in penguin mother behavior 
 #define QOL_FIX_TUXIE_HELD_STATE (0 || QOL_FIXES)
@@ -105,6 +105,8 @@
 #define QOL_FIX_HAT_CLONE_FADE (0 || QOL_FIXES)
 /// Fixes open door key cutscene on 90-270 degrees
 #define QOL_FIX_DOOR_KEY_CUTSCENE (0 || QOL_FIXES)
+/// Fixes cutscene loop code (see comment in the fix)
+#define QOL_FIX_CUTSCENE_LOOP (0 || QOL_FIXES)
 
 // Debug Defines
 // Skip Intro Cutscene (N64)
