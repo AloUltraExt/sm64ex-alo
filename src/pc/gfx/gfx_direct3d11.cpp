@@ -277,6 +277,9 @@ static void create_render_target_views(bool is_resize) {
         ThrowIfFailed(d3d.swap_chain->GetDesc1(&desc1));
         ThrowIfFailed(d3d.swap_chain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, desc1.Flags),
                       gfx_dxgi_get_h_wnd(), "Failed to resize IDXGISwapChain buffers.");
+    } else {
+        // Only initialize the framebuffer the first time
+        initialize_framebuffer();
     }
 
     // Get new size
@@ -347,10 +350,6 @@ static void create_render_target_views(bool is_resize) {
     ComPtr<ID3D11Texture2D> depth_stencil_texture;
     ThrowIfFailed(d3d.device->CreateTexture2D(&depth_stencil_texture_desc, nullptr, depth_stencil_texture.GetAddressOf()));
     ThrowIfFailed(d3d.device->CreateDepthStencilView(depth_stencil_texture.Get(), nullptr, d3d.depth_stencil_view.GetAddressOf()));
-
-    // Initialize framebuffer
-
-    initialize_framebuffer();
 
     // Save resolution
 
