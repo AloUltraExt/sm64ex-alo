@@ -25,6 +25,7 @@ struct GfxRenderingAPI {
     void (*set_scissor)(int x, int y, int width, int height);
     void (*set_use_alpha)(bool use_alpha);
     void (*draw_triangles)(float buf_vbo[], size_t buf_vbo_len, size_t buf_vbo_num_tris);
+    void (*get_framebuffer)(uint16_t *buffer); 
     void (*init)(void);
     void (*on_resize)(void);
     void (*start_frame)(void);

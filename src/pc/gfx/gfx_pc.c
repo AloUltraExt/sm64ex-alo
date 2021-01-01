@@ -183,6 +183,8 @@ static size_t buf_vbo_num_tris;
 static struct GfxWindowManagerAPI *gfx_wapi;
 static struct GfxRenderingAPI *gfx_rapi;
 
+static uint16_t *framebuffer_data;
+
 // 4x4 pink-black checkerboard texture to indicate missing textures
 #define MISSING_W 4
 #define MISSING_H 4
@@ -1845,6 +1847,21 @@ struct GfxRenderingAPI *gfx_get_current_rendering_api(void) {
     return gfx_rapi;
 }
 
+uint16_t *get_framebuffer() {
+    return framebuffer_data;
+}
+
+void fill_framebuffer_data() {
+    size_t size = 320 * 240;
+
+    if (framebuffer_data == NULL) {
+        framebuffer_data = (uint16_t *) malloc(size * sizeof(uint16_t));
+        printf("Initializing backbuffer data...\n");
+    }
+
+    gfx_get_current_rendering_api()->get_framebuffer(framebuffer_data);
+}
+
 void gfx_start_frame(void) {
     gfx_wapi->handle_events();
     gfx_wapi->get_dimensions(&gfx_current_dimensions.width, &gfx_current_dimensions.height);
@@ -1878,6 +1895,7 @@ void gfx_run(Gfx *commands) {
 
 void gfx_end_frame(void) {
     if (!dropped_frame) {
+        fill_framebuffer_data();
         gfx_rapi->finish_render();
         gfx_wapi->swap_buffers_end();
     }

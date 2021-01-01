@@ -123,7 +123,7 @@ const Texture *const game_over_texture_table[] = {
 
 UNUSED static const u64 title_screen_bg_unused_0 = 0;
 
-#ifdef VERSION_SH
+//#ifdef VERSION_SH
 const Gfx title_screen_bg_dl_0A0065E8[] = {
     gsDPPipeSync(),
     gsDPSetCycleType(G_CYC_COPY),
@@ -162,4 +162,4 @@ const Gfx title_screen_bg_dl_0A007548[] = {
     gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
     gsSPEndDisplayList(),
 };
-#endif
+//#endif

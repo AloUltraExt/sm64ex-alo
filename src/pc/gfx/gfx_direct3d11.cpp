@@ -28,7 +28,7 @@
 #include "gfx_screen_config.h"
 
 #define THREE_POINT_FILTERING 0
-#define DEBUG_D3D 0
+#define DEBUG_D3D 1
 
 using namespace Microsoft::WRL; // For ComPtr
 
@@ -82,7 +82,11 @@ static struct {
     ComPtr<ID3D11Device> device;
     ComPtr<IDXGISwapChain1> swap_chain;
     ComPtr<ID3D11DeviceContext> context;
+    ComPtr<ID3D11Texture2D> backbuffer_texture;
     ComPtr<ID3D11RenderTargetView> backbuffer_view;
+    ComPtr<ID3D11Texture2D> backbuffer_copy_texture;
+    ComPtr<ID3D11ShaderResourceView> backbuffer_copy_shader_resource_view;
+    ComPtr<ID3D11SamplerState> backbuffer_copy_sampler_state;
     ComPtr<ID3D11DepthStencilView> depth_stencil_view;
     ComPtr<ID3D11RasterizerState> rasterizer_state;
     ComPtr<ID3D11DepthStencilState> depth_stencil_state;
@@ -116,6 +120,9 @@ static struct {
     int8_t depth_mask;
     int8_t zmode_decal;
 
+    int32_t viewport_x, viewport_y, viewport_width, viewport_height;
+    int32_t scissor_x, scissor_y, scissor_width, scissor_height;
+
     // Previous states (to prevent setting states needlessly)
 
     struct ShaderProgramD3D11 *last_shader_program = nullptr;
@@ -126,10 +133,131 @@ static struct {
     int8_t last_depth_test = -1;
     int8_t last_depth_mask = -1;
     int8_t last_zmode_decal = -1;
+    int32_t last_viewport_x, last_viewport_y, last_viewport_width, last_viewport_height;
+    int32_t last_scissor_x, last_scissor_y, last_scissor_width, last_scissor_height;
     D3D_PRIMITIVE_TOPOLOGY last_primitive_topology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 } d3d;
 
+static struct {
+    ComPtr<ID3D11Texture2D> texture;
+    ComPtr<ID3D11RenderTargetView> render_target_view;
+
+    ComPtr<ID3D11Texture2D> texture_copy;
+
+    ComPtr<ID3D11VertexShader> vertex_shader;
+    ComPtr<ID3D11PixelShader> pixel_shader;
+    ComPtr<ID3D11InputLayout> input_layout;
+
+    ComPtr<ID3D11Buffer> vertex_buffer;
+
+    const char blit_shader[1024] =
+        "struct PSInput {\n"
+        "    float4 position : SV_POSITION;\n"
+        "    float2 uv : TEXCOORD;\n"
+        "};\n"
+        "Texture2D texture8 : register(t8);\n"
+        "SamplerState sampler8 : register(s8);\n"
+        "PSInput VSMain(float2 position : POSITION, float2 uv : TEXCOORD) {\n"
+        "    PSInput result;\n"
+        "    result.position = float4(position, 0, 1);\n"
+        "    result.uv = uv;\n"
+        "    return result;\n"
+        "}\n"
+        "float4 PSMain(PSInput input) : SV_TARGET {\n"
+        "    return float4(texture8.Sample(sampler8, input.uv).rgb, 1);\n"
+        "}\n";
+} framebuffer;
+
 static LARGE_INTEGER last_time, accumulated_time, frequency;
+
+static void initialize_framebuffer() {
+    // Create the framebuffer texture
+
+    D3D11_TEXTURE2D_DESC texture_desc;
+    ZeroMemory(&texture_desc, sizeof(D3D11_TEXTURE2D_DESC));
+
+    texture_desc.Width = 320;
+    texture_desc.Height = 240;
+    texture_desc.MipLevels = 1;
+    texture_desc.ArraySize = 1;
+    texture_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    texture_desc.SampleDesc.Count = 1;
+    texture_desc.SampleDesc.Quality = 0;
+    texture_desc.Usage = D3D11_USAGE_DEFAULT;
+    texture_desc.BindFlags = D3D11_BIND_RENDER_TARGET /*| D3D11_BIND_SHADER_RESOURCE*/;
+    texture_desc.CPUAccessFlags = 0;
+    texture_desc.MiscFlags = 0;
+
+    ThrowIfFailed(d3d.device->CreateTexture2D(&texture_desc, nullptr, framebuffer.texture.GetAddressOf()));
+
+    // Create the framebuffer render target
+
+    D3D11_RENDER_TARGET_VIEW_DESC rtv_desc;
+    ZeroMemory(&rtv_desc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+
+    rtv_desc.Format = texture_desc.Format;
+    rtv_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    rtv_desc.Texture2D.MipSlice = 0;
+
+    ThrowIfFailed(d3d.device->CreateRenderTargetView(framebuffer.texture.Get(), &rtv_desc, framebuffer.render_target_view.GetAddressOf()));
+
+    // Create a copy of the framebuffer to be able to read it from CPU
+
+    texture_desc.Usage = D3D11_USAGE_STAGING;
+    texture_desc.BindFlags = 0;
+    texture_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+    ThrowIfFailed(d3d.device->CreateTexture2D(&texture_desc, nullptr, framebuffer.texture_copy.GetAddressOf()));
+
+    // Compile shader
+
+    ComPtr<ID3DBlob> vs, ps, error_blob;
+
+#if DEBUG_D3D
+    UINT compile_flags = D3DCOMPILE_DEBUG;
+#else
+    UINT compile_flags = D3DCOMPILE_OPTIMIZATION_LEVEL2;
+#endif
+
+    size_t shader_length = strlen(framebuffer.blit_shader);
+    HRESULT hr = d3d.D3DCompile(framebuffer.blit_shader, shader_length, nullptr, nullptr, nullptr, "VSMain", "vs_4_0_level_9_1", compile_flags, 0, vs.GetAddressOf(), error_blob.GetAddressOf());
+
+    if (FAILED(hr)) {
+        MessageBox(gfx_dxgi_get_h_wnd(), (char *) error_blob->GetBufferPointer(), "Error", MB_OK | MB_ICONERROR);
+        throw hr;
+    }
+
+    hr = d3d.D3DCompile(framebuffer.blit_shader, shader_length, nullptr, nullptr, nullptr, "PSMain", "ps_4_0_level_9_1", compile_flags, 0, ps.GetAddressOf(), error_blob.GetAddressOf());
+
+    if (FAILED(hr)) {
+        MessageBox(gfx_dxgi_get_h_wnd(), (char *) error_blob->GetBufferPointer(), "Error", MB_OK | MB_ICONERROR);
+        throw hr;
+    }
+
+    ThrowIfFailed(d3d.device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, framebuffer.vertex_shader.GetAddressOf()));
+    ThrowIfFailed(d3d.device->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(), nullptr, framebuffer.pixel_shader.GetAddressOf()));
+
+    // Create input layout
+
+    D3D11_INPUT_ELEMENT_DESC ied[2];
+    ied[0] = { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 };
+    ied[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 };
+
+    ThrowIfFailed(d3d.device->CreateInputLayout(ied, 2, vs->GetBufferPointer(), vs->GetBufferSize(), framebuffer.input_layout.GetAddressOf()));
+
+    // Quad vertex buffer
+
+    D3D11_BUFFER_DESC vertex_buffer_desc;
+    ZeroMemory(&vertex_buffer_desc, sizeof(D3D11_BUFFER_DESC));
+
+    vertex_buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+    vertex_buffer_desc.ByteWidth = 6 * 2 * 2 * sizeof(float);
+    vertex_buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    vertex_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    vertex_buffer_desc.MiscFlags = 0;
+
+    ThrowIfFailed(d3d.device->CreateBuffer(&vertex_buffer_desc, nullptr, framebuffer.vertex_buffer.GetAddressOf()));
+}
 
 static void create_render_target_views(bool is_resize) {
     DXGI_SWAP_CHAIN_DESC1 desc1;
@@ -137,7 +265,11 @@ static void create_render_target_views(bool is_resize) {
     if (is_resize) {
         // Release previous stuff (if any)
 
+        d3d.backbuffer_texture.Reset();
         d3d.backbuffer_view.Reset();
+        d3d.backbuffer_copy_texture.Reset();
+        d3d.backbuffer_copy_shader_resource_view.Reset();
+        d3d.backbuffer_copy_sampler_state.Reset();
         d3d.depth_stencil_view.Reset();
 
         // Resize swap chain buffers
@@ -153,12 +285,47 @@ static void create_render_target_views(bool is_resize) {
 
     // Create back buffer
 
-    ComPtr<ID3D11Texture2D> backbuffer_texture;
-    ThrowIfFailed(d3d.swap_chain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID *) backbuffer_texture.GetAddressOf()),
+    ThrowIfFailed(d3d.swap_chain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID *) d3d.backbuffer_texture.GetAddressOf()),
                   gfx_dxgi_get_h_wnd(), "Failed to get backbuffer from IDXGISwapChain.");
 
-    ThrowIfFailed(d3d.device->CreateRenderTargetView(backbuffer_texture.Get(), nullptr, d3d.backbuffer_view.GetAddressOf()),
+    ThrowIfFailed(d3d.device->CreateRenderTargetView(d3d.backbuffer_texture.Get(), nullptr, d3d.backbuffer_view.GetAddressOf()),
                   gfx_dxgi_get_h_wnd(), "Failed to create render target view.");
+
+    // Create a copy of the backbuffer to be able to sample it from a shader
+
+    D3D11_TEXTURE2D_DESC backbuffer_desc;
+    d3d.backbuffer_texture->GetDesc(&backbuffer_desc);
+    backbuffer_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    backbuffer_desc.CPUAccessFlags = 0;
+    backbuffer_desc.Usage = D3D11_USAGE_DEFAULT;
+
+    ThrowIfFailed(d3d.device->CreateTexture2D(&backbuffer_desc, nullptr, d3d.backbuffer_copy_texture.GetAddressOf()));
+
+    // Create the shader resource view from the backbuffer copy
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC backbuffer_srv_desc;
+    ZeroMemory(&backbuffer_srv_desc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+
+    backbuffer_srv_desc.Format = backbuffer_desc.Format;
+    backbuffer_srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    backbuffer_srv_desc.Texture2D.MostDetailedMip = 0;
+    backbuffer_srv_desc.Texture2D.MipLevels = 1;
+
+    ThrowIfFailed(d3d.device->CreateShaderResourceView(d3d.backbuffer_copy_texture.Get(), &backbuffer_srv_desc, d3d.backbuffer_copy_shader_resource_view.GetAddressOf()));
+
+    // Create backbuffer copy sampler
+
+    D3D11_SAMPLER_DESC backbuffer_sampler_desc;
+    ZeroMemory(&backbuffer_sampler_desc, sizeof(D3D11_SAMPLER_DESC));
+
+    backbuffer_sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    backbuffer_sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    backbuffer_sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    backbuffer_sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    backbuffer_sampler_desc.MinLOD = 0;
+    backbuffer_sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    ThrowIfFailed(d3d.device->CreateSamplerState(&backbuffer_sampler_desc, d3d.backbuffer_copy_sampler_state.GetAddressOf()));
 
     // Create depth buffer
 
@@ -180,6 +347,10 @@ static void create_render_target_views(bool is_resize) {
     ComPtr<ID3D11Texture2D> depth_stencil_texture;
     ThrowIfFailed(d3d.device->CreateTexture2D(&depth_stencil_texture_desc, nullptr, depth_stencil_texture.GetAddressOf()));
     ThrowIfFailed(d3d.device->CreateDepthStencilView(depth_stencil_texture.Get(), nullptr, d3d.depth_stencil_view.GetAddressOf()));
+
+    // Initialize framebuffer
+
+    initialize_framebuffer();
 
     // Save resolution
 
@@ -525,25 +696,17 @@ static void gfx_d3d11_set_zmode_decal(bool zmode_decal) {
 }
 
 static void gfx_d3d11_set_viewport(int x, int y, int width, int height) {
-    D3D11_VIEWPORT viewport;
-    viewport.TopLeftX = x;
-    viewport.TopLeftY = d3d.current_height - y - height;
-    viewport.Width = width;
-    viewport.Height = height;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-
-    d3d.context->RSSetViewports(1, &viewport);
+    d3d.viewport_x = x;
+    d3d.viewport_y = d3d.current_height - y - height;
+    d3d.viewport_width = width;
+    d3d.viewport_height = height;
 }
 
 static void gfx_d3d11_set_scissor(int x, int y, int width, int height) {
-    D3D11_RECT rect;
-    rect.left = x;
-    rect.top = d3d.current_height - y - height;
-    rect.right = x + width;
-    rect.bottom = d3d.current_height - y;
-
-    d3d.context->RSSetScissorRects(1, &rect);
+    d3d.scissor_x = x;
+    d3d.scissor_y = d3d.current_height - y - height;
+    d3d.scissor_width = x + width;
+    d3d.scissor_height = d3d.current_height - y;
 }
 
 static void gfx_d3d11_set_use_alpha(bool use_alpha) {
@@ -591,6 +754,40 @@ static void gfx_d3d11_draw_triangles(float buf_vbo[], size_t buf_vbo_len, size_t
 
         ThrowIfFailed(d3d.device->CreateRasterizerState(&rasterizer_desc, d3d.rasterizer_state.GetAddressOf()));
         d3d.context->RSSetState(d3d.rasterizer_state.Get());
+    }
+
+    // Viewport and Scissor
+
+    if (d3d.last_viewport_x != d3d.viewport_x || d3d.last_viewport_y != d3d.viewport_y || d3d.last_viewport_width != d3d.viewport_width || d3d.last_viewport_height != d3d.viewport_height) {
+        d3d.last_viewport_x = d3d.viewport_x;
+        d3d.last_viewport_y = d3d.viewport_y;
+        d3d.last_viewport_width = d3d.viewport_width;
+        d3d.last_viewport_height = d3d.viewport_height;
+
+        D3D11_VIEWPORT viewport;
+        viewport.TopLeftX = d3d.viewport_x;
+        viewport.TopLeftY = d3d.viewport_y;
+        viewport.Width = d3d.viewport_width;
+        viewport.Height = d3d.viewport_height;
+        viewport.MinDepth = 0.0f;
+        viewport.MaxDepth = 1.0f;
+
+        d3d.context->RSSetViewports(1, &viewport);
+    }
+
+    if (d3d.last_scissor_x != d3d.scissor_x || d3d.last_scissor_y != d3d.scissor_y || d3d.last_scissor_width != d3d.scissor_width || d3d.last_scissor_height != d3d.scissor_height) {
+        d3d.last_scissor_x = d3d.scissor_x;
+        d3d.last_scissor_y = d3d.scissor_y;
+        d3d.last_scissor_width = d3d.scissor_width;
+        d3d.last_scissor_height = d3d.scissor_height;
+
+        D3D11_RECT rect;
+        rect.left = d3d.scissor_x;
+        rect.top = d3d.scissor_y;
+        rect.right = d3d.scissor_width;
+        rect.bottom = d3d.scissor_height;
+
+        d3d.context->RSSetScissorRects(1, &rect);
     }
 
     bool textures_changed = false;
@@ -662,6 +859,33 @@ static void gfx_d3d11_draw_triangles(float buf_vbo[], size_t buf_vbo_len, size_t
     d3d.context->Draw(buf_vbo_num_tris * 3, 0);
 }
 
+static void gfx_d3d11_get_framebuffer(uint16_t *buffer) {
+    d3d.context->CopyResource(framebuffer.texture_copy.Get(), framebuffer.texture.Get());
+
+    D3D11_MAPPED_SUBRESOURCE ms;
+    ZeroMemory(&ms, sizeof(D3D11_MAPPED_SUBRESOURCE));
+    UINT subresource = D3D11CalcSubresource(0, 0, 0);
+    d3d.context->Map(framebuffer.texture_copy.Get(), subresource, D3D11_MAP_READ, 0, &ms);
+    uint8_t *pixels = (uint8_t *) ms.pData;
+
+    uint32_t bi = 0;
+    for (uint32_t y = 0; y < 240; y++) {
+        for (uint32_t x = 0; x < 320; x++) {
+            uint32_t fb_pixel = (y * 320 + x) * 4;
+
+            uint8_t r = pixels[fb_pixel + 0] / 8;
+            uint8_t g = pixels[fb_pixel + 1] / 8;
+            uint8_t b = pixels[fb_pixel + 2] / 8;
+            uint8_t a = 1; //pixels[fb_pixel + 3] / 255;
+
+            buffer[bi] = (r << 11) | (g << 6) | (b << 1) | a;
+            bi++;
+        }
+    }
+
+    d3d.context->Unmap(framebuffer.texture_copy.Get(), subresource);
+}
+
 static void gfx_d3d11_on_resize(void) {
     create_render_target_views(true);
 }
@@ -696,6 +920,111 @@ static void gfx_d3d11_start_frame(void) {
 }
 
 static void gfx_d3d11_end_frame(void) {
+    // Set framebuffer render target
+
+    d3d.context->OMSetRenderTargets(1, framebuffer.render_target_view.GetAddressOf(), NULL);
+
+    const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    d3d.context->ClearRenderTargetView(framebuffer.render_target_view.Get(), clearColor);
+
+    // Disable depth buffer
+
+    if (d3d.last_depth_test != false || d3d.last_depth_mask != false) {
+        d3d.last_depth_test = false;
+        d3d.last_depth_mask = false;
+
+        d3d.depth_stencil_state.Reset();
+
+        D3D11_DEPTH_STENCIL_DESC depth_stencil_desc;
+        ZeroMemory(&depth_stencil_desc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+
+        depth_stencil_desc.DepthEnable = false;
+        depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+        depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+        depth_stencil_desc.StencilEnable = false;
+
+        ThrowIfFailed(d3d.device->CreateDepthStencilState(&depth_stencil_desc, d3d.depth_stencil_state.GetAddressOf()));
+        d3d.context->OMSetDepthStencilState(d3d.depth_stencil_state.Get(), 0);
+    }
+
+    // Viewport and Scissor
+
+    if (d3d.last_viewport_x != 0 || d3d.last_viewport_y != 0 || d3d.last_viewport_width != 320 || d3d.last_viewport_height != 240) {
+        d3d.last_viewport_x = 0;
+        d3d.last_viewport_y = 0;
+        d3d.last_viewport_width = 320;
+        d3d.last_viewport_height = 240;
+
+        D3D11_VIEWPORT viewport;
+        viewport.TopLeftX = 0;
+        viewport.TopLeftY = 0;
+        viewport.Width = 320;
+        viewport.Height = 240;
+        viewport.MinDepth = 0.0f;
+        viewport.MaxDepth = 1.0f;
+
+        d3d.context->RSSetViewports(1, &viewport);
+    }
+
+    if (d3d.last_scissor_x != 0 || d3d.last_scissor_y != 0 || d3d.last_scissor_width != 320 || d3d.last_scissor_height != 240) {
+        d3d.last_scissor_x = 0;
+        d3d.last_scissor_y = 0;
+        d3d.last_scissor_width = 320;
+        d3d.last_scissor_height = 240;
+
+        D3D11_RECT rect;
+        rect.left = 0;
+        rect.top = 0;
+        rect.right = 320;
+        rect.bottom = 240;
+
+        d3d.context->RSSetScissorRects(1, &rect);
+    }
+
+    // Set vertex buffer data
+
+    float framebuffer_aspect = 320.0 / 240.0;
+    float current_aspect = (float) d3d.current_width / (float) d3d.current_height;
+    float w = current_aspect / framebuffer_aspect;
+
+    float buf_vbo[] = {
+        -w, +1.0, 0.0, 0.0,
+        -w, -1.0, 0.0, 1.0,
+        +w, +1.0, 1.0, 0.0,
+        +w, +1.0, 1.0, 0.0,
+        -w, -1.0, 0.0, 1.0,
+        +w, -1.0, 1.0, 1.0
+    };
+
+    D3D11_MAPPED_SUBRESOURCE ms;
+    ZeroMemory(&ms, sizeof(D3D11_MAPPED_SUBRESOURCE));
+    d3d.context->Map(framebuffer.vertex_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
+    memcpy(ms.pData, buf_vbo, 6 * 2 * 2 * sizeof(float));
+    d3d.context->Unmap(framebuffer.vertex_buffer.Get(), 0);
+
+    uint32_t stride = 2 * 2 * sizeof(float);
+    uint32_t offset = 0;
+
+    d3d.last_vertex_buffer_stride = 0;
+    d3d.context->IASetVertexBuffers(0, 1, framebuffer.vertex_buffer.GetAddressOf(), &stride, &offset);
+
+    // Set shader stuff
+
+    d3d.last_shader_program = nullptr;
+    d3d.context->IASetInputLayout(framebuffer.input_layout.Get());
+    d3d.context->VSSetShader(framebuffer.vertex_shader.Get(), 0, 0);
+    d3d.context->PSSetShader(framebuffer.pixel_shader.Get(), 0, 0);
+
+    d3d.context->CopyResource(d3d.backbuffer_copy_texture.Get(), d3d.backbuffer_texture.Get());
+    d3d.context->PSSetShaderResources(8, 1, d3d.backbuffer_copy_shader_resource_view.GetAddressOf());
+    d3d.context->PSSetSamplers(8, 1, d3d.backbuffer_copy_sampler_state.GetAddressOf());
+
+    if (d3d.last_primitive_topology != D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST) {
+        d3d.last_primitive_topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        d3d.context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    }
+
+    d3d.context->Draw(6, 0);
 }
 
 static void gfx_d3d11_finish_render(void) {
@@ -721,6 +1050,7 @@ struct GfxRenderingAPI gfx_direct3d11_api = {
     gfx_d3d11_set_scissor,
     gfx_d3d11_set_use_alpha,
     gfx_d3d11_draw_triangles,
+    gfx_d3d11_get_framebuffer,
     gfx_d3d11_init,
     gfx_d3d11_on_resize,
     gfx_d3d11_start_frame,
