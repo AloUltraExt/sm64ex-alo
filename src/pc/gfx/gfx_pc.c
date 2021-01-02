@@ -184,6 +184,7 @@ static struct GfxWindowManagerAPI *gfx_wapi;
 static struct GfxRenderingAPI *gfx_rapi;
 
 static uint16_t *framebuffer_data;
+static bool requested_framebuffer;
 
 // 4x4 pink-black checkerboard texture to indicate missing textures
 #define MISSING_W 4
@@ -1799,7 +1800,10 @@ void gfx_init(struct GfxWindowManagerAPI *wapi, struct GfxRenderingAPI *rapi, co
     gfx_rapi = rapi;
     gfx_wapi->init(window_title);
     gfx_rapi->init();
-    
+
+    framebuffer_data = NULL;
+    requested_framebuffer = false;
+
     // Used in the 120 star TAS
     static uint32_t precomp_shaders[] = {
         0x01200200,
@@ -1848,18 +1852,16 @@ struct GfxRenderingAPI *gfx_get_current_rendering_api(void) {
 }
 
 uint16_t *get_framebuffer() {
-    return framebuffer_data;
-}
+    if (!requested_framebuffer) {
+        if (framebuffer_data == NULL) {
+            framebuffer_data = (uint16_t *) malloc(FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * sizeof(uint16_t));
+        }
 
-void fill_framebuffer_data() {
-    size_t size = 320 * 240;
-
-    if (framebuffer_data == NULL) {
-        framebuffer_data = (uint16_t *) malloc(size * sizeof(uint16_t));
-        printf("Initializing backbuffer data...\n");
+        gfx_get_current_rendering_api()->get_framebuffer(framebuffer_data);
+        requested_framebuffer = true;
     }
 
-    gfx_get_current_rendering_api()->get_framebuffer(framebuffer_data);
+    return framebuffer_data;
 }
 
 void gfx_start_frame(void) {
@@ -1895,9 +1897,9 @@ void gfx_run(Gfx *commands) {
 
 void gfx_end_frame(void) {
     if (!dropped_frame) {
-        fill_framebuffer_data();
         gfx_rapi->finish_render();
         gfx_wapi->swap_buffers_end();
+        requested_framebuffer = false;
     }
 }
 

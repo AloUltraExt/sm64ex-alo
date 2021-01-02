@@ -27,9 +27,6 @@
 
 #include "gfx_screen_config.h"
 
-#define FRAMEBUFFER_WIDTH 320
-#define FRAMEBUFFER_HEIGHT 240
-
 #define THREE_POINT_FILTERING 0
 #define DEBUG_D3D 0
 
