@@ -87,6 +87,8 @@ struct TextureHashmapNode {
     uint32_t texture_id;
     uint8_t cms, cmt;
     bool linear_filter;
+
+    uint32_t checksum;
 };
 static struct {
     struct TextureHashmapNode *hashmap[HASHMAP_LEN];
@@ -297,7 +299,7 @@ static struct ColorCombiner *gfx_lookup_or_create_color_combiner(uint32_t cc_id)
     return prev_combiner = comb;
 }
 
-static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, const uint8_t *orig_addr, uint32_t fmt, uint32_t siz, uint8_t palette) {
+static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, const uint8_t *orig_addr, uint32_t fmt, uint32_t siz, uint8_t palette, uint32_t checksum) {
     #ifdef EXTERNAL_DATA // hash and compare the data (i.e. the texture name) itself
     size_t hash = string_hash(orig_addr);
     #define CMPADDR(x, y) (x && !sys_strcasecmp((const char *)x, (const char *)y))
@@ -310,7 +312,7 @@ static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, co
 
     struct TextureHashmapNode **node = &gfx_texture_cache.hashmap[hash];
     while (*node != NULL && *node - gfx_texture_cache.pool < gfx_texture_cache.pool_pos) {
-        if (CMPADDR((*node)->texture_addr, orig_addr) && (*node)->fmt == fmt && (*node)->siz == siz && (*node)->palette == palette) {
+        if (CMPADDR((*node)->texture_addr, orig_addr) && (*node)->fmt == fmt && (*node)->siz == siz && (*node)->palette == palette && (*node)->checksum == checksum) {
             gfx_rapi->select_texture(tile, (*node)->texture_id);
             *n = *node;
             return true;
@@ -337,6 +339,7 @@ static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, co
     (*node)->fmt = fmt;
     (*node)->siz = siz;
     (*node)->palette = palette;
+    (*node)->checksum = checksum;
     *n = *node;
     return false;
     #undef CMPADDR
@@ -625,13 +628,23 @@ static bool preload_texture(void *user, const char *path) {
     assert(actualname);
 
     struct TextureHashmapNode *n;
-    if (!gfx_texture_cache_lookup(0, &n, actualname, fmt, siz, 0))
+    if (!gfx_texture_cache_lookup(0, &n, actualname, fmt, siz, 0, 0))
         load_texture(path); // new texture, load it
 
     return true;
 }
 
 #endif // EXTERNAL_DATA
+
+uint32_t calculate_checksum(const uint8_t *data, uint32_t count) {
+    uint32_t sum = 0;
+
+    for (uint32_t i = 0; i < count; i++) {
+        sum = (sum + data[i] + i) & 0xFFFFFFFF;
+    }
+
+    return sum;
+}
 
 static void import_texture(int tile) {
     uint8_t fmt = rdp.texture_tile.fmt;
@@ -644,7 +657,9 @@ static void import_texture(int tile) {
         return;
     }
 
-    if (gfx_texture_cache_lookup(tile, &rendering_state.textures[tile], rdp.loaded_texture[tile].addr, fmt, siz, palette)) {
+    uint32_t checksum = calculate_checksum(rdp.loaded_texture[tile].addr, rdp.loaded_texture[tile].size_bytes);
+
+    if (gfx_texture_cache_lookup(tile, &rendering_state.textures[tile], rdp.loaded_texture[tile].addr, fmt, siz, palette, checksum)) {
         return;
     }
 
