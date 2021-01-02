@@ -27,6 +27,9 @@
 
 #include "gfx_screen_config.h"
 
+#define FRAMEBUFFER_WIDTH 320
+#define FRAMEBUFFER_HEIGHT 240
+
 #define THREE_POINT_FILTERING 0
 #define DEBUG_D3D 0
 
@@ -70,6 +73,23 @@ struct ShaderProgramD3D11 {
     bool used_textures[2];
 };
 
+struct PipelineState {
+    int32_t viewport_x, viewport_y, viewport_width, viewport_height;
+    int32_t scissor_x, scissor_y, scissor_width, scissor_height;
+    int8_t depth_test, depth_mask;
+    int8_t zmode_decal;
+
+    D3D_PRIMITIVE_TOPOLOGY primitive_topology;
+
+    struct ShaderProgramD3D11 *shader_program;
+    ComPtr<ID3D11BlendState> blend_state;
+
+    ComPtr<ID3D11ShaderResourceView> resource_views[2];
+    ComPtr<ID3D11SamplerState> sampler_states[2];
+
+    uint32_t vertex_buffer_stride = 0;
+};
+
 static struct {
     HMODULE d3d11_module;
     PFN_D3D11_CREATE_DEVICE D3D11CreateDevice;
@@ -84,15 +104,15 @@ static struct {
     ComPtr<ID3D11DeviceContext> context;
     ComPtr<ID3D11Texture2D> backbuffer_texture;
     ComPtr<ID3D11RenderTargetView> backbuffer_view;
-    ComPtr<ID3D11Texture2D> backbuffer_copy_texture;
-    ComPtr<ID3D11ShaderResourceView> backbuffer_copy_shader_resource_view;
-    ComPtr<ID3D11SamplerState> backbuffer_copy_sampler_state;
     ComPtr<ID3D11DepthStencilView> depth_stencil_view;
     ComPtr<ID3D11RasterizerState> rasterizer_state;
     ComPtr<ID3D11DepthStencilState> depth_stencil_state;
     ComPtr<ID3D11Buffer> vertex_buffer;
     ComPtr<ID3D11Buffer> per_frame_cb;
     ComPtr<ID3D11Buffer> per_draw_cb;
+
+    ComPtr<ID3D11Texture2D> backbuffer_copy_texture;
+    TextureData backbuffer_copy;
 
 #if DEBUG_D3D
     ComPtr<ID3D11Debug> debug;
@@ -107,35 +127,26 @@ static struct {
     uint8_t shader_program_pool_size;
 
     std::vector<struct TextureData> textures;
+
+    // Current values
+
     int current_tile;
     uint32_t current_texture_ids[2];
 
-    // Current state
-
-    struct ShaderProgramD3D11 *shader_program;
+    struct ShaderProgramD3D11 *current_shader_program;
 
     uint32_t current_width, current_height;
 
-    int8_t depth_test;
-    int8_t depth_mask;
-    int8_t zmode_decal;
+    int8_t current_depth_test, current_depth_mask;
+    int8_t current_zmode_decal;
 
-    int32_t viewport_x, viewport_y, viewport_width, viewport_height;
-    int32_t scissor_x, scissor_y, scissor_width, scissor_height;
+    int32_t current_viewport_x, current_viewport_y, current_viewport_width, current_viewport_height;
+    int32_t current_scissor_x, current_scissor_y, current_scissor_width, current_scissor_height;
 
-    // Previous states (to prevent setting states needlessly)
+    // State of the D3D pipeline (to prevent setting states needlessly)
 
-    struct ShaderProgramD3D11 *last_shader_program = nullptr;
-    uint32_t last_vertex_buffer_stride = 0;
-    ComPtr<ID3D11BlendState> last_blend_state = nullptr;
-    ComPtr<ID3D11ShaderResourceView> last_resource_views[2] = { nullptr, nullptr };
-    ComPtr<ID3D11SamplerState> last_sampler_states[2] = { nullptr, nullptr };
-    int8_t last_depth_test = -1;
-    int8_t last_depth_mask = -1;
-    int8_t last_zmode_decal = -1;
-    int32_t last_viewport_x, last_viewport_y, last_viewport_width, last_viewport_height;
-    int32_t last_scissor_x, last_scissor_y, last_scissor_width, last_scissor_height;
-    D3D_PRIMITIVE_TOPOLOGY last_primitive_topology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+    struct PipelineState state;
+
 } d3d;
 
 static struct {
@@ -144,19 +155,15 @@ static struct {
 
     ComPtr<ID3D11Texture2D> texture_copy;
 
-    ComPtr<ID3D11VertexShader> vertex_shader;
-    ComPtr<ID3D11PixelShader> pixel_shader;
-    ComPtr<ID3D11InputLayout> input_layout;
+    struct ShaderProgramD3D11 shader_program;
 
-    ComPtr<ID3D11Buffer> vertex_buffer;
-
-    const char blit_shader[1024] =
+    const char shader[1024] =
         "struct PSInput {\n"
         "    float4 position : SV_POSITION;\n"
         "    float2 uv : TEXCOORD;\n"
         "};\n"
-        "Texture2D texture8 : register(t8);\n"
-        "SamplerState sampler8 : register(s8);\n"
+        "Texture2D texture0 : register(t0);\n"
+        "SamplerState sampler0 : register(s0);\n"
         "PSInput VSMain(float2 position : POSITION, float2 uv : TEXCOORD) {\n"
         "    PSInput result;\n"
         "    result.position = float4(position, 0, 1);\n"
@@ -164,11 +171,201 @@ static struct {
         "    return result;\n"
         "}\n"
         "float4 PSMain(PSInput input) : SV_TARGET {\n"
-        "    return float4(texture8.Sample(sampler8, input.uv).rgb, 1);\n"
+        "    return float4(texture0.Sample(sampler0, input.uv).rgb, 1);\n"
         "}\n";
 } framebuffer;
 
 static LARGE_INTEGER last_time, accumulated_time, frequency;
+
+static ComPtr<ID3DBlob> compile_shader(const char *vertex_shader, size_t vertex_shader_length, const char *fragment_shader, size_t fragment_shader_length, ShaderProgramD3D11 *shader_program) {
+    ComPtr<ID3DBlob> vs, ps, error_blob;
+
+#if DEBUG_D3D
+    UINT compile_flags = D3DCOMPILE_DEBUG;
+#else
+    UINT compile_flags = D3DCOMPILE_OPTIMIZATION_LEVEL2;
+#endif
+
+    HRESULT hr = d3d.D3DCompile(vertex_shader, vertex_shader_length, nullptr, nullptr, nullptr, "VSMain", "vs_4_0_level_9_1", compile_flags, 0, vs.GetAddressOf(), error_blob.GetAddressOf());
+
+    if (FAILED(hr)) {
+        char *message = (char *) error_blob->GetBufferPointer();
+        MessageBox(gfx_dxgi_get_h_wnd(), message, "Error", MB_OK | MB_ICONERROR);
+        throw hr;
+    }
+
+    hr = d3d.D3DCompile(fragment_shader, fragment_shader_length, nullptr, nullptr, nullptr, "PSMain", "ps_4_0_level_9_1", compile_flags, 0, ps.GetAddressOf(), error_blob.GetAddressOf());
+
+    if (FAILED(hr)) {
+        char *message = (char *) error_blob->GetBufferPointer();
+        MessageBox(gfx_dxgi_get_h_wnd(), message, "Error", MB_OK | MB_ICONERROR);
+        throw hr;
+    }
+
+    ThrowIfFailed(d3d.device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, shader_program->vertex_shader.GetAddressOf()));
+    ThrowIfFailed(d3d.device->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(), nullptr, shader_program->pixel_shader.GetAddressOf()));
+
+    return vs;
+}
+
+static void set_vertex_buffer(float buffer[], size_t buffer_length, uint32_t stride) {
+    D3D11_MAPPED_SUBRESOURCE ms;
+    ZeroMemory(&ms, sizeof(D3D11_MAPPED_SUBRESOURCE));
+
+    d3d.context->Map(d3d.vertex_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
+    memcpy(ms.pData, buffer, buffer_length);
+    d3d.context->Unmap(d3d.vertex_buffer.Get(), 0);
+
+    if (d3d.state.vertex_buffer_stride == stride) {
+        return;
+    }
+
+    d3d.state.vertex_buffer_stride = stride;
+
+    uint32_t offset = 0;
+    d3d.context->IASetVertexBuffers(0, 1, d3d.vertex_buffer.GetAddressOf(), &stride, &offset);
+}
+
+static void set_viewport(int32_t x, int32_t y, int32_t width, int32_t height) {
+    if (d3d.state.viewport_x == x && d3d.state.viewport_y == y && d3d.state.viewport_width == width && d3d.state.viewport_height == height) {
+        return;
+    }
+
+    d3d.state.viewport_x = x;
+    d3d.state.viewport_y = y;
+    d3d.state.viewport_width = width;
+    d3d.state.viewport_height = height;
+
+    D3D11_VIEWPORT viewport;
+    viewport.TopLeftX = x;
+    viewport.TopLeftY = y;
+    viewport.Width = width;
+    viewport.Height = height;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+
+    d3d.context->RSSetViewports(1, &viewport);
+}
+
+static void set_scissor(int32_t x, int32_t y, int32_t width, int32_t height) {
+    if (d3d.state.scissor_x == x && d3d.state.scissor_y == y && d3d.state.scissor_width == width && d3d.state.scissor_height == height) {
+        return;
+    }
+
+    d3d.state.scissor_x = x;
+    d3d.state.scissor_y = y;
+    d3d.state.scissor_width = width;
+    d3d.state.scissor_height = height;
+
+    D3D11_RECT rect;
+    rect.left = x;
+    rect.top = y;
+    rect.right = width;
+    rect.bottom = height;
+
+    d3d.context->RSSetScissorRects(1, &rect);
+}
+
+static void set_depth_stencil_state(int8_t depth_test, int8_t depth_mask) {
+    if (d3d.state.depth_test == depth_test && d3d.state.depth_mask == depth_mask) {
+        return;
+    }
+
+    d3d.state.depth_test = depth_test;
+    d3d.state.depth_mask = depth_mask;
+
+    d3d.depth_stencil_state.Reset();
+
+    D3D11_DEPTH_STENCIL_DESC depth_stencil_desc;
+    ZeroMemory(&depth_stencil_desc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+
+    depth_stencil_desc.DepthEnable = depth_test;
+    depth_stencil_desc.DepthWriteMask = depth_mask ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
+    depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    depth_stencil_desc.StencilEnable = false;
+
+    ThrowIfFailed(d3d.device->CreateDepthStencilState(&depth_stencil_desc, d3d.depth_stencil_state.GetAddressOf()),
+                  gfx_dxgi_get_h_wnd(), "Failed to create depth stencil state.");
+
+    d3d.context->OMSetDepthStencilState(d3d.depth_stencil_state.Get(), 0);
+}
+
+static void set_rasterizer_state(int8_t zmode_decal) {
+    if (d3d.state.zmode_decal == zmode_decal) {
+        return;
+    }
+
+    d3d.state.zmode_decal = zmode_decal;
+
+    d3d.rasterizer_state.Reset();
+
+    D3D11_RASTERIZER_DESC rasterizer_desc;
+    ZeroMemory(&rasterizer_desc, sizeof(D3D11_RASTERIZER_DESC));
+
+    rasterizer_desc.FillMode = D3D11_FILL_SOLID;
+    rasterizer_desc.CullMode = D3D11_CULL_NONE;
+    rasterizer_desc.FrontCounterClockwise = true;
+    rasterizer_desc.DepthBias = 0;
+    rasterizer_desc.SlopeScaledDepthBias = zmode_decal ? -2.0f : 0.0f;
+    rasterizer_desc.DepthBiasClamp = 0.0f;
+    rasterizer_desc.DepthClipEnable = true;
+    rasterizer_desc.ScissorEnable = true;
+    rasterizer_desc.MultisampleEnable = false;
+    rasterizer_desc.AntialiasedLineEnable = false;
+
+    ThrowIfFailed(d3d.device->CreateRasterizerState(&rasterizer_desc, d3d.rasterizer_state.GetAddressOf()),
+                  gfx_dxgi_get_h_wnd(), "Failed to create rasterizer state.");
+
+    d3d.context->RSSetState(d3d.rasterizer_state.Get());
+}
+
+static void set_shader(ShaderProgramD3D11 *shader_program) {
+    if (d3d.state.shader_program == shader_program) {
+        return;
+    }
+
+    d3d.state.shader_program = shader_program;
+
+    d3d.context->IASetInputLayout(shader_program->input_layout.Get());
+    d3d.context->VSSetShader(shader_program->vertex_shader.Get(), 0, 0);
+    d3d.context->PSSetShader(shader_program->pixel_shader.Get(), 0, 0);
+
+    if (d3d.state.blend_state.Get() != shader_program->blend_state.Get()) {
+        d3d.state.blend_state = shader_program->blend_state.Get();
+        d3d.context->OMSetBlendState(shader_program->blend_state.Get(), 0, 0xFFFFFFFF);
+    }
+}
+
+static void set_primitive_topology(D3D_PRIMITIVE_TOPOLOGY primitive_topology) {
+    if (d3d.state.primitive_topology == primitive_topology) {
+        return;
+    }
+
+    d3d.state.primitive_topology = primitive_topology;
+
+    d3d.context->IASetPrimitiveTopology(primitive_topology);
+}
+
+static void set_shader_resources(uint8_t slot, TextureData texture) {
+    if (d3d.state.resource_views[slot].Get() == texture.resource_view.Get()) {
+        return;
+    }
+
+    d3d.state.resource_views[slot] = texture.resource_view.Get();
+
+    d3d.context->PSSetShaderResources(slot, 1, texture.resource_view.GetAddressOf());
+
+#if THREE_POINT_FILTERING
+    d3d.per_draw_cb_data.textures[slot].width = texture.width;
+    d3d.per_draw_cb_data.textures[slot].height = texture.height;
+    d3d.per_draw_cb_data.textures[slot].linear_filtering = texture.linear_filtering;
+#endif
+
+    if (d3d.state.sampler_states[slot].Get() != texture.sampler_state.Get()) {
+        d3d.state.sampler_states[slot] = texture.sampler_state.Get();
+        d3d.context->PSSetSamplers(slot, 1, texture.sampler_state.GetAddressOf());
+    }
+}
 
 static void initialize_framebuffer() {
     // Create the framebuffer texture
@@ -176,8 +373,8 @@ static void initialize_framebuffer() {
     D3D11_TEXTURE2D_DESC texture_desc;
     ZeroMemory(&texture_desc, sizeof(D3D11_TEXTURE2D_DESC));
 
-    texture_desc.Width = 320;
-    texture_desc.Height = 240;
+    texture_desc.Width = FRAMEBUFFER_WIDTH;
+    texture_desc.Height = FRAMEBUFFER_HEIGHT;
     texture_desc.MipLevels = 1;
     texture_desc.ArraySize = 1;
     texture_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -211,31 +408,9 @@ static void initialize_framebuffer() {
 
     // Compile shader
 
-    ComPtr<ID3DBlob> vs, ps, error_blob;
-
-#if DEBUG_D3D
-    UINT compile_flags = D3DCOMPILE_DEBUG;
-#else
-    UINT compile_flags = D3DCOMPILE_OPTIMIZATION_LEVEL2;
-#endif
-
-    size_t shader_length = strlen(framebuffer.blit_shader);
-    HRESULT hr = d3d.D3DCompile(framebuffer.blit_shader, shader_length, nullptr, nullptr, nullptr, "VSMain", "vs_4_0_level_9_1", compile_flags, 0, vs.GetAddressOf(), error_blob.GetAddressOf());
-
-    if (FAILED(hr)) {
-        MessageBox(gfx_dxgi_get_h_wnd(), (char *) error_blob->GetBufferPointer(), "Error", MB_OK | MB_ICONERROR);
-        throw hr;
-    }
-
-    hr = d3d.D3DCompile(framebuffer.blit_shader, shader_length, nullptr, nullptr, nullptr, "PSMain", "ps_4_0_level_9_1", compile_flags, 0, ps.GetAddressOf(), error_blob.GetAddressOf());
-
-    if (FAILED(hr)) {
-        MessageBox(gfx_dxgi_get_h_wnd(), (char *) error_blob->GetBufferPointer(), "Error", MB_OK | MB_ICONERROR);
-        throw hr;
-    }
-
-    ThrowIfFailed(d3d.device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, framebuffer.vertex_shader.GetAddressOf()));
-    ThrowIfFailed(d3d.device->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(), nullptr, framebuffer.pixel_shader.GetAddressOf()));
+    struct ShaderProgramD3D11 *prg = &framebuffer.shader_program;
+    size_t shader_length = strlen(framebuffer.shader);
+    ComPtr<ID3DBlob> vs = compile_shader(framebuffer.shader, shader_length, framebuffer.shader, shader_length, prg);
 
     // Create input layout
 
@@ -243,20 +418,17 @@ static void initialize_framebuffer() {
     ied[0] = { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 };
     ied[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 };
 
-    ThrowIfFailed(d3d.device->CreateInputLayout(ied, 2, vs->GetBufferPointer(), vs->GetBufferSize(), framebuffer.input_layout.GetAddressOf()));
+    ThrowIfFailed(d3d.device->CreateInputLayout(ied, 2, vs->GetBufferPointer(), vs->GetBufferSize(), prg->input_layout.GetAddressOf()));
 
-    // Quad vertex buffer
+    // Blend state
 
-    D3D11_BUFFER_DESC vertex_buffer_desc;
-    ZeroMemory(&vertex_buffer_desc, sizeof(D3D11_BUFFER_DESC));
+    D3D11_BLEND_DESC blend_desc;
+    ZeroMemory(&blend_desc, sizeof(D3D11_BLEND_DESC));
 
-    vertex_buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-    vertex_buffer_desc.ByteWidth = 6 * 2 * 2 * sizeof(float);
-    vertex_buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    vertex_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    vertex_buffer_desc.MiscFlags = 0;
+    blend_desc.RenderTarget[0].BlendEnable = false;
+    blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-    ThrowIfFailed(d3d.device->CreateBuffer(&vertex_buffer_desc, nullptr, framebuffer.vertex_buffer.GetAddressOf()));
+    ThrowIfFailed(d3d.device->CreateBlendState(&blend_desc, prg->blend_state.GetAddressOf()));
 }
 
 static void create_render_target_views(bool is_resize) {
@@ -268,8 +440,8 @@ static void create_render_target_views(bool is_resize) {
         d3d.backbuffer_texture.Reset();
         d3d.backbuffer_view.Reset();
         d3d.backbuffer_copy_texture.Reset();
-        d3d.backbuffer_copy_shader_resource_view.Reset();
-        d3d.backbuffer_copy_sampler_state.Reset();
+        d3d.backbuffer_copy.resource_view.Reset();
+        d3d.backbuffer_copy.sampler_state.Reset();
         d3d.depth_stencil_view.Reset();
 
         // Resize swap chain buffers
@@ -304,7 +476,7 @@ static void create_render_target_views(bool is_resize) {
 
     ThrowIfFailed(d3d.device->CreateTexture2D(&backbuffer_desc, nullptr, d3d.backbuffer_copy_texture.GetAddressOf()));
 
-    // Create the shader resource view from the backbuffer copy
+    // Create the shader resource view and sampler from the backbuffer copy
 
     D3D11_SHADER_RESOURCE_VIEW_DESC backbuffer_srv_desc;
     ZeroMemory(&backbuffer_srv_desc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
@@ -314,9 +486,7 @@ static void create_render_target_views(bool is_resize) {
     backbuffer_srv_desc.Texture2D.MostDetailedMip = 0;
     backbuffer_srv_desc.Texture2D.MipLevels = 1;
 
-    ThrowIfFailed(d3d.device->CreateShaderResourceView(d3d.backbuffer_copy_texture.Get(), &backbuffer_srv_desc, d3d.backbuffer_copy_shader_resource_view.GetAddressOf()));
-
-    // Create backbuffer copy sampler
+    ThrowIfFailed(d3d.device->CreateShaderResourceView(d3d.backbuffer_copy_texture.Get(), &backbuffer_srv_desc, d3d.backbuffer_copy.resource_view.GetAddressOf()));
 
     D3D11_SAMPLER_DESC backbuffer_sampler_desc;
     ZeroMemory(&backbuffer_sampler_desc, sizeof(D3D11_SAMPLER_DESC));
@@ -328,7 +498,11 @@ static void create_render_target_views(bool is_resize) {
     backbuffer_sampler_desc.MinLOD = 0;
     backbuffer_sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
 
-    ThrowIfFailed(d3d.device->CreateSamplerState(&backbuffer_sampler_desc, d3d.backbuffer_copy_sampler_state.GetAddressOf()));
+    ThrowIfFailed(d3d.device->CreateSamplerState(&backbuffer_sampler_desc, d3d.backbuffer_copy.sampler_state.GetAddressOf()));
+
+    d3d.backbuffer_copy.width = desc1.Width;
+    d3d.backbuffer_copy.height = desc1.Height;
+    d3d.backbuffer_copy.linear_filtering = true;
 
     // Create depth buffer
 
@@ -473,8 +647,14 @@ static void gfx_d3d11_init(void) {
                   gfx_dxgi_get_h_wnd(), "Failed to create per-draw constant buffer.");
 
     d3d.context->PSSetConstantBuffers(1, 1, d3d.per_draw_cb.GetAddressOf());
-}
 
+    // Initialize pipeline state
+
+    ZeroMemory(&d3d.state, sizeof(PipelineState));
+    d3d.state.depth_test = -1;
+    d3d.state.depth_mask = -1;
+    d3d.state.zmode_decal = -1;
+}
 
 static bool gfx_d3d11_z_is_from_0_to_1(void) {
     return true;
@@ -484,7 +664,7 @@ static void gfx_d3d11_unload_shader(struct ShaderProgram *old_prg) {
 }
 
 static void gfx_d3d11_load_shader(struct ShaderProgram *new_prg) {
-    d3d.shader_program = (struct ShaderProgramD3D11 *)new_prg;
+    d3d.current_shader_program = (struct ShaderProgramD3D11 *)new_prg;
 }
 
 static struct ShaderProgram *gfx_d3d11_create_and_load_new_shader(uint32_t shader_id) {
@@ -496,33 +676,8 @@ static struct ShaderProgram *gfx_d3d11_create_and_load_new_shader(uint32_t shade
 
     gfx_direct3d_common_build_shader(buf, len, num_floats, cc_features, false, THREE_POINT_FILTERING);
 
-    ComPtr<ID3DBlob> vs, ps;
-    ComPtr<ID3DBlob> error_blob;
-
-#if DEBUG_D3D
-    UINT compile_flags = D3DCOMPILE_DEBUG;
-#else
-    UINT compile_flags = D3DCOMPILE_OPTIMIZATION_LEVEL2;
-#endif
-
-    HRESULT hr = d3d.D3DCompile(buf, len, nullptr, nullptr, nullptr, "VSMain", "vs_4_0_level_9_1", compile_flags, 0, vs.GetAddressOf(), error_blob.GetAddressOf());
-
-    if (FAILED(hr)) {
-        MessageBox(gfx_dxgi_get_h_wnd(), (char *) error_blob->GetBufferPointer(), "Error", MB_OK | MB_ICONERROR);
-        throw hr;
-    }
-
-    hr = d3d.D3DCompile(buf, len, nullptr, nullptr, nullptr, "PSMain", "ps_4_0_level_9_1", compile_flags, 0, ps.GetAddressOf(), error_blob.GetAddressOf());
-
-    if (FAILED(hr)) {
-        MessageBox(gfx_dxgi_get_h_wnd(), (char *) error_blob->GetBufferPointer(), "Error", MB_OK | MB_ICONERROR);
-        throw hr;
-    }
-
     struct ShaderProgramD3D11 *prg = &d3d.shader_program_pool[d3d.shader_program_pool_size++];
-
-    ThrowIfFailed(d3d.device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, prg->vertex_shader.GetAddressOf()));
-    ThrowIfFailed(d3d.device->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(), nullptr, prg->pixel_shader.GetAddressOf()));
+    ComPtr<ID3DBlob> vs = compile_shader(buf, len, buf, len, prg);
 
     // Input Layout
 
@@ -571,7 +726,7 @@ static struct ShaderProgram *gfx_d3d11_create_and_load_new_shader(uint32_t shade
     prg->used_textures[0] = cc_features.used_textures[0];
     prg->used_textures[1] = cc_features.used_textures[1];
 
-    return (struct ShaderProgram *)(d3d.shader_program = prg);
+    return (struct ShaderProgram *)(d3d.current_shader_program = prg);
 }
 
 static struct ShaderProgram *gfx_d3d11_lookup_shader(uint32_t shader_id) {
@@ -683,29 +838,29 @@ static void gfx_d3d11_set_sampler_parameters(int tile, bool linear_filter, uint3
 }
 
 static void gfx_d3d11_set_depth_test(bool depth_test) {
-    d3d.depth_test = depth_test;
+    d3d.current_depth_test = depth_test;
 }
 
 static void gfx_d3d11_set_depth_mask(bool depth_mask) {
-    d3d.depth_mask = depth_mask;
+    d3d.current_depth_mask = depth_mask;
 }
 
 static void gfx_d3d11_set_zmode_decal(bool zmode_decal) {
-    d3d.zmode_decal = zmode_decal;
+    d3d.current_zmode_decal = zmode_decal;
 }
 
 static void gfx_d3d11_set_viewport(int x, int y, int width, int height) {
-    d3d.viewport_x = x;
-    d3d.viewport_y = d3d.current_height - y - height;
-    d3d.viewport_width = width;
-    d3d.viewport_height = height;
+    d3d.current_viewport_x = x;
+    d3d.current_viewport_y = d3d.current_height - y - height;
+    d3d.current_viewport_width = width;
+    d3d.current_viewport_height = height;
 }
 
 static void gfx_d3d11_set_scissor(int x, int y, int width, int height) {
-    d3d.scissor_x = x;
-    d3d.scissor_y = d3d.current_height - y - height;
-    d3d.scissor_width = x + width;
-    d3d.scissor_height = d3d.current_height - y;
+    d3d.current_scissor_x = x;
+    d3d.current_scissor_y = d3d.current_height - y - height;
+    d3d.current_scissor_width = x + width;
+    d3d.current_scissor_height = d3d.current_height - y;
 }
 
 static void gfx_d3d11_set_use_alpha(bool use_alpha) {
@@ -714,146 +869,41 @@ static void gfx_d3d11_set_use_alpha(bool use_alpha) {
 
 static void gfx_d3d11_draw_triangles(float buf_vbo[], size_t buf_vbo_len, size_t buf_vbo_num_tris) {
 
-    if (d3d.last_depth_test != d3d.depth_test || d3d.last_depth_mask != d3d.depth_mask) {
-        d3d.last_depth_test = d3d.depth_test;
-        d3d.last_depth_mask = d3d.depth_mask;
-
-        d3d.depth_stencil_state.Reset();
-
-        D3D11_DEPTH_STENCIL_DESC depth_stencil_desc;
-        ZeroMemory(&depth_stencil_desc, sizeof(D3D11_DEPTH_STENCIL_DESC));
-
-        depth_stencil_desc.DepthEnable = d3d.depth_test;
-        depth_stencil_desc.DepthWriteMask = d3d.depth_mask ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
-        depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-        depth_stencil_desc.StencilEnable = false;
-
-        ThrowIfFailed(d3d.device->CreateDepthStencilState(&depth_stencil_desc, d3d.depth_stencil_state.GetAddressOf()));
-        d3d.context->OMSetDepthStencilState(d3d.depth_stencil_state.Get(), 0);
-    }
-
-    if (d3d.last_zmode_decal != d3d.zmode_decal) {
-        d3d.last_zmode_decal = d3d.zmode_decal;
-
-        d3d.rasterizer_state.Reset();
-
-        D3D11_RASTERIZER_DESC rasterizer_desc;
-        ZeroMemory(&rasterizer_desc, sizeof(D3D11_RASTERIZER_DESC));
-
-        rasterizer_desc.FillMode = D3D11_FILL_SOLID;
-        rasterizer_desc.CullMode = D3D11_CULL_NONE;
-        rasterizer_desc.FrontCounterClockwise = true;
-        rasterizer_desc.DepthBias = 0;
-        rasterizer_desc.SlopeScaledDepthBias = d3d.zmode_decal ? -2.0f : 0.0f;
-        rasterizer_desc.DepthBiasClamp = 0.0f;
-        rasterizer_desc.DepthClipEnable = true;
-        rasterizer_desc.ScissorEnable = true;
-        rasterizer_desc.MultisampleEnable = false;
-        rasterizer_desc.AntialiasedLineEnable = false;
-
-        ThrowIfFailed(d3d.device->CreateRasterizerState(&rasterizer_desc, d3d.rasterizer_state.GetAddressOf()));
-        d3d.context->RSSetState(d3d.rasterizer_state.Get());
-    }
+    set_depth_stencil_state(d3d.current_depth_test, d3d.current_depth_mask);
+    set_rasterizer_state(d3d.current_zmode_decal);
 
     // Viewport and Scissor
 
-    if (d3d.last_viewport_x != d3d.viewport_x || d3d.last_viewport_y != d3d.viewport_y || d3d.last_viewport_width != d3d.viewport_width || d3d.last_viewport_height != d3d.viewport_height) {
-        d3d.last_viewport_x = d3d.viewport_x;
-        d3d.last_viewport_y = d3d.viewport_y;
-        d3d.last_viewport_width = d3d.viewport_width;
-        d3d.last_viewport_height = d3d.viewport_height;
+    set_viewport(d3d.current_viewport_x, d3d.current_viewport_y, d3d.current_viewport_width, d3d.current_viewport_height);
+    set_scissor(d3d.current_scissor_x, d3d.current_scissor_y, d3d.current_scissor_width, d3d.current_scissor_height);
 
-        D3D11_VIEWPORT viewport;
-        viewport.TopLeftX = d3d.viewport_x;
-        viewport.TopLeftY = d3d.viewport_y;
-        viewport.Width = d3d.viewport_width;
-        viewport.Height = d3d.viewport_height;
-        viewport.MinDepth = 0.0f;
-        viewport.MaxDepth = 1.0f;
+    // Textures
 
-        d3d.context->RSSetViewports(1, &viewport);
-    }
-
-    if (d3d.last_scissor_x != d3d.scissor_x || d3d.last_scissor_y != d3d.scissor_y || d3d.last_scissor_width != d3d.scissor_width || d3d.last_scissor_height != d3d.scissor_height) {
-        d3d.last_scissor_x = d3d.scissor_x;
-        d3d.last_scissor_y = d3d.scissor_y;
-        d3d.last_scissor_width = d3d.scissor_width;
-        d3d.last_scissor_height = d3d.scissor_height;
-
-        D3D11_RECT rect;
-        rect.left = d3d.scissor_x;
-        rect.top = d3d.scissor_y;
-        rect.right = d3d.scissor_width;
-        rect.bottom = d3d.scissor_height;
-
-        d3d.context->RSSetScissorRects(1, &rect);
-    }
-
-    bool textures_changed = false;
-
-    for (int i = 0; i < 2; i++) {
-        if (d3d.shader_program->used_textures[i]) {
-            if (d3d.last_resource_views[i].Get() != d3d.textures[d3d.current_texture_ids[i]].resource_view.Get()) {
-                d3d.last_resource_views[i] = d3d.textures[d3d.current_texture_ids[i]].resource_view.Get();
-                d3d.context->PSSetShaderResources(i, 1, d3d.textures[d3d.current_texture_ids[i]].resource_view.GetAddressOf());
-
-#if THREE_POINT_FILTERING
-                d3d.per_draw_cb_data.textures[i].width = d3d.textures[d3d.current_texture_ids[i]].width;
-                d3d.per_draw_cb_data.textures[i].height = d3d.textures[d3d.current_texture_ids[i]].height;
-                d3d.per_draw_cb_data.textures[i].linear_filtering = d3d.textures[d3d.current_texture_ids[i]].linear_filtering;
-                textures_changed = true;
-#endif
-
-                if (d3d.last_sampler_states[i].Get() != d3d.textures[d3d.current_texture_ids[i]].sampler_state.Get()) {
-                    d3d.last_sampler_states[i] = d3d.textures[d3d.current_texture_ids[i]].sampler_state.Get();
-                    d3d.context->PSSetSamplers(i, 1, d3d.textures[d3d.current_texture_ids[i]].sampler_state.GetAddressOf());
-                }
-            }
+    for (uint8_t i = 0; i < 2; i++) {
+        if (d3d.current_shader_program->used_textures[i]) {
+            set_shader_resources(i, d3d.textures[d3d.current_texture_ids[i]]);
         }
     }
 
     // Set per-draw constant buffer
 
-    if (textures_changed) {
-        D3D11_MAPPED_SUBRESOURCE ms;
-        ZeroMemory(&ms, sizeof(D3D11_MAPPED_SUBRESOURCE));
-        d3d.context->Map(d3d.per_draw_cb.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
-        memcpy(ms.pData, &d3d.per_draw_cb_data, sizeof(PerDrawCB));
-        d3d.context->Unmap(d3d.per_draw_cb.Get(), 0);
-    }
+#if THREE_POINT_FILTERING
+    D3D11_MAPPED_SUBRESOURCE ms;
+    ZeroMemory(&ms, sizeof(D3D11_MAPPED_SUBRESOURCE));
+    d3d.context->Map(d3d.per_draw_cb.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
+    memcpy(ms.pData, &d3d.per_draw_cb_data, sizeof(PerDrawCB));
+    d3d.context->Unmap(d3d.per_draw_cb.Get(), 0);
+#endif
 
     // Set vertex buffer data
 
-    D3D11_MAPPED_SUBRESOURCE ms;
-    ZeroMemory(&ms, sizeof(D3D11_MAPPED_SUBRESOURCE));
-    d3d.context->Map(d3d.vertex_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
-    memcpy(ms.pData, buf_vbo, buf_vbo_len * sizeof(float));
-    d3d.context->Unmap(d3d.vertex_buffer.Get(), 0);
+    size_t buffer_length = buf_vbo_len * sizeof(float);
+    uint32_t stride = d3d.current_shader_program->num_floats * sizeof(float);
+    set_vertex_buffer(buf_vbo, buffer_length, stride);
 
-    uint32_t stride = d3d.shader_program->num_floats * sizeof(float);
-    uint32_t offset = 0;
+    set_shader(d3d.current_shader_program);
 
-    if (d3d.last_vertex_buffer_stride != stride) {
-        d3d.last_vertex_buffer_stride = stride;
-        d3d.context->IASetVertexBuffers(0, 1, d3d.vertex_buffer.GetAddressOf(), &stride, &offset);
-    }
-
-    if (d3d.last_shader_program != d3d.shader_program) {
-        d3d.last_shader_program = d3d.shader_program;
-        d3d.context->IASetInputLayout(d3d.shader_program->input_layout.Get());
-        d3d.context->VSSetShader(d3d.shader_program->vertex_shader.Get(), 0, 0);
-        d3d.context->PSSetShader(d3d.shader_program->pixel_shader.Get(), 0, 0);
-
-        if (d3d.last_blend_state.Get() != d3d.shader_program->blend_state.Get()) {
-            d3d.last_blend_state = d3d.shader_program->blend_state.Get();
-            d3d.context->OMSetBlendState(d3d.shader_program->blend_state.Get(), 0, 0xFFFFFFFF);
-        }
-    }
-
-    if (d3d.last_primitive_topology != D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST) {
-        d3d.last_primitive_topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        d3d.context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    }
+    set_primitive_topology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     d3d.context->Draw(buf_vbo_num_tris * 3, 0);
 }
@@ -868,9 +918,9 @@ static void gfx_d3d11_get_framebuffer(uint16_t *buffer) {
     uint8_t *pixels = (uint8_t *) ms.pData;
 
     uint32_t bi = 0;
-    for (uint32_t y = 0; y < 240; y++) {
-        for (uint32_t x = 0; x < 320; x++) {
-            uint32_t fb_pixel = (y * 320 + x) * 4;
+    for (uint32_t y = 0; y < FRAMEBUFFER_HEIGHT; y++) {
+        for (uint32_t x = 0; x < FRAMEBUFFER_WIDTH; x++) {
+            uint32_t fb_pixel = (y * FRAMEBUFFER_WIDTH + x) * 4;
 
             uint8_t r = pixels[fb_pixel + 0] / 8;
             uint8_t g = pixels[fb_pixel + 1] / 8;
@@ -928,61 +978,17 @@ static void gfx_d3d11_end_frame(void) {
 
     // Disable depth buffer
 
-    if (d3d.last_depth_test != false || d3d.last_depth_mask != false) {
-        d3d.last_depth_test = false;
-        d3d.last_depth_mask = false;
-
-        d3d.depth_stencil_state.Reset();
-
-        D3D11_DEPTH_STENCIL_DESC depth_stencil_desc;
-        ZeroMemory(&depth_stencil_desc, sizeof(D3D11_DEPTH_STENCIL_DESC));
-
-        depth_stencil_desc.DepthEnable = false;
-        depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-        depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-        depth_stencil_desc.StencilEnable = false;
-
-        ThrowIfFailed(d3d.device->CreateDepthStencilState(&depth_stencil_desc, d3d.depth_stencil_state.GetAddressOf()));
-        d3d.context->OMSetDepthStencilState(d3d.depth_stencil_state.Get(), 0);
-    }
+    set_depth_stencil_state(false, false);
+    set_rasterizer_state(false);
 
     // Viewport and Scissor
 
-    if (d3d.last_viewport_x != 0 || d3d.last_viewport_y != 0 || d3d.last_viewport_width != 320 || d3d.last_viewport_height != 240) {
-        d3d.last_viewport_x = 0;
-        d3d.last_viewport_y = 0;
-        d3d.last_viewport_width = 320;
-        d3d.last_viewport_height = 240;
-
-        D3D11_VIEWPORT viewport;
-        viewport.TopLeftX = 0;
-        viewport.TopLeftY = 0;
-        viewport.Width = 320;
-        viewport.Height = 240;
-        viewport.MinDepth = 0.0f;
-        viewport.MaxDepth = 1.0f;
-
-        d3d.context->RSSetViewports(1, &viewport);
-    }
-
-    if (d3d.last_scissor_x != 0 || d3d.last_scissor_y != 0 || d3d.last_scissor_width != 320 || d3d.last_scissor_height != 240) {
-        d3d.last_scissor_x = 0;
-        d3d.last_scissor_y = 0;
-        d3d.last_scissor_width = 320;
-        d3d.last_scissor_height = 240;
-
-        D3D11_RECT rect;
-        rect.left = 0;
-        rect.top = 0;
-        rect.right = 320;
-        rect.bottom = 240;
-
-        d3d.context->RSSetScissorRects(1, &rect);
-    }
+    set_viewport(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
+    set_scissor(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
 
     // Set vertex buffer data
 
-    float framebuffer_aspect = 320.0 / 240.0;
+    float framebuffer_aspect = (float)FRAMEBUFFER_WIDTH / (float)FRAMEBUFFER_HEIGHT;
     float current_aspect = (float) d3d.current_width / (float) d3d.current_height;
     float w = current_aspect / framebuffer_aspect;
 
@@ -990,40 +996,22 @@ static void gfx_d3d11_end_frame(void) {
         -w, +1.0, 0.0, 0.0,
         -w, -1.0, 0.0, 1.0,
         +w, +1.0, 1.0, 0.0,
-        +w, +1.0, 1.0, 0.0,
-        -w, -1.0, 0.0, 1.0,
         +w, -1.0, 1.0, 1.0
     };
 
-    D3D11_MAPPED_SUBRESOURCE ms;
-    ZeroMemory(&ms, sizeof(D3D11_MAPPED_SUBRESOURCE));
-    d3d.context->Map(framebuffer.vertex_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
-    memcpy(ms.pData, buf_vbo, 6 * 2 * 2 * sizeof(float));
-    d3d.context->Unmap(framebuffer.vertex_buffer.Get(), 0);
-
     uint32_t stride = 2 * 2 * sizeof(float);
-    uint32_t offset = 0;
-
-    d3d.last_vertex_buffer_stride = 0;
-    d3d.context->IASetVertexBuffers(0, 1, framebuffer.vertex_buffer.GetAddressOf(), &stride, &offset);
+    set_vertex_buffer(buf_vbo, 4 * stride, stride);
 
     // Set shader stuff
 
-    d3d.last_shader_program = nullptr;
-    d3d.context->IASetInputLayout(framebuffer.input_layout.Get());
-    d3d.context->VSSetShader(framebuffer.vertex_shader.Get(), 0, 0);
-    d3d.context->PSSetShader(framebuffer.pixel_shader.Get(), 0, 0);
+    set_shader(&framebuffer.shader_program);
 
     d3d.context->CopyResource(d3d.backbuffer_copy_texture.Get(), d3d.backbuffer_texture.Get());
-    d3d.context->PSSetShaderResources(8, 1, d3d.backbuffer_copy_shader_resource_view.GetAddressOf());
-    d3d.context->PSSetSamplers(8, 1, d3d.backbuffer_copy_sampler_state.GetAddressOf());
+    set_shader_resources(0, d3d.backbuffer_copy);
 
-    if (d3d.last_primitive_topology != D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST) {
-        d3d.last_primitive_topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        d3d.context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    }
+    set_primitive_topology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
-    d3d.context->Draw(6, 0);
+    d3d.context->Draw(4, 0);
 }
 
 static void gfx_d3d11_finish_render(void) {
