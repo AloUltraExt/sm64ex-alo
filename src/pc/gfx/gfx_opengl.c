@@ -39,6 +39,7 @@
 #include "../configfile.h"
 #include "gfx_cc.h"
 #include "gfx_rendering_api.h"
+#include "gfx_screen_config.h"
 #include "gfx_pc.h"
 
 #define TEX_CACHE_STEP 512
@@ -615,6 +616,25 @@ static inline bool gl_get_version(int *major, int *minor, bool *is_es) {
     return (sscanf(vstr, "%d.%d", major, minor) == 2);
 }
 
+static void gfx_opengl_get_framebuffer(uint16_t *buffer) {
+    //memset(buffer, 0, FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * 2);
+
+    uint32_t bi = 0;
+    for (uint32_t y = 0; y < FRAMEBUFFER_HEIGHT; y++) {
+        for (uint32_t x = 0; x < FRAMEBUFFER_WIDTH; x++) {
+            uint32_t fb_pixel = (y * FRAMEBUFFER_WIDTH + x) * 4;
+
+            uint8_t r = 31; //pixels[fb_pixel + 0] / 8;
+            uint8_t g = 15; //pixels[fb_pixel + 1] / 8;
+            uint8_t b = 6; //pixels[fb_pixel + 2] / 8;
+            uint8_t a = 1; //pixels[fb_pixel + 3] / 255;
+
+            buffer[bi] = (r << 11) | (g << 6) | (b << 1) | a;
+            bi++;
+        }
+    }
+}
+
 static void gfx_opengl_init(void) {
 #if FOR_WINDOWS || defined(OSX_BUILD)
     GLenum err;
@@ -681,6 +701,7 @@ struct GfxRenderingAPI gfx_opengl_api = {
     gfx_opengl_set_scissor,
     gfx_opengl_set_use_alpha,
     gfx_opengl_draw_triangles,
+    gfx_opengl_get_framebuffer,
     gfx_opengl_init,
     gfx_opengl_on_resize,
     gfx_opengl_start_frame,
