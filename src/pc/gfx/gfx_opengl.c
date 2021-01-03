@@ -39,6 +39,7 @@
 #include "../configfile.h"
 #include "gfx_cc.h"
 #include "gfx_rendering_api.h"
+#include "gfx_pc.h"
 
 #define TEX_CACHE_STEP 512
 
@@ -595,8 +596,7 @@ static void gfx_opengl_set_use_alpha(bool use_alpha) {
 }
 
 static void gfx_opengl_draw_triangles(float buf_vbo[], size_t buf_vbo_len, size_t buf_vbo_num_tris) {
-    //printf("flushing %d tris\n", buf_vbo_num_tris);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * buf_vbo_len, buf_vbo, GL_STREAM_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, buf_vbo_len * sizeof(float), buf_vbo);
     glDrawArrays(GL_TRIANGLES, 0, 3 * buf_vbo_num_tris);
 }
 
@@ -634,9 +634,9 @@ static void gfx_opengl_init(void) {
         sys_fatal("OpenGL 2.1+ is required.\nReported version: %s%d.%d", is_es ? "ES" : "", vmajor, vminor);
 
     glGenBuffers(1, &opengl_vbo);
-    
     glBindBuffer(GL_ARRAY_BUFFER, opengl_vbo);
-    
+    glBufferData(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE * sizeof(float), NULL, GL_DYNAMIC_DRAW);
+
     glDepthFunc(GL_LEQUAL);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }

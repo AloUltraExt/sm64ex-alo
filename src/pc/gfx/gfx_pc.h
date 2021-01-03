@@ -1,6 +1,9 @@
 #ifndef GFX_PC_H
 #define GFX_PC_H
 
+#define MAX_BUFFERED_TRIANGLES 256
+#define VERTEX_BUFFER_SIZE MAX_BUFFERED_TRIANGLES * 26 * 3 // 3 vertices in a triangle and 26 floats per vtx
+
 struct GfxRenderingAPI;
 struct GfxWindowManagerAPI;
 

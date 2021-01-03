@@ -46,7 +46,6 @@
 #define RATIO_X (gfx_current_dimensions.width / (2.0f * HALF_SCREEN_WIDTH))
 #define RATIO_Y (gfx_current_dimensions.height / (2.0f * HALF_SCREEN_HEIGHT))
 
-#define MAX_BUFFERED 256
 #define MAX_LIGHTS 2
 #define MAX_VERTICES 64
 
@@ -178,7 +177,7 @@ struct GfxDimensions gfx_current_dimensions;
 
 static bool dropped_frame;
 
-static float buf_vbo[MAX_BUFFERED * (26 * 3)]; // 3 vertices in a triangle and 26 floats per vtx
+static float buf_vbo[VERTEX_BUFFER_SIZE];
 static size_t buf_vbo_len;
 static size_t buf_vbo_num_tris;
 
@@ -1128,7 +1127,7 @@ static void gfx_sp_tri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx) {
         buf_vbo[buf_vbo_len++] = color->b / 255.0f;
         buf_vbo[buf_vbo_len++] = color->a / 255.0f;*/
     }
-    if (++buf_vbo_num_tris == MAX_BUFFERED) {
+    if (++buf_vbo_num_tris == MAX_BUFFERED_TRIANGLES) {
         gfx_flush();
     }
 }
