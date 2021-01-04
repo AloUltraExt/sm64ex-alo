@@ -885,25 +885,29 @@ static inline bool gl_get_version(int *major, int *minor, bool *is_es) {
 }
 
 static void gfx_opengl_get_framebuffer(uint16_t *buffer) {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_rt.framebuffer_id);
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    if (GL_ARB_framebuffer_object) {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_rt.framebuffer_id);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
 
-    uint8_t pixels[FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * 3];
-    glReadPixels(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+        uint8_t pixels[FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * 3];
+        glReadPixels(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
-    uint32_t bi = 0;
-    for (int32_t y = FRAMEBUFFER_HEIGHT - 1; y >= 0; y--) {
-        for (int32_t x = 0; x < FRAMEBUFFER_WIDTH; x++) {
-            uint32_t fb_pixel = (y * FRAMEBUFFER_WIDTH + x) * 3;
+        uint32_t bi = 0;
+        for (int32_t y = FRAMEBUFFER_HEIGHT - 1; y >= 0; y--) {
+            for (int32_t x = 0; x < FRAMEBUFFER_WIDTH; x++) {
+                uint32_t fb_pixel = (y * FRAMEBUFFER_WIDTH + x) * 3;
 
-            uint8_t r = pixels[fb_pixel + 0] >> 3;
-            uint8_t g = pixels[fb_pixel + 1] >> 3;
-            uint8_t b = pixels[fb_pixel + 2] >> 3;
-            uint8_t a = 1; //pixels[fb_pixel + 3] / 255;
+                uint8_t r = pixels[fb_pixel + 0] >> 3;
+                uint8_t g = pixels[fb_pixel + 1] >> 3;
+                uint8_t b = pixels[fb_pixel + 2] >> 3;
+                uint8_t a = 1; //pixels[fb_pixel + 3] / 255;
 
-            buffer[bi] = (r << 11) | (g << 6) | (b << 1) | a;
-            bi++;
+                buffer[bi] = (r << 11) | (g << 6) | (b << 1) | a;
+                bi++;
+            }
         }
+    } else {
+        memset(buffer, 0, FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * 2);
     }
 }
 
@@ -925,31 +929,35 @@ static void gfx_opengl_init(void) {
     if (vmajor < 2 && vminor < 1 && !is_es)
         sys_fatal("OpenGL 2.1+ is required.\nReported version: %s%d.%d", is_es ? "ES" : "", vmajor, vminor);
 
-    // Initialize render targets
+    // Initialize resolution before drawing first frame
 
     current_width = gfx_current_dimensions.width;
     current_height = gfx_current_dimensions.height;
 
-    create_render_target_views(false);
+    // Initialize render targets
 
-    // Create the render target shader, used to draw into fullscreen quads
+    if (GL_ARB_framebuffer_object) {
+        create_render_target_views(false);
 
-    rt_shader_program.opengl_program_id = compile_shader(rt_vertex_shader, rt_fragment_shader);
-    rt_shader_program.attrib_locations[0] = glGetAttribLocation(rt_shader_program.opengl_program_id, "a_position");
-    rt_shader_program.attrib_sizes[0] = 2;
-    rt_shader_program.attrib_locations[1] = glGetAttribLocation(rt_shader_program.opengl_program_id, "a_uv");
-    rt_shader_program.attrib_sizes[1] = 2;
-    rt_shader_program.num_attribs = 2;
-    rt_shader_program.num_floats = 4;
-    rt_shader_program.used_textures[0] = true;
-    rt_shader_program.used_textures[1] = false;
-    rt_shader_program.num_inputs = 0;     // Unused in this case
-    rt_shader_program.shader_id = 0;      // Unused in this case
-    rt_shader_program.used_noise = false; // Unused in this case
+        // Create the render target shader, used to draw into fullscreen quads
 
-    glUseProgram(rt_shader_program.opengl_program_id);
-    GLint sampler_location = glGetUniformLocation(rt_shader_program.opengl_program_id, "u_texture");
-    glUniform1i(sampler_location, 0);
+        rt_shader_program.opengl_program_id = compile_shader(rt_vertex_shader, rt_fragment_shader);
+        rt_shader_program.attrib_locations[0] = glGetAttribLocation(rt_shader_program.opengl_program_id, "a_position");
+        rt_shader_program.attrib_sizes[0] = 2;
+        rt_shader_program.attrib_locations[1] = glGetAttribLocation(rt_shader_program.opengl_program_id, "a_uv");
+        rt_shader_program.attrib_sizes[1] = 2;
+        rt_shader_program.num_attribs = 2;
+        rt_shader_program.num_floats = 4;
+        rt_shader_program.used_textures[0] = true;
+        rt_shader_program.used_textures[1] = false;
+        rt_shader_program.num_inputs = 0;     // Unused in this case
+        rt_shader_program.shader_id = 0;      // Unused in this case
+        rt_shader_program.used_noise = false; // Unused in this case
+
+        glUseProgram(rt_shader_program.opengl_program_id);
+        GLint sampler_location = glGetUniformLocation(rt_shader_program.opengl_program_id, "u_texture");
+        glUniform1i(sampler_location, 0);
+    }
 
     // Initialize vertex buffer
 
@@ -971,13 +979,15 @@ static void gfx_opengl_on_resize(void) {
 static void gfx_opengl_start_frame(void) {
     frame_count++;
 
-    if (current_width != gfx_current_dimensions.width || current_height != gfx_current_dimensions.height) {
-        current_width = gfx_current_dimensions.width;
-        current_height = gfx_current_dimensions.height;
-        create_render_target_views(true);
-    }
+    if (GL_ARB_framebuffer_object) {
+        if (current_width != gfx_current_dimensions.width || current_height != gfx_current_dimensions.height) {
+            current_width = gfx_current_dimensions.width;
+            current_height = gfx_current_dimensions.height;
+            create_render_target_views(true);
+        }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, main_rt.framebuffer_id);
+        glBindFramebuffer(GL_FRAMEBUFFER, main_rt.framebuffer_id);
+    }
 
     glDisable(GL_SCISSOR_TEST);
     set_depth_mask(true); // Must be set to clear Z-buffer
@@ -986,21 +996,23 @@ static void gfx_opengl_start_frame(void) {
 }
 
 static void gfx_opengl_end_frame(void) {
-    // Set the shader and vertex attribs for quad rendering
+    if (GL_ARB_framebuffer_object) {
+        // Set the shader and vertex attribs for quad rendering
 
-    glUseProgram(rt_shader_program.opengl_program_id);
-    gfx_opengl_vertex_array_set_attribs(&rt_shader_program);
+        glUseProgram(rt_shader_program.opengl_program_id);
+        gfx_opengl_vertex_array_set_attribs(&rt_shader_program);
 
-    // Draw quad with main render target into the other render targets
+        // Draw quad with main render target into the other render targets
 
-    draw_render_target(NULL, &main_rt, false);
-    draw_render_target(&framebuffer_rt, &main_rt, true);
+        draw_render_target(NULL, &main_rt, false);
+        draw_render_target(&framebuffer_rt, &main_rt, true);
 
-    // Set again the last shader used before drawing render targets.
-    // Not doing so can lead to rendering issues on the first drawcalls
-    // of the next frame, if they use the same shader as the ones before.
+        // Set again the last shader used before drawing render targets.
+        // Not doing so can lead to rendering issues on the first drawcalls
+        // of the next frame, if they use the same shader as the ones before.
 
-    gfx_opengl_load_shader(opengl_prg);
+        gfx_opengl_load_shader(opengl_prg);
+    }
 }
 
 static void gfx_opengl_finish_render(void) {
