@@ -77,7 +77,9 @@ static struct {
     int32_t scissor_x, scissor_y, scissor_width, scissor_height;
     int8_t depth_test, depth_mask;
     int8_t zmode_decal;
-} gl_state;
+
+    uint8_t active_texture;
+} gl_state = {0};
 
 static struct RenderTarget main_rt;
 static struct RenderTarget framebuffer_rt;
@@ -201,6 +203,16 @@ static void set_zmode_decal(bool zmode_decal) {
         glPolygonOffset(0, 0);
         glDisable(GL_POLYGON_OFFSET_FILL);
     }
+}
+
+static void set_active_texture(uint8_t active_texture) {
+    if (gl_state.active_texture == active_texture) {
+        return;
+    }
+
+    gl_state.active_texture = active_texture;
+
+    glActiveTexture(GL_TEXTURE0 + active_texture);
 }
 
 static void set_vertex_buffer(float buffer[], size_t buffer_length) {
@@ -362,13 +374,9 @@ static void draw_render_target(const struct RenderTarget *dst_render_target, con
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    // Set shader program, vertex attrib pointers and textures
+    // Set color texture
 
-    glUseProgram(rt_shader_program.opengl_program_id);
-
-    gfx_opengl_vertex_array_set_attribs(&rt_shader_program);
-
-    glActiveTexture(GL_TEXTURE0);
+    set_active_texture(0);
     glBindTexture(GL_TEXTURE_2D, src_render_target->color_texture_id);
 
     // Set vertex buffer data
@@ -776,7 +784,7 @@ static GLuint gfx_opengl_new_texture(void) {
 static void gfx_opengl_select_texture(int tile, GLuint texture_id) {
      opengl_tex[tile] = tex_cache + texture_id;
      opengl_curtex = tile;
-     glActiveTexture(GL_TEXTURE0 + tile);
+     set_active_texture(tile);
      glBindTexture(GL_TEXTURE_2D, opengl_tex[tile]->gltex);
      gfx_opengl_set_texture_uniforms(opengl_prg, tile);
 }
@@ -796,7 +804,7 @@ static uint32_t gfx_cm_to_opengl(uint32_t val) {
 
 static void gfx_opengl_set_sampler_parameters(int tile, bool linear_filter, uint32_t cms, uint32_t cmt) {
     const GLenum filter = linear_filter ? GL_LINEAR : GL_NEAREST;
-    glActiveTexture(GL_TEXTURE0 + tile);
+    set_active_texture(tile);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, gfx_cm_to_opengl(cms));
@@ -877,7 +885,7 @@ static inline bool gl_get_version(int *major, int *minor, bool *is_es) {
 }
 
 static void gfx_opengl_get_framebuffer(uint16_t *buffer) {
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_rt.framebuffer_id);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_rt.framebuffer_id);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
     uint8_t pixels[FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * 3];
@@ -978,6 +986,13 @@ static void gfx_opengl_start_frame(void) {
 }
 
 static void gfx_opengl_end_frame(void) {
+    // Set the shader and vertex attribs for quad rendering
+
+    glUseProgram(rt_shader_program.opengl_program_id);
+    gfx_opengl_vertex_array_set_attribs(&rt_shader_program);
+
+    // Draw quad with main render target into the other render targets
+
     draw_render_target(NULL, &main_rt, false);
     draw_render_target(&framebuffer_rt, &main_rt, true);
 
@@ -985,7 +1000,6 @@ static void gfx_opengl_end_frame(void) {
     // Not doing so can lead to rendering issues on the first drawcalls
     // of the next frame, if they use the same shader as the ones before.
 
-    //glUseProgram(opengl_prg->opengl_program_id);
     gfx_opengl_load_shader(opengl_prg);
 }
 
