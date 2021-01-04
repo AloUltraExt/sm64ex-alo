@@ -475,7 +475,7 @@ static void create_render_target(uint32_t width, uint32_t height, bool has_depth
     }
 }
 
-static void draw_render_texture(const RenderTarget *dst_render_target, const RenderTarget *src_render_target, bool clear_before_drawing) {
+static void draw_render_target(const RenderTarget *dst_render_target, const RenderTarget *src_render_target, bool clear_before_drawing) {
     // Set render target
 
     d3d.context->OMSetRenderTargets(1, dst_render_target->render_target_view.GetAddressOf(), NULL);
@@ -991,9 +991,9 @@ static void gfx_d3d11_get_framebuffer(uint16_t *buffer) {
         for (uint32_t x = 0; x < FRAMEBUFFER_WIDTH; x++) {
             uint32_t fb_pixel = (y * FRAMEBUFFER_WIDTH + x) * 4;
 
-            uint8_t r = pixels[fb_pixel + 0] / 8;
-            uint8_t g = pixels[fb_pixel + 1] / 8;
-            uint8_t b = pixels[fb_pixel + 2] / 8;
+            uint8_t r = pixels[fb_pixel + 0] >> 3;
+            uint8_t g = pixels[fb_pixel + 1] >> 3;
+            uint8_t b = pixels[fb_pixel + 2] >> 3;
             uint8_t a = 1; //pixels[fb_pixel + 3] / 255;
 
             buffer[bi] = (r << 11) | (g << 6) | (b << 1) | a;
@@ -1038,8 +1038,8 @@ static void gfx_d3d11_start_frame(void) {
 }
 
 static void gfx_d3d11_end_frame(void) {
-    draw_render_texture(&d3d.backbuffer_rt, &d3d.main_rt, false);
-    draw_render_texture(&d3d.framebuffer_rt, &d3d.main_rt, true);
+    draw_render_target(&d3d.backbuffer_rt, &d3d.main_rt, false);
+    draw_render_target(&d3d.framebuffer_rt, &d3d.main_rt, true);
 }
 
 static void gfx_d3d11_finish_render(void) {
