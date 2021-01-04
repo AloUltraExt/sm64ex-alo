@@ -63,8 +63,30 @@ struct GLTexture {
     bool filter;
 };
 
+struct RenderTarget {
+    GLuint framebuffer_id;
+    GLuint color_texture_id;
+    GLuint depth_renderbuffer_id;
+
+    uint32_t width;
+    uint32_t height;
+};
+
+static struct {
+    int32_t viewport_x, viewport_y, viewport_width, viewport_height;
+    int32_t scissor_x, scissor_y, scissor_width, scissor_height;
+    int8_t depth_test, depth_mask;
+    int8_t zmode_decal;
+} gl_state;
+
+static struct RenderTarget main_rt;
+static struct RenderTarget framebuffer_rt;
+
 static struct ShaderProgram shader_program_pool[64];
 static uint8_t shader_program_pool_size;
+
+static struct ShaderProgram rt_shader_program;
+
 static GLuint opengl_vbo;
 
 static int tex_cache_size = 0;
@@ -75,10 +97,158 @@ static struct ShaderProgram *opengl_prg = NULL;
 static struct GLTexture *opengl_tex[2];
 static int opengl_curtex = 0;
 
+// Current values
+
+static uint32_t current_width;
+static uint32_t current_height;
+
+static int8_t current_depth_test, current_depth_mask;
+static int8_t current_zmode_decal;
+
+static int32_t current_viewport_x, current_viewport_y, current_viewport_width, current_viewport_height;
+static int32_t current_scissor_x, current_scissor_y, current_scissor_width, current_scissor_height;
+
 static uint32_t frame_count;
 
-static bool gfx_opengl_z_is_from_0_to_1(void) {
-    return false;
+static const char *rt_vertex_shader =
+#ifdef USE_GLES
+    "#version 100\n"
+#else
+    "#version 120\n"
+#endif
+    "attribute vec2 a_position;\n"
+    "attribute vec2 a_uv;\n"
+    "varying vec2 v_uv;\n"
+    "void main() {\n"
+    "    gl_Position = vec4(a_position.x, a_position.y, 0.0, 1.0);\n"
+    "    v_uv = a_uv;\n"
+    "}\n";
+
+static const char *rt_fragment_shader =
+#ifdef USE_GLES
+    "#version 100\n"
+    "precision mediump float;\n"
+#else
+    "#version 120\n"
+#endif
+    "varying vec2 v_uv;\n"
+    "uniform sampler2D u_texture;"
+    "void main() {\n"
+    "    gl_FragColor = texture2D(u_texture, v_uv);\n"
+    "}\n";
+
+static void set_viewport(int32_t x, int32_t y, int32_t width, int32_t height) {
+    if (gl_state.viewport_x == x && gl_state.viewport_y == y && gl_state.viewport_width == width && gl_state.viewport_height == height) {
+        return;
+    }
+
+    gl_state.viewport_x = x;
+    gl_state.viewport_y = y;
+    gl_state.viewport_width = width;
+    gl_state.viewport_height = height;
+
+    glViewport(x, y, width, height);
+}
+
+static void set_scissor(int32_t x, int32_t y, int32_t width, int32_t height) {
+    if (gl_state.scissor_x == x && gl_state.scissor_y == y && gl_state.scissor_width == width && gl_state.scissor_height == height) {
+        return;
+    }
+
+    gl_state.scissor_x = x;
+    gl_state.scissor_y = y;
+    gl_state.scissor_width = width;
+    gl_state.scissor_height = height;
+
+    glScissor(x, y, width, height);
+}
+
+static void set_depth_test(bool depth_test) {
+    if (gl_state.depth_test == depth_test) {
+        return;
+    }
+
+    gl_state.depth_test = depth_test;
+
+    if (depth_test) {
+        glEnable(GL_DEPTH_TEST);
+    } else {
+        glDisable(GL_DEPTH_TEST);
+    }
+}
+
+static void set_depth_mask(bool depth_mask) {
+    if (gl_state.depth_mask == depth_mask) {
+        return;
+    }
+
+    gl_state.depth_mask = depth_mask;
+
+    glDepthMask(depth_mask ? GL_TRUE : GL_FALSE);
+}
+
+static void set_zmode_decal(bool zmode_decal) {
+    if (gl_state.zmode_decal == zmode_decal) {
+        return;
+    }
+
+    gl_state.zmode_decal = zmode_decal;
+
+    if (zmode_decal) {
+        glPolygonOffset(-2, -2);
+        glEnable(GL_POLYGON_OFFSET_FILL);
+    } else {
+        glPolygonOffset(0, 0);
+        glDisable(GL_POLYGON_OFFSET_FILL);
+    }
+}
+
+static void set_vertex_buffer(float buffer[], size_t buffer_length) {
+    glBufferSubData(GL_ARRAY_BUFFER, 0, buffer_length, buffer);
+}
+
+static GLuint compile_shader(const char *vertex_shader, const char *fragment_shader) {
+    GLint success;
+
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vs, 1, &vertex_shader, NULL);
+    glCompileShader(vs);
+    glGetShaderiv(vs, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        GLint max_length = 0;
+        glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &max_length);
+        char error_log[1024];
+        fprintf(stderr, "Vertex shader compilation failed\n");
+        glGetShaderInfoLog(vs, max_length, &max_length, &error_log[0]);
+        fprintf(stderr, "%s\n", &error_log[0]);
+        sys_fatal("vertex shader compilation failed (see terminal)");
+    }
+
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs, 1, &fragment_shader, NULL);
+    glCompileShader(fs);
+    glGetShaderiv(fs, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        GLint max_length = 0;
+        glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &max_length);
+        char error_log[1024];
+        fprintf(stderr, "Fragment shader compilation failed\n");
+        glGetShaderInfoLog(fs, max_length, &max_length, &error_log[0]);
+        fprintf(stderr, "%s\n", &error_log[0]);
+        sys_fatal("fragment shader compilation failed (see terminal)");
+    }
+
+    GLuint shader_program_id = glCreateProgram();
+    glAttachShader(shader_program_id, vs);
+    glAttachShader(shader_program_id, fs);
+    glLinkProgram(shader_program_id);
+
+    glDetachShader(shader_program_id, vs);
+    glDetachShader(shader_program_id, fs);
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    return shader_program_id;
 }
 
 static void gfx_opengl_vertex_array_set_attribs(struct ShaderProgram *prg) {
@@ -104,6 +274,15 @@ static inline void gfx_opengl_set_texture_uniforms(struct ShaderProgram *prg, co
     }
 }
 
+static void gfx_opengl_load_shader(struct ShaderProgram *new_prg) {
+    opengl_prg = new_prg;
+    glUseProgram(new_prg->opengl_program_id);
+    gfx_opengl_vertex_array_set_attribs(new_prg);
+    gfx_opengl_set_shader_uniforms(new_prg);
+    gfx_opengl_set_texture_uniforms(new_prg, 0);
+    gfx_opengl_set_texture_uniforms(new_prg, 1);
+}
+
 static void gfx_opengl_unload_shader(struct ShaderProgram *old_prg) {
     if (old_prg != NULL) {
         for (int i = 0; i < old_prg->num_attribs; i++)
@@ -115,13 +294,117 @@ static void gfx_opengl_unload_shader(struct ShaderProgram *old_prg) {
     }
 }
 
-static void gfx_opengl_load_shader(struct ShaderProgram *new_prg) {
-    opengl_prg = new_prg;
-    glUseProgram(new_prg->opengl_program_id);
-    gfx_opengl_vertex_array_set_attribs(new_prg);
-    gfx_opengl_set_shader_uniforms(new_prg);
-    gfx_opengl_set_texture_uniforms(new_prg, 0);
-    gfx_opengl_set_texture_uniforms(new_prg, 1);
+static void create_render_target(uint32_t width, uint32_t height, bool is_resizing, bool has_depth_buffer, struct RenderTarget *render_target) {
+    // Create color texture and buffers
+
+    if (!is_resizing) {
+        glGenTextures(1, &render_target->color_texture_id);
+        if (has_depth_buffer) {
+            glGenRenderbuffers(1, &render_target->depth_renderbuffer_id);
+        }
+        glGenFramebuffers(1, &render_target->framebuffer_id);
+    }
+
+    // Configure color texture
+
+    glBindTexture(GL_TEXTURE_2D, render_target->color_texture_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // Configure the depth buffer
+
+    if (has_depth_buffer) {
+        glBindRenderbuffer(GL_RENDERBUFFER, render_target->depth_renderbuffer_id);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    }
+
+    // Bind color and depth to the framebuffer
+
+    if (!is_resizing) {
+        glBindFramebuffer(GL_FRAMEBUFFER, render_target->framebuffer_id);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, render_target->color_texture_id, 0);
+        if (has_depth_buffer) {
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, render_target->depth_renderbuffer_id);
+        }
+    }
+
+    render_target->width = width;
+    render_target->height = height;
+}
+
+static void draw_render_target(const struct RenderTarget *dst_render_target, const struct RenderTarget *src_render_target, bool clear_before_drawing) {
+    // Set render target
+
+    uint32_t width, height;
+
+    if (dst_render_target == NULL) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        width = current_width;
+        height = current_height;
+    } else {
+        glBindFramebuffer(GL_FRAMEBUFFER, dst_render_target->framebuffer_id);
+        width = dst_render_target->width;
+        height = dst_render_target->height;
+    }
+
+    // Set some states and clear after that
+
+    set_depth_test(false);
+    set_depth_mask(false);
+    set_zmode_decal(false);
+    set_viewport(0, 0, width, height);
+    set_scissor(0, 0, width, height);
+
+    if (clear_before_drawing) {
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
+
+    // Set shader program, vertex attrib pointers and textures
+
+    glUseProgram(rt_shader_program.opengl_program_id);
+
+    gfx_opengl_vertex_array_set_attribs(&rt_shader_program);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, src_render_target->color_texture_id);
+
+    // Set vertex buffer data
+
+    float rt_aspect = (float) width / (float) height;
+    float current_aspect = (float) current_width / (float) current_height;
+    float w = current_aspect / rt_aspect;
+
+    float buf_vbo[] = {
+        -w, +1.0, 0.0, 1.0,
+        -w, -1.0, 0.0, 0.0,
+        +w, +1.0, 1.0, 1.0,
+        +w, -1.0, 1.0, 0.0
+    };
+
+    uint32_t stride = 2 * 2 * sizeof(float);
+    set_vertex_buffer(buf_vbo, 4 * stride);
+
+    // Draw the quad
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+static void create_render_target_views(bool is_resize) {
+    if (!is_resize) {
+        // Initialize the framebuffer only the first time
+        create_render_target(FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, false, false, &framebuffer_rt);
+    }
+
+    // Create the main render target where contents will be rendered
+
+    create_render_target(current_width, current_height, is_resize, true, &main_rt);
+}
+
+static bool gfx_opengl_z_is_from_0_to_1(void) {
+    return false;
 }
 
 static void append_str(char *buf, size_t *len, const char *str) {
@@ -398,46 +681,13 @@ static struct ShaderProgram *gfx_opengl_create_and_load_new_shader(uint32_t shad
     puts(fs_buf);
     puts("End");*/
 
-    const GLchar *sources[2] = { vs_buf, fs_buf };
-    const GLint lengths[2] = { vs_len, fs_len };
-    GLint success;
-
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &sources[0], &lengths[0]);
-    glCompileShader(vertex_shader);
-    glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        GLint max_length = 0;
-        glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &max_length);
-        char error_log[1024];
-        fprintf(stderr, "Vertex shader compilation failed\n");
-        glGetShaderInfoLog(vertex_shader, max_length, &max_length, &error_log[0]);
-        fprintf(stderr, "%s\n", &error_log[0]);
-        sys_fatal("vertex shader compilation failed (see terminal)");
-    }
-
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &sources[1], &lengths[1]);
-    glCompileShader(fragment_shader);
-    glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        GLint max_length = 0;
-        glGetShaderiv(fragment_shader, GL_INFO_LOG_LENGTH, &max_length);
-        char error_log[1024];
-        fprintf(stderr, "Fragment shader compilation failed\n");
-        glGetShaderInfoLog(fragment_shader, max_length, &max_length, &error_log[0]);
-        fprintf(stderr, "%s\n", &error_log[0]);
-        sys_fatal("fragment shader compilation failed (see terminal)");
-    }
-
-    GLuint shader_program = glCreateProgram();
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    glLinkProgram(shader_program);
+    GLuint shader_program = compile_shader(vs_buf, fs_buf);
+    
+    struct ShaderProgram *prg = &shader_program_pool[shader_program_pool_size++];
+    prg->opengl_program_id = shader_program;
 
     size_t cnt = 0;
 
-    struct ShaderProgram *prg = &shader_program_pool[shader_program_pool_size++];
     prg->attrib_locations[cnt] = glGetAttribLocation(shader_program, "aVtxPos");
     prg->attrib_sizes[cnt] = 4;
     ++cnt;
@@ -559,33 +809,29 @@ static void gfx_opengl_set_sampler_parameters(int tile, bool linear_filter, uint
 }
 
 static void gfx_opengl_set_depth_test(bool depth_test) {
-    if (depth_test) {
-        glEnable(GL_DEPTH_TEST);
-    } else {
-        glDisable(GL_DEPTH_TEST);
-    }
+    current_depth_test = depth_test;
 }
 
 static void gfx_opengl_set_depth_mask(bool z_upd) {
-    glDepthMask(z_upd ? GL_TRUE : GL_FALSE);
+    current_depth_mask = z_upd;
 }
 
 static void gfx_opengl_set_zmode_decal(bool zmode_decal) {
-    if (zmode_decal) {
-        glPolygonOffset(-2, -2);
-        glEnable(GL_POLYGON_OFFSET_FILL);
-    } else {
-        glPolygonOffset(0, 0);
-        glDisable(GL_POLYGON_OFFSET_FILL);
-    }
+    current_zmode_decal = zmode_decal;
 }
 
 static void gfx_opengl_set_viewport(int x, int y, int width, int height) {
-    glViewport(x, y, width, height);
+    current_viewport_x = x;
+    current_viewport_y = y;
+    current_viewport_width = width;
+    current_viewport_height = height;
 }
 
 static void gfx_opengl_set_scissor(int x, int y, int width, int height) {
-    glScissor(x, y, width, height);
+    current_scissor_x = x;
+    current_scissor_y = y;
+    current_scissor_width = width;
+    current_scissor_height = height;
 }
 
 static void gfx_opengl_set_use_alpha(bool use_alpha) {
@@ -597,7 +843,21 @@ static void gfx_opengl_set_use_alpha(bool use_alpha) {
 }
 
 static void gfx_opengl_draw_triangles(float buf_vbo[], size_t buf_vbo_len, size_t buf_vbo_num_tris) {
-    glBufferSubData(GL_ARRAY_BUFFER, 0, buf_vbo_len * sizeof(float), buf_vbo);
+    // Depth
+
+    set_depth_test(current_depth_test);
+    set_depth_mask(current_depth_mask);
+    set_zmode_decal(current_zmode_decal);
+
+    // Viewport and Scissor
+
+    set_viewport(current_viewport_x, current_viewport_y, current_viewport_width, current_viewport_height);
+    set_scissor(current_scissor_x, current_scissor_y, current_scissor_width, current_scissor_height);
+
+    // Draw vertex buffer
+
+    set_vertex_buffer(buf_vbo, buf_vbo_len * sizeof(float));
+
     glDrawArrays(GL_TRIANGLES, 0, 3 * buf_vbo_num_tris);
 }
 
@@ -617,16 +877,20 @@ static inline bool gl_get_version(int *major, int *minor, bool *is_es) {
 }
 
 static void gfx_opengl_get_framebuffer(uint16_t *buffer) {
-    //memset(buffer, 0, FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * 2);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_rt.framebuffer_id);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+    uint8_t pixels[FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * 3];
+    glReadPixels(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
     uint32_t bi = 0;
-    for (uint32_t y = 0; y < FRAMEBUFFER_HEIGHT; y++) {
-        for (uint32_t x = 0; x < FRAMEBUFFER_WIDTH; x++) {
-            uint32_t fb_pixel = (y * FRAMEBUFFER_WIDTH + x) * 4;
+    for (int32_t y = FRAMEBUFFER_HEIGHT - 1; y >= 0; y--) {
+        for (int32_t x = 0; x < FRAMEBUFFER_WIDTH; x++) {
+            uint32_t fb_pixel = (y * FRAMEBUFFER_WIDTH + x) * 3;
 
-            uint8_t r = 31; //pixels[fb_pixel + 0] / 8;
-            uint8_t g = 15; //pixels[fb_pixel + 1] / 8;
-            uint8_t b = 6; //pixels[fb_pixel + 2] / 8;
+            uint8_t r = pixels[fb_pixel + 0] >> 3;
+            uint8_t g = pixels[fb_pixel + 1] >> 3;
+            uint8_t b = pixels[fb_pixel + 2] >> 3;
             uint8_t a = 1; //pixels[fb_pixel + 3] / 255;
 
             buffer[bi] = (r << 11) | (g << 6) | (b << 1) | a;
@@ -653,12 +917,44 @@ static void gfx_opengl_init(void) {
     if (vmajor < 2 && vminor < 1 && !is_es)
         sys_fatal("OpenGL 2.1+ is required.\nReported version: %s%d.%d", is_es ? "ES" : "", vmajor, vminor);
 
+    // Initialize render targets
+
+    current_width = gfx_current_dimensions.width;
+    current_height = gfx_current_dimensions.height;
+
+    create_render_target_views(false);
+
+    // Create the render target shader, used to draw into fullscreen quads
+
+    rt_shader_program.opengl_program_id = compile_shader(rt_vertex_shader, rt_fragment_shader);
+    rt_shader_program.attrib_locations[0] = glGetAttribLocation(rt_shader_program.opengl_program_id, "a_position");
+    rt_shader_program.attrib_sizes[0] = 2;
+    rt_shader_program.attrib_locations[1] = glGetAttribLocation(rt_shader_program.opengl_program_id, "a_uv");
+    rt_shader_program.attrib_sizes[1] = 2;
+    rt_shader_program.num_attribs = 2;
+    rt_shader_program.num_floats = 4;
+    rt_shader_program.used_textures[0] = true;
+    rt_shader_program.used_textures[1] = false;
+    rt_shader_program.num_inputs = 0;     // Unused in this case
+    rt_shader_program.shader_id = 0;      // Unused in this case
+    rt_shader_program.used_noise = false; // Unused in this case
+
+    glUseProgram(rt_shader_program.opengl_program_id);
+    GLint sampler_location = glGetUniformLocation(rt_shader_program.opengl_program_id, "u_texture");
+    glUniform1i(sampler_location, 0);
+
+    // Initialize vertex buffer
+
     glGenBuffers(1, &opengl_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, opengl_vbo);
     glBufferData(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE * sizeof(float), NULL, GL_DYNAMIC_DRAW);
 
+    // Initialize misc states
+
     glDepthFunc(GL_LEQUAL);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
 }
 
 static void gfx_opengl_on_resize(void) {
@@ -667,14 +963,30 @@ static void gfx_opengl_on_resize(void) {
 static void gfx_opengl_start_frame(void) {
     frame_count++;
 
+    if (current_width != gfx_current_dimensions.width || current_height != gfx_current_dimensions.height) {
+        current_width = gfx_current_dimensions.width;
+        current_height = gfx_current_dimensions.height;
+        create_render_target_views(true);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, main_rt.framebuffer_id);
+
     glDisable(GL_SCISSOR_TEST);
-    glDepthMask(GL_TRUE); // Must be set to clear Z-buffer
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    set_depth_mask(true); // Must be set to clear Z-buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_SCISSOR_TEST);
 }
 
 static void gfx_opengl_end_frame(void) {
+    draw_render_target(NULL, &main_rt, false);
+    draw_render_target(&framebuffer_rt, &main_rt, true);
+
+    // Set again the last shader used before drawing render targets.
+    // Not doing so can lead to rendering issues on the first drawcalls
+    // of the next frame, if they use the same shader as the ones before.
+
+    //glUseProgram(opengl_prg->opengl_program_id);
+    gfx_opengl_load_shader(opengl_prg);
 }
 
 static void gfx_opengl_finish_render(void) {

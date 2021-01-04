@@ -1805,14 +1805,24 @@ static void gfx_sp_reset() {
     rsp.lights_changed = true;
 }
 
-void gfx_get_dimensions(uint32_t *width, uint32_t *height) {
-    gfx_wapi->get_dimensions(width, height);
+void gfx_update_dimensions() {
+    gfx_wapi->get_dimensions(&gfx_current_dimensions.width, &gfx_current_dimensions.height);
+
+    if (gfx_current_dimensions.height == 0) {
+        // Avoid division by zero
+        gfx_current_dimensions.height = 1;
+    }
+
+    gfx_current_dimensions.aspect_ratio = (float) gfx_current_dimensions.width / (float) gfx_current_dimensions.height;
 }
 
 void gfx_init(struct GfxWindowManagerAPI *wapi, struct GfxRenderingAPI *rapi, const char *window_title) {
     gfx_wapi = wapi;
-    gfx_rapi = rapi;
     gfx_wapi->init(window_title);
+
+    gfx_update_dimensions();
+
+    gfx_rapi = rapi;
     gfx_rapi->init();
 
     framebuffer_data = NULL;
@@ -1880,12 +1890,7 @@ uint16_t *get_framebuffer() {
 
 void gfx_start_frame(void) {
     gfx_wapi->handle_events();
-    gfx_wapi->get_dimensions(&gfx_current_dimensions.width, &gfx_current_dimensions.height);
-    if (gfx_current_dimensions.height == 0) {
-        // Avoid division by zero
-        gfx_current_dimensions.height = 1;
-    }
-    gfx_current_dimensions.aspect_ratio = (float)gfx_current_dimensions.width / (float)gfx_current_dimensions.height;
+    gfx_update_dimensions();
 }
 
 void gfx_run(Gfx *commands) {
