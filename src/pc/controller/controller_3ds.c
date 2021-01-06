@@ -36,15 +36,6 @@
 
 #define DEADZONE 4960
 
-#ifdef BETTERCAMERA
-int mouse_x = 0;
-int mouse_y = 0;
-
-extern u8 newcam_mouse;
-#endif
-
-static bool init_ok;
-
 static void controller_3ds_init(void)
 {
 }

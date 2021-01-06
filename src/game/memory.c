@@ -144,6 +144,7 @@ void move_segment_table_to_dmem(void) {
 #endif
 #ifdef USE_SYSTEM_MALLOC
 #include <stdlib.h>
+#include <malloc.h>
 #endif
 
 #ifdef USE_SYSTEM_MALLOC
@@ -179,7 +180,7 @@ void main_pool_init(void *start, void *end) {
 
 #ifdef USE_SYSTEM_MALLOC
 void *main_pool_alloc(u32 size, void (*releaseHandler)(void *addr)) {
-    struct MainPoolBlock *newListHead = (struct MainPoolBlock *) malloc(sizeof(struct MainPoolBlock) + size);
+    struct MainPoolBlock *newListHead = (struct MainPoolBlock *) memalign(64, sizeof(struct MainPoolBlock) + size);
     if (newListHead == NULL) {
         abort();
     }
@@ -516,8 +517,9 @@ void alloc_only_pool_clear(struct AllocOnlyPool *pool) {
 }
 
 void *alloc_only_pool_alloc(struct AllocOnlyPool *pool, s32 size) {
-    u8 *addr;
-    u32 s = size;
+    const size_t ptr_size = sizeof(u8 *);
+    u32 s = size + ptr_size;
+
     if (pool->lastBlockSize - pool->lastBlockNextPos < s) {
         struct AllocOnlyPoolBlock *block;
         u32 nextSize = pool->lastBlockSize * 2;
@@ -527,7 +529,7 @@ void *alloc_only_pool_alloc(struct AllocOnlyPool *pool, s32 size) {
         if (nextSize < s) {
             nextSize = s;
         }
-        block = (struct AllocOnlyPoolBlock *) malloc(sizeof(struct AllocOnlyPoolBlock) + nextSize);
+        block = (struct AllocOnlyPoolBlock *) memalign(64, sizeof(struct AllocOnlyPoolBlock) + nextSize);
         if (block == NULL) {
             abort();
         }
@@ -536,9 +538,12 @@ void *alloc_only_pool_alloc(struct AllocOnlyPool *pool, s32 size) {
         pool->lastBlockSize = nextSize;
         pool->lastBlockNextPos = 0;
     }
-    addr = (u8 *) (pool->lastBlock + 1) + pool->lastBlockNextPos;
+    s -= ptr_size;
+    uintptr_t addr = (uintptr_t) (pool->lastBlock + 1) + pool->lastBlockNextPos;
+    uintptr_t addrAligned = ((addr - 1) | (ptr_size - 1)) + 1;
+    s += addrAligned - addr;
     pool->lastBlockNextPos += s;
-    return addr;
+    return (u8 *)addrAligned;
 }
 
 struct MemoryPool *mem_pool_init(UNUSED u32 size, UNUSED u32 side) {
@@ -593,7 +598,7 @@ void mem_pool_free(struct MemoryPool *pool, void *addr) {
 }
 
 void *alloc_display_list(u32 size) {
-    size = ALIGN8(size);
+    size = ALIGN16(size);
     return alloc_only_pool_alloc(gGfxAllocOnlyPool, size);
 }
 #else

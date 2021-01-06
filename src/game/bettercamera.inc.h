@@ -386,7 +386,7 @@ static void newcam_rotate_button(void) {
             newcam_tilt_acc -= (newcam_tilt_acc*((f32)newcam_degrade/100));
     }
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
     if (newcam_mouse == 1) {
         newcam_yaw += ivrt(0) * mouse_x * 16;
         newcam_tilt += ivrt(1) * mouse_y * 16;

@@ -2802,6 +2802,9 @@ void mode_cannon_camera(struct Camera *c) {
     gCameraMovementFlags &= ~CAM_MOVING_INTO_MODE;
     c->nextYaw = update_in_cannon(c, c->focus, c->pos);
     if (gPlayer1Controller->buttonPressed & A_BUTTON) {
+#ifdef TARGET_N3DS
+        gDPSetIod(gDisplayListHead++, iodNormal);
+#endif
         set_camera_mode(c, CAMERA_MODE_BEHIND_MARIO, 1);
         sPanDistance = 0.f;
         sCannonYOffset = 0.f;

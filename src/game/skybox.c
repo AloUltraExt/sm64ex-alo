@@ -14,6 +14,11 @@
 #define BETTER_SKYBOX_POSITION_PRECISION
 #endif
 
+#ifdef TARGET_N3DS
+#include "pc/gfx/gfx_3ds.h"
+bool is3D;
+#endif
+
 /**
  * @file skybox.c
  *
@@ -59,6 +64,12 @@ struct Skybox {
 
     /// The index of the upper-left tile in the 3x3 grid that gets drawn
     s32 upperLeftTile;
+#ifdef TARGET_N3DS
+    s32 tileCol; // col and row of upper-left tile
+    s32 tileRow;
+    s32 tileColCur; // col and row in current 5x5 grid
+    s32 tileRowCur;
+#endif
 };
 
 struct Skybox sSkyBoxInfo[2];
@@ -211,6 +222,21 @@ static s32 get_top_left_tile_idx(s8 player) {
     s32 tileCol = sSkyBoxInfo[player].scaledX / SKYBOX_TILE_WIDTH;
     s32 tileRow = (SKYBOX_HEIGHT - sSkyBoxInfo[player].scaledY) / SKYBOX_TILE_HEIGHT;
 
+#ifdef TARGET_N3DS
+/* As a tile is exactly half of the width and height of the screen, ordinarily 2-3 tiles would be visible in 
+ * a given dimension at any given time. Increasing the FOV in 3D mode increases this to 3-4 tiles, so a 3x3
+ * grid is not enough to see 4 tiles on screen at once. Since an extra tile is needed in all directions, the
+ * grid is being changed to 5x5 when 3D mode is enabled. This calculates the new upper left tile position.  */
+
+    if (is3D) {
+        if (tileCol == 8) // checks for yaw = 360.0, the game treats this as the end of the 8th column
+            sSkyBoxInfo[player].tileCol = 6; // our shift moves yaw = 360.0 to the end of the 7th column
+        else 
+            sSkyBoxInfo[player].tileCol = (tileCol - 1 < 0) ? 7 : tileCol - 1; // shifts 1 left and checks wrap around
+        sSkyBoxInfo[player].tileRow = (tileRow - 1 < 0) ? 0 : tileRow - 1; // shifts 1 up and checks for top
+    }
+#endif
+
     return tileRow * SKYBOX_COLS + tileCol;
 }
 
@@ -221,6 +247,7 @@ static s32 get_top_left_tile_idx(s8 player) {
  *                  into an x and y by modulus and division by SKYBOX_COLS. x and y are then scaled by
  *                  SKYBOX_TILE_WIDTH to get a point in world space.
  */
+#ifndef TARGET_N3DS // original vertex function
 Vtx *make_skybox_rect(s32 tileIndex, s8 colorIndex) {
     Vtx *verts = alloc_display_list(4 * sizeof(*verts));
     s16 x = tileIndex % SKYBOX_COLS * SKYBOX_TILE_WIDTH;
@@ -237,8 +264,45 @@ Vtx *make_skybox_rect(s32 tileIndex, s8 colorIndex) {
                     sSkyboxColors[colorIndex][2], 255);
     } else {
     }
+
     return verts;
 }
+#else // 3D mode vertex function
+Vtx *make_skybox_rect(s32 tileIndex, s8 colorIndex, s8 player) {
+    Vtx *verts = alloc_display_list(4 * sizeof(*verts));
+    s16 x, y, z;
+    if (is3D) {
+        s16 tileColTotal = sSkyBoxInfo[player].tileCol + sSkyBoxInfo[player].tileColCur;
+        s16 tileRowTotal = sSkyBoxInfo[player].tileRow + sSkyBoxInfo[player].tileRowCur;
+        if (sSkyBoxInfo[player].tileCol == 7 && sSkyBoxInfo[player].tileColCur == 0) // check wrap around
+            x = 0 - SKYBOX_TILE_WIDTH; // negative value required to properly wrap
+        else if (sSkyBoxInfo[player].tileCol == 7)
+            x = SKYBOX_TILE_WIDTH * (sSkyBoxInfo[player].tileColCur - 1);
+        else
+            x = tileColTotal * SKYBOX_TILE_WIDTH;
+        y = (tileRowTotal > 7) ? SKYBOX_TILE_HEIGHT : SKYBOX_HEIGHT - tileRowTotal * SKYBOX_TILE_HEIGHT; // check for bottom
+        z = -3; // skybox depth, disappears when less than -3
+    }
+    else {
+        x = tileIndex % SKYBOX_COLS * SKYBOX_TILE_WIDTH;
+        y = SKYBOX_HEIGHT - tileIndex / SKYBOX_COLS * SKYBOX_TILE_HEIGHT;
+        z = -1; // just in case, returning this to its original value in 2D mode
+    }
+    if (verts != NULL) {
+        make_vertex(verts, 0, x, y, z, 0, 0, sSkyboxColors[colorIndex][0], sSkyboxColors[colorIndex][1],
+                    sSkyboxColors[colorIndex][2], 255);
+        make_vertex(verts, 1, x, y - SKYBOX_TILE_HEIGHT, z, 0, 31 << 5, sSkyboxColors[colorIndex][0], sSkyboxColors[colorIndex][1],
+                    sSkyboxColors[colorIndex][2], 255);
+        make_vertex(verts, 2, x + SKYBOX_TILE_WIDTH, y - SKYBOX_TILE_HEIGHT, z, 31 << 5, 31 << 5, sSkyboxColors[colorIndex][0],
+                    sSkyboxColors[colorIndex][1], sSkyboxColors[colorIndex][2], 255);
+        make_vertex(verts, 3, x + SKYBOX_TILE_WIDTH, y, z, 31 << 5, 0, sSkyboxColors[colorIndex][0], sSkyboxColors[colorIndex][1],
+                    sSkyboxColors[colorIndex][2], 255);
+    } else {
+    }
+
+    return verts;
+}
+#endif
 
 /**
  * Draws a 3x3 grid of 32x32 sections of the original skybox image.
@@ -249,13 +313,32 @@ void draw_skybox_tile_grid(Gfx **dlist, s8 background, s8 player, s8 colorIndex)
     s32 row;
     s32 col;
 
+#ifdef TARGET_N3DS
+    s16 grid = (is3D) ? 5 : 3; // 5x5 only if 3D is on
+    for (row = 0; row < grid; row++) { 
+        for (col = 0; col < grid; col++) { 
+            s32 tileIndex;
+            if (is3D) {
+                sSkyBoxInfo[player].tileColCur = col; // tracking the position in the current 5x5 grid
+                sSkyBoxInfo[player].tileRowCur = row;
+                s16 tileColTotal = sSkyBoxInfo[player].tileCol + col;
+                s16 tileRowTotal = sSkyBoxInfo[player].tileRow + row;
+                if (tileColTotal > 7) tileColTotal = tileColTotal - 8; // check wrap around 
+                if (tileRowTotal > 7) tileRowTotal = 7; // check for bottom
+                tileIndex = tileColTotal + tileRowTotal * SKYBOX_COLS; // 5x5 index value
+            }
+            else tileIndex = sSkyBoxInfo[player].upperLeftTile + row * SKYBOX_COLS + col; // original index value
+            const u8 *const texture =
+                (*(SkyboxTexture *) segmented_to_virtual(sSkyboxTextures[background]))[tileIndex];
+            Vtx *vertices = make_skybox_rect(tileIndex, colorIndex, player);
+#else
     for (row = 0; row < 3; row++) {
         for (col = 0; col < 3; col++) {
             s32 tileIndex = sSkyBoxInfo[player].upperLeftTile + row * SKYBOX_COLS + col;
             const u8 *const texture =
                 (*(SkyboxTexture *) segmented_to_virtual(sSkyboxTextures[background]))[tileIndex];
             Vtx *vertices = make_skybox_rect(tileIndex, colorIndex);
-
+#endif
             gLoadBlockTexture((*dlist)++, 32, 32, G_IM_FMT_RGBA, texture);
             gSPVertex((*dlist)++, VIRTUAL_TO_PHYSICAL(vertices), 4, 0);
             gSPDisplayList((*dlist)++, dl_draw_quad_verts_0123);
@@ -292,7 +375,11 @@ void *create_skybox_ortho_matrix(s8 player) {
  * Creates the skybox's display list, then draws the 3x3 grid of tiles.
  */
 Gfx *init_skybox_display_list(s8 player, s8 background, s8 colorIndex) {
+#ifdef TARGET_N3DS
+    s32 dlCommandCount = (is3D) ? 5 + (5 * 5) * 7 : 5 + (3 * 3) * 7; // 5x5 only if 3D is on
+#else
     s32 dlCommandCount = 5 + (3 * 3) * 7; // 5 for the start and end, plus 9 skybox tiles
+#endif
     void *skybox = alloc_display_list(dlCommandCount * sizeof(Gfx));
     Gfx *dlist = skybox;
 
@@ -302,10 +389,12 @@ Gfx *init_skybox_display_list(s8 player, s8 background, s8 colorIndex) {
         Mtx *ortho = create_skybox_ortho_matrix(player);
 
         gSPDisplayList(dlist++, dl_skybox_begin);
+
         gSPMatrix(dlist++, VIRTUAL_TO_PHYSICAL(ortho), G_MTX_PROJECTION | G_MTX_MUL | G_MTX_NOPUSH);
         gSPDisplayList(dlist++, dl_skybox_tile_tex_settings);
         draw_skybox_tile_grid(&dlist, background, player, colorIndex);
         gSPDisplayList(dlist++, dl_skybox_end);
+
         gSPEndDisplayList(dlist);
     }
     return skybox;
@@ -329,6 +418,9 @@ Gfx *create_skybox_facing_camera(s8 player, s8 background, f32 fov,
     f32 cameraFaceY = focY - posY;
     f32 cameraFaceZ = focZ - posZ;
     s8 colorIndex = 1;
+#ifdef TARGET_N3DS
+    is3D = ((gGfx3DSMode == GFX_3DS_MODE_NORMAL || gGfx3DSMode == GFX_3DS_MODE_AA_22) && gSliderLevel > 0.0f);
+#endif
 
     // If the first star is collected in JRB, make the sky darker and slightly green
     if (background == 8 && !(save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_JRB - 1) & 1)) {

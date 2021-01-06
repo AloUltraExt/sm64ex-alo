@@ -14,13 +14,6 @@
 #include "controller_api.h"
 #include "../configfile.h"
 
-#ifdef BETTERCAMERA
-int mouse_x = 0;
-int mouse_y = 0;
-
-extern u8 newcam_mouse;
-#endif
-
 struct WiiUKeymap {
     uint32_t n64Button;
     uint32_t vpadButton;

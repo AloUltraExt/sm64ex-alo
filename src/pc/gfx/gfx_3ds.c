@@ -2,15 +2,23 @@
 
 #include "macros.h"
 
-#include <3ds.h>
-#include <citro3d.h>
 #include "gfx_3ds.h"
+#include "gfx_3ds_menu.h"
 
-#include "../pc_main.h"
+C3D_RenderTarget *gTarget;
+C3D_RenderTarget *gTargetRight;
+C3D_RenderTarget *gTargetBottom;
 
-static C3D_RenderTarget* sTarget;
+int uLoc_projection, uLoc_modelView;
+
+float gSliderLevel;
 
 Gfx3DSMode gGfx3DSMode;
+
+bool gShowConfigMenu = false;
+bool gShouldRun = true;
+
+static u8 n3ds_model = 0;
 
 static bool checkN3DS()
 {
@@ -21,32 +29,34 @@ static bool checkN3DS()
     return false;
 }
 
-static void gfx_3ds_init(UNUSED const char *game_name)
+static void deinitialise_screens()
 {
-    if (checkN3DS())
-        osSetSpeedupEnable(true);
+    if (gTarget != NULL)
+    {
+        C3D_RenderTargetDelete(gTarget);
+        gTarget = NULL;
+    }
+    if (gTargetRight != NULL)
+    {
+        C3D_RenderTargetDelete(gTargetRight);
+        gTargetRight = NULL;
+    }
+    if (gTargetBottom != NULL)
+    {
+        C3D_RenderTargetDelete(gTargetBottom);
+        gTargetBottom = NULL;
+    }
+    C3D_Fini();
+}
 
-    gfxInitDefault();
-    consoleInit(GFX_BOTTOM, NULL);
+static void initialise_screens()
+{
     C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 
-    bool useAA = false;
-#ifdef N3DS_USE_ANTIALIASING
-    useAA = true;
-#endif
-    bool useWide = false;
-#ifdef N3DS_USE_WIDE_800PX
-    u8 model;
-    CFGU_GetSystemModel(&model);
-    useWide = model != 3; //wide is not possible on o2ds
-#endif
+    bool useAA = gfx_config.useAA;
+    bool useWide =  gfx_config.useWide && n3ds_model != 3; // old 2DS does not support 800px
 
-    u32 transferFlags =
-        GX_TRANSFER_FLIP_VERT(0) |
-        GX_TRANSFER_OUT_TILED(0) |
-        GX_TRANSFER_RAW_COPY(0) |
-        GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) |
-        GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8);
+    u32 transferFlags = DISPLAY_TRANSFER_FLAGS;
 
     if (useAA && !useWide)
         transferFlags |= GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_XY);
@@ -58,9 +68,24 @@ static void gfx_3ds_init(UNUSED const char *game_name)
     int width = useAA || useWide ? 800 : 400;
     int height = useAA ? 480 : 240;
 
-    sTarget = C3D_RenderTargetCreate(height, width, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-    C3D_RenderTargetSetOutput(sTarget, GFX_TOP, GFX_LEFT, transferFlags);
+    gTarget = C3D_RenderTargetCreate(height, width, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+    C3D_RenderTargetSetOutput(gTarget, GFX_TOP, GFX_LEFT, transferFlags);
 
+    if (!useWide)
+    {
+        gfxSetWide(false);
+        // TODO: reinitialise screens when iod changes from/to 0.0
+        gTargetRight = C3D_RenderTargetCreate(height, width, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+        C3D_RenderTargetSetOutput(gTargetRight, GFX_TOP, GFX_RIGHT, transferFlags);
+        gfxSet3D(true);
+    }
+    else
+    {
+        gfxSet3D(false);
+        gfxSetWide(true);
+    }
+
+    // used to determine scissoring
     if (!useAA && !useWide)
         gGfx3DSMode = GFX_3DS_MODE_NORMAL;
     else if (useAA && !useWide)
@@ -69,9 +94,39 @@ static void gfx_3ds_init(UNUSED const char *game_name)
         gGfx3DSMode = GFX_3DS_MODE_WIDE;
     else
         gGfx3DSMode = GFX_3DS_MODE_WIDE_AA_12;
+        
+    // TODO: refactor; this is (also) set in gfx_citro3d_init,
+    C3D_CullFace(GPU_CULL_NONE);
+    C3D_DepthMap(true, -1.0f, 0);
+    C3D_DepthTest(false, GPU_LEQUAL, GPU_WRITE_ALL);
+    C3D_AlphaTest(true, GPU_GREATER, 0x00);
 
-    if (useWide)
-        gfxSetWide(true);
+    gTargetBottom = C3D_RenderTargetCreate(240, 320, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+    C3D_RenderTargetSetOutput(gTargetBottom, GFX_BOTTOM, GFX_LEFT,
+        DISPLAY_TRANSFER_FLAGS | GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO));
+    // consoleInit(GFX_BOTTOM, NULL);
+}
+
+static void gfx_3ds_init(UNUSED const char *game_name)
+{
+    if (checkN3DS())
+        osSetSpeedupEnable(true);
+
+    gfxInitDefault();
+
+    Result rc = cfguInit();
+    if (R_SUCCEEDED(rc))
+    {
+        u8 model;
+        rc = CFGU_GetSystemModel(&model);
+        if (R_SUCCEEDED(rc))
+            n3ds_model = model;
+        cfguExit();
+    }
+
+    gfx_3ds_menu_init();
+
+    initialise_screens();
 }
 
 static void gfx_set_keyboard_callbacks(UNUSED bool (*on_key_down)(int scancode), UNUSED bool (*on_key_up)(int scancode), UNUSED void (*on_all_keys_up)(void))
@@ -80,10 +135,11 @@ static void gfx_set_keyboard_callbacks(UNUSED bool (*on_key_down)(int scancode),
 
 static void gfx_3ds_main_loop(void (*run_one_game_iter)(void))
 {
-    while (aptMainLoop())
+    while (aptMainLoop() && gShouldRun)
+    {
         run_one_game_iter();
+    }
 
-    ndspExit();
     C3D_Fini();
     gfxExit();
 }
@@ -94,27 +150,75 @@ static void gfx_3ds_get_dimensions(uint32_t *width, uint32_t *height)
     *height = 240;
 }
 
+static int debounce;
 static void gfx_3ds_handle_events(void)
 {
+    // as good a time as any
+    gSliderLevel = osGet3DSliderState();
+
+    if (debounce > 0)
+    {
+        debounce--;
+        return;
+    }
+
+    // check if screen is pressed
+    hidScanInput();
+    touchPosition pos;
+    hidTouchRead(&pos);
+
+    if (pos.px || pos.py)
+    {
+        debounce = 8;
+        if (gShowConfigMenu)
+        {
+            menu_action res = gfx_3ds_menu_on_touch(pos.px, pos.py);
+            if (res == CONFIG_CHANGED)
+            {
+                deinitialise_screens();
+                initialise_screens();
+            } else if (res == EXIT_MENU)
+            {
+                gShowConfigMenu = false;
+            }
+        } else
+        {
+            // screen tapped so show menu
+            gShowConfigMenu = true;
+        }
+    }
 }
+
+float cpu_time, gpu_time;
+uint8_t skip_debounce;
 
 static bool gfx_3ds_start_frame(void)
 {
-    C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
-    C3D_RenderTargetClear(sTarget, C3D_CLEAR_ALL, 0x000000FF, 0xFFFFFFFF);
-    C3D_FrameDrawOn(sTarget);
+#ifndef DISABLE_N3DS_FRAMESKIP
+    if (skip_debounce)
+    {
+        skip_debounce--;
+        return true;
+    }
+    // skip if frame took longer than 1 / 30 = 33.3 ms
+    if (cpu_time + gpu_time > 33.3f)
+    {
+        skip_debounce = 3; // skip a max of once every 4 frames
+        cpu_time = 0, gpu_time = 0;
+        return false;
+    }
+#endif
     return true;
 }
 
 static void gfx_3ds_swap_buffers_begin(void)
 {
-    C3D_FrameEnd(0);
-    if (C3D_GetProcessingTime() < 1000.0f / 60.f)
-        gspWaitForVBlank();
 }
 
 static void gfx_3ds_swap_buffers_end(void)
 {
+    cpu_time = C3D_GetProcessingTime();
+    gpu_time = C3D_GetDrawingTime();
 }
 
 static double gfx_3ds_get_time(void)
@@ -124,7 +228,7 @@ static double gfx_3ds_get_time(void)
 
 static void gfx_3ds_shutdown(void)
 {
-}
+} 
 
 struct GfxWindowManagerAPI gfx_3ds =
 {
