@@ -936,6 +936,9 @@ static void gfx_direct3d12_finish_render(void) {
     //printf("done %llu gpu:%d wait:%d freed:%llu frame:%u %u monitor:%u t:%llu\n", (unsigned long long)(t0.QuadPart - d3d.qpc_init), (int)(t1.QuadPart - t0.QuadPart), (int)(t2.QuadPart - t0.QuadPart), (unsigned long long)(t2.QuadPart - d3d.qpc_init), d3d.pending_frame_stats.rbegin()->first, stats.PresentCount, stats.SyncRefreshCount, (unsigned long long)(stats.SyncQPCTime.QuadPart - d3d.qpc_init));
 }
 
+static void gfx_direct3d12_get_framebuffer(uint16_t *buffer) {
+}
+
 } // namespace
 
 struct GfxRenderingAPI gfx_direct3d12_api = {
@@ -956,6 +959,7 @@ struct GfxRenderingAPI gfx_direct3d12_api = {
     gfx_direct3d12_set_scissor,
     gfx_direct3d12_set_use_alpha,
     gfx_direct3d12_draw_triangles,
+    gfx_direct3d12_get_framebuffer,
     gfx_direct3d12_init,
     gfx_direct3d12_on_resize,
     gfx_direct3d12_start_frame,

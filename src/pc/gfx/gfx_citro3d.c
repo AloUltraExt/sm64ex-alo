@@ -764,6 +764,9 @@ static void gfx_citro3d_draw_triangles_helper(float buf_vbo[], size_t buf_vbo_le
     gfx_citro3d_draw_triangles(buf_vbo, buf_vbo_len, buf_vbo_num_tris);
 }
 
+static void gfx_citro3d_get_framebuffer(uint16_t *buffer) {
+}
+
 static void gfx_citro3d_init(void)
 {
     sVShaderDvlb = DVLB_ParseFile((u32*)shader_shbin, shader_shbin_size);
@@ -904,6 +907,7 @@ struct GfxRenderingAPI gfx_citro3d_api = {
     gfx_citro3d_set_scissor,
     gfx_citro3d_set_use_alpha,
     gfx_citro3d_draw_triangles_helper,
+    gfx_citro3d_get_framebuffer,
     gfx_citro3d_init,
     gfx_citro3d_on_resize,
     gfx_citro3d_start_frame,

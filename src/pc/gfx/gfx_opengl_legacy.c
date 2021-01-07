@@ -514,6 +514,9 @@ static inline bool gl_get_version(int *major, int *minor, bool *is_es) {
     return (sscanf(vstr, "%d.%d", major, minor) == 2);
 }
 
+static void gfx_opengl_get_framebuffer(uint16_t *buffer) {
+}
+
 static void gfx_opengl_init(void) {
 #if FOR_WINDOWS || defined(OSX_BUILD)
     GLenum err;
@@ -593,6 +596,7 @@ struct GfxRenderingAPI gfx_opengl_api = {
     gfx_opengl_set_scissor,
     gfx_opengl_set_use_alpha,
     gfx_opengl_draw_triangles,
+    gfx_opengl_get_framebuffer,
     gfx_opengl_init,
     gfx_opengl_on_resize,
     gfx_opengl_start_frame,
