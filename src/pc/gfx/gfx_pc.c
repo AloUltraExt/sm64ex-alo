@@ -1999,5 +1999,6 @@ void gfx_shutdown(void) {
     }
     if (framebuffer_data) {
         free(framebuffer_data);
+        framebuffer_data = NULL;
     }
 }
