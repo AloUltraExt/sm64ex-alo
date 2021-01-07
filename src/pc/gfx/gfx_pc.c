@@ -180,7 +180,12 @@ struct GfxDimensions gfx_current_dimensions;
 
 static bool dropped_frame;
 
+#ifdef TARGET_WII_U
+static float buf_vbo[MAX_BUFFERED * (28 * 3)]; // 3 vertices in a triangle and 28 floats per vtx
+#else
 static float buf_vbo[MAX_BUFFERED * (26 * 3)]; // 3 vertices in a triangle and 26 floats per vtx
+#endif
+
 static size_t buf_vbo_len;
 static size_t buf_vbo_num_tris;
 
@@ -1095,6 +1100,11 @@ static void gfx_sp_tri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx) {
             }
             buf_vbo[buf_vbo_len++] = u / tex_width;
             buf_vbo[buf_vbo_len++] = v / tex_height;
+#ifdef TARGET_WII_U
+            // Padding for faster GPU reading
+            buf_vbo[buf_vbo_len++] = 0.0f;
+            buf_vbo[buf_vbo_len++] = 0.0f;
+#endif
         }
 #ifndef TARGET_N3DS
         if (use_fog) {

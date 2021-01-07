@@ -14,6 +14,8 @@
 #include "controller_api.h"
 #include "../configfile.h"
 
+extern void KPADShutdown();
+
 struct WiiUKeymap {
     uint32_t n64Button;
     uint32_t vpadButton;
@@ -191,6 +193,7 @@ static u32 controller_wiiu_rawkey(void) {
 }
 
 static void controller_wiiu_shutdown(void) {
+    KPADShutdown();
 }
 
 struct ControllerAPI controller_wiiu = {
