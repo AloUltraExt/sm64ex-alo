@@ -1890,7 +1890,9 @@ uint16_t *get_framebuffer() {
 
 void gfx_start_frame(void) {
     gfx_wapi->handle_events();
+#ifndef TARGET_N3DS
     gfx_update_dimensions();
+#endif
 }
 
 void gfx_run(Gfx *commands) {
