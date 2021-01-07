@@ -14,12 +14,7 @@
 #include "controller_api.h"
 #include "../configfile.h"
 
-#ifdef BETTERCAMERA
-int mouse_x = 0;
-int mouse_y = 0;
-
-extern u8 newcam_mouse;
-#endif
+extern void KPADShutdown();
 
 struct WiiUKeymap {
     uint32_t n64Button;
@@ -198,6 +193,7 @@ static u32 controller_wiiu_rawkey(void) {
 }
 
 static void controller_wiiu_shutdown(void) {
+    KPADShutdown();
 }
 
 struct ControllerAPI controller_wiiu = {

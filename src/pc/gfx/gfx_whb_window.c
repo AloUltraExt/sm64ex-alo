@@ -35,8 +35,9 @@ uint32_t gfx_whb_window_proc_ui_exit_callback(UNUSED void* data) {
     whb_free_vbo();
     whb_free();
 
+    controller_shutdown();
     AXQuit();
-    WHBGfxShutdown();
+    gfx_shutdown();
 
     WHBLogCafeDeinit();
     WHBLogUdpDeinit();

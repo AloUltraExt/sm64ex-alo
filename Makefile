@@ -70,8 +70,8 @@ QOL_FIXES ?= 1
 # Various workarounds for weird toolchains
 NO_BZERO_BCOPY ?= 0
 NO_LDIV ?= 0
-# Check if is compiling on a console
-TARGET_GAME_CONSOLE ?= 0
+# Check if is compiling on a console (N64 doesn't count)
+TARGET_PORT_CONSOLE ?= 0
 
 # Backend selection
 
@@ -90,6 +90,8 @@ ifeq ($(TARGET_WII_U),1)
   WINDOW_API := WHB
   AUDIO_API := SDL2
   CONTROLLER_API := WII_U
+  
+  TARGET_PORT_CONSOLE := 1
 endif
 
 ifeq ($(TARGET_N3DS),1)
@@ -97,6 +99,8 @@ ifeq ($(TARGET_N3DS),1)
   WINDOW_API := 3DS
   AUDIO_API := 3DS
   CONTROLLER_API := 3DS
+  
+  TARGET_PORT_CONSOLE := 1
 endif
 
 ifeq ($(TARGET_SWITCH),1)
@@ -104,15 +108,13 @@ ifeq ($(TARGET_SWITCH),1)
   WINDOW_API := SDL2
   AUDIO_API := SDL2
   CONTROLLER_API := SWITCH
-endif
-
-ifeq ($(TARGET_N3DS)$(TARGET_WII_U)$(TARGET_SWITCH),111)
-  TARGET_GAME_CONSOLE := 1
+  
+  TARGET_PORT_CONSOLE := 1
 endif
 
 # Misc settings for EXTERNAL_DATA
 
-ifeq ($(TARGET_GAME_CONSOLE),1)
+ifeq ($(TARGET_PORT_CONSOLE),1)
   BASEDIR ?= sm64ex_res
 else
   BASEDIR ?= res
@@ -145,7 +147,7 @@ else
 endif
 
 ifeq ($(TARGET_WEB),0)
-  ifeq ($(TARGET_GAME_CONSOLE),0)
+  ifeq ($(TARGET_PORT_CONSOLE),0)
     ifeq ($(HOST_OS),Windows)
       WINDOWS_BUILD := 1
     endif
@@ -346,7 +348,9 @@ ifeq ($(TARGET_WEB),1)
 else ifeq ($(TARGET_WII_U),1)
   EXE := $(BUILD_DIR)/$(TARGET).rpx
 else ifeq ($(TARGET_N3DS),1)
-  EXE := $(BUILD_DIR)/$(TARGET).3dsx
+ EXE := $(BUILD_DIR)/$(TARGET).3dsx
+ ELF := $(BUILD_DIR)/$(TARGET).elf
+ CIA := $(BUILD_DIR)/$(TARGET).cia
 else ifeq ($(WINDOWS_BUILD),1)
   EXE := $(BUILD_DIR)/$(TARGET).exe
 
@@ -551,7 +555,7 @@ ULTRA_O_FILES := $(foreach file,$(ULTRA_S_FILES),$(BUILD_DIR)/$(file:.s=.o)) \
 GODDARD_O_FILES := $(foreach file,$(GODDARD_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
 
 RPC_LIBS :=
-ifeq ($(TARGET_GAME_CONSOLE),0)
+ifeq ($(TARGET_PORT_CONSOLE),0)
   ifeq ($(DISCORDRPC),1)
     ifeq ($(WINDOWS_BUILD),1)
       RPC_LIBS := lib/discord/libdiscord-rpc.dll
@@ -577,6 +581,21 @@ endif
 ##################### Compiler Options #######################
 INCLUDE_CFLAGS := -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I .
 ENDIAN_BITWIDTH := $(BUILD_DIR)/endian-and-bitwidth
+
+# minimap
+ifeq ($(TARGET_N3DS),1)
+MINIMAP := 3ds/minimap
+
+MINIMAP_C := $(wildcard $(MINIMAP)/*.c)
+MINIMAP_O := $(foreach file,$(MINIMAP_C),$(BUILD_DIR)/$(file:.c=.o))
+
+MINIMAP_TEXTURES := $(MINIMAP)/textures
+MINIMAP_PNG := $(wildcard $(MINIMAP_TEXTURES)/*.png)
+MINIMAP_T3S := $(foreach file,$(MINIMAP_PNG),$(BUILD_DIR)/$(file:.png=.t3s))
+MINIMAP_T3X := $(foreach file,$(MINIMAP_T3S),$(file:.t3s=.t3x))
+MINIMAP_T3X_O := $(foreach file,$(MINIMAP_T3X),$(file:.t3x=.t3x.o))
+MINIMAP_T3X_HEADERS := $(foreach file,$(MINIMAP_PNG),$(BUILD_DIR)/$(file:.png=_t3x.h))
+endif
 
 ifeq ($(TARGET_N64),1)
 IRIX_ROOT := tools/ido5.3_compiler
@@ -654,7 +673,7 @@ ifeq ($(QOL_FIXES),1)
   CFLAGS += -DQOL_FIXES
 endif
 
-# Check for QoL fixes option
+# Check for QoL features option
 ifeq ($(QOL_FEATURES),1)
   CC_CHECK += -DQOL_FEATURES
   CFLAGS += -DQOL_FEATURES
@@ -856,6 +875,13 @@ ifeq ($(TARGET_N3DS),1)
   export LIBPATHS  :=  $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
   CC_CHECK += -mtp=soft -DARM11 -DosGetTime=n64_osGetTime -D_3DS -march=armv6k -mtune=mpcore -mfloat-abi=hard -mword-relocations -fomit-frame-pointer -ffast-math $(foreach dir,$(LIBDIRS),-I$(dir)/include)
   CFLAGS += -mtp=soft -DARM11 -DosGetTime=n64_osGetTime -D_3DS -march=armv6k -mtune=mpcore -mfloat-abi=hard -mword-relocations -fomit-frame-pointer -ffast-math $(foreach dir,$(LIBDIRS),-I$(dir)/include)
+  
+  ifeq ($(DISABLE_N3DS_AUDIO),1)
+    CFLAGS += -DDISABLE_N3DS_AUDIO
+  endif
+  ifeq ($(DISABLE_N3DS_FRAMESKIP),1)
+    CFLAGS += -DDISABLE_N3DS_FRAMESKIP
+  endif
 endif
 
 ifeq ($(TARGET_SWITCH),1)
@@ -890,7 +916,7 @@ ifeq ($(PC_PORT_DEFINES),1)
 endif
 
 # Check for Discord Rich Presence option
-ifeq ($(TARGET_GAME_CONSOLE),0)
+ifeq ($(TARGET_PORT_CONSOLE),0)
   ifeq ($(DISCORDRPC),1)
     CC_CHECK += -DDISCORDRPC
     CFLAGS += -DDISCORDRPC
@@ -909,7 +935,7 @@ ifeq ($(QOL_FIXES),1)
   CFLAGS += -DQOL_FIXES
 endif
 
-# Check for QoL fixes option
+# Check for QoL features option
 ifeq ($(QOL_FEATURES),1)
   CC_CHECK += -DQOL_FEATURES
   CFLAGS += -DQOL_FEATURES
@@ -933,16 +959,10 @@ ifeq ($(NO_LDIV),1)
   CFLAGS += -DNO_LDIV
 endif
 
-# Use OpenGL 1.3
-ifeq ($(LEGACY_GL),1)
-  CC_CHECK += -DLEGACY_GL
-  CFLAGS += -DLEGACY_GL
-endif
-
 # Use Console exclusive defines
-ifeq ($(TARGET_GAME_CONSOLE),1)
-  CC_CHECK += -DTARGET_GAME_CONSOLE
-  CFLAGS += -DTARGET_GAME_CONSOLE
+ifeq ($(TARGET_PORT_CONSOLE),1)
+  CC_CHECK += -DTARGET_PORT_CONSOLE
+  CFLAGS += -DTARGET_PORT_CONSOLE
 endif
 
 # Load external textures
@@ -998,7 +1018,7 @@ endif
 
 ####################### Other Tools #########################
 
-ifeq ($(WINDOWS_BUILD),1)
+ifeq ($(HOST_OS),Windows)
 EXT_PREFIX := .exe
 else
 EXT_PREFIX :=
@@ -1051,6 +1071,10 @@ endif
 
 ifeq ($(TARGET_SWITCH),1)
 all: $(EXE).nro
+endif
+
+ifeq ($(TARGET_N3DS),1)
+cia: $(CIA)
 endif
 
 # thank you apple very cool
@@ -1172,6 +1196,11 @@ $(BUILD_DIR)/text/%/define_text.inc.c: text/define_text.inc.c text/%/courses.h t
 RSP_DIRS := $(BUILD_DIR)/rsp
 ALL_DIRS := $(BUILD_DIR) $(addprefix $(BUILD_DIR)/,$(SRC_DIRS) $(ASM_DIRS) $(GODDARD_SRC_DIRS) $(ULTRA_SRC_DIRS) $(ULTRA_ASM_DIRS) $(ULTRA_BIN_DIRS) $(BIN_DIRS) $(TEXTURE_DIRS) $(TEXT_DIRS) $(SOUND_SAMPLE_DIRS) $(addprefix levels/,$(LEVEL_DIRS)) include) $(MIO0_DIR) $(addprefix $(MIO0_DIR)/,$(VERSION)) $(SOUND_BIN_DIR) $(SOUND_BIN_DIR)/sequences/$(VERSION) $(RSP_DIRS)
 
+ifeq ($(TARGET_N3DS),1)
+  # create build dir for .t3x etc
+  ALL_DIRS += $(BUILD_DIR)/$(MINIMAP_TEXTURES) $(BUILD_DIR)/3ds
+endif
+
 # Make sure build directory exists before compiling anything
 DUMMY != mkdir -p $(ALL_DIRS)
 
@@ -1184,7 +1213,7 @@ $(BUILD_DIR)/src/menu/star_select.o: $(BUILD_DIR)/include/text_strings.h $(BUILD
 $(BUILD_DIR)/src/game/ingame_menu.o: $(BUILD_DIR)/include/text_strings.h $(BUILD_DIR)/bin/eu/translation_en.o $(BUILD_DIR)/bin/eu/translation_de.o $(BUILD_DIR)/bin/eu/translation_fr.o
 $(BUILD_DIR)/src/game/options_menu.o: $(BUILD_DIR)/include/text_strings.h $(BUILD_DIR)/bin/eu/translation_en.o $(BUILD_DIR)/bin/eu/translation_de.o $(BUILD_DIR)/bin/eu/translation_fr.o
 # O_FILES += $(BUILD_DIR)/bin/eu/translation_en.o $(BUILD_DIR)/bin/eu/translation_de.o $(BUILD_DIR)/bin/eu/translation_fr.o
-ifeq ($(TARGET_GAME_CONSOLE),0)
+ifeq ($(TARGET_PORT_CONSOLE),0)
   ifeq ($(DISCORDRPC),1)
     $(BUILD_DIR)/src/pc/discord/discordrpc.o: $(BUILD_DIR)/include/text_strings.h $(BUILD_DIR)/bin/eu/translation_en.o $(BUILD_DIR)/bin/eu/translation_de.o $(BUILD_DIR)/bin/eu/translation_fr.o
   endif
@@ -1194,7 +1223,7 @@ $(BUILD_DIR)/src/menu/file_select.o: $(BUILD_DIR)/include/text_strings.h
 $(BUILD_DIR)/src/menu/star_select.o: $(BUILD_DIR)/include/text_strings.h
 $(BUILD_DIR)/src/game/ingame_menu.o: $(BUILD_DIR)/include/text_strings.h
 $(BUILD_DIR)/src/game/options_menu.o: $(BUILD_DIR)/include/text_strings.h
-ifeq ($(TARGET_GAME_CONSOLE),0)
+ifeq ($(TARGET_PORT_CONSOLE),0)
   ifeq ($(DISCORDRPC),1)
     $(BUILD_DIR)/src/pc/discord/discordrpc.o: $(BUILD_DIR)/include/text_strings.h
   endif
@@ -1493,9 +1522,43 @@ $(BUILD_DIR)/src/pc/gfx/shader.shbin.o : src/pc/gfx/shader.v.pica
 	$(DEVKITPRO)/tools/bin/picasso -o $(BUILD_DIR)/src/pc/gfx/shader.shbin $<
 	$(DEVKITPRO)/tools/bin/bin2s $(BUILD_DIR)/src/pc/gfx/shader.shbin | $(AS) -o $@
 
-$(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o
-	$(LD) -L $(BUILD_DIR) -o $@.elf $(O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
-	3dsxtool $@.elf $@
+SMDH_TITLE ?= Super Mario 64
+SMDH_DESCRIPTION ?= Super Mario 64 3DS Port
+SMDH_AUTHOR ?= mkst
+SMDH_ICON := 3ds/icon.smdh
+
+$(ELF): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o $(SMDH_ICON)
+	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o $(MINIMAP_T3X_O) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
+
+$(EXE): $(ELF)
+	3dsxtool $< $@ --smdh=$(BUILD_DIR)/$(SMDH_ICON)
+
+$(CIA): $(ELF)
+	@echo "Generating $@, please wait..."
+	makerom -f cia -o "$@" -rsf 3ds/template.rsf -target t -elf "$<" -icon 3ds/icon.icn -banner 3ds/banner.bnr
+
+# stolen from /opt/devkitpro/devkitARM/base_tools
+define bin2o
+  bin2s -a 4 -H $(BUILD_DIR)/$(MINIMAP_TEXTURES)/`(echo $(<F) | tr . _)`.h $(BUILD_DIR)/$< | $(AS) -o $(BUILD_DIR)/$(MINIMAP_TEXTURES)/$(<F).o
+endef
+
+# TODO: simplify dependency chain
+$(BUILD_DIR)/src/pc/gfx/gfx_citro3d.o: $(BUILD_DIR)/src/pc/gfx/gfx_3ds.o
+$(BUILD_DIR)/src/pc/gfx/gfx_3ds.o: $(BUILD_DIR)/src/pc/gfx/gfx_3ds_menu.o
+$(BUILD_DIR)/src/pc/gfx/gfx_3ds_menu.o: $(MINIMAP_T3X_HEADERS)
+
+%.t3x.o $(BUILD_DIR)/%_t3x.h: %.t3x
+	$(bin2o)
+
+%.t3x: %.t3s
+	tex3ds -i $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+
+%.t3s: %.png
+	@printf -- "-f rgba -z auto\n../../../../../$(<)\n" > $(BUILD_DIR)/$@
+
+%.smdh: %.png
+	smdhtool --create "$(SMDH_TITLE)" "$(SMDH_DESCRIPTION)" "$(SMDH_AUTHOR)" $< $(BUILD_DIR)/$@
+
 else
 $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
 	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)

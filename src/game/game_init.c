@@ -21,6 +21,13 @@
 #include "segment_symbols.h"
 #include "rumble_init.h"
 #include <prevent_bss_reordering.h>
+
+#ifdef TARGET_N3DS
+#ifndef DISABLE_N3DS_AUDIO
+#include "pc/audio/audio_3ds_threading.h"
+#endif
+#endif
+
 #ifdef BETTERCAMERA
 #include "bettercamera.h"
 #endif
@@ -158,10 +165,17 @@ void clear_frame_buffer(s32 color) {
     gDPSetCycleType(gDisplayListHead++, G_CYC_FILL);
 
     gDPSetFillColor(gDisplayListHead++, color);
+#ifdef TARGET_N3DS
+    gDPForceFlush(gDisplayListHead++);
+    gDPSet2d(gDisplayListHead++, 1);
+#endif
     gDPFillRectangle(gDisplayListHead++,
                      GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(0), BORDER_HEIGHT,
                      GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(0) - 1, SCREEN_HEIGHT - BORDER_HEIGHT - 1);
-
+#ifdef TARGET_N3DS
+    gDPForceFlush(gDisplayListHead++);
+    gDPSet2d(gDisplayListHead++, 0);
+#endif
     gDPPipeSync(gDisplayListHead++);
 
     gDPSetCycleType(gDisplayListHead++, G_CYC_1CYCLE);
@@ -185,8 +199,15 @@ void clear_viewport(Vp *viewport, s32 color) {
     gDPSetCycleType(gDisplayListHead++, G_CYC_FILL);
 
     gDPSetFillColor(gDisplayListHead++, color);
+#ifdef TARGET_N3DS
+    gDPForceFlush(gDisplayListHead++);
+    gDPSet2d(gDisplayListHead++, 1);
+#endif
     gDPFillRectangle(gDisplayListHead++, vpUlx, vpUly, vpLrx, vpLry);
-
+#ifdef TARGET_N3DS
+    gDPForceFlush(gDisplayListHead++);
+    gDPSet2d(gDisplayListHead++, 0);
+#endif
     gDPPipeSync(gDisplayListHead++);
 
     gDPSetCycleType(gDisplayListHead++, G_CYC_1CYCLE);
@@ -673,6 +694,11 @@ void game_loop_one_iteration(void) {
         config_gfx_pool();
         read_controller_inputs();
         levelCommandAddr = level_script_execute(levelCommandAddr);
+#ifdef TARGET_N3DS
+#ifndef DISABLE_N3DS_AUDIO
+        LightEvent_Signal(&s_event_audio);
+#endif
+#endif
         display_and_vsync();
 
         // when debug info is enabled, print the "BUF %d" information.

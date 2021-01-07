@@ -1200,6 +1200,9 @@ s32 update_level(void) {
 #endif
 
 s32 init_level(void) {
+#ifdef TARGET_N3DS
+    gDPSetIod(gDisplayListHead++, iodNormal);
+#endif
     s32 val4 = 0;
 
     set_play_mode(PLAY_MODE_NORMAL);

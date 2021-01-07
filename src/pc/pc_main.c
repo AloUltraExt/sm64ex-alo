@@ -27,6 +27,7 @@
 #include "audio/audio_sdl.h"
 #include "audio/audio_null.h"
 #include "audio/audio_3ds.h"
+#include "audio/audio_3ds_threading.h"
 
 #include "pc_main.h"
 #include "cliopts.h"
@@ -94,22 +95,23 @@ void produce_one_frame(void) {
     game_loop_one_iteration();
     thread6_rumble_loop(NULL);
 
+#ifndef TARGET_N3DS
     int samples_left = audio_api->buffered();
     u32 num_audio_samples = samples_left < audio_api->get_desired_buffered() ? SAMPLES_HIGH : SAMPLES_LOW;
-    //printf("Audio samples: %d %u\n", samples_left, num_audio_samples);
     s16 audio_buffer[SAMPLES_HIGH * 2 * 2];
     for (int i = 0; i < 2; i++) {
-        /*if (audio_cnt-- == 0) {
-            audio_cnt = 2;
-        }
-        u32 num_audio_samples = audio_cnt < 2 ? 528 : 544;*/
         create_next_audio_buffer(audio_buffer + i * (num_audio_samples * 2), num_audio_samples);
     }
-    //printf("Audio samples before submitting: %d\n", audio_api->buffered());
 
     audio_api->play((u8 *)audio_buffer, 2 * num_audio_samples * 4);
+#endif
 
     gfx_end_frame();
+#ifdef TARGET_N3DS
+#ifndef DISABLE_N3DS_AUDIO
+    LightEvent_Wait(&s_event_main);
+#endif
+#endif
 }
 
 void audio_shutdown(void) {
@@ -124,7 +126,7 @@ void game_deinit(void) {
     discord_shutdown();
 #endif
     configfile_save(configfile_name());
-#ifndef TARGET_GAME_CONSOLE
+#ifndef TARGET_PORT_CONSOLE
     controller_shutdown();
     audio_shutdown();
     gfx_shutdown();
@@ -133,7 +135,7 @@ void game_deinit(void) {
 }
 
 void game_exit(void) {
-#ifndef TARGET_GAME_CONSOLE
+#ifndef TARGET_PORT_CONSOLE
     game_deinit();
 #ifndef TARGET_WEB
     exit(0);
@@ -199,7 +201,7 @@ void main_func(void) {
     gGfxAllocOnlyPool = alloc_only_pool_init();
 #else
     const size_t poolsize = 
-    #ifndef TARGET_GAME_CONSOLE
+    #ifndef TARGET_PORT_CONSOLE
     gCLIOpts.PoolSize ? gCLIOpts.PoolSize : 
     #endif
     DEFAULT_POOL_SIZE;
@@ -253,13 +255,10 @@ void main_func(void) {
 
     char window_title[96] =
     "Super Mario 64 EX (" RAPI_NAME ")"
-    #ifdef NIGHTLY
-    " nightly " GIT_HASH
-    #endif
     ;
 
     gfx_init(wm_api, rendering_api, window_title);
-    #ifndef TARGET_GAME_CONSOLE
+    #ifndef TARGET_PORT_CONSOLE
     wm_api->set_keyboard_callbacks(keyboard_on_key_down, keyboard_on_key_up, keyboard_on_all_keys_up);
     #endif
 
@@ -269,9 +268,11 @@ void main_func(void) {
     #endif
 
     #ifdef AAPI_3DS
+    #ifndef DISABLE_N3DS_AUDIO
     if (audio_api == NULL && audio_3ds.init()) {
         audio_api = &audio_3ds;
     }
+    #endif
     #endif
 
     if (audio_api == NULL) {
@@ -303,6 +304,7 @@ void main_func(void) {
     request_anim_frame(on_anim_frame);
 #elif defined(TARGET_N3DS)
     wm_api->main_loop(produce_one_frame);
+    audio_api->shutdown();
 #else
 
     #if defined(TARGET_WII_U)
@@ -320,7 +322,7 @@ void main_func(void) {
 #endif
 }
 
-#ifdef TARGET_GAME_CONSOLE
+#ifdef TARGET_PORT_CONSOLE
 int main(UNUSED int argc, UNUSED char *argv[]) {
     main_func();
     return 0;

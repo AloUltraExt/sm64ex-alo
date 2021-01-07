@@ -376,18 +376,29 @@ void render_game(void) {
         geo_process_root(gCurrentArea->unk04, D_8032CE74, D_8032CE78, gFBSetColor);
 
         gSPViewport(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(&D_8032CF00));
-
         gDPSetScissor(gDisplayListHead++, G_SC_NON_INTERLACE, 0, BORDER_HEIGHT, SCREEN_WIDTH,
                       SCREEN_HEIGHT - BORDER_HEIGHT);
-        render_hud();
 
+#ifdef TARGET_N3DS
+        gDPForceFlush(gDisplayListHead++); // flush anything
+        gDPSet2d(gDisplayListHead++, 1); // HUD, text labels and cutscene text are 2D
+#endif
+
+        render_hud();
         gDPSetScissor(gDisplayListHead++, G_SC_NON_INTERLACE, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         render_text_labels();
         do_cutscene_handler();
+
         print_displaying_credits_entry();
+
         gDPSetScissor(gDisplayListHead++, G_SC_NON_INTERLACE, 0, BORDER_HEIGHT, SCREEN_WIDTH,
                       SCREEN_HEIGHT - BORDER_HEIGHT);
         gPauseScreenMode = render_menus_and_dialogs();
+
+#ifdef TARGET_N3DS
+        gDPForceFlush(gDisplayListHead++); // flush dialog/menus
+        gDPSet2d(gDisplayListHead++, 0); // reset 2D mode
+#endif
 
         if (gPauseScreenMode != 0) {
             gSaveOptSelectIndex = gPauseScreenMode;
@@ -415,7 +426,19 @@ void render_game(void) {
             }
         }
     } else {
+
+#ifdef TARGET_N3DS
+        gDPForceFlush(gDisplayListHead++); // flush anything
+        gDPSet2d(gDisplayListHead++, 1); // text labels are 2D
+#endif
+
         render_text_labels();
+
+#ifdef TARGET_N3DS
+        gDPForceFlush(gDisplayListHead++); // flush text labels
+        gDPSet2d(gDisplayListHead++, 0); // reset 2D mode
+#endif
+
         if (D_8032CE78 != NULL) {
             clear_viewport(D_8032CE78, gWarpTransFBSetColor);
         } else {

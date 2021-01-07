@@ -295,7 +295,11 @@ Gfx *intro_backdrop_set_image(f32 x, f32 y, s8 index) {
     displayList = alloc_display_list(36 * sizeof(*displayList));
     displayListIter = displayList;
     vIntroBgTable = segmented_to_virtual(textureTables[index]);
+#ifdef TARGET_N3DS
+    guTranslate(mtx, x, y, -1.0f);
+#else
     guTranslate(mtx, x, y, 0.0f);
+#endif
     gSPMatrix(displayListIter++, mtx, G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_PUSH);
     gSPDisplayList(displayListIter++, &title_screen_bg_dl_0A000118);
     for (i = 0; i < 4; ++i) {
