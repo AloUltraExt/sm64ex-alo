@@ -1997,4 +1997,7 @@ void gfx_shutdown(void) {
         if (gfx_wapi->shutdown) gfx_wapi->shutdown();
         gfx_wapi = NULL;
     }
+    if (framebuffer_data) {
+        free(framebuffer_data);
+    }
 }
