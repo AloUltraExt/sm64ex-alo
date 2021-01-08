@@ -180,7 +180,7 @@ void main_pool_init(void *start, void *end) {
 
 #ifdef USE_SYSTEM_MALLOC
 void *main_pool_alloc(u32 size, void (*releaseHandler)(void *addr)) {
-    struct MainPoolBlock *newListHead = (struct MainPoolBlock *) memalign(64, sizeof(struct MainPoolBlock) + size);
+    struct MainPoolBlock *newListHead = (struct MainPoolBlock *) MALLOC_FUNCTION(sizeof(struct MainPoolBlock) + size);
     if (newListHead == NULL) {
         abort();
     }
@@ -529,7 +529,7 @@ void *alloc_only_pool_alloc(struct AllocOnlyPool *pool, s32 size) {
         if (nextSize < s) {
             nextSize = s;
         }
-        block = (struct AllocOnlyPoolBlock *) memalign(64, sizeof(struct AllocOnlyPoolBlock) + nextSize);
+        block = (struct AllocOnlyPoolBlock *) MALLOC_FUNCTION(sizeof(struct AllocOnlyPoolBlock) + nextSize);
         if (block == NULL) {
             abort();
         }
@@ -598,7 +598,7 @@ void mem_pool_free(struct MemoryPool *pool, void *addr) {
 }
 
 void *alloc_display_list(u32 size) {
-    size = ALIGN16(size);
+    size = ALIGN8(size);
     return alloc_only_pool_alloc(gGfxAllocOnlyPool, size);
 }
 #else
