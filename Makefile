@@ -723,13 +723,13 @@ ifeq ($(TARGET_SWITCH),1)
   CC := $(CROSS)gcc
   CXX := $(CROSS)g++
   STRIP := $(CROSS)strip
-  NXARCH := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
+  NXARCH := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ftls-model=local-exec
   APP_TITLE := Super Mario 64
   APP_AUTHOR := Nintendo, n64decomp team, sm64pc team
   APP_VERSION := 1_master_$(VERSION)
-  APP_ICON := nx_icon.jpg
+  APP_ICON := $(CURDIR)/switch/logo.jpg
   INCLUDE_CFLAGS += -isystem$(LIBNX)/include -I$(PORTLIBS)/include
-  OPT_FLAGS := -g -O0 -std=gnu99
+  OPT_FLAGS := -O2
 endif
 
 # for some reason sdl-config in dka64 is not prefixed, while pkg-config is
@@ -1568,7 +1568,7 @@ ifeq ($(TARGET_SWITCH), 1)
 
 # add `--icon=$(APP_ICON)` to this when we get a suitable icon
 %.nro: %.stripped %.nacp
-	@elf2nro $< $@ --nacp=$*.nacp
+	@elf2nro $< $@ --nacp=$*.nacp --icon=$(APP_ICON)
 	@echo built ... $(notdir $@)
 
 %.nacp:

@@ -34,6 +34,12 @@
 #include "configfile.h"
 #include "controller/controller_api.h"
 #include "controller/controller_keyboard.h"
+
+#ifdef TARGET_SWITCH
+#include "controller/controller_switch.h"
+#include "nx_main.h"
+#endif
+
 #include "fs/fs.h"
 
 #include "game/game_init.h"
@@ -94,6 +100,9 @@ void produce_one_frame(void) {
 
     game_loop_one_iteration();
     thread6_rumble_loop(NULL);
+#ifdef TARGET_SWITCH
+    controller_nx_rumble_loop();
+#endif
 
 #ifndef TARGET_N3DS
     int samples_left = audio_api->buffered();
@@ -324,7 +333,13 @@ void main_func(void) {
 
 #ifdef TARGET_PORT_CONSOLE
 int main(UNUSED int argc, UNUSED char *argv[]) {
+#ifdef TARGET_SWITCH
+    initNX();
+#endif
     main_func();
+#ifdef TARGET_SWITCH
+    exitNX();
+#endif
     return 0;
 }
 #else
