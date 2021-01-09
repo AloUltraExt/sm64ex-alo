@@ -129,10 +129,6 @@ static void gfx_3ds_init(UNUSED const char *game_name)
     initialise_screens();
 }
 
-static void gfx_set_keyboard_callbacks(UNUSED bool (*on_key_down)(int scancode), UNUSED bool (*on_key_up)(int scancode), UNUSED void (*on_all_keys_up)(void))
-{
-}
-
 static void gfx_3ds_main_loop(void (*run_one_game_iter)(void))
 {
     while (aptMainLoop() && gShouldRun)
@@ -233,7 +229,6 @@ static void gfx_3ds_shutdown(void)
 struct GfxWindowManagerAPI gfx_3ds =
 {
     gfx_3ds_init,
-    gfx_set_keyboard_callbacks,
     gfx_3ds_main_loop,
     gfx_3ds_get_dimensions,
     gfx_3ds_handle_events,

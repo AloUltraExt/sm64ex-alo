@@ -61,9 +61,6 @@ static void gfx_whb_window_init(UNUSED const char *game_name) {
     GX2SetSwapInterval(2);
 }
 
-static void gfx_whb_window_set_keyboard_callbacks(UNUSED bool (*on_key_down)(int scancode), UNUSED bool (*on_key_up)(int scancode), UNUSED void (*on_all_keys_up)(void)) {
-}
-
 static void gfx_whb_window_main_loop(void (*run_one_game_iter)(void)) {
     run_one_game_iter();
 }
@@ -139,7 +136,6 @@ bool whb_window_is_running(void) {
 
 struct GfxWindowManagerAPI gfx_whb_window = {
     gfx_whb_window_init,
-    gfx_whb_window_set_keyboard_callbacks,
     gfx_whb_window_main_loop,
     gfx_whb_window_get_dimensions,
     gfx_whb_window_handle_events,
