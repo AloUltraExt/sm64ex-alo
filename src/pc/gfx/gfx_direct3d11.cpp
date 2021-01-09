@@ -134,6 +134,9 @@ static struct {
 
     std::vector<struct TextureData> textures;
 
+    bool framebuffer_requested;
+    uint16_t *framebuffer_data;
+
     // Current values
 
     int current_tile;
@@ -979,29 +982,8 @@ static void gfx_d3d11_draw_triangles(float buf_vbo[], size_t buf_vbo_len, size_t
 
 static void gfx_d3d11_get_framebuffer(uint16_t *buffer) {
     d3d.context->CopyResource(d3d.framebuffer_rt.cpu_readable_texture_copy.Get(), d3d.framebuffer_rt.texture.Get());
-
-    D3D11_MAPPED_SUBRESOURCE ms;
-    ZeroMemory(&ms, sizeof(D3D11_MAPPED_SUBRESOURCE));
-    UINT subresource = D3D11CalcSubresource(0, 0, 0);
-    d3d.context->Map(d3d.framebuffer_rt.cpu_readable_texture_copy.Get(), subresource, D3D11_MAP_READ, 0, &ms);
-    uint8_t *pixels = (uint8_t *) ms.pData;
-
-    uint32_t bi = 0;
-    for (uint32_t y = 0; y < FRAMEBUFFER_HEIGHT; y++) {
-        for (uint32_t x = 0; x < FRAMEBUFFER_WIDTH; x++) {
-            uint32_t fb_pixel = (y * FRAMEBUFFER_WIDTH + x) * 4;
-
-            uint8_t r = pixels[fb_pixel + 0] >> 3;
-            uint8_t g = pixels[fb_pixel + 1] >> 3;
-            uint8_t b = pixels[fb_pixel + 2] >> 3;
-            uint8_t a = 1; //pixels[fb_pixel + 3] / 255;
-
-            buffer[bi] = (r << 11) | (g << 6) | (b << 1) | a;
-            bi++;
-        }
-    }
-
-    d3d.context->Unmap(d3d.framebuffer_rt.cpu_readable_texture_copy.Get(), subresource);
+    d3d.framebuffer_requested = true;
+    d3d.framebuffer_data = buffer;
 }
 
 static void gfx_d3d11_on_resize(void) {
@@ -1040,6 +1022,32 @@ static void gfx_d3d11_start_frame(void) {
 static void gfx_d3d11_end_frame(void) {
     draw_render_target(&d3d.backbuffer_rt, &d3d.main_rt, false);
     draw_render_target(&d3d.framebuffer_rt, &d3d.main_rt, true);
+
+    if (d3d.framebuffer_requested) {
+        D3D11_MAPPED_SUBRESOURCE ms;
+        ZeroMemory(&ms, sizeof(D3D11_MAPPED_SUBRESOURCE));
+        UINT subresource = D3D11CalcSubresource(0, 0, 0);
+        d3d.context->Map(d3d.framebuffer_rt.cpu_readable_texture_copy.Get(), subresource, D3D11_MAP_READ, 0, &ms);
+        uint8_t *pixels = (uint8_t *) ms.pData;
+
+        uint32_t bi = 0;
+        for (uint32_t y = 0; y < FRAMEBUFFER_HEIGHT; y++) {
+            for (uint32_t x = 0; x < FRAMEBUFFER_WIDTH; x++) {
+                uint32_t fb_pixel = (y * FRAMEBUFFER_WIDTH + x) * 4;
+
+                uint8_t r = pixels[fb_pixel + 0] >> 3;
+                uint8_t g = pixels[fb_pixel + 1] >> 3;
+                uint8_t b = pixels[fb_pixel + 2] >> 3;
+                uint8_t a = 1; //pixels[fb_pixel + 3] / 255;
+
+                d3d.framebuffer_data[bi] = (r << 11) | (g << 6) | (b << 1) | a;
+                bi++;
+            }
+        }
+
+        d3d.context->Unmap(d3d.framebuffer_rt.cpu_readable_texture_copy.Get(), subresource);
+        d3d.framebuffer_requested = false;
+    }
 }
 
 static void gfx_d3d11_finish_render(void) {
