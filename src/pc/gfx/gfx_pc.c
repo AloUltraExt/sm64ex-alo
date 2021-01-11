@@ -664,14 +664,53 @@ static bool preload_texture(void *user, const char *path) {
 
 #endif // EXTERNAL_DATA
 
-uint32_t calculate_checksum(const uint8_t *data, uint32_t count) {
-    uint32_t sum = 0;
+#define ADLER_BASE 65521U
+#define ADLER_NMAX 5552
 
-    for (uint32_t i = 0; i < count; i++) {
-        sum = (sum + data[i] + i) & 0xFFFFFFFF;
+#define ADLER_DO1(buf,i) {adler += (buf)[i]; sum2 += adler;}
+#define ADLER_DO2(buf,i) ADLER_DO1(buf,i); ADLER_DO1(buf,i+1);
+#define ADLER_DO4(buf,i) ADLER_DO2(buf,i); ADLER_DO2(buf,i+2);
+#define ADLER_DO8(buf,i) ADLER_DO4(buf,i); ADLER_DO4(buf,i+4);
+#define ADLER_DO16(buf)  ADLER_DO8(buf,0); ADLER_DO8(buf,8);
+
+uint32_t calculate_checksum(const uint8_t *buf, size_t len) {
+    uint32_t adler = 1;
+    uint32_t sum2;
+    unsigned n;
+
+    /* split Adler-32 into component sums */
+    sum2 = (adler >> 16) & 0xffff;
+    adler &= 0xffff;
+
+    /* do length ADLER_NMAX blocks -- requires just one modulo operation */
+    while (len >= ADLER_NMAX) {
+        len -= ADLER_NMAX;
+        n = ADLER_NMAX / 16; /* ADLER_NMAX is divisible by 16 */
+        do {
+            ADLER_DO16(buf); /* 16 sums unrolled */
+            buf += 16;
+        } while (--n);
+        adler %= ADLER_BASE;
+        sum2 %= ADLER_BASE;
     }
 
-    return sum;
+    /* do remaining bytes (less than ADLER_NMAX, still just one modulo) */
+    if (len) { /* avoid modulos if none remaining */
+        while (len >= 16) {
+            len -= 16;
+            ADLER_DO16(buf);
+            buf += 16;
+        }
+        while (len--) {
+            adler += *buf++;
+            sum2 += adler;
+        }
+        adler %= ADLER_BASE;
+        sum2 %= ADLER_BASE;
+    }
+
+    /* return recombined sums */
+    return adler | (sum2 << 16);
 }
 
 static void import_texture(int tile) {
