@@ -17,8 +17,7 @@
  * Iterate through the list of walls until all walls are checked and
  * have given their wall push.
  */
-static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode,
-                                          struct WallCollisionData *data) {
+static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struct WallCollisionData *data) {
     register struct Surface *surf;
     register f32 offset;
     register f32 radius = data->radius;
@@ -58,7 +57,7 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode,
         //  the fact they are floating point, certain floating point positions
         //  along the seam of two walls may collide with neither wall or both walls.
         if (surf->flags & SURFACE_FLAG_X_PROJECTION) {
-            w1 = -surf->vertex1[2];            w2 = -surf->vertex2[2];            w3 = -surf->vertex3[2];
+            w1 = -surf->vertex1[2];           w2 = -surf->vertex2[2];           w3 = -surf->vertex3[2];
             y1 = surf->vertex1[1];            y2 = surf->vertex2[1];            y3 = surf->vertex3[1];
 
             if (surf->normal.x > 0.0f) {
@@ -267,33 +266,31 @@ static struct Surface *find_ceil_from_list(struct SurfaceNode *surfaceNode, s32 
             continue;
         }
 
-        {
-            f32 nx = surf->normal.x;
-            f32 ny = surf->normal.y;
-            f32 nz = surf->normal.z;
-            f32 oo = surf->originOffset;
-            f32 height;
+        f32 nx = surf->normal.x;
+        f32 ny = surf->normal.y;
+        f32 nz = surf->normal.z;
+        f32 oo = surf->originOffset;
+        f32 height;
 
-            // If a wall, ignore it. Likely a remnant, should never occur.
-            if (ny == 0.0f) {
-                continue;
-            }
-
-            // Find the ceil height at the specific point.
-            height = -(x * nx + nz * z + oo) / ny;
-
-            // Checks for ceiling interaction with a 78 unit buffer.
-            //! (Exposed Ceilings) Because any point above a ceiling counts
-            //  as interacting with a ceiling, ceilings far below can cause
-            // "invisible walls" that are really just exposed ceilings.
-            if (y - (height - -78.0f) > 0.0f) {
-                continue;
-            }
-
-            *pheight = height;
-            ceil = surf;
-            break;
+        // If a wall, ignore it. Likely a remnant, should never occur.
+        if (ny == 0.0f) {
+            continue;
         }
+
+        // Find the ceil height at the specific point.
+        height = -(x * nx + nz * z + oo) / ny;
+
+        // Checks for ceiling interaction with a 78 unit buffer.
+        //! (Exposed Ceilings) Because any point above a ceiling counts
+        //  as interacting with a ceiling, ceilings far below can cause
+        // "invisible walls" that are really just exposed ceilings.
+        if (y - (height - -78.0f) > 0.0f) {
+            continue;
+        }
+
+        *pheight = height;
+        ceil = surf;
+        break;
     }
 
     //! (Surface Cucking) Since only the first ceil is returned and not the lowest,
@@ -777,6 +774,7 @@ static s32 unused_resolve_floor_or_ceil_collisions(s32 checkCeil, f32 *px, f32 *
     return 0;
 }
 
+#ifdef BETTERCAMERA
 /**************************************************
  *             BETTER CAMERA SECTION              *
  **************************************************/
@@ -950,3 +948,4 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
         cellZ = (s16) fCellZ;
     }
 }
+#endif
