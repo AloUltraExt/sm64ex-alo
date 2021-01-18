@@ -625,7 +625,6 @@ LD        := $(CROSS)ld
 AR        := $(CROSS)ar
 OBJDUMP   := $(CROSS)objdump
 OBJCOPY   := $(CROSS)objcopy
-PYTHON    := python3
 
 # change the compiler to gcc, to use the default, install the gcc-mips-linux-gnu package
 ifeq ($(COMPILER_N64),gcc)
@@ -780,8 +779,6 @@ endif
 SDLCONFIG := $(SDLCROSS)sdl2-config
 
 endif
-
-PYTHON := python3
 
 # configure backend flags
 
