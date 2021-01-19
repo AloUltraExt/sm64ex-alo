@@ -55,6 +55,8 @@
 /// Adds unused cracked ice object in SL
 /// More information in 'unused_poundable_platform.inc.c' comment
 #define QOL_FEATURE_SSL_CRACKED_ICE (0 || QOL_FEATURES)
+/// Adds blinking to King Bob-omb, reusing it's unused blinking texture
+#define QOL_FEATURE_KING_BOBOMB_BLINK (0 || QOL_FEATURES)
 
 // --| Quality of life fixes
 /// Fixes bug where the castle trap sound in the entrance of Bowser 1 doesn't play
@@ -107,6 +109,8 @@
 #define QOL_FIX_DOOR_KEY_CUTSCENE (0 || QOL_FIXES)
 /// Fixes cutscene loop code (see comment in the fix)
 #define QOL_FIX_CUTSCENE_LOOP (0 || QOL_FIXES)
+/// Fixes fall damage height when grounpounding
+#define QOL_FIX_FALL_DAMAGE_HEIGHT (0 || QOL_FIXES)
 
 // Debug Defines
 // Skip Intro Cutscene (N64)

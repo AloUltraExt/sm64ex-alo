@@ -1,6 +1,7 @@
 #include <PR/ultratypes.h>
 #include <PR/gbi.h>
 
+#include "sm64.h"
 #include "macros.h"
 #include "surface_terrains.h"
 #include "types.h"
