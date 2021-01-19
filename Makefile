@@ -132,6 +132,7 @@ ifeq ($(TARGET_N64),0)
   PC_PORT_DEFINES := 1
 else
   GRUCODE := $(GRUCODE)
+  NO_LDIV := 1
 endif
 
 # Attempt to detect OS
@@ -578,6 +579,76 @@ GLOBAL_ASM_O_FILES = $(foreach file,$(GLOBAL_ASM_C_FILES),$(BUILD_DIR)/$(file:.c
 GLOBAL_ASM_DEP = $(BUILD_DIR)/src/audio/non_matching_dep
 endif
 
+###################### Custom Defines ########################
+CUSTOM_C_DEFINES :=
+
+ifeq ($(TARGET_N64),0)
+
+# Check for PC Port Defines
+ifeq ($(PC_PORT_DEFINES),1)
+  CUSTOM_C_DEFINES += -DNO_SEGMENTED_MEMORY -DWIDESCREEN -DUSE_SYSTEM_MALLOC
+endif
+
+# Use Console exclusive defines
+ifeq ($(TARGET_PORT_CONSOLE),1)
+  CUSTOM_C_DEFINES += -DTARGET_PORT_CONSOLE
+endif
+
+# Check for Discord Rich Presence option
+ifeq ($(TARGET_PORT_CONSOLE),0)
+  ifeq ($(DISCORDRPC),1)
+    CUSTOM_C_DEFINES += -DDISCORDRPC
+  endif
+endif
+
+# Check for PC text save format
+ifeq ($(TEXTSAVES),1)
+  CUSTOM_C_DEFINES += -DTEXTSAVES
+endif
+
+endif
+
+# Check for Puppycam option
+ifeq ($(BETTERCAMERA),1)
+  CUSTOM_C_DEFINES += -DBETTERCAMERA
+  EXT_OPTIONS_MENU := 1
+endif
+
+# Check for extended options menu option
+ifeq ($(EXT_OPTIONS_MENU),1)
+  CUSTOM_C_DEFINES += -DEXT_OPTIONS_MENU -DCHEATS_ACTIONS
+endif
+
+# Check for Rumble option
+ifeq ($(RUMBLE_FEEDBACK),1)
+  CUSTOM_C_DEFINES += -DRUMBLE_FEEDBACK
+endif
+
+# Check for no drawing distance option
+ifeq ($(NODRAWINGDISTANCE),1)
+  CUSTOM_C_DEFINES += -DNODRAWINGDISTANCE
+endif
+
+# Check for QoL fixes option
+ifeq ($(QOL_FIXES),1)
+  CUSTOM_C_DEFINES += -DQOL_FIXES
+endif
+
+# Check for QoL features option
+ifeq ($(QOL_FEATURES),1)
+  CUSTOM_C_DEFINES += -DQOL_FEATURES
+endif
+
+# Check for no bzero/bcopy workaround option
+ifeq ($(NO_BZERO_BCOPY),1)
+  CUSTOM_C_DEFINES += -DNO_BZERO_BCOPY
+endif
+
+# Use internal ldiv()/lldiv()
+ifeq ($(NO_LDIV),1)
+  CUSTOM_C_DEFINES += -DNO_LDIV
+endif
+
 ##################### Compiler Options #######################
 INCLUDE_CFLAGS := -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I .
 ENDIAN_BITWIDTH := $(BUILD_DIR)/endian-and-bitwidth
@@ -631,7 +702,7 @@ ifeq ($(COMPILER_N64),gcc)
   CC        := $(CROSS)gcc
 endif
 
-N64_CFLAGS := -nostdinc -I include/libc -DTARGET_N64 -D_LANGUAGE_C -DNO_LDIV
+N64_CFLAGS := -nostdinc -I include/libc -DTARGET_N64 -D_LANGUAGE_C
 CC_CFLAGS := -fno-builtin
 
 INCLUDE_CFLAGS := -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I .
@@ -653,30 +724,8 @@ ifeq ($(COMPILER_N64),gcc)
   CFLAGS := -march=vr4300 -mfix4300 -mabi=32 -mno-shared -G 0 $(COMMON_CFLAGS) -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I . -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra
 endif
 
-# Check for Puppycam option
-ifeq ($(BETTERCAMERA),1)
-  CC_CHECK += -DBETTERCAMERA
-  CFLAGS += -DBETTERCAMERA
-  EXT_OPTIONS_MENU := 1
-endif
-
-# Check for extended options menu option
-ifeq ($(EXT_OPTIONS_MENU),1)
-  CC_CHECK += -DEXT_OPTIONS_MENU -DCHEATS_ACTIONS
-  CFLAGS += -DEXT_OPTIONS_MENU -DCHEATS_ACTIONS
-endif
-
-# Check for QoL fixes option
-ifeq ($(QOL_FIXES),1)
-  CC_CHECK += -DQOL_FIXES
-  CFLAGS += -DQOL_FIXES
-endif
-
-# Check for QoL features option
-ifeq ($(QOL_FEATURES),1)
-  CC_CHECK += -DQOL_FEATURES
-  CFLAGS += -DQOL_FEATURES
-endif
+CC_CHECK += $(CUSTOM_C_DEFINES)
+CFLAGS += $(CUSTOM_C_DEFINES)
 
 ifeq ($(shell getconf LONG_BIT), 32)
   # Work around memory allocation bug in QEMU
@@ -886,81 +935,8 @@ ifeq ($(TARGET_SWITCH),1)
   CFLAGS := $(NXARCH) $(OPT_FLAGS) $(INCLUDE_CFLAGS) $(BACKEND_CFLAGS) $(VERSION_CFLAGS) $(GRUCODE_CFLAGS) -fno-strict-aliasing -ftls-model=local-exec -fPIE -fwrapv -D__SWITCH__=1
 endif
 
-# Check for enhancement options
-
-# Check for Puppycam option
-ifeq ($(BETTERCAMERA),1)
-  CC_CHECK += -DBETTERCAMERA
-  CFLAGS += -DBETTERCAMERA
-  EXT_OPTIONS_MENU := 1
-endif
-
-ifeq ($(TEXTSAVES),1)
-  CC_CHECK += -DTEXTSAVES
-  CFLAGS += -DTEXTSAVES
-endif
-
-# Check for no drawing distance option
-ifeq ($(NODRAWINGDISTANCE),1)
-  CC_CHECK += -DNODRAWINGDISTANCE
-  CFLAGS += -DNODRAWINGDISTANCE
-endif
-
-# Check for PC Port Defines
-ifeq ($(PC_PORT_DEFINES),1)
-  CC_CHECK += -DNO_SEGMENTED_MEMORY -DWIDESCREEN -DUSE_SYSTEM_MALLOC
-  CFLAGS += -DNO_SEGMENTED_MEMORY -DWIDESCREEN -DUSE_SYSTEM_MALLOC
-endif
-
-# Check for Discord Rich Presence option
-ifeq ($(TARGET_PORT_CONSOLE),0)
-  ifeq ($(DISCORDRPC),1)
-    CC_CHECK += -DDISCORDRPC
-    CFLAGS += -DDISCORDRPC
-  endif
-endif
-
-# Check for Rumble option
-ifeq ($(RUMBLE_FEEDBACK),1)
-  CC_CHECK += -DRUMBLE_FEEDBACK
-  CFLAGS += -DRUMBLE_FEEDBACK
-endif
-
-# Check for QoL fixes option
-ifeq ($(QOL_FIXES),1)
-  CC_CHECK += -DQOL_FIXES
-  CFLAGS += -DQOL_FIXES
-endif
-
-# Check for QoL features option
-ifeq ($(QOL_FEATURES),1)
-  CC_CHECK += -DQOL_FEATURES
-  CFLAGS += -DQOL_FEATURES
-endif
-
-# Check for extended options menu option
-ifeq ($(EXT_OPTIONS_MENU),1)
-  CC_CHECK += -DEXT_OPTIONS_MENU -DCHEATS_ACTIONS
-  CFLAGS += -DEXT_OPTIONS_MENU -DCHEATS_ACTIONS
-endif
-
-# Check for no bzero/bcopy workaround option
-ifeq ($(NO_BZERO_BCOPY),1)
-  CC_CHECK += -DNO_BZERO_BCOPY
-  CFLAGS += -DNO_BZERO_BCOPY
-endif
-
-# Use internal ldiv()/lldiv()
-ifeq ($(NO_LDIV),1)
-  CC_CHECK += -DNO_LDIV
-  CFLAGS += -DNO_LDIV
-endif
-
-# Use Console exclusive defines
-ifeq ($(TARGET_PORT_CONSOLE),1)
-  CC_CHECK += -DTARGET_PORT_CONSOLE
-  CFLAGS += -DTARGET_PORT_CONSOLE
-endif
+CC_CHECK += $(CUSTOM_C_DEFINES)
+CFLAGS += $(CUSTOM_C_DEFINES)
 
 # Load external textures
 ifeq ($(EXTERNAL_DATA),1)
