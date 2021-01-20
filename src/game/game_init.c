@@ -29,7 +29,7 @@
 #endif
 
 #ifdef BETTERCAMERA
-#include "bettercamera.h"
+#include "extras/bettercamera.h"
 #endif
 
 // FIXME: I'm not sure all of these variables belong in this file, but I don't

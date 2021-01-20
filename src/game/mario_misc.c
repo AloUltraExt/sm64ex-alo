@@ -15,6 +15,7 @@
 #include "goddard/renderer.h"
 #include "interaction.h"
 #include "level_update.h"
+#include "mario.h"
 #include "mario_misc.h"
 #include "memory.h"
 #include "object_helpers.h"
@@ -24,7 +25,7 @@
 #include "skybox.h"
 #include "sound_init.h"
 #ifdef BETTERCAMERA
-#include "bettercamera.h"
+#include "extras/bettercamera.h"
 #endif
 
 #define TOAD_STAR_1_REQUIREMENT 12

@@ -10,13 +10,15 @@
 #include "game/print.h"
 #include "game/segment2.h"
 #include "game/save_file.h"
-#ifdef BETTERCAMERA
-#include "game/bettercamera.h"
-#endif
 #include "game/mario_misc.h"
 #include "game/game_init.h"
 #include "game/ingame_menu.h"
-#include "game/options_menu.h"
+
+#include "options_menu.h"
+
+#ifdef BETTERCAMERA
+#include "bettercamera.h"
+#endif
 
 #ifndef TARGET_N64
 #include "pc/pc_main.h"

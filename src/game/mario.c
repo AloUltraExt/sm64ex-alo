@@ -34,10 +34,10 @@
 #include "sound_init.h"
 #include "pc/configfile.h"
 #ifdef CHEATS_ACTIONS
-#include "cheats.h"
+#include "extras/cheats.h"
 #endif
 #ifdef BETTERCAMERA
-#include "bettercamera.h"
+#include "extras/bettercamera.h"
 #endif
 
 u32 unused80339F10;

@@ -1,9 +1,10 @@
 #include "cliopts.h"
 #include "configfile.h"
-#include "game/cheats.h"
 #include "pc_main.h"
 #include "platform.h"
 #include "macros.h"
+
+#include "extras/cheats.h"
 
 #include <strings.h>
 #include <stdlib.h>

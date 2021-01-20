@@ -23,14 +23,15 @@
 #include "text_strings.h"
 #include "types.h"
 #include "macros.h"
+
 #ifdef CHEATS_ACTIONS
-#include "cheats.h"
+#include "extras/cheats.h"
 #endif
 #ifdef BETTERCAMERA
-#include "bettercamera.h"
+#include "extras/bettercamera.h"
 #endif
 #ifdef EXT_OPTIONS_MENU
-#include "options_menu.h"
+#include "extras/options_menu.h"
 #endif
 
 u16 gDialogColorFadeTimer;

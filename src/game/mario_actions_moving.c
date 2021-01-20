@@ -14,7 +14,7 @@
 #include "rumble_init.h"
 #include "pc/configfile.h"
 #ifdef CHEATS_ACTIONS
-#include "cheats.h"
+#include "extras/cheats.h"
 #endif
 
 struct LandingAction {

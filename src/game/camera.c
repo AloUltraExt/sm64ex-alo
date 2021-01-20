@@ -30,6 +30,10 @@
 #include "level_table.h"
 #include "pc/configfile.h"
 
+#ifdef BETTERCAMERA
+#include "extras/bettercamera.h"
+#endif
+
 #define CBUTTON_MASK (U_CBUTTONS | D_CBUTTONS | L_CBUTTONS | R_CBUTTONS)
 
 /**
@@ -662,7 +666,7 @@ void unused_set_camera_pitch_shake_env(s16 shake) {
  *      posOff and focOff are sometimes the same address, which just ignores the pos calculation
  *! Doesn't return anything, but required to match on -O2
  */
-BAD_RETURN(f32) calc_y_to_curr_floor(f32 *posOff, f32 posMul, f32 posBound, f32 *focOff, f32 focMul, f32 focBound) {
+void calc_y_to_curr_floor(f32 *posOff, f32 posMul, f32 posBound, f32 *focOff, f32 focMul, f32 focBound) {
     f32 floorHeight = sMarioGeometry.currFloorHeight;
     f32 waterHeight;
     UNUSED s32 filler;
@@ -706,11 +710,6 @@ BAD_RETURN(f32) calc_y_to_curr_floor(f32 *posOff, f32 posMul, f32 posBound, f32 
         *focOff = -focBound;
     }
 }
-
-//Compiler gets mad if I put this any further above. thanks refresh 7
-#ifdef BETTERCAMERA
-#include "bettercamera.inc.h"
-#endif
 
 void focus_on_mario(Vec3f focus, Vec3f pos, f32 posYOff, f32 focYOff, f32 dist, s16 pitch, s16 yaw) {
     Vec3f marioPos;

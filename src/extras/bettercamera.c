@@ -1,15 +1,23 @@
+#ifdef BETTERCAMERA
+
 #include "sm64.h"
-#include "game/camera.h"
-#include "game/level_update.h"
-#include "game/print.h"
 #include "engine/math_util.h"
+#include "engine/surface_collision.h"
+#include "audio/external.h"
+#include "game/camera.h"
+#include "game/game_init.h"
+#include "game/level_update.h"
+#include "game/object_helpers.h"
+#include "game/object_list_processor.h"
+#include "game/print.h"
 #include "game/segment2.h"
 #include "game/save_file.h"
-#include "bettercamera.h"
 #include "include/text_strings.h"
-#include "engine/surface_collision.h"
+
 #include "pc/configfile.h"
 #include "pc/controller/controller_mouse.h"
+
+#include "bettercamera.h"
 
 #if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR) 
 //quick and dirty fix for some older MinGW.org mingwrt
@@ -44,7 +52,7 @@ struct newcam_hardpos {
     u8 newcam_hard_areaID;
     u8 newcam_hard_permaswap;
     u16 newcam_hard_modeset;
-    s32 *newcam_hard_script;
+    void *newcam_hard_script;
     s16 newcam_hard_X1;
     s16 newcam_hard_Y1;
     s16 newcam_hard_Z1;
@@ -731,3 +739,5 @@ void newcam_loop(struct Camera *c) {
     newcam_diagnostics();
     #endif // NEWCAM_DEBUG
 }
+
+#endif // BETTERCAMERA

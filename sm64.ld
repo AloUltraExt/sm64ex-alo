@@ -334,6 +334,7 @@ SECTIONS
       BUILD_DIR/lib/rsp.o(.text);
 #else
       BUILD_DIR/src/game*.o(.text);
+      BUILD_DIR/src/extras*.o(.text);
       BUILD_DIR/src/audio*.o(.text);
       BUILD_DIR/libultra.a:parameters.o(.text);
       BUILD_DIR/libultra.a:osSetTime.o(.text);
@@ -510,7 +511,9 @@ SECTIONS
       BUILD_DIR/src/audio/port_eu.o(.data*);
       BUILD_DIR/src/audio/data.o(.data*);
 #endif
-
+      
+      BUILD_DIR/src/extras*.o(.data*);
+      
 #if defined(VERSION_EU) || defined(VERSION_SH)
       BUILD_DIR/libultra.a:_Printf.o(.data*);
       BUILD_DIR/libultra.a:osInitialize.o(.data*);
@@ -617,7 +620,9 @@ SECTIONS
       BUILD_DIR/src/audio/external.o(.rodata*);
       BUILD_DIR/src/audio/port_eu.o(.rodata*);
       BUILD_DIR/src/audio*.o(.rodata*);
-
+    
+      BUILD_DIR/src/extras*.o(.rodata*);
+      
 #if defined(VERSION_EU) || defined(VERSION_SH)
       BUILD_DIR/libultra.a:_Printf.o(.rodata*);
 #endif
@@ -715,7 +720,9 @@ SECTIONS
       BUILD_DIR/src/audio/load.o(.bss*);
       BUILD_DIR/src/audio/data.o(.bss*);
 #endif
-
+      
+      BUILD_DIR/src/extras*.o(.bss*);
+      
 #if defined(VERSION_EU) || defined(VERSION_SH)
       BUILD_DIR/libultra.a:osInitialize.o(.bss*);
       BUILD_DIR/libultra.a:osSetEventMesg.o(.bss*);

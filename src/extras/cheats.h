@@ -1,5 +1,5 @@
-#ifndef _CHEATS_H
-#define _CHEATS_H
+#ifndef CHEATS_H
+#define CHEATS_H
 
 #ifndef TARGET_N64
 #include <stdbool.h>
@@ -21,4 +21,4 @@ struct CheatList {
 
 extern struct CheatList Cheats;
 
-#endif // _CHEATS_H
+#endif // CHEATS_H

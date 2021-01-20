@@ -381,7 +381,7 @@ LEVEL_DIRS := $(patsubst levels/%,%,$(dir $(wildcard levels/*/header.h)))
 # Directories containing source files
 
 # Hi, I'm a PC
-SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers actors levels bin bin/$(VERSION) data assets
+SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers src/extras actors levels bin bin/$(VERSION) data assets
 ASM_DIRS := lib
 ifeq ($(TARGET_N64),1)
   ASM_DIRS := asm $(ASM_DIRS)
