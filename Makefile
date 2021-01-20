@@ -388,6 +388,9 @@ ifeq ($(TARGET_N64),1)
 else
   SRC_DIRS := $(SRC_DIRS)  src/pc src/pc/gfx src/pc/audio src/pc/controller src/pc/fs src/pc/fs/packtypes
   ASM_DIRS :=
+  ifeq ($(WINDOWS_BUILD),1)
+    RES_DIRS := res_win
+  endif
 endif
 
 ifeq ($(TARGET_WII_U),1)
@@ -502,6 +505,10 @@ CXX_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 S_FILES := $(foreach dir,$(ASM_DIRS),$(wildcard $(dir)/*.s))
 GODDARD_C_FILES := $(foreach dir,$(GODDARD_SRC_DIRS),$(wildcard $(dir)/*.c))
 
+ifeq ($(WINDOWS_BUILD),1)
+  RC_FILES := $(foreach dir,$(RES_DIRS),$(wildcard $(dir)/*.rc))
+endif
+
 ifeq ($(TARGET_N64),1)
   ULTRA_S_FILES := $(foreach dir,$(ULTRA_ASM_DIRS),$(wildcard $(dir)/*.s))
 endif
@@ -549,6 +556,10 @@ O_FILES := $(foreach file,$(C_FILES),$(BUILD_DIR)/$(file:.c=.o)) \
            $(foreach file,$(CXX_FILES),$(BUILD_DIR)/$(file:.cpp=.o)) \
            $(foreach file,$(S_FILES),$(BUILD_DIR)/$(file:.s=.o)) \
            $(foreach file,$(GENERATED_C_FILES),$(file:.c=.o))
+
+ifeq ($(WINDOWS_BUILD),1)
+  O_FILES += $(foreach file,$(RC_FILES),$(BUILD_DIR)/$(file:.rc=.o))
+endif
 
 ULTRA_O_FILES := $(foreach file,$(ULTRA_S_FILES),$(BUILD_DIR)/$(file:.s=.o)) \
                  $(foreach file,$(ULTRA_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
@@ -826,6 +837,8 @@ else # Linux & other builds
 endif
 
 SDLCONFIG := $(SDLCROSS)sdl2-config
+
+WINDRES := $(CROSS)windres
 
 endif
 
@@ -1169,6 +1182,10 @@ $(BUILD_DIR)/text/%/define_text.inc.c: text/define_text.inc.c text/%/courses.h t
 RSP_DIRS := $(BUILD_DIR)/rsp
 ALL_DIRS := $(BUILD_DIR) $(addprefix $(BUILD_DIR)/,$(SRC_DIRS) $(ASM_DIRS) $(GODDARD_SRC_DIRS) $(ULTRA_SRC_DIRS) $(ULTRA_ASM_DIRS) $(ULTRA_BIN_DIRS) $(BIN_DIRS) $(TEXTURE_DIRS) $(TEXT_DIRS) $(SOUND_SAMPLE_DIRS) $(addprefix levels/,$(LEVEL_DIRS)) include) $(MIO0_DIR) $(addprefix $(MIO0_DIR)/,$(VERSION)) $(SOUND_BIN_DIR) $(SOUND_BIN_DIR)/sequences/$(VERSION) $(RSP_DIRS)
 
+ifeq ($(WINDOWS_BUILD),1)
+  ALL_DIRS += $(RES_DIRS)
+endif
+
 ifeq ($(TARGET_N3DS),1)
   # create build dir for .t3x etc
   ALL_DIRS += $(BUILD_DIR)/$(MINIMAP_TEXTURES) $(BUILD_DIR)/3ds
@@ -1436,7 +1453,7 @@ $(BUILD_DIR)/%.o: %.c
 	$(call print,Compiling:,$<,$@)
 	@$(CC_CHECK) $(CC_CHECK_CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<
 	$(V)$(CC) -c $(CFLAGS) -o $@ $<
-
+    
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
 	$(call print,Compiling:,$<,$@)
 	@$(CC_CHECK) $(CC_CHECK_CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<
@@ -1447,6 +1464,9 @@ $(BUILD_DIR)/%.o: %.s
 	$(call print,Assembling:,$<,$@)
 	$(V)$(AS) $(ASFLAGS) -MD $(BUILD_DIR)/$*.d -o $@ $<
 
+# Windows Icon
+$(BUILD_DIR)/%.o: %.rc
+	$(WINDRES) -o $@ -i $<
 
 ifeq ($(TARGET_N64),1)
 
