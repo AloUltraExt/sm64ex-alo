@@ -207,12 +207,13 @@ struct SubMenu {
 #define DEF_OPT_SUBMENU(lbl, nm) \
     { .type = OPT_SUBMENU, .label = lbl, .nextMenu = nm }
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 #define DEF_OPT_BIND(lbl, uv) \
     { .type = OPT_BIND, .label = lbl, .uval = uv }
+#endif
+
 #define DEF_OPT_BUTTON(lbl, act) \
     { .type = OPT_BUTTON, .label = lbl, .actionFn = act }
-#endif
 
 #define DEF_SUBMENU(lbl, opt) \
     { .label = lbl, .opts = opt, .numOpts = sizeof(opt) / sizeof(opt[0]) }
@@ -256,11 +257,8 @@ static struct Option optsCamera[] = {
 };
 #endif
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct Option optsControls[] = {
-#ifdef TARGET_WII_U
-    DEF_OPT_TOGGLE( optBindStr[22], &configN64FaceButtons ),
-#else
     DEF_OPT_BIND( optBindStr[ 2], configKeyA ),
     DEF_OPT_BIND( optBindStr[ 3], configKeyB ),
     DEF_OPT_BIND( optBindStr[ 4], configKeyStart ),
@@ -283,20 +281,21 @@ static struct Option optsControls[] = {
     // way, the player can't accidentally lock themselves out of using the stick
     DEF_OPT_SCROLL( optBindStr[20], &configStickDeadzone, 0, 100, 1 ),
     DEF_OPT_SCROLL( optBindStr[21], &configRumbleStrength, 0, 100, 1)
-#endif
 };
+#endif
 
 static struct Option optsVideo[] = {
-#ifndef TARGET_WII_U
+#ifndef TARGET_PORT_CONSOLE
     DEF_OPT_TOGGLE( optsVideoStr[0], &configWindow.fullscreen ),
     DEF_OPT_TOGGLE( optsVideoStr[5], &configWindow.vsync ),
 #endif
     DEF_OPT_CHOICE( optsVideoStr[1], &configFiltering, filterChoices ),
     DEF_OPT_TOGGLE( optsVideoStr[7], &configHUD ),
+#ifndef TARGET_PORT_CONSOLE
     DEF_OPT_BUTTON( optsVideoStr[4], optvideo_reset_window ),
+#endif
     DEF_OPT_BUTTON( optsVideoStr[9], optvideo_apply ),
 };
-#endif
 
 static struct Option optsAudio[] = {
     DEF_OPT_SCROLL( optsAudioStr[0], &configMasterVolume, 0, MAX_VOLUME, 1 ),
@@ -326,8 +325,11 @@ static struct Option optsCheats[] = {
 static struct SubMenu menuCamera   = DEF_SUBMENU( optMainStr[1], optsCamera );
 #endif
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct SubMenu menuControls = DEF_SUBMENU( optMainStr[2], optsControls );
+#endif
+
+#ifndef TARGET_N64
 static struct SubMenu menuVideo    = DEF_SUBMENU( optMainStr[3], optsVideo );
 #endif
 
@@ -343,13 +345,20 @@ static struct Option optsMain[] = {
 #ifdef BETTERCAMERA
     DEF_OPT_SUBMENU( optMainStr[1], &menuCamera ),
 #endif
-#ifndef TARGET_N64
+
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
     DEF_OPT_SUBMENU( optMainStr[2], &menuControls ),
+#endif
+
+#ifndef TARGET_N64
     DEF_OPT_SUBMENU( optMainStr[3], &menuVideo ),
-    DEF_OPT_BUTTON ( optMainStr[5], optmenu_act_exit ),
 #endif
 
     DEF_OPT_SUBMENU( optMainStr[4], &menuAudio ),
+    
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
+    DEF_OPT_BUTTON ( optMainStr[5], optmenu_act_exit ),
+#endif
 
 #ifdef CHEATS_ACTIONS
     // NOTE: always keep cheats the last option here because of the half-assed way I toggle them
@@ -429,7 +438,7 @@ static void optmenu_draw_opt(const struct Option *opt, s16 x, s16 y, u8 sel) {
             optmenu_draw_text(x, y-13, buf, sel);
             break;
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
         case OPT_BIND:
             x = 112;
             for (u8 i = 0; i < MAX_BINDS; ++i, x += 48) {
@@ -476,7 +485,7 @@ static void optmenu_opt_change(struct Option *opt, s32 val) {
                 opt->actionFn(opt, val);
             break;
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
         case OPT_BIND:
             if (val == 0xFF) {
                 // clear the bind
@@ -584,7 +593,7 @@ void optmenu_toggle(void) {
 }
 
 void optmenu_check_buttons(void) {
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
     if (optmenu_binding) {
         u32 key = controller_get_raw_key();
         if (key != VK_INVALID) {
@@ -683,7 +692,7 @@ void optmenu_check_buttons(void) {
                 optmenu_toggle();
             }
         }
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
     } else if (gPlayer1Controller->buttonPressed & Z_TRIG) {
         // HACK: clear binds with Z
         if (allowInput && currentMenu->opts[currentMenu->select].type == OPT_BIND)

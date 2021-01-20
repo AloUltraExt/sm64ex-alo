@@ -32,9 +32,6 @@ extern unsigned int configMasterVolume;
 extern unsigned int configMusicVolume;
 extern unsigned int configSfxVolume;
 extern unsigned int configEnvVolume;
-#ifdef TARGET_WII_U
-extern bool configN64FaceButtons;
-#else
 extern unsigned int configKeyA[];
 extern unsigned int configKeyB[];
 extern unsigned int configKeyStart[];
@@ -53,7 +50,6 @@ extern unsigned int configKeyStickUp[];
 extern unsigned int configKeyStickDown[];
 extern unsigned int configKeyStickLeft[];
 extern unsigned int configKeyStickRight[];
-#endif
 extern unsigned int configStickDeadzone;
 extern unsigned int configRumbleStrength;
 #ifdef EXTERNAL_DATA

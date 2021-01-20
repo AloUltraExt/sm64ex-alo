@@ -54,11 +54,6 @@ static void controller_wiiu_init(void) {
     KPADInit();
     WPADEnableURCC(1);
     WPADEnableWiiRemote(1);
-
-    if (configN64FaceButtons) {
-        map[0] = (struct WiiUKeymap) { B_BUTTON, VB(Y) | VB(X), CB(Y) | CB(X), PB(Y) | PB(X) };
-        map[1] = (struct WiiUKeymap) { A_BUTTON, VB(B) | VB(A), CB(B) | CB(A), PB(B) | PB(A) };
-    }
 }
 
 static void read_vpad(OSContPad *pad) {
