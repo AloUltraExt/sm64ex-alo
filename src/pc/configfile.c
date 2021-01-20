@@ -66,12 +66,12 @@ unsigned int configEnvVolume = MAX_VOLUME;
 bool configN64FaceButtons = 0;
 #else
 // Keyboard mappings (VK_ values, by default keyboard/gamepad/mouse)
-unsigned int configKeyA[MAX_BINDS]          = { 0x002D,   0x1000,     0x1103     };
-unsigned int configKeyB[MAX_BINDS]          = { 0x002E,   0x1002,     0x1101     };
-unsigned int configKeyStart[MAX_BINDS]      = { 0x001C,   0x1006,     VK_INVALID };
-unsigned int configKeyL[MAX_BINDS]          = { 0x0010,   0x1009,     0x1104     };
-unsigned int configKeyR[MAX_BINDS]          = { 0x0012,   0x100A,     0x101B     };
-unsigned int configKeyZ[MAX_BINDS]          = { 0x002C,   0x1007,     0x101A     };
+unsigned int configKeyA[MAX_BINDS]          = { 0x002D,   0x1000,     0x1101     };
+unsigned int configKeyB[MAX_BINDS]          = { 0x002E,   0x1002,     0x1103     };
+unsigned int configKeyStart[MAX_BINDS]      = { 0x001C,   0x1006,     0x1102     };
+unsigned int configKeyL[MAX_BINDS]          = { 0x0010,   0x1009,     VK_INVALID };
+unsigned int configKeyR[MAX_BINDS]          = { 0x0012,   0x100A,     VK_INVALID };
+unsigned int configKeyZ[MAX_BINDS]          = { 0x002C,   0x1007,     VK_INVALID };
 unsigned int configKeyCUp[MAX_BINDS]        = { 0x0011,   VK_INVALID, VK_INVALID };
 unsigned int configKeyCDown[MAX_BINDS]      = { 0x001F,   VK_INVALID, VK_INVALID };
 unsigned int configKeyCLeft[MAX_BINDS]      = { 0x001E,   VK_INVALID, VK_INVALID };
