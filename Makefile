@@ -605,16 +605,24 @@ ifeq ($(TARGET_PORT_CONSOLE),1)
   CUSTOM_C_DEFINES += -DTARGET_PORT_CONSOLE
 endif
 
-# Check for Discord Rich Presence option
+# Use PC-only exclusive defines
 ifeq ($(TARGET_PORT_CONSOLE),0)
+
+  # Check for Discord Rich Presence option
   ifeq ($(DISCORDRPC),1)
     CUSTOM_C_DEFINES += -DDISCORDRPC
   endif
-endif
+  
+ # Check for PC text save format
+ ifeq ($(TEXTSAVES),1)
+   CUSTOM_C_DEFINES += -DTEXTSAVES
+ endif
 
-# Check for PC text save format
-ifeq ($(TEXTSAVES),1)
-  CUSTOM_C_DEFINES += -DTEXTSAVES
+ # Check for Mouse Puppycam Option
+ ifeq ($(BETTERCAMERA),1)
+   CUSTOM_C_DEFINES += -DBETTERCAM_MOUSE
+ endif
+
 endif
 
 endif

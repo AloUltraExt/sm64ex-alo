@@ -46,6 +46,10 @@ extern u8 newcam_xlu;
 extern u16 newcam_mode;
 extern s16 newcam_yaw;
 
+#ifdef BETTERCAM_MOUSE
+extern u8 newcam_mouse;
+#endif
+
 extern void newcam_init(struct Camera *c, u8 dv);
 extern void newcam_init_settings(void);
 extern void newcam_disable(void);

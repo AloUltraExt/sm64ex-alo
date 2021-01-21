@@ -26,6 +26,15 @@
 #include "config.h"
 #include "gfx_dimensions.h"
 
+#ifdef BETTERCAM_MOUSE
+#include "pc/controller/controller_mouse.h"
+#include "pc/configfile.h"
+
+static bool mouseControl = FALSE;
+static int oldMouse_x;
+static int oldMouse_y;
+#endif
+
 #define MAX_GD_DLS 1000
 #define OS_MESG_SI_COMPLETE 0x33333333
 
@@ -2567,12 +2576,33 @@ void parse_p1_controller(void) {
     // deadzone checks
     if (ABS(gdctrl->stickX) >= 6) {
         gdctrl->csrX += gdctrl->stickX * 0.1;
+#ifdef BETTERCAM_MOUSE
+        mouseControl = FALSE;
+#endif
     }
 
     if (ABS(gdctrl->stickY) >= 6) {
         gdctrl->csrY -= gdctrl->stickY * 0.1;
+#ifdef BETTERCAM_MOUSE 
+        mouseControl = FALSE;
+#endif
     }
 
+#ifdef BETTERCAM_MOUSE
+    if (mouse_x - oldMouse_x != 0 || mouse_y - oldMouse_y != 0)
+        mouseControl = true;
+    if (mouseControl) {
+        float screenScale = (float) gfx_current_dimensions.height / (float)SCREEN_HEIGHT;
+        if (configCameraMouse) {
+            gdctrl->csrX = (mouse_x - (gfx_current_dimensions.width - (screenScale * (float)SCREEN_WIDTH))/ 2)/ screenScale;
+            gdctrl->csrY = mouse_y / screenScale;
+        }
+    }
+    oldMouse_x = mouse_x;
+    oldMouse_y = mouse_y;
+
+if (!mouseControl) {
+#endif
     // clamp cursor position within screen view bounds
     if (gdctrl->csrX < sScreenView->parent->upperLeft.x + (16.0f/aspect)) {
         gdctrl->csrX = sScreenView->parent->upperLeft.x + (16.0f/aspect);
@@ -2593,6 +2623,9 @@ void parse_p1_controller(void) {
     for (i = 0; i < sizeof(OSContPad); i++) {
         ((u8 *) prevInputs)[i] = ((u8 *) currInputs)[i];
     }
+#ifdef BETTERCAM_MOUSE
+}
+#endif
 }
 
 void stub_renderer_4(f32 arg0) {
