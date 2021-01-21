@@ -1215,22 +1215,9 @@ void squish_mario_model(struct MarioState *m) {
         // Also handles the Tiny Mario and Huge Mario cheats.
         if (m->squishTimer == 0) {
 #ifdef CHEATS_ACTIONS
-            if (Cheats.EnableCheats) {
-                if (Cheats.HugeMario) {
-                    vec3f_set(m->marioObj->header.gfx.scale, 2.5f, 2.5f, 2.5f);
-                }
-                else if (Cheats.TinyMario) {
-                    vec3f_set(m->marioObj->header.gfx.scale, 0.2f, 0.2f, 0.2f);
-                }
-                else {
-                    vec3f_set(m->marioObj->header.gfx.scale, 1.0f, 1.0f, 1.0f);
-                }
-            }
-            else {
-#endif
-                vec3f_set(m->marioObj->header.gfx.scale, 1.0f, 1.0f, 1.0f);
-#ifdef CHEATS_ACTIONS
-            }
+            cheats_mario_size(m);
+#else
+            vec3f_set(m->marioObj->header.gfx.scale, 1.0f, 1.0f, 1.0f);
 #endif      
         }
         // If timer is less than 16, rubber-band Mario's size scale up and down.
@@ -1415,17 +1402,7 @@ void update_mario_inputs(struct MarioState *m) {
     debug_print_speed_action_normal(m);
     
 #ifdef CHEATS_ACTIONS
-    /* Moonjump cheat */
-    if (Cheats.MoonJump == true && Cheats.EnableCheats == true) {        
-        if (m->controller->buttonPressed & L_TRIG) {
-            set_mario_action(m, ACT_JUMP, 0);
-        }
-
-        if (m->controller->buttonDown & L_TRIG) {
-            m->vel[1] = 25;
-        }
-    }
-    /*End of moonjump cheat */
+    cheats_mario_inputs(m);
 #endif
 
     if (gCameraMovementFlags & CAM_MOVE_C_UP_MODE) {
@@ -1753,26 +1730,11 @@ void queue_rumble_particles(void) {
  */
 s32 execute_mario_action(UNUSED struct Object *o) {
     s32 inLoop = TRUE;
-    /**
-    * Cheat stuff
-    */
 
 #ifdef CHEATS_ACTIONS
-    if (Cheats.EnableCheats)
-    {
-        if (Cheats.GodMode)
-            gMarioState->health = 0x880;
+    cheats_mario_action(gMarioState);
+#endif
 
-        if (Cheats.InfiniteLives && gMarioState->numLives < 99)
-            gMarioState->numLives += 1;
-
-        if (Cheats.SuperSpeed && gMarioState->forwardVel > 0)
-            gMarioState->forwardVel += 100;
-    }
-    /**
-    * End of cheat stuff
-    */
-#endif    
     if (gMarioState->action) {
         gMarioState->marioObj->header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
         mario_reset_bodystate(gMarioState);

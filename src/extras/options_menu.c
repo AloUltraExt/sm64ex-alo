@@ -105,18 +105,6 @@ static const u8 optsAudioStr[][32] = {
     { TEXT_OPT_ENVVOLUME },
 };
 
-static const u8 optsCheatsStr[][64] = {
-    { TEXT_OPT_CHEAT1 },
-    { TEXT_OPT_CHEAT2 },
-    { TEXT_OPT_CHEAT3 },
-    { TEXT_OPT_CHEAT4 },
-    { TEXT_OPT_CHEAT5 },
-    { TEXT_OPT_CHEAT6 },
-    { TEXT_OPT_CHEAT7 },
-    { TEXT_OPT_CHEAT8 },
-    { TEXT_OPT_CHEAT9 },
-};
-
 static const u8 optBindStr[][32] = {
     { TEXT_OPT_UNBOUND },
     { TEXT_OPT_PRESSKEY },
@@ -140,7 +128,6 @@ static const u8 optBindStr[][32] = {
     { TEXT_BIND_RIGHT },
     { TEXT_OPT_DEADZONE },
     { TEXT_OPT_RUMBLE },
-    { TEXT_OPT_N64FACE }
 };
 
 static const u8 *filterChoices[] = {
@@ -310,13 +297,12 @@ static struct Option optsAudio[] = {
 static struct Option optsCheats[] = {
     DEF_OPT_TOGGLE( optsCheatsStr[0], &Cheats.EnableCheats ),
     DEF_OPT_TOGGLE( optsCheatsStr[1], &Cheats.MoonJump ),
-    DEF_OPT_TOGGLE( optsCheatsStr[2], &Cheats.GodMode ),
+    DEF_OPT_TOGGLE( optsCheatsStr[2], &Cheats.InfiniteHealth ),
     DEF_OPT_TOGGLE( optsCheatsStr[3], &Cheats.InfiniteLives ),
     DEF_OPT_TOGGLE( optsCheatsStr[4], &Cheats.SuperSpeed ),
     DEF_OPT_TOGGLE( optsCheatsStr[5], &Cheats.Responsive ),
     DEF_OPT_TOGGLE( optsCheatsStr[6], &Cheats.ExitAnywhere ),
-    DEF_OPT_TOGGLE( optsCheatsStr[7], &Cheats.HugeMario ),
-    DEF_OPT_TOGGLE( optsCheatsStr[8], &Cheats.TinyMario ),
+    DEF_OPT_CHOICE( optsCheatsStr[7], &Cheats.MarioSize, marioSizeCheatChoices ),
 
 };
 #endif

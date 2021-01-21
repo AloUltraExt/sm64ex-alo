@@ -1,0 +1,38 @@
+﻿#ifndef TEXT_CHEATS_STRINGS_H
+#define TEXT_CHEATS_STRINGS_H
+
+#if defined(VERSION_JP) || defined(VERSION_SH)
+
+// TODO: Actually translate this to JP
+
+#define TEXT_OPT_CHEAT0    _("ENABLE CHEATS")
+#define TEXT_OPT_CHEAT1    _("MOONJUMP (PRESS L)")
+#define TEXT_OPT_CHEAT2    _("INVINCIBLE PLAYER")
+#define TEXT_OPT_CHEAT3    _("INFINITE LIVES")
+#define TEXT_OPT_CHEAT4    _("SUPER SPEED")
+#define TEXT_OPT_CHEAT5    _("SUPER RESPONSIVE CONTROLS")
+#define TEXT_OPT_CHEAT6    _("EXIT COURSE AT ANY TIME")
+#define TEXT_OPT_CHEAT7    _("PLAYER SIZE")
+
+#define TEXT_CHEAT_MSIZE0   _("NORMAL")
+#define TEXT_CHEAT_MSIZE1   _("TINY")
+#define TEXT_CHEAT_MSIZE2   _("HUGE")
+
+#else // VERSION
+
+#define TEXT_OPT_CHEAT0    _("Enable cheats")
+#define TEXT_OPT_CHEAT1    _("Moonjump (Press L)")
+#define TEXT_OPT_CHEAT2    _("Invincible Player")
+#define TEXT_OPT_CHEAT3    _("Infinite lives")
+#define TEXT_OPT_CHEAT4    _("Super speed")
+#define TEXT_OPT_CHEAT5    _("Super responsive controls")
+#define TEXT_OPT_CHEAT6    _("Exit course at any time")
+#define TEXT_OPT_CHEAT7    _("Player Size")
+
+#define TEXT_CHEAT_MSIZE0   _("Normal")
+#define TEXT_CHEAT_MSIZE1   _("Tiny")
+#define TEXT_CHEAT_MSIZE2   _("Huge")
+
+#endif
+
+#endif // TEXT_CHEATS_STRINGS_H
