@@ -1198,7 +1198,7 @@ RSP_DIRS := $(BUILD_DIR)/rsp
 ALL_DIRS := $(BUILD_DIR) $(addprefix $(BUILD_DIR)/,$(SRC_DIRS) $(ASM_DIRS) $(GODDARD_SRC_DIRS) $(ULTRA_SRC_DIRS) $(ULTRA_ASM_DIRS) $(ULTRA_BIN_DIRS) $(BIN_DIRS) $(TEXTURE_DIRS) $(TEXT_DIRS) $(SOUND_SAMPLE_DIRS) $(addprefix levels/,$(LEVEL_DIRS)) include) $(MIO0_DIR) $(addprefix $(MIO0_DIR)/,$(VERSION)) $(SOUND_BIN_DIR) $(SOUND_BIN_DIR)/sequences/$(VERSION) $(RSP_DIRS)
 
 ifeq ($(WINDOWS_BUILD),1)
-  ALL_DIRS += $(RES_DIRS)
+  ALL_DIRS += $(BUILD_DIR)/$(RES_DIRS)
 endif
 
 ifeq ($(TARGET_N3DS),1)
@@ -1227,8 +1227,7 @@ $(BUILD_DIR)/src/menu/star_select.o:    $(BUILD_DIR)/include/text_strings.h $(LA
 $(BUILD_DIR)/src/game/ingame_menu.o:    $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
 
 ifeq ($(EXT_OPTIONS_MENU),1)
-$(BUILD_DIR)/src/extras/options_menu.o: $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
-$(BUILD_DIR)/src/extras/cheats.h:       $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
+$(BUILD_DIR)/src/extras/%.o: $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
 endif
 
 ifeq ($(TARGET_PORT_CONSOLE),0)
