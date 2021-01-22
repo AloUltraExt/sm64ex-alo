@@ -421,7 +421,12 @@ endif
 ifeq ($(DEBUG),1)
   OPT_FLAGS := -g
 else
-  OPT_FLAGS := -O2
+# At some point -O2 broke on PC, only -O1 and -g works
+  ifeq ($(TARGET_PORT_CONSOLE),1)
+    OPT_FLAGS := -O2
+  else 
+    OPT_FLAGS := -O1
+  endif
 endif
 
 # Set BITS (32/64) to compile for
@@ -1197,6 +1202,10 @@ $(BUILD_DIR)/text/%/define_text.inc.c: text/define_text.inc.c text/%/courses.h t
 RSP_DIRS := $(BUILD_DIR)/rsp
 ALL_DIRS := $(BUILD_DIR) $(addprefix $(BUILD_DIR)/,$(SRC_DIRS) $(ASM_DIRS) $(GODDARD_SRC_DIRS) $(ULTRA_SRC_DIRS) $(ULTRA_ASM_DIRS) $(ULTRA_BIN_DIRS) $(BIN_DIRS) $(TEXTURE_DIRS) $(TEXT_DIRS) $(SOUND_SAMPLE_DIRS) $(addprefix levels/,$(LEVEL_DIRS)) include) $(MIO0_DIR) $(addprefix $(MIO0_DIR)/,$(VERSION)) $(SOUND_BIN_DIR) $(SOUND_BIN_DIR)/sequences/$(VERSION) $(RSP_DIRS)
 
+ifeq ($(EXTERNAL_DATA),1)
+  ALL_DIRS += $(SKYTILE_DIR)
+endif
+
 ifeq ($(WINDOWS_BUILD),1)
   ALL_DIRS += $(BUILD_DIR)/$(RES_DIRS)
 endif
@@ -1249,17 +1258,21 @@ ifeq ($(EXTERNAL_DATA),1)
 $(BUILD_DIR)/%: %.png
 	$(ZEROTERM) "$(patsubst %.png,%,$^)" > $@
 
+$(BUILD_DIR)/%.inc.c: %.png
+	hexdump -v -e '1/1 "0x%X,"' $< > $@
+	echo >> $@
+
 else
 
 $(BUILD_DIR)/%: %.png
 	$(call print,Converting:,$<,$@)
 	$(V)$(N64GRAPHICS) -s raw -i $@ -g $< -f $(lastword $(subst ., ,$@))
 
-endif
-
 $(BUILD_DIR)/%.inc.c: %.png
 	$(call print,Converting:,$<,$@)
 	$(V)$(N64GRAPHICS) -s $(TEXTURE_ENCODING) -i $@ -g $< -f $(lastword ,$(subst ., ,$(basename $<)))
+
+endif
 
 ifeq ($(EXTERNAL_DATA),0)
 
