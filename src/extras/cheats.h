@@ -54,6 +54,10 @@ extern const u8 optCheatMenuStr[][32];
 struct CheatListWalkOn {
     bool    Lava;
     bool    Quicksand;
+    bool    Water;
+    bool    Gas;
+    bool    Slope;
+    bool    DeathBarrier;
 };
 
 struct CheatList {
@@ -76,5 +80,6 @@ extern void cheats_mario_inputs(struct MarioState *m);
 extern void cheats_mario_action(struct MarioState *m);
 extern void cheats_responsive_controls(struct MarioState *m);
 extern void cheats_mario_size(struct MarioState *m);
+extern f32 cheats_walk_on_environment(f32 height, f32 x, f32 z);
 
 #endif // CHEATS_H

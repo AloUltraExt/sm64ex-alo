@@ -45,12 +45,14 @@ OSX_BUILD ?= 0
 TARGET_ARCH ?= native
 TARGET_BITS ?= 0
 
-# Enable better camera (Puppycam)
-BETTERCAMERA ?= 1
-# Disable no drawing distance by default
-NODRAWINGDISTANCE ?= 0
 # Enable extended options menu by default
 EXT_OPTIONS_MENU ?= 1
+# Enable better camera (Puppycam)
+BETTERCAMERA ?= 1
+# Enable cheats
+CHEATS_ACTIONS ?= 1
+# Disable no drawing distance by default
+NODRAWINGDISTANCE ?= 0
 # Disable text-based save-files by default
 TEXTSAVES ?= 0
 # Load resources from external files
@@ -638,9 +640,15 @@ ifeq ($(BETTERCAMERA),1)
   EXT_OPTIONS_MENU := 1
 endif
 
+# Check for Cheats option
+ifeq ($(CHEATS_ACTIONS),1)
+  CUSTOM_C_DEFINES += -DCHEATS_ACTIONS
+  EXT_OPTIONS_MENU := 1
+endif
+
 # Check for extended options menu option
 ifeq ($(EXT_OPTIONS_MENU),1)
-  CUSTOM_C_DEFINES += -DEXT_OPTIONS_MENU -DCHEATS_ACTIONS
+  CUSTOM_C_DEFINES += -DEXT_OPTIONS_MENU
 endif
 
 # Check for Rumble option
@@ -1157,9 +1165,12 @@ $(BUILD_DIR)/include/text_options_strings.h: include/text_options_strings.h.in
 	$(call print,Encoding:,$<,$@)
 	$(V)$(TEXTCONV) charmap.txt $< $@
 
+ifeq ($(CHEATS_ACTIONS),1)
 $(BUILD_DIR)/include/text_cheats_strings.h: include/text_cheats_strings.h.in
 	$(call print,Encoding:,$<,$@)
 	$(V)$(TEXTCONV) charmap.txt $< $@
+endif
+
 endif
 
 ifeq ($(VERSION),eu)
@@ -1231,13 +1242,18 @@ $(BUILD_DIR)/src/menu/file_select.o:    $(BUILD_DIR)/include/text_strings.h $(LA
 $(BUILD_DIR)/src/menu/star_select.o:    $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
 $(BUILD_DIR)/src/game/ingame_menu.o:    $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
 
-ifeq ($(BETTERCAMERA),1)
-  $(BUILD_DIR)/src/extras/bettercamera.o: $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
-endif
 
 ifeq ($(EXT_OPTIONS_MENU),1)
-  $(BUILD_DIR)/src/extras/cheats.o:       $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
-  $(BUILD_DIR)/src/extras/options_menu.o: $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
+
+  ifeq ($(BETTERCAMERA),1)
+    $(BUILD_DIR)/src/extras/bettercamera.o: $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
+  endif
+
+  ifeq ($(CHEATS_ACTIONS),1)
+    $(BUILD_DIR)/src/extras/cheats.o:       $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
+  endif
+
+  $(BUILD_DIR)/src/extras/options_menu.o:   $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
 endif
 
 ifeq ($(TARGET_PORT_CONSOLE),0)

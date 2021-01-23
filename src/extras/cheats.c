@@ -87,11 +87,19 @@ static const u8 *cheatChoicesMarioSize[] = {
 static const u8 optsWalkOnCheatStr[][64] = {
     { TEXT_CHEAT_WALKON0 },
     { TEXT_CHEAT_WALKON1 },
+    { TEXT_CHEAT_WALKON2 },
+    { TEXT_CHEAT_WALKON3 },
+    { TEXT_CHEAT_WALKON4 },
+    { TEXT_CHEAT_WALKON5 },
 };
 
 static struct Option optWalkOnCheats[] = {
     DEF_OPT_TOGGLE( optsWalkOnCheatStr[0], &Cheats.WalkOn.Lava ),
     DEF_OPT_TOGGLE( optsWalkOnCheatStr[1], &Cheats.WalkOn.Quicksand ),
+    DEF_OPT_TOGGLE( optsWalkOnCheatStr[2], &Cheats.WalkOn.Water ),
+    DEF_OPT_TOGGLE( optsWalkOnCheatStr[3], &Cheats.WalkOn.Gas ),
+    DEF_OPT_TOGGLE( optsWalkOnCheatStr[4], &Cheats.WalkOn.Slope ),
+    DEF_OPT_TOGGLE( optsWalkOnCheatStr[5], &Cheats.WalkOn.DeathBarrier ),
 };
 
 static struct SubMenu menuCheatWalkOn = DEF_SUBMENU( optCheatMenuStr[1], optWalkOnCheats );
@@ -182,6 +190,26 @@ void cheats_mario_size(struct MarioState *m) {
     } else {
         vec3f_set(m->marioObj->header.gfx.scale, 1.0f, 1.0f, 1.0f);
     }
+}
+
+f32 cheats_walk_on_environment(f32 height, f32 x, f32 z) {
+    f32 newHeight;
+    f32 waterLevel = find_water_level(x, z);
+    f32 gasLevel = find_poison_gas_level(x, z);
+
+    if (Cheats.EnableCheats) {
+        if (Cheats.WalkOn.Water && height < waterLevel && gCurrentObject == gMarioObject) {
+            newHeight = waterLevel;
+        } else if (Cheats.WalkOn.Gas && height < gasLevel && gCurrentObject == gMarioObject) {
+            newHeight = gasLevel;
+        } else {
+            newHeight = height;
+        }
+    } else {
+        newHeight = height;
+    }
+
+    return newHeight;
 }
 
 #endif // CHEATS_ACTIONS

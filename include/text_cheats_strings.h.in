@@ -9,7 +9,7 @@
 // TODO: Actually translate this to JP
 
 #define TEXT_OPT_CHEAT0    _("ENABLE CHEATS")
-#define TEXT_OPT_CHEAT1    _("MOONJUMP (PRESS L)")
+#define TEXT_OPT_CHEAT1    _("MOON-JUMP (PRESS L)")
 #define TEXT_OPT_CHEAT2    _("INVINCIBLE PLAYER")
 #define TEXT_OPT_CHEAT3    _("INFINITE LIVES")
 #define TEXT_OPT_CHEAT4    _("SUPER SPEED")
@@ -24,17 +24,21 @@
 
 #define TEXT_CHEAT_WALKON0   _("WALK ON LAVA")
 #define TEXT_CHEAT_WALKON1   _("WALK ON QUICKSAND")
+#define TEXT_CHEAT_WALKON2   _("WALK ON WATER")
+#define TEXT_CHEAT_WALKON3   _("WALK ON GAS")
+#define TEXT_CHEAT_WALKON4   _("WALK ON SLOPE")
+#define TEXT_CHEAT_WALKON5   _("WALK ON DEATH BARRIER")
 
 #else // VERSION
 
 #define TEXT_OPT_CHEAT0    _("Enable cheats")
-#define TEXT_OPT_CHEAT1    _("Moonjump (Press L)")
-#define TEXT_OPT_CHEAT2    _("Invincible Player")
+#define TEXT_OPT_CHEAT1    _("Moon-jump (Press L)")
+#define TEXT_OPT_CHEAT2    _("Invincible player")
 #define TEXT_OPT_CHEAT3    _("Infinite lives")
 #define TEXT_OPT_CHEAT4    _("Super speed")
 #define TEXT_OPT_CHEAT5    _("Super responsive controls")
 #define TEXT_OPT_CHEAT6    _("Exit course at any time")
-#define TEXT_OPT_CHEAT7    _("Player Size")
+#define TEXT_OPT_CHEAT7    _("Player size")
 #define TEXT_OPT_CHEAT8    _("Walk on cheats")
 
 #define TEXT_CHEAT_MSIZE0   _("Normal")
@@ -43,6 +47,10 @@
 
 #define TEXT_CHEAT_WALKON0   _("Walk on lava")
 #define TEXT_CHEAT_WALKON1   _("Walk on quicksand")
+#define TEXT_CHEAT_WALKON2   _("Walk on water")
+#define TEXT_CHEAT_WALKON3   _("Walk on gas")
+#define TEXT_CHEAT_WALKON4   _("Walk on slope")
+#define TEXT_CHEAT_WALKON5   _("Walk on death barrier")
 
 #endif
 

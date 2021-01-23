@@ -8,6 +8,9 @@
 #include "surface_collision.h"
 #include "surface_load.h"
 #include "math_util.h"
+#ifdef CHEATS_ACTIONS
+#include "extras/cheats.h"
+#endif
 
 /**************************************************
  *                      WALLS                     *
@@ -455,6 +458,10 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
         if (y - (height + -78.0f) < 0.0f) {
             continue;
         }
+
+#ifdef CHEATS_ACTIONS
+        height = cheats_walk_on_environment(height, x, z);
+#endif
 
         *pheight = height;
         floor = surf;
