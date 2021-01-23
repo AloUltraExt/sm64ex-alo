@@ -87,8 +87,6 @@ static const u8 *cheatChoicesMarioSize[] = {
 static const u8 optsWalkOnCheatStr[][64] = {
     { TEXT_CHEAT_WALKON0 },
     { TEXT_CHEAT_WALKON1 },
-    { TEXT_CHEAT_WALKON2 },
-    { TEXT_CHEAT_WALKON3 },
 };
 
 static struct Option optWalkOnCheats[] = {
