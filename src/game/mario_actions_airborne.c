@@ -16,6 +16,9 @@
 #ifdef BETTERCAMERA
 #include "extras/bettercamera.h"
 #endif
+#ifdef CHEATS_ACTIONS
+#include "extras/cheats.h"
+#endif
 
 void play_flip_sounds(struct MarioState *m, s16 frame1, s16 frame2, s16 frame3) {
     s32 animFrame = m->marioObj->header.gfx.animInfo.animFrame;
@@ -1524,7 +1527,11 @@ s32 act_lava_boost(struct MarioState *m) {
 
     switch (perform_air_step(m, 0)) {
         case AIR_STEP_LANDED:
-            if (m->floor->type == SURFACE_BURNING) {
+            if (m->floor->type == SURFACE_BURNING
+#ifdef CHEATS_ACTIONS
+            && (Cheats.EnableCheats && !Cheats.WalkOn.Lava)
+#endif
+            ) {
                 m->actionState = 0;
                 if (!(m->flags & MARIO_METAL_CAP)) {
                     m->hurtCounter += (m->flags & MARIO_CAP_ON_HEAD) ? 12 : 18;

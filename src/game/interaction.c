@@ -24,6 +24,10 @@
 #include "sound_init.h"
 #include "rumble_init.h"
 
+#ifdef CHEATS_ACTIONS
+#include "extras/cheats.h"
+#endif
+
 #define INT_GROUND_POUND_OR_TWIRL (1 << 0) // 0x01
 #define INT_PUNCH                 (1 << 1) // 0x02
 #define INT_KICK                  (1 << 2) // 0x04
@@ -1821,6 +1825,10 @@ void check_death_barrier(struct MarioState *m) {
 }
 
 void check_lava_boost(struct MarioState *m) {
+#ifdef CHEATS_ACTIONS
+    if (Cheats.EnableCheats && Cheats.WalkOn.Lava) return;
+#endif
+
     if (!(m->action & ACT_FLAG_RIDING_SHELL) && m->pos[1] < m->floorHeight + 10.0f) {
         if (!(m->flags & MARIO_METAL_CAP)) {
             m->hurtCounter += (m->flags & MARIO_CAP_ON_HEAD) ? 12 : 18;

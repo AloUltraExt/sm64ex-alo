@@ -465,7 +465,7 @@ void update_walking_speed(struct MarioState *m) {
 
 /* Handles the "Super responsive controls" cheat. The content of the "else" is Mario's original code for turning around.*/
 #ifdef CHEATS_ACTIONS
-    cheats_responsible_controls(m);
+    cheats_responsive_controls(m);
 #else
     m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0x800, 0x800);
 #endif

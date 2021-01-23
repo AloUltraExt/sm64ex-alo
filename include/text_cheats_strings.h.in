@@ -1,6 +1,9 @@
 ﻿#ifndef TEXT_CHEATS_STRINGS_H
 #define TEXT_CHEATS_STRINGS_H
 
+#define TEXT_OPT_CHEATS          _("CHEATS")
+#define TEXT_OPT_CHEATS_WALKON   _("WALK ON CHEATS")
+
 #if defined(VERSION_JP) || defined(VERSION_SH)
 
 // TODO: Actually translate this to JP
@@ -13,10 +16,14 @@
 #define TEXT_OPT_CHEAT5    _("SUPER RESPONSIVE CONTROLS")
 #define TEXT_OPT_CHEAT6    _("EXIT COURSE AT ANY TIME")
 #define TEXT_OPT_CHEAT7    _("PLAYER SIZE")
+#define TEXT_OPT_CHEAT8    _("WALK ON CHEATS")
 
 #define TEXT_CHEAT_MSIZE0   _("NORMAL")
 #define TEXT_CHEAT_MSIZE1   _("TINY")
 #define TEXT_CHEAT_MSIZE2   _("HUGE")
+
+#define TEXT_CHEAT_WALKON0   _("WALK ON LAVA")
+#define TEXT_CHEAT_WALKON1   _("WALK ON QUICKSAND")
 
 #else // VERSION
 
@@ -28,10 +35,14 @@
 #define TEXT_OPT_CHEAT5    _("Super responsive controls")
 #define TEXT_OPT_CHEAT6    _("Exit course at any time")
 #define TEXT_OPT_CHEAT7    _("Player Size")
+#define TEXT_OPT_CHEAT8    _("Walk on cheats")
 
 #define TEXT_CHEAT_MSIZE0   _("Normal")
 #define TEXT_CHEAT_MSIZE1   _("Tiny")
 #define TEXT_CHEAT_MSIZE2   _("Huge")
+
+#define TEXT_CHEAT_WALKON0   _("Walk on lava")
+#define TEXT_CHEAT_WALKON1   _("Walk on quicksand")
 
 #endif
 

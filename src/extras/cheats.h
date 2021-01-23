@@ -41,7 +41,7 @@
 #include "game/save_file.h"
 #include "game/sound_init.h"
 
-#include "text_strings.h"
+#include "options_menu.h"
 
 #ifndef TARGET_N64
 #include <stdbool.h>
@@ -49,45 +49,32 @@
 #define bool int
 #endif
 
-static const u8 optsCheatsStr[][64] = {
-    { TEXT_OPT_CHEAT0 },
-    { TEXT_OPT_CHEAT1 },
-    { TEXT_OPT_CHEAT2 },
-    { TEXT_OPT_CHEAT3 },
-    { TEXT_OPT_CHEAT4 },
-    { TEXT_OPT_CHEAT5 },
-    { TEXT_OPT_CHEAT6 },
-    { TEXT_OPT_CHEAT7 },
-};
+extern const u8 optCheatMenuStr[][32];
 
-static const u8 optsmarioSizeCheatStr[][64] = {
-    { TEXT_CHEAT_MSIZE0 },
-    { TEXT_CHEAT_MSIZE1 },
-    { TEXT_CHEAT_MSIZE2 },
-};
-
-static const u8 *marioSizeCheatChoices[] = {
-    optsmarioSizeCheatStr[0],
-    optsmarioSizeCheatStr[1],
-    optsmarioSizeCheatStr[2],
+struct CheatListWalkOn {
+    bool    Lava;
+    bool    Quicksand;
 };
 
 struct CheatList {
-    bool         EnableCheats;
-    bool         MoonJump;
-    bool         InfiniteHealth;
-    bool         InfiniteLives;
-    bool         SuperSpeed;
-    bool         Responsive;
-    bool         ExitAnywhere;
-    unsigned int MarioSize;
+    bool    EnableCheats;
+    bool    MoonJump;
+    bool    InfiniteHealth;
+    bool    InfiniteLives;
+    bool    SuperSpeed;
+    bool    Responsive;
+    bool    ExitAnywhere;
+    u32     MarioSize;
+    struct CheatListWalkOn WalkOn;
 };
 
 extern struct CheatList Cheats;
 
+extern struct SubMenu menuCheats;
+
 extern void cheats_mario_inputs(struct MarioState *m);
 extern void cheats_mario_action(struct MarioState *m);
-extern void cheats_responsible_controls(struct MarioState *m);
+extern void cheats_responsive_controls(struct MarioState *m);
 extern void cheats_mario_size(struct MarioState *m);
 
 #endif // CHEATS_H

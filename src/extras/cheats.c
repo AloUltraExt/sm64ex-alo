@@ -8,6 +8,7 @@
 #include "model_ids.h"
 #include "object_fields.h"
 #include "seq_ids.h"
+#include "text_strings.h"
 
 #include "actors/common0.h"
 
@@ -49,9 +50,67 @@
 
 #include "pc/configfile.h"
 
+#include "options_menu.h"
 #include "cheats.h"
 
 struct CheatList Cheats;
+
+const u8 optCheatMenuStr[][32] = {
+    { TEXT_OPT_CHEATS },
+    { TEXT_OPT_CHEATS_WALKON },
+};
+
+static const u8 optsCheatsStr[][64] = {
+    { TEXT_OPT_CHEAT0 },
+    { TEXT_OPT_CHEAT1 },
+    { TEXT_OPT_CHEAT2 },
+    { TEXT_OPT_CHEAT3 },
+    { TEXT_OPT_CHEAT4 },
+    { TEXT_OPT_CHEAT5 },
+    { TEXT_OPT_CHEAT6 },
+    { TEXT_OPT_CHEAT7 },
+    { TEXT_OPT_CHEAT8 },
+};
+
+static const u8 optsMarioSizeCheatStr[][64] = {
+    { TEXT_CHEAT_MSIZE0 },
+    { TEXT_CHEAT_MSIZE1 },
+    { TEXT_CHEAT_MSIZE2 },
+};
+
+static const u8 *cheatChoicesMarioSize[] = {
+    optsMarioSizeCheatStr[0],
+    optsMarioSizeCheatStr[1],
+    optsMarioSizeCheatStr[2],
+};
+
+static const u8 optsWalkOnCheatStr[][64] = {
+    { TEXT_CHEAT_WALKON0 },
+    { TEXT_CHEAT_WALKON1 },
+    { TEXT_CHEAT_WALKON2 },
+    { TEXT_CHEAT_WALKON3 },
+};
+
+static struct Option optWalkOnCheats[] = {
+    DEF_OPT_TOGGLE( optsWalkOnCheatStr[0], &Cheats.WalkOn.Lava ),
+    DEF_OPT_TOGGLE( optsWalkOnCheatStr[1], &Cheats.WalkOn.Quicksand ),
+};
+
+static struct SubMenu menuCheatWalkOn = DEF_SUBMENU( optCheatMenuStr[1], optWalkOnCheats );
+
+struct Option optsCheats[] = {
+    DEF_OPT_TOGGLE( optsCheatsStr[0], &Cheats.EnableCheats ),
+    DEF_OPT_TOGGLE( optsCheatsStr[1], &Cheats.MoonJump ),
+    DEF_OPT_TOGGLE( optsCheatsStr[2], &Cheats.InfiniteHealth ),
+    DEF_OPT_TOGGLE( optsCheatsStr[3], &Cheats.InfiniteLives ),
+    DEF_OPT_TOGGLE( optsCheatsStr[4], &Cheats.SuperSpeed ),
+    DEF_OPT_TOGGLE( optsCheatsStr[5], &Cheats.Responsive ),
+    DEF_OPT_TOGGLE( optsCheatsStr[6], &Cheats.ExitAnywhere ),
+    DEF_OPT_CHOICE( optsCheatsStr[7], &Cheats.MarioSize, cheatChoicesMarioSize ),
+    DEF_OPT_SUBMENU( optsCheatsStr[8], &menuCheatWalkOn ),
+};
+
+struct SubMenu menuCheats = DEF_SUBMENU( optCheatMenuStr[0], optsCheats );
 
 void cheats_moon_jump(struct MarioState *m) {
     if (Cheats.MoonJump) {        
@@ -100,7 +159,7 @@ void cheats_mario_action(struct MarioState *m) {
     }
 }
 
-void cheats_responsible_controls(struct MarioState *m) {
+void cheats_responsive_controls(struct MarioState *m) {
     if (Cheats.Responsive && Cheats.EnableCheats) {
         m->faceAngle[1] = m->intendedYaw;
     } else {

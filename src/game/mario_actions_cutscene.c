@@ -30,6 +30,10 @@
 #include "../../include/libc/stdlib.h"
 #include "pc/pc_main.h"
 
+#ifdef CHEATS_ACTIONS
+#include "extras/cheats.h"
+#endif
+
 // TODO: put this elsewhere
 enum SaveOption { SAVE_OPT_SAVE_AND_CONTINUE = 1, SAVE_OPT_SAVE_AND_QUIT, SAVE_OPT_SAVE_EXIT_GAME, SAVE_OPT_CONTINUE_DONT_SAVE };
 
@@ -2717,6 +2721,10 @@ static s32 act_end_waving_cutscene(struct MarioState *m) {
 }
 
 static s32 check_for_instant_quicksand(struct MarioState *m) {
+#ifdef CHEATS_ACTIONS
+    if (Cheats.EnableCheats && Cheats.WalkOn.Quicksand) return FALSE;
+#endif
+
     if (m->floor->type == SURFACE_INSTANT_QUICKSAND && m->action & ACT_FLAG_INVULNERABLE
         && m->action != ACT_QUICKSAND_DEATH) {
         update_mario_sound_and_camera(m);

@@ -1144,10 +1144,6 @@ ifeq ($(VERSION),sh)
   $(BUILD_DIR)/src/audio/load.o: $(SOUND_BIN_DIR)/bank_sets.inc.c $(SOUND_BIN_DIR)/sequences_header.inc.c $(SOUND_BIN_DIR)/ctl_header.inc.c $(SOUND_BIN_DIR)/tbl_header.inc.c
 endif
 
-ifeq ($(BETTERCAMERA),1)
-  $(BUILD_DIR)/src/game/camera.o: $(BUILD_DIR)/include/text_strings.h
-endif
-
 $(BUILD_DIR)/include/text_strings.h: include/text_strings.h.in
 	$(call print,Encoding:,$<,$@)
 	$(V)$(TEXTCONV) charmap.txt $< $@
@@ -1235,8 +1231,13 @@ $(BUILD_DIR)/src/menu/file_select.o:    $(BUILD_DIR)/include/text_strings.h $(LA
 $(BUILD_DIR)/src/menu/star_select.o:    $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
 $(BUILD_DIR)/src/game/ingame_menu.o:    $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
 
+ifeq ($(BETTERCAMERA),1)
+  $(BUILD_DIR)/src/extras/bettercamera.o: $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
+endif
+
 ifeq ($(EXT_OPTIONS_MENU),1)
-$(BUILD_DIR)/src/extras/%.o: $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
+  $(BUILD_DIR)/src/extras/cheats.o:       $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
+  $(BUILD_DIR)/src/extras/options_menu.o: $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
 endif
 
 ifeq ($(TARGET_PORT_CONSOLE),0)
