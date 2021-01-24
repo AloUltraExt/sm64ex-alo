@@ -3957,6 +3957,10 @@ s32 update_camera_hud_status(struct Camera *c) {
         status |= CAM_STATUS_FIXED;
     } else if (set_cam_angle(0) == CAM_ANGLE_MARIO) {
         status |= CAM_STATUS_MARIO;
+#ifdef BETTERCAMERA
+    } else if (c->mode == CAMERA_MODE_NEWCAM) {
+        status |= CAM_STATUS_NEWCAM;
+#endif
     } else {
         status |= CAM_STATUS_LAKITU;
     }

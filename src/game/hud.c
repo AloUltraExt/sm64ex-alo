@@ -421,6 +421,13 @@ void render_hud_camera_status(void) {
             break;
     }
 
+#ifdef BETTERCAMERA
+extern Texture texture_hud_char_puppycam[];
+    if (sCameraHUD.status & CAM_STATUS_NEWCAM) {
+        render_hud_tex_lut(x + 16, y, texture_hud_char_puppycam);
+    }
+#endif
+
     gSPDisplayList(gDisplayListHead++, dl_hud_img_end);
 }
 

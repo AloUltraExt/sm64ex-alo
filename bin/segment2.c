@@ -87,7 +87,7 @@ ALIGNED8 static const Texture texture_hud_char_I[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_J[] = {
-#include "textures/segment2/segment2.02600_custom.rgba16.inc.c"
+#include "textures/segment2/custom/segment2.02600.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_K[] = {
@@ -115,7 +115,7 @@ ALIGNED8 static const Texture texture_hud_char_P[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_Q[] = {
-#include "textures/segment2/segment2.03400_custom.rgba16.inc.c"
+#include "textures/segment2/custom/segment2.03400.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_R[] = {
@@ -135,7 +135,7 @@ ALIGNED8 static const Texture texture_hud_char_U[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_V[] = {
-#include "textures/segment2/segment2.03E00_custom.rgba16.inc.c"
+#include "textures/segment2/custom/segment2.03E00.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_W[] = {
@@ -143,7 +143,7 @@ ALIGNED8 static const Texture texture_hud_char_W[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_X[] = {
-#include "textures/segment2/segment2.04200_custom.rgba16.inc.c"
+#include "textures/segment2/custom/segment2.04200.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_Y[] = {
@@ -151,7 +151,7 @@ ALIGNED8 static const Texture texture_hud_char_Y[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_Z[] = {
-#include "textures/segment2/segment2.04600_custom.rgba16.inc.c"
+#include "textures/segment2/custom/segment2.04600.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_apostrophe[] = {
@@ -169,23 +169,23 @@ ALIGNED8 static const Texture texture_hud_char_umlaut[] = {
 #endif
 
 ALIGNED8 static const Texture texture_hud_char_exclamation[] = {
-#include "textures/segment2/segment2.04C00_custom.rgba16.inc.c"// JP !
+#include "textures/segment2/custom/segment2.04C00.rgba16.inc.c"// JP !
 };
 
 ALIGNED8 static const Texture texture_hud_char_double_exclamation[] = {
-#include "textures/segment2/segment2.04E00_custom.rgba16.inc.c"// JP !!
+#include "textures/segment2/custom/segment2.04E00.rgba16.inc.c"// JP !!
 };
 
 ALIGNED8 static const Texture texture_hud_char_question[] = {
-#include "textures/segment2/segment2.05000_custom.rgba16.inc.c"// JP ?
+#include "textures/segment2/custom/segment2.05000.rgba16.inc.c"// JP ?
 };
 
 ALIGNED8 static const Texture texture_hud_char_ampersand[] = {
-#include "textures/segment2/segment2.05200_custom.rgba16.inc.c"// JP &
+#include "textures/segment2/custom/segment2.05200.rgba16.inc.c"// JP &
 };
 
 ALIGNED8 static const Texture texture_hud_char_percent[] = {
-#include "textures/segment2/segment2.05400_custom.rgba16.inc.c"// JP %
+#include "textures/segment2/custom/segment2.05400.rgba16.inc.c"// JP %
 };
 
 ALIGNED8 static const Texture texture_hud_char_multiply[] = {
@@ -213,6 +213,12 @@ ALIGNED8 static const Texture texture_hud_char_decimal_point[] = {
 #if defined(VERSION_JP) || defined(VERSION_SH)
 ALIGNED8 static const Texture texture_hud_char_beta_key[] = {
 #include "textures/segment2/segment2.06000.rgba16.inc.c"
+};
+#endif
+
+#ifdef BETTERCAMERA
+ALIGNED8 const Texture texture_hud_char_puppycam[] = {
+#include "textures/segment2/custom/tex_puppycam_icon.rgba16.inc.c"
 };
 #endif
 
