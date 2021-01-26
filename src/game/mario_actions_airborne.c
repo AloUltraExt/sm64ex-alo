@@ -70,17 +70,7 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
 
     fallHeight = m->peakHeight - m->pos[1];
 
-#if QOL_FIX_FALL_DAMAGE_HEIGHT
-    if (m->action == ACT_GROUND_POUND)
-#else
-    //! Never true
-    if (m->actionState == ACT_GROUND_POUND)
-#endif
-    {
-        damageHeight = 600.0f;
-    } else {
-        damageHeight = 1150.0f;
-    }
+    damageHeight = 1150.0f;
 
     if (m->action != ACT_TWIRLING && m->floor->type != SURFACE_BURNING) {
         if (m->vel[1] < -55.0f) {

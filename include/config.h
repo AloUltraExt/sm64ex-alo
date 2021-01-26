@@ -109,8 +109,6 @@
 #define QOL_FIX_DOOR_KEY_CUTSCENE (0 || QOL_FIXES)
 /// Fixes cutscene loop code (see comment in the fix)
 #define QOL_FIX_CUTSCENE_LOOP (0 || QOL_FIXES)
-/// Fixes fall damage height when grounpounding
-#define QOL_FIX_FALL_DAMAGE_HEIGHT (0 || QOL_FIXES)
 
 // Debug Defines
 // Skip Intro Cutscene (N64)
