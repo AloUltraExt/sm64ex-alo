@@ -67,7 +67,9 @@ u32 gGlobalTimer = 0;
 
 static u16 sCurrFBNum = 0;
 u16 frameBufferIndex = 0;
+#ifdef GODDARD_MFACE
 void (*gGoddardVblankCallback)(void) = NULL;
+#endif
 struct Controller *gPlayer1Controller = &gControllers[0];
 struct Controller *gPlayer2Controller = &gControllers[1];
 // probably debug only, see note below
@@ -368,10 +370,12 @@ void config_gfx_pool(void) {
 void display_and_vsync(void) {
     profiler_log_thread5_time(BEFORE_DISPLAY_LISTS);
     osRecvMesg(&D_80339CB8, &D_80339BEC, OS_MESG_BLOCK);
+#ifdef GODDARD_MFACE
     if (gGoddardVblankCallback != NULL) {
         gGoddardVblankCallback();
         gGoddardVblankCallback = NULL;
     }
+#endif
     send_display_list(&gGfxPool->spTask);
     profiler_log_thread5_time(AFTER_DISPLAY_LISTS);
     osRecvMesg(&gGameVblankQueue, &D_80339BEC, OS_MESG_BLOCK);

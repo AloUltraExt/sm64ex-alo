@@ -12,7 +12,6 @@
 #include "engine/math_util.h"
 #include "envfx_snow.h"
 #include "game_init.h"
-#include "goddard/renderer.h"
 #include "interaction.h"
 #include "level_update.h"
 #include "mario.h"
@@ -24,6 +23,9 @@
 #include "save_file.h"
 #include "skybox.h"
 #include "sound_init.h"
+#ifdef GODDARD_MFACE
+#include "goddard/renderer.h"
+#endif
 #ifdef BETTERCAMERA
 #include "extras/bettercamera.h"
 #endif
@@ -82,6 +84,7 @@ struct GraphNodeObject gMirrorMario;  // copy of Mario's geo node for drawing mi
 // (message NPC related things, the Mario head geo, and Mario geo
 // functions)
 
+#ifdef GODDARD_MFACE
 /**
  * Geo node script that draws Mario's head on the title screen.
  */
@@ -102,6 +105,7 @@ Gfx *geo_draw_mario_head_goddard(s32 callContext, struct GraphNode *node, Mat4 *
     }
     return gfx;
 }
+#endif
 
 static void toad_message_faded(void) {
     if (gCurrentObject->oDistanceToMario > 700.0f) {

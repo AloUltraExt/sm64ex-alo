@@ -61,6 +61,8 @@ EXTERNAL_DATA ?= 0
 DISCORDRPC ?= 0
 # Enable rumble functions (Originally in Shindou)
 RUMBLE_FEEDBACK ?= 0
+# Enable Goddard (Mario Face)
+GODDARD_MFACE ?= 1
 # Enable PC Port defines
 PC_PORT_DEFINES ?= 0
 
@@ -407,7 +409,9 @@ ULTRA_SRC_DIRS := lib/src lib/src/math
 ULTRA_ASM_DIRS := lib/asm lib/data
 ULTRA_BIN_DIRS := lib/bin
 
-GODDARD_SRC_DIRS := src/goddard src/goddard/dynlists
+ifeq ($(GODDARD_MFACE),1)
+  GODDARD_SRC_DIRS := src/goddard src/goddard/dynlists
+endif
 
 MIPSISET := -mips2
 MIPSBIT := -32
@@ -510,7 +514,10 @@ endif
 
 CXX_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 S_FILES := $(foreach dir,$(ASM_DIRS),$(wildcard $(dir)/*.s))
-GODDARD_C_FILES := $(foreach dir,$(GODDARD_SRC_DIRS),$(wildcard $(dir)/*.c))
+
+ifeq ($(GODDARD_MFACE),1)
+  GODDARD_C_FILES := $(foreach dir,$(GODDARD_SRC_DIRS),$(wildcard $(dir)/*.c))
+endif
 
 ifeq ($(WINDOWS_BUILD),1)
   RC_FILES := $(foreach dir,$(RES_DIRS),$(wildcard $(dir)/*.rc))
@@ -571,7 +578,9 @@ endif
 ULTRA_O_FILES := $(foreach file,$(ULTRA_S_FILES),$(BUILD_DIR)/$(file:.s=.o)) \
                  $(foreach file,$(ULTRA_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
 
-GODDARD_O_FILES := $(foreach file,$(GODDARD_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
+ifeq ($(GODDARD_MFACE),1)
+  GODDARD_O_FILES := $(foreach file,$(GODDARD_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
+endif
 
 RPC_LIBS :=
 ifeq ($(TARGET_PORT_CONSOLE),0)
@@ -659,6 +668,11 @@ endif
 # Check for no drawing distance option
 ifeq ($(NODRAWINGDISTANCE),1)
   CUSTOM_C_DEFINES += -DNODRAWINGDISTANCE
+endif
+
+# Check for Goddard option
+ifeq ($(GODDARD_MFACE),1)
+  CUSTOM_C_DEFINES += -DGODDARD_MFACE
 endif
 
 # Check for QoL fixes option
@@ -1519,7 +1533,7 @@ ifeq ($(TARGET_N64),1)
 # Run linker script through the C preprocessor
 $(BUILD_DIR)/$(LD_SCRIPT): $(LD_SCRIPT)
 	$(call print,Preprocessing linker script:,$<,$@)
-	$(V)$(CPP) $(VERSION_CFLAGS) -MMD -MP -MT $@ -MF $@.d -I include/ -I . -DBUILD_DIR=$(BUILD_DIR) -o $@ $<
+	$(V)$(CPP) $(VERSION_CFLAGS) $(CUSTOM_C_DEFINES) -MMD -MP -MT $@ -MF $@.d -I include/ -I . -DBUILD_DIR=$(BUILD_DIR) -o $@ $<
 
 # Link libultra
 $(BUILD_DIR)/libultra.a: $(ULTRA_O_FILES)
@@ -1527,15 +1541,20 @@ $(BUILD_DIR)/libultra.a: $(ULTRA_O_FILES)
 	$(V)$(AR) rcs -o $@ $(ULTRA_O_FILES)
 	$(V)$(TOOLS_DIR)/patch_libultra_math $@
 
+ifeq ($(GODDARD_MFACE),1)
 # Link libgoddard
 $(BUILD_DIR)/libgoddard.a: $(GODDARD_O_FILES)
 	@$(PRINT) "$(GREEN)Linking libgoddard:  $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(AR) rcs -o $@ $(GODDARD_O_FILES)
+    
+LIB_GD_FILE := $(BUILD_DIR)/libgoddard.a
+LIB_GD_FLAG := -lgoddard
+endif
 
 # Link SM64 ELF file
-$(ELF): $(O_FILES) $(MIO0_OBJ_FILES) $(SOUND_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) undefined_syms.txt $(BUILD_DIR)/libultra.a $(BUILD_DIR)/libgoddard.a
+$(ELF): $(O_FILES) $(MIO0_OBJ_FILES) $(SOUND_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) undefined_syms.txt $(BUILD_DIR)/libultra.a $(LIB_GD_FILE)
 	@$(PRINT) "$(GREEN)Linking ELF file:  $(BLUE)$@ $(NO_COL)\n"
-	$(V)$(LD) -L $(BUILD_DIR) $(LDFLAGS) -o $@ $(O_FILES) $(LIBS) -lultra -lgoddard
+	$(V)$(LD) -L $(BUILD_DIR) $(LDFLAGS) -o $@ $(O_FILES) $(LIBS) -lultra $(LIB_GD_FLAG)
 
 # Build ROM
 $(ROM): $(ELF)

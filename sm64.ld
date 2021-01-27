@@ -921,6 +921,7 @@ SECTIONS
       BUILD_DIR/src/menu/file_select.o(.text);
       BUILD_DIR/src/menu/star_select.o(.text);
       BUILD_DIR/src/menu*.o(.text);
+#ifdef GODDARD_MFACE
       BUILD_DIR/libgoddard.a:gd_main.o(.text);
       BUILD_DIR/libgoddard.a:gd_memory.o(.text);
       BUILD_DIR/libgoddard.a:sfx.o(.text);
@@ -937,6 +938,7 @@ SECTIONS
       BUILD_DIR/libgoddard.a:shape_helper.o(.text);
       BUILD_DIR/libgoddard.a:renderer.o(.text);
       BUILD_DIR/libgoddard.a:*.o(.text);
+#endif
       /* data, rodata, per file */
       BUILD_DIR/src/menu/level_select_menu.o(.data*);
       BUILD_DIR/src/menu/level_select_menu.o(.rodata*);
@@ -947,6 +949,7 @@ SECTIONS
       BUILD_DIR/src/menu/star_select.o(.rodata*);
       BUILD_DIR/src/menu*.o(.data*);
       BUILD_DIR/src/menu*.o(.rodata*);
+#ifdef GODDARD_MFACE
       /* goddard subsystem data */
       BUILD_DIR/libgoddard.a:gd_main.o(.data*);
       BUILD_DIR/libgoddard.a:draw_objects.o(.data*);
@@ -972,6 +975,7 @@ SECTIONS
       BUILD_DIR/libgoddard.a:gd_math.o(.rodata*);
       BUILD_DIR/libgoddard.a:shape_helper.o(.rodata*);
       BUILD_DIR/libgoddard.a:renderer.o(.rodata*);
+#endif
    }
    END_SEG(goddard)
    BEGIN_NOLOAD(goddard)
@@ -980,6 +984,7 @@ SECTIONS
       BUILD_DIR/src/menu/file_select.o(.bss*);
       BUILD_DIR/src/menu/star_select.o(.bss*);
       BUILD_DIR/src/menu*.o(.bss*);
+#ifdef GODDARD_MFACE
       BUILD_DIR/libgoddard.a:gd_main.o(.bss*);
       BUILD_DIR/libgoddard.a:gd_memory.o(.bss*);
       BUILD_DIR/libgoddard.a:sfx.o(.bss*);
@@ -995,6 +1000,7 @@ SECTIONS
       BUILD_DIR/libgoddard.a:shape_helper.o(.bss*);
       BUILD_DIR/libgoddard.a:renderer.o(.bss*);
       BUILD_DIR/libgoddard.a:*.o(.bss*);
+#endif
    }
    END_NOLOAD(goddard)
 
@@ -1020,6 +1026,7 @@ SECTIONS
    MIO0_SEG(debug_level_select, 0x07000000)
    MIO0_SEG(title_screen_bg, 0x0A000000)
 
+#ifdef GODDARD_MFACE
    /* 271B20-2A42A0 [32780] */
    BEGIN_SEG(gd_dynlists, 0x04000000)
    {
@@ -1042,6 +1049,7 @@ SECTIONS
       BUILD_DIR/libgoddard.a:*.o(.rodata);
    }
    END_SEG(gd_dynlists)
+#endif
 
    gMainLevels = __romPos;
 

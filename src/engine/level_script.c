@@ -16,7 +16,6 @@
 #include "game/profiler.h"
 #include "game/save_file.h"
 #include "game/sound_init.h"
-#include "goddard/renderer.h"
 #include "geo_layout.h"
 #include "graph_node.h"
 #include "level_script.h"
@@ -25,6 +24,9 @@
 #include "surface_collision.h"
 #include "surface_load.h"
 #include "level_table.h"
+#ifdef GODDARD_MFACE
+#include "goddard/renderer.h"
+#endif
 
 #define CMD_GET(type, offset) (*(type *) (CMD_PROCESS_OFFSET(offset) + (u8 *) sCurrentCmd))
 
@@ -285,7 +287,7 @@ static void level_cmd_load_mio0(void) {
     sCurrentCmd = CMD_NEXT;
 }
 
-#ifdef USE_SYSTEM_MALLOC
+#if defined(USE_SYSTEM_MALLOC) && defined(GODDARD_MFACE)
 static void *alloc_for_goddard(u32 size) {
     return mem_pool_alloc(sMemPoolForGoddard, size);
 }
@@ -296,6 +298,8 @@ static void free_for_goddard(void *ptr) {
 #endif
 
 static void level_cmd_load_mario_head(void) {
+#ifdef GODDARD_MFACE
+
 #ifdef USE_SYSTEM_MALLOC
     sMemPoolForGoddard = mem_pool_init(0, 0);
     gdm_init(alloc_for_goddard, free_for_goddard);
@@ -314,6 +318,7 @@ static void level_cmd_load_mario_head(void) {
     }
 #endif
 
+#endif
     sCurrentCmd = CMD_NEXT;
 }
 
