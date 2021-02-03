@@ -1285,24 +1285,19 @@ endif
 TEXTURE_ENCODING := u8
 
 ifeq ($(EXTERNAL_DATA),1)
-
 $(BUILD_DIR)/%: %.png
-	$(ZEROTERM) "$(patsubst %.png,%,$^)" > $@
-
-$(BUILD_DIR)/%.inc.c: %.png
-	hexdump -v -e '1/1 "0x%X,"' $< > $@
-	echo >> $@
-
+	$(call print,Converting:,$<,$@)
+	$(V)$(ZEROTERM) "$(patsubst %.png,%,$^)" > $@
+$(BUILD_DIR)/%.inc.c: $(BUILD_DIR)/% %.png
+	$(call print,Converting:,$<,$@)
+	$(V)hexdump -v -e '1/1 "0x%X,"' $< > $@
 else
-
 $(BUILD_DIR)/%: %.png
 	$(call print,Converting:,$<,$@)
 	$(V)$(N64GRAPHICS) -s raw -i $@ -g $< -f $(lastword $(subst ., ,$@))
-
 $(BUILD_DIR)/%.inc.c: %.png
 	$(call print,Converting:,$<,$@)
 	$(V)$(N64GRAPHICS) -s $(TEXTURE_ENCODING) -i $@ -g $< -f $(lastword ,$(subst ., ,$(basename $<)))
-
 endif
 
 ifeq ($(EXTERNAL_DATA),0)
