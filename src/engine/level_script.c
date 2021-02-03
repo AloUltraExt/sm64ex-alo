@@ -16,7 +16,6 @@
 #include "game/profiler.h"
 #include "game/save_file.h"
 #include "game/sound_init.h"
-#include "goddard/renderer.h"
 #include "geo_layout.h"
 #include "graph_node.h"
 #include "level_script.h"
@@ -25,6 +24,9 @@
 #include "surface_collision.h"
 #include "surface_load.h"
 #include "level_table.h"
+#ifdef GODDARD_MFACE
+#include "goddard/renderer.h"
+#endif
 
 #define CMD_GET(type, offset) (*(type *) (CMD_PROCESS_OFFSET(offset) + (u8 *) sCurrentCmd))
 
@@ -285,7 +287,7 @@ static void level_cmd_load_mio0(void) {
     sCurrentCmd = CMD_NEXT;
 }
 
-#ifdef USE_SYSTEM_MALLOC
+#if defined(USE_SYSTEM_MALLOC) && defined(GODDARD_MFACE)
 static void *alloc_for_goddard(u32 size) {
     return mem_pool_alloc(sMemPoolForGoddard, size);
 }
@@ -296,6 +298,8 @@ static void free_for_goddard(void *ptr) {
 #endif
 
 static void level_cmd_load_mario_head(void) {
+#ifdef GODDARD_MFACE
+
 #ifdef USE_SYSTEM_MALLOC
     sMemPoolForGoddard = mem_pool_init(0, 0);
     gdm_init(alloc_for_goddard, free_for_goddard);
@@ -314,6 +318,7 @@ static void level_cmd_load_mario_head(void) {
     }
 #endif
 
+#endif
     sCurrentCmd = CMD_NEXT;
 }
 
@@ -740,8 +745,6 @@ static void level_cmd_38(void) {
     sCurrentCmd = CMD_NEXT;
 }
 
-extern int gPressedStart;
-
 static void level_cmd_get_or_set_var(void) {
     if (CMD_GET(u8, 2) == 0) {
         switch (CMD_GET(u8, 3)) {
@@ -759,9 +762,6 @@ static void level_cmd_get_or_set_var(void) {
                 break;
             case 4:
                 gCurrAreaIndex = sRegister;
-                break;
-            case 5: 
-                gPressedStart = sRegister; 
                 break;
         }
     } else {
@@ -781,45 +781,9 @@ static void level_cmd_get_or_set_var(void) {
             case 4:
                 sRegister = gCurrAreaIndex;
                 break;
-            case 5: 
-                sRegister = gPressedStart; 
-                break;
         }
     }
 
-    sCurrentCmd = CMD_NEXT;
-}
-
-int gDemoLevels[7] = {
-    LEVEL_BOWSER_1,
-    LEVEL_WF,
-    LEVEL_CCM,
-    LEVEL_BBH,
-    LEVEL_JRB,
-    LEVEL_HMC,
-    LEVEL_PSS
-};
-
-int gDemoLevelID = 0;
-int gDemoInputListID_2 = 0;
-
-extern int start_demo(int);
-
-static void level_cmd_advdemo(void)
-{
-    start_demo(0);
-    if(gDemoLevelID == 6) {
-        sRegister = gDemoLevels[6];
-        gDemoLevelID = 0;
-    } else {
-        sRegister = gDemoLevels[gDemoLevelID++];
-    }
-    sCurrentCmd = CMD_NEXT;
-}
-
-static void level_cmd_cleardemoptr(void)
-{
-    gCurrDemoInput = NULL;
     sCurrentCmd = CMD_NEXT;
 }
 
@@ -885,8 +849,6 @@ static void (*LevelScriptJumpTable[])(void) = {
     /*3A*/ level_cmd_3A,
     /*3B*/ level_cmd_create_whirlpool,
     /*3C*/ level_cmd_get_or_set_var,
-    /*3D*/ level_cmd_advdemo,
-    /*3E*/ level_cmd_cleardemoptr,
 };
 
 struct LevelCommand *level_script_execute(struct LevelCommand *cmd) {

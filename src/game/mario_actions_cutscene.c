@@ -30,6 +30,10 @@
 #include "../../include/libc/stdlib.h"
 #include "pc/pc_main.h"
 
+#ifdef CHEATS_ACTIONS
+#include "extras/cheats.h"
+#endif
+
 // TODO: put this elsewhere
 enum SaveOption { SAVE_OPT_SAVE_AND_CONTINUE = 1, SAVE_OPT_SAVE_AND_QUIT, SAVE_OPT_SAVE_EXIT_GAME, SAVE_OPT_CONTINUE_DONT_SAVE };
 
@@ -602,7 +606,7 @@ void general_star_dance_handler(struct MarioState *m, s32 isInWater) {
     if (m->actionState == 0) {
         switch (++m->actionTimer) {
             case 1:
-                #ifdef QOL_FIXES
+                #if QOL_FEATURE_PROPER_SHOW_COLLECTABLE
                 spawn_object(m->marioObj, MODEL_NONE, bhvCelebrationStar)->header.gfx.sharedChild = m->interactObj->header.gfx.sharedChild;
                 #else
                 spawn_object(m->marioObj, MODEL_STAR, bhvCelebrationStar);
@@ -787,10 +791,24 @@ s32 launch_mario_until_land(struct MarioState *m, s32 endAction, s32 animation, 
 }
 
 s32 act_unlocking_key_door(struct MarioState *m) {
+#if QOL_FIX_DOOR_KEY_CUTSCENE
+    f32 angle;
+#endif
     m->faceAngle[1] = m->usedObj->oMoveAngleYaw;
 
+#if QOL_FIX_DOOR_KEY_CUTSCENE
+    if (m->faceAngle[1] >= -0x4000 && m->faceAngle[1] <= 0x4000) {
+        angle = -75.0f;
+    } else {
+        angle = 75.0f;
+    }
+    
+    m->pos[0] = m->usedObj->oPosX + coss(m->faceAngle[1]) * angle;
+    m->pos[2] = m->usedObj->oPosZ + sins(m->faceAngle[1]) * angle;
+#else
     m->pos[0] = m->usedObj->oPosX + coss(m->faceAngle[1]) * 75.0f;
     m->pos[2] = m->usedObj->oPosZ + sins(m->faceAngle[1]) * 75.0f;
+#endif
 
     if (m->actionArg & 2) {
         m->faceAngle[1] += 0x8000;
@@ -1119,15 +1137,27 @@ s32 act_exit_land_save_dialog(struct MarioState *m) {
                 case -1:
                     spawn_obj_at_mario_rel_yaw(m, MODEL_BOWSER_KEY_CUTSCENE, bhvBowserKeyCourseExit, -32768);
                     //! fall through
+                    #if QOL_FIX_MISSING_SOUNDS_KEY_EXIT
+                    break;
+                    #endif
                 case 67:
                     play_sound(SOUND_ACTION_KEY_SWISH, m->marioObj->header.gfx.cameraToObject);
                     //! fall through
+                    #if QOL_FIX_MISSING_SOUNDS_KEY_EXIT
+                    break;
+                    #endif
                 case 83:
                     play_sound(SOUND_ACTION_PAT_BACK, m->marioObj->header.gfx.cameraToObject);
                     //! fall through
+                    #if QOL_FIX_MISSING_SOUNDS_KEY_EXIT
+                    break;
+                    #endif
                 case 111:
                     play_sound(SOUND_ACTION_UNKNOWN45C, m->marioObj->header.gfx.cameraToObject);
                     // no break
+                    #if QOL_FIX_MISSING_SOUNDS_KEY_EXIT
+                    break;
+                    #endif
             }
             handle_save_menu(m);
             break;
@@ -2691,6 +2721,10 @@ static s32 act_end_waving_cutscene(struct MarioState *m) {
 }
 
 static s32 check_for_instant_quicksand(struct MarioState *m) {
+#ifdef CHEATS_ACTIONS
+    if (Cheats.EnableCheats && Cheats.WalkOn.Quicksand) return FALSE;
+#endif
+
     if (m->floor->type == SURFACE_INSTANT_QUICKSAND && m->action & ACT_FLAG_INVULNERABLE
         && m->action != ACT_QUICKSAND_DEATH) {
         update_mario_sound_and_camera(m);

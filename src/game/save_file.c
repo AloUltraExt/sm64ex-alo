@@ -13,6 +13,10 @@
 #include "macros.h"
 #include "pc/ini.h"
 
+#ifdef TEXTSAVES
+#include "extras/text_save.h"
+#endif
+
 #define MENU_DATA_MAGIC 0x4849
 #define SAVE_FILE_MAGIC 0x4441
 
@@ -50,12 +54,6 @@ s8 gLevelToCourseNumTable[] = {
 
 STATIC_ASSERT(ARRAY_COUNT(gLevelToCourseNumTable) == LEVEL_COUNT - 1,
               "change this array if you are adding levels");
-
-#ifdef TEXTSAVES
-
-#include "text_save.inc.h"
-
-#endif
 
 // This was probably used to set progress to 100% for debugging, but
 // it was removed from the release ROM.

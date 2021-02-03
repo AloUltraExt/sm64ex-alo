@@ -14,7 +14,10 @@
 #include "rumble_init.h"
 #include "save_file.h"
 #ifdef BETTERCAMERA
-#include "bettercamera.h"
+#include "extras/bettercamera.h"
+#endif
+#ifdef CHEATS_ACTIONS
+#include "extras/cheats.h"
 #endif
 
 void play_flip_sounds(struct MarioState *m, s16 frame1, s16 frame2, s16 frame3) {
@@ -67,17 +70,7 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
 
     fallHeight = m->peakHeight - m->pos[1];
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtype-limits"
-
-    //! Never true
-    if (m->actionState == ACT_GROUND_POUND) {
-        damageHeight = 600.0f;
-    } else {
-        damageHeight = 1150.0f;
-    }
-
-#pragma GCC diagnostic pop
+    damageHeight = 1150.0f;
 
     if (m->action != ACT_TWIRLING && m->floor->type != SURFACE_BURNING) {
         if (m->vel[1] < -55.0f) {
@@ -1336,7 +1329,7 @@ s32 act_air_hit_wall(struct MarioState *m) {
         return set_mario_action(m, ACT_SOFT_BONK, 0);
     }
 
-#ifdef AVOID_UB
+#if QOL_FIX_HIT_WALL_ANIMATION
     return
 #endif
     set_mario_animation(m, MARIO_ANIM_START_WALLKICK);
@@ -1524,7 +1517,11 @@ s32 act_lava_boost(struct MarioState *m) {
 
     switch (perform_air_step(m, 0)) {
         case AIR_STEP_LANDED:
-            if (m->floor->type == SURFACE_BURNING) {
+            if (m->floor->type == SURFACE_BURNING
+#ifdef CHEATS_ACTIONS
+            && (Cheats.EnableCheats && !Cheats.WalkOn.Lava)
+#endif
+            ) {
                 m->actionState = 0;
                 if (!(m->flags & MARIO_METAL_CAP)) {
                     m->hurtCounter += (m->flags & MARIO_CAP_ON_HEAD) ? 12 : 18;
@@ -2108,7 +2105,7 @@ s32 act_special_triple_jump(struct MarioState *m) {
 
     switch (perform_air_step(m, 0)) {
         case AIR_STEP_LANDED:
-            #ifdef QOL_FIXES
+            #if QOL_FEATURE_MORE_SPECIAL_TRIPLE_JUMP_ACTIONS
             if (m->actionState++ != 0) {
                 set_mario_action(m, ACT_FREEFALL_LAND_STOP, 0);
             }
@@ -2122,7 +2119,7 @@ s32 act_special_triple_jump(struct MarioState *m) {
             play_mario_landing_sound(m, SOUND_ACTION_TERRAIN_LANDING);
             break;
         
-        #ifdef QOL_FIXES
+        #if QOL_FEATURE_MORE_SPECIAL_TRIPLE_JUMP_ACTIONS
         case AIR_STEP_HIT_WALL:
             if (m->forwardVel > 16.0f) {
                 mario_bonk_reflection(m, FALSE);

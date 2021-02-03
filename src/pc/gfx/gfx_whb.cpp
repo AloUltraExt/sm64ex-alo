@@ -250,8 +250,8 @@ error:
             goto error;
         }
 
-        pos += 2 * sizeof(float);
-        prg->num_floats += 2;
+        pos += (2+2) * sizeof(float); // 2 floats for the texcoord + 2 floats (8 bytes) as padding, for faster GPU reading
+        prg->num_floats += (2+2);
     }
 
     if (cc_features.opt_fog) {
@@ -491,7 +491,7 @@ static void gfx_whb_draw_triangles(float buf_vbo[], size_t buf_vbo_len, size_t b
     vbo_array.resize(idx + 1);
 
     size_t vbo_len = sizeof(float) * buf_vbo_len;
-    vbo_array[idx] = static_cast<float*>(memalign(4, vbo_len));
+    vbo_array[idx] = static_cast<float*>(memalign(0x40, vbo_len));
 
     float* new_vbo = vbo_array[idx];
     memcpy(new_vbo, buf_vbo, vbo_len);
@@ -526,6 +526,7 @@ static void gfx_whb_finish_render(void) {
 }
 
 static void gfx_whb_shutdown(void) {
+    WHBGfxShutdown();
 }
 
 extern "C" void whb_free_vbo(void) {

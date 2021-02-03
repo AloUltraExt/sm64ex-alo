@@ -23,6 +23,17 @@
 #include "sm64.h"
 #include "text_strings.h"
 
+#ifdef BETTERCAM_MOUSE
+#include "pc/controller/controller_mouse.h"
+#include "pc/configfile.h"
+
+static bool mouseControl = FALSE;
+static int oldMouse_x;
+static int oldMouse_y;
+
+extern struct GfxDimensions gfx_current_dimensions;
+#endif
+
 #include "eu_translation.h"
 #ifdef VERSION_EU
 #undef LANGUAGE_FUNCTION
@@ -115,7 +126,10 @@ static s8 sAllFilesExist = FALSE;
 
 // Defines the value of the save slot selected in the menu.
 // Mario A: 1 | Mario B: 2 | Mario C: 3 | Mario D: 4
-static s8 sSelectedFileNum = 0;
+#ifndef BETTERCAM_MOUSE
+static
+#endif
+s8 sSelectedFileNum = 0;
 
 // Which coin score mode to use when scoring files. 0 for local
 // coin high score, 1 for high score across all files.
@@ -1646,12 +1660,12 @@ void handle_cursor_button_input(void) {
     if (sSelectedButtonID == MENU_BUTTON_SCORE_FILE_A || sSelectedButtonID == MENU_BUTTON_SCORE_FILE_B
         || sSelectedButtonID == MENU_BUTTON_SCORE_FILE_C
         || sSelectedButtonID == MENU_BUTTON_SCORE_FILE_D) {
-        if (gPlayer3Controller->buttonPressed
-#if Z_TRIG_EXTRA_ACT
-            & (B_BUTTON | START_BUTTON | Z_TRIG)) {
-#else
-            & (B_BUTTON | START_BUTTON)) {
+        if (gPlayer3Controller->buttonPressed 
+            & (B_BUTTON | START_BUTTON 
+#if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
+            | Z_TRIG
 #endif
+            )) {
             sClickPos[0] = sCursorPos[0];
             sClickPos[1] = sCursorPos[1];
             sCursorClickingTimer = 1;
@@ -1661,11 +1675,11 @@ void handle_cursor_button_input(void) {
         }
     } else { // If cursor is clicked
         if (gPlayer3Controller->buttonPressed
-#if Z_TRIG_EXTRA_ACT
-            & (A_BUTTON | B_BUTTON | START_BUTTON | Z_TRIG)) {
-#else
-            & (A_BUTTON | B_BUTTON | START_BUTTON)) {
+            & (A_BUTTON | B_BUTTON | START_BUTTON 
+#if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
+            | Z_TRIG
 #endif
+            )) {
             sClickPos[0] = sCursorPos[0];
             sClickPos[1] = sCursorPos[1];
             sCursorClickingTimer = 1;
@@ -1684,14 +1698,41 @@ void handle_controller_cursor_input(void) {
     if (rawStickY > -2 && rawStickY < 2) {
         rawStickY = 0;
     }
+    #ifdef BETTERCAM_MOUSE 
+    else
+    {
+        mouseControl = 0;
+    }
+    #endif
     if (rawStickX > -2 && rawStickX < 2) {
         rawStickX = 0;
     }
+    #ifdef BETTERCAM_MOUSE 
+    else
+    {
+        mouseControl = 0;
+    }
+    #endif
 
     // Move cursor
     sCursorPos[0] += rawStickX / 8;
     sCursorPos[1] += rawStickY / 8;
 
+#ifdef BETTERCAM_MOUSE
+    static float screenScale;
+    screenScale = (float) gfx_current_dimensions.height / SCREEN_HEIGHT;
+    if (mouse_x - oldMouse_x != 0 || mouse_y - oldMouse_y != 0)
+        mouseControl = 1;
+    if (mouseControl && configCameraMouse) {
+        sCursorPos[0] = ((mouse_x - (gfx_current_dimensions.width - (screenScale * 320)) / 2) / screenScale) - 160.0f;
+        sCursorPos[1] = (mouse_y / screenScale - 120.0f) * -1;
+    }
+    oldMouse_x = mouse_x;
+    oldMouse_y = mouse_y;
+
+if (!mouseControl) {
+#endif
+    
     // Stop cursor from going offscreen
     if (sCursorPos[0] > GFX_DIMENSIONS_FROM_RIGHT_EDGE(188)) {
         sCursorPos[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(188);
@@ -1706,6 +1747,9 @@ void handle_controller_cursor_input(void) {
     if (sCursorPos[1] < -90.0f) {
         sCursorPos[1] = -90.0f;
     }
+#ifdef BETTERCAM_MOUSE
+}
+#endif
 
     if (sCursorClickingTimer == 0) {
         handle_cursor_button_input();
@@ -2709,6 +2753,10 @@ void print_score_file_star_score(s8 fileIndex, s16 courseIndex, s16 x, s16 y) {
  * Prints save file score strings that shows when a save file is chosen inside the score menu.
  */
 void print_save_file_scores(s8 fileIndex) {
+#ifdef TARGET_N3DS
+    gDPForceFlush(gDisplayListHead++);
+    gDPSet2d(gDisplayListHead++, 2); // vetoed
+#endif 
 #ifndef VERSION_EU
     unsigned char textMario[] = { TEXT_MARIO };
 #ifdef VERSION_JP
@@ -2987,9 +3035,18 @@ static void print_file_select_strings(void) {
  * Geo function that prints file select strings and the cursor.
  */
 Gfx *geo_file_select_strings_and_menu_cursor(s32 callContext, UNUSED struct GraphNode *node, UNUSED Mat4 mtx) {
-    if (callContext == GEO_CONTEXT_RENDER) {
+    if (callContext == GEO_CONTEXT_RENDER && sSelectedFileNum == 0) {
+#ifdef TARGET_N3DS
+        gDPForceFlush(gDisplayListHead++);
+        gDPSet2d(gDisplayListHead++, 1);
+        gDPSetIod(gDisplayListHead++, iodFileSelect);
+#endif
         print_file_select_strings();
         print_menu_cursor();
+#ifdef TARGET_N3DS
+        gDPForceFlush(gDisplayListHead++);
+        gDPSet2d(gDisplayListHead++, 0);
+#endif
     }
     return NULL;
 }

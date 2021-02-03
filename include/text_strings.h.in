@@ -7,6 +7,10 @@
 #include "text_options_strings.h"
 #endif
 
+#ifdef CHEATS_ACTIONS
+#include "text_cheats_strings.h"
+#endif
+
 /**
  * Global Symbols
  */

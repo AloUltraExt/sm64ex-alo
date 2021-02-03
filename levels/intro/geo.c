@@ -62,7 +62,9 @@ const GeoLayout intro_geo_mario_head_regular[] = {
       GEO_OPEN_NODE(),
          GEO_CAMERA_FRUSTUM(45, 128, 16384),
          GEO_OPEN_NODE(),
+#ifdef GODDARD_MFACE
             GEO_ASM(2, geo_draw_mario_head_goddard),
+#endif
          GEO_CLOSE_NODE(),
       GEO_CLOSE_NODE(),
 #ifdef VERSION_SH
@@ -93,7 +95,9 @@ const GeoLayout intro_geo_mario_head_dizzy[] = {
       GEO_OPEN_NODE(),
          GEO_CAMERA_FRUSTUM(45, 128, 16384),
          GEO_OPEN_NODE(),
+#ifdef GODDARD_MFACE
             GEO_ASM(3, geo_draw_mario_head_goddard),
+#endif
          GEO_CLOSE_NODE(),
       GEO_CLOSE_NODE(),
 #ifdef VERSION_SH

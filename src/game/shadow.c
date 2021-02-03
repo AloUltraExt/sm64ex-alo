@@ -15,6 +15,7 @@
 
 // Avoid Z-fighting
 #define find_floor_height_and_data 0.4 + find_floor_height_and_data
+#define find_water_level -1.4 + find_water_level
 
 /**
  * @file shadow.c
@@ -190,6 +191,9 @@ f32 get_water_level_below_shadow(struct Shadow *s) {
     }
     //! @bug Missing return statement. This compiles to return `waterLevel`
     //! incidentally.
+#if QOL_FIX_SHADOW_WATER_LEVEL
+    return waterLevel;
+#endif
 }
 
 /**
@@ -214,6 +218,11 @@ s8 init_shadow(struct Shadow *s, f32 xPos, f32 yPos, f32 zPos, s16 shadowScale, 
     if (gEnvironmentRegions != 0) {
         waterLevel = get_water_level_below_shadow(s);
     }
+#if QOL_FIX_SHADOW_WATER_LEVEL
+    else {
+        waterLevel = 0;
+    }
+#endif
     if (gShadowAboveWaterOrLava) {
         //! @bug Use of potentially undefined variable `waterLevel`
         s->floorHeight = waterLevel;

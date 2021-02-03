@@ -378,7 +378,7 @@ static struct ShaderProgram *gfx_opengl_create_and_load_new_shader(uint32_t shad
     }
 
     if (opt_alpha && opt_noise) 
-        append_line(fs_buf, &fs_len, "texel.a *= floor(random(floor(vec3(gl_FragCoord.xy, frame_count))) + 0.5);");
+        append_line(fs_buf, &fs_len, "texel.a *= floor(clamp(random(floor(vec3(gl_FragCoord.xy, frame_count))) + texel.a, 0.0, 1.0));");
 
     if (opt_alpha) {
         append_line(fs_buf, &fs_len, "gl_FragColor = texel;");

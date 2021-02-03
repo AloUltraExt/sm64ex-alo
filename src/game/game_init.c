@@ -21,8 +21,15 @@
 #include "segment_symbols.h"
 #include "rumble_init.h"
 #include <prevent_bss_reordering.h>
+
+#ifdef TARGET_N3DS
+#ifndef DISABLE_N3DS_AUDIO
+#include "pc/audio/audio_3ds_threading.h"
+#endif
+#endif
+
 #ifdef BETTERCAMERA
-#include "bettercamera.h"
+#include "extras/bettercamera.h"
 #endif
 
 // FIXME: I'm not sure all of these variables belong in this file, but I don't
@@ -60,7 +67,9 @@ u32 gGlobalTimer = 0;
 
 static u16 sCurrFBNum = 0;
 u16 frameBufferIndex = 0;
+#ifdef GODDARD_MFACE
 void (*gGoddardVblankCallback)(void) = NULL;
+#endif
 struct Controller *gPlayer1Controller = &gControllers[0];
 struct Controller *gPlayer2Controller = &gControllers[1];
 // probably debug only, see note below
@@ -158,10 +167,17 @@ void clear_frame_buffer(s32 color) {
     gDPSetCycleType(gDisplayListHead++, G_CYC_FILL);
 
     gDPSetFillColor(gDisplayListHead++, color);
+#ifdef TARGET_N3DS
+    gDPForceFlush(gDisplayListHead++);
+    gDPSet2d(gDisplayListHead++, 1);
+#endif
     gDPFillRectangle(gDisplayListHead++,
                      GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(0), BORDER_HEIGHT,
                      GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(0) - 1, SCREEN_HEIGHT - BORDER_HEIGHT - 1);
-
+#ifdef TARGET_N3DS
+    gDPForceFlush(gDisplayListHead++);
+    gDPSet2d(gDisplayListHead++, 0);
+#endif
     gDPPipeSync(gDisplayListHead++);
 
     gDPSetCycleType(gDisplayListHead++, G_CYC_1CYCLE);
@@ -185,8 +201,15 @@ void clear_viewport(Vp *viewport, s32 color) {
     gDPSetCycleType(gDisplayListHead++, G_CYC_FILL);
 
     gDPSetFillColor(gDisplayListHead++, color);
+#ifdef TARGET_N3DS
+    gDPForceFlush(gDisplayListHead++);
+    gDPSet2d(gDisplayListHead++, 1);
+#endif
     gDPFillRectangle(gDisplayListHead++, vpUlx, vpUly, vpLrx, vpLry);
-
+#ifdef TARGET_N3DS
+    gDPForceFlush(gDisplayListHead++);
+    gDPSet2d(gDisplayListHead++, 0);
+#endif
     gDPPipeSync(gDisplayListHead++);
 
     gDPSetCycleType(gDisplayListHead++, G_CYC_1CYCLE);
@@ -347,10 +370,12 @@ void config_gfx_pool(void) {
 void display_and_vsync(void) {
     profiler_log_thread5_time(BEFORE_DISPLAY_LISTS);
     osRecvMesg(&D_80339CB8, &D_80339BEC, OS_MESG_BLOCK);
+#ifdef GODDARD_MFACE
     if (gGoddardVblankCallback != NULL) {
         gGoddardVblankCallback();
         gGoddardVblankCallback = NULL;
     }
+#endif
     send_display_list(&gGfxPool->spTask);
     profiler_log_thread5_time(AFTER_DISPLAY_LISTS);
     osRecvMesg(&gGameVblankQueue, &D_80339BEC, OS_MESG_BLOCK);
@@ -673,6 +698,11 @@ void game_loop_one_iteration(void) {
         config_gfx_pool();
         read_controller_inputs();
         levelCommandAddr = level_script_execute(levelCommandAddr);
+#ifdef TARGET_N3DS
+#ifndef DISABLE_N3DS_AUDIO
+        LightEvent_Signal(&s_event_audio);
+#endif
+#endif
         display_and_vsync();
 
         // when debug info is enabled, print the "BUF %d" information.

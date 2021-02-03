@@ -5,6 +5,9 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex/tree/nightly) with addi
  * Restored N64 build.
  * Additional backends merged from other forks (3DS, Wii U, Switch) (more incoming)
 
+## Patches
+ * Some misc patches for this repo are available [here](https://github.com/AloXado320/sm64ex-alo-patches) (more incoming)
+
 ## Building
  * To build for sm64ex platforms, [click here](https://github.com/sm64pc/sm64ex/blob/nightly/README.md).
  * To build for N64, [click here](https://github.com/n64decomp/sm64/blob/master/README.md). (TARGET_N64=1)

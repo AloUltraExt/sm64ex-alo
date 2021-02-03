@@ -349,11 +349,13 @@ static void gfx_sdl_handle_events(void) {
     }
 }
 
+#ifndef TARGET_PORT_CONSOLE
 static void gfx_sdl_set_keyboard_callbacks(kb_callback_t on_key_down, kb_callback_t on_key_up, void (*on_all_keys_up)(void)) {
     kb_key_down = on_key_down;
     kb_key_up = on_key_up;
     kb_all_keys_up = on_all_keys_up;
 }
+#endif
 
 static bool gfx_sdl_start_frame(void) {
     return true;
@@ -405,7 +407,9 @@ static void gfx_sdl_shutdown(void) {
 
 struct GfxWindowManagerAPI gfx_sdl = {
     gfx_sdl_init,
+#ifndef TARGET_PORT_CONSOLE
     gfx_sdl_set_keyboard_callbacks,
+#endif
     gfx_sdl_main_loop,
     gfx_sdl_get_dimensions,
     gfx_sdl_handle_events,

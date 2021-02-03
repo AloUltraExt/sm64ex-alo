@@ -303,7 +303,6 @@ void print_act_selector_strings(void) {
     }
     currLevelName = segmented_to_virtual(levelNameTbl[gCurrCourseNum - 1]);
 #endif
-
     // Print the coin highscore.
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
@@ -361,7 +360,7 @@ void print_act_selector_strings(void) {
     }
 
     gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_end);
- }
+}
 
 /**
  * Geo function that Print act selector strings.
@@ -373,7 +372,16 @@ Gfx *geo_act_selector_strings(s16 callContext, UNUSED struct GraphNode *node, UN
 Gfx *geo_act_selector_strings(s16 callContext, UNUSED struct GraphNode *node) {
 #endif
     if (callContext == GEO_CONTEXT_RENDER) {
+#ifdef TARGET_N3DS
+        gDPForceFlush(gDisplayListHead++);
+        gDPSet2d(gDisplayListHead++, 1);
+        gDPSetIod(gDisplayListHead++, iodStarSelect);
+#endif
         print_act_selector_strings();
+#ifdef TARGET_N3DS
+        gDPForceFlush(gDisplayListHead++);
+        gDPSet2d(gDisplayListHead++, 0);
+#endif
     }
     return NULL;
 }
@@ -413,13 +421,14 @@ s32 lvl_init_act_selector_values_and_stars(UNUSED s32 arg, UNUSED s32 unused) {
 s32 lvl_update_obj_and_load_act_button_actions(UNUSED s32 arg, UNUSED s32 unused) {
     if (sActSelectorMenuTimer >= 11) {
         // If any of these buttons are pressed, play sound and go to course act
-#ifndef Z_TRIG_EXTRA_ACT
+#if !QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
         if ((gPlayer3Controller->buttonPressed & A_BUTTON)
          || (gPlayer3Controller->buttonPressed & START_BUTTON)
-         || (gPlayer3Controller->buttonPressed & B_BUTTON)) {
+         || (gPlayer3Controller->buttonPressed & B_BUTTON)) 
 #else
-        if ((gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | B_BUTTON | Z_TRIG))) {
+        if ((gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | B_BUTTON | Z_TRIG))) 
 #endif
+        {
 #if defined(VERSION_JP)
             play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
 #else

@@ -1,5 +1,6 @@
 #ifdef USE_SYSTEM_MALLOC
 #include <stdlib.h>
+#include <malloc.h>
 #endif
 #include <PR/ultratypes.h>
 
@@ -9,6 +10,7 @@
 #include "engine/math_util.h"
 #include "engine/surface_collision.h"
 #include "level_table.h"
+#include "memory.h"
 #include "object_constants.h"
 #include "object_fields.h"
 #include "object_helpers.h"
@@ -93,7 +95,7 @@ struct Object *try_allocate_object(struct ObjectNode *destList, struct ObjectNod
         destList->prev = nextObj;
     } else {
 #ifdef USE_SYSTEM_MALLOC
-        nextObj = (struct ObjectNode *) malloc(sizeof(struct Object));
+        nextObj = (struct ObjectNode *) MALLOC_FUNCTION(sizeof(struct Object));
         if (nextObj == NULL) {
             abort();
         }

@@ -1,10 +1,18 @@
+#ifdef TEXTSAVES
+
+#include <ultra64.h>
+#include "sm64.h"
+#include "buffers/buffers.h"
+#include "game/save_file.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-#include "course_table.h"
 #include "pc/ini.h"
 #include "pc/platform.h"
 #include "pc/fs/fs.h"
+
+#include "course_table.h"
 
 #define FILENAME_FORMAT "%s/sm64_save_file_%d.sav"
 #define NUM_COURSES 15
@@ -75,7 +83,7 @@ static u32 int_to_bin(u32 n) {
 /**
  * Write SaveFile and MainMenuSaveData structs to a text-based savefile
  */
-static s32 write_text_save(s32 fileIndex) {
+s32 write_text_save(s32 fileIndex) {
     FILE* file;
     struct SaveFile *savedata;
     struct MainMenuSaveData *menudata;
@@ -204,7 +212,7 @@ static s32 write_text_save(s32 fileIndex) {
 /**
  * Read gSaveBuffer data from a text-based savefile
  */
-static s32 read_text_save(s32 fileIndex) {
+s32 read_text_save(s32 fileIndex) {
     char filename[SYS_MAX_PATH] = { 0 };
     const char *value;
     ini_t *savedata;
@@ -335,3 +343,5 @@ static s32 read_text_save(s32 fileIndex) {
     ini_free(savedata);
     return 0;
 }
+
+#endif // TEXTSAVES

@@ -10,13 +10,15 @@
 #include "game/print.h"
 #include "game/segment2.h"
 #include "game/save_file.h"
-#ifdef BETTERCAMERA
-#include "game/bettercamera.h"
-#endif
 #include "game/mario_misc.h"
 #include "game/game_init.h"
 #include "game/ingame_menu.h"
-#include "game/options_menu.h"
+
+#include "options_menu.h"
+
+#ifdef BETTERCAMERA
+#include "bettercamera.h"
+#endif
 
 #ifndef TARGET_N64
 #include "pc/pc_main.h"
@@ -67,7 +69,6 @@ static const u8 optMainStr[][32] = {
     { TEXT_OPT_VIDEO },
     { TEXT_OPT_AUDIO },
     { TEXT_EXIT_GAME },
-    { TEXT_OPT_CHEATS },
 };
 
 static const u8 optsCameraStr[][32] = {
@@ -103,18 +104,6 @@ static const u8 optsAudioStr[][32] = {
     { TEXT_OPT_ENVVOLUME },
 };
 
-static const u8 optsCheatsStr[][64] = {
-    { TEXT_OPT_CHEAT1 },
-    { TEXT_OPT_CHEAT2 },
-    { TEXT_OPT_CHEAT3 },
-    { TEXT_OPT_CHEAT4 },
-    { TEXT_OPT_CHEAT5 },
-    { TEXT_OPT_CHEAT6 },
-    { TEXT_OPT_CHEAT7 },
-    { TEXT_OPT_CHEAT8 },
-    { TEXT_OPT_CHEAT9 },
-};
-
 static const u8 optBindStr[][32] = {
     { TEXT_OPT_UNBOUND },
     { TEXT_OPT_PRESSKEY },
@@ -138,7 +127,6 @@ static const u8 optBindStr[][32] = {
     { TEXT_BIND_RIGHT },
     { TEXT_OPT_DEADZONE },
     { TEXT_OPT_RUMBLE },
-    { TEXT_OPT_N64FACE }
 };
 
 static const u8 *filterChoices[] = {
@@ -152,70 +140,6 @@ static const u8 *vsyncChoices[] = {
     toggleStr[1],
     optsVideoStr[6],
 };
-
-enum OptType {
-    OPT_INVALID = 0,
-    OPT_TOGGLE,
-    OPT_CHOICE,
-    OPT_SCROLL,
-    OPT_SUBMENU,
-    OPT_BIND,
-    OPT_BUTTON,
-};
-
-struct SubMenu;
-
-struct Option {
-    enum OptType type;
-    const u8 *label;
-    union {
-        u32 *uval;
-        bool *bval;
-    };
-    union {
-        struct {
-            const u8 **choices;
-            u32 numChoices;
-        };
-        struct {
-            u32 scrMin;
-            u32 scrMax;
-            u32 scrStep;
-        };
-        struct SubMenu *nextMenu;
-        void (*actionFn)(struct Option *, s32);
-    };
-};
-
-struct SubMenu {
-    struct SubMenu *prev; // this is set at runtime to avoid needless complication
-    const u8 *label;
-    struct Option *opts;
-    s32 numOpts;
-    s32 select;
-    s32 scroll;
-};
-
-/* helper macros */
-
-#define DEF_OPT_TOGGLE(lbl, bv) \
-    { .type = OPT_TOGGLE, .label = lbl, .bval = bv }
-#define DEF_OPT_SCROLL(lbl, uv, min, max, st) \
-    { .type = OPT_SCROLL, .label = lbl, .uval = uv, .scrMin = min, .scrMax = max, .scrStep = st }
-#define DEF_OPT_CHOICE(lbl, uv, ch) \
-    { .type = OPT_CHOICE, .label = lbl, .uval = uv, .choices = ch, .numChoices = sizeof(ch) / sizeof(ch[0]) }
-#define DEF_OPT_SUBMENU(lbl, nm) \
-    { .type = OPT_SUBMENU, .label = lbl, .nextMenu = nm }
-
-#ifndef TARGET_N64
-#define DEF_OPT_BIND(lbl, uv) \
-    { .type = OPT_BIND, .label = lbl, .uval = uv }
-#define DEF_OPT_BUTTON(lbl, act) \
-    { .type = OPT_BUTTON, .label = lbl, .actionFn = act }
-#endif
-
-#define DEF_SUBMENU(lbl, opt) \
-    { .label = lbl, .opts = opt, .numOpts = sizeof(opt) / sizeof(opt[0]) }
 
 /* button action functions */
 
@@ -256,11 +180,8 @@ static struct Option optsCamera[] = {
 };
 #endif
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct Option optsControls[] = {
-#ifdef TARGET_WII_U
-    DEF_OPT_TOGGLE( optBindStr[22], &configN64FaceButtons ),
-#else
     DEF_OPT_BIND( optBindStr[ 2], configKeyA ),
     DEF_OPT_BIND( optBindStr[ 3], configKeyB ),
     DEF_OPT_BIND( optBindStr[ 4], configKeyStart ),
@@ -283,20 +204,21 @@ static struct Option optsControls[] = {
     // way, the player can't accidentally lock themselves out of using the stick
     DEF_OPT_SCROLL( optBindStr[20], &configStickDeadzone, 0, 100, 1 ),
     DEF_OPT_SCROLL( optBindStr[21], &configRumbleStrength, 0, 100, 1)
-#endif
 };
+#endif
 
 static struct Option optsVideo[] = {
-#ifndef TARGET_WII_U
+#ifndef TARGET_PORT_CONSOLE
     DEF_OPT_TOGGLE( optsVideoStr[0], &configWindow.fullscreen ),
     DEF_OPT_TOGGLE( optsVideoStr[5], &configWindow.vsync ),
 #endif
     DEF_OPT_CHOICE( optsVideoStr[1], &configFiltering, filterChoices ),
     DEF_OPT_TOGGLE( optsVideoStr[7], &configHUD ),
+#ifndef TARGET_PORT_CONSOLE
     DEF_OPT_BUTTON( optsVideoStr[4], optvideo_reset_window ),
+#endif
     DEF_OPT_BUTTON( optsVideoStr[9], optvideo_apply ),
 };
-#endif
 
 static struct Option optsAudio[] = {
     DEF_OPT_SCROLL( optsAudioStr[0], &configMasterVolume, 0, MAX_VOLUME, 1 ),
@@ -305,37 +227,21 @@ static struct Option optsAudio[] = {
     DEF_OPT_SCROLL( optsAudioStr[3], &configEnvVolume, 0, MAX_VOLUME, 1),
 };
 
-#ifdef CHEATS_ACTIONS
-static struct Option optsCheats[] = {
-    DEF_OPT_TOGGLE( optsCheatsStr[0], &Cheats.EnableCheats ),
-    DEF_OPT_TOGGLE( optsCheatsStr[1], &Cheats.MoonJump ),
-    DEF_OPT_TOGGLE( optsCheatsStr[2], &Cheats.GodMode ),
-    DEF_OPT_TOGGLE( optsCheatsStr[3], &Cheats.InfiniteLives ),
-    DEF_OPT_TOGGLE( optsCheatsStr[4], &Cheats.SuperSpeed ),
-    DEF_OPT_TOGGLE( optsCheatsStr[5], &Cheats.Responsive ),
-    DEF_OPT_TOGGLE( optsCheatsStr[6], &Cheats.ExitAnywhere ),
-    DEF_OPT_TOGGLE( optsCheatsStr[7], &Cheats.HugeMario ),
-    DEF_OPT_TOGGLE( optsCheatsStr[8], &Cheats.TinyMario ),
-
-};
-#endif
-
 /* submenu definitions */
 
 #ifdef BETTERCAMERA
 static struct SubMenu menuCamera   = DEF_SUBMENU( optMainStr[1], optsCamera );
 #endif
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct SubMenu menuControls = DEF_SUBMENU( optMainStr[2], optsControls );
+#endif
+
+#ifndef TARGET_N64
 static struct SubMenu menuVideo    = DEF_SUBMENU( optMainStr[3], optsVideo );
 #endif
 
 static struct SubMenu menuAudio    = DEF_SUBMENU( optMainStr[4], optsAudio );
-
-#ifdef CHEATS_ACTIONS
-static struct SubMenu menuCheats   = DEF_SUBMENU( optMainStr[6], optsCheats );
-#endif
 
 /* main options menu definition */
 
@@ -343,17 +249,24 @@ static struct Option optsMain[] = {
 #ifdef BETTERCAMERA
     DEF_OPT_SUBMENU( optMainStr[1], &menuCamera ),
 #endif
-#ifndef TARGET_N64
+
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
     DEF_OPT_SUBMENU( optMainStr[2], &menuControls ),
+#endif
+
+#ifndef TARGET_N64
     DEF_OPT_SUBMENU( optMainStr[3], &menuVideo ),
-    DEF_OPT_BUTTON ( optMainStr[5], optmenu_act_exit ),
 #endif
 
     DEF_OPT_SUBMENU( optMainStr[4], &menuAudio ),
+    
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
+    DEF_OPT_BUTTON ( optMainStr[5], optmenu_act_exit ),
+#endif
 
 #ifdef CHEATS_ACTIONS
     // NOTE: always keep cheats the last option here because of the half-assed way I toggle them
-    DEF_OPT_SUBMENU( optMainStr[6], &menuCheats )
+    DEF_OPT_SUBMENU( optCheatMenuStr[0], &menuCheats )
 #endif
 };
 
@@ -429,7 +342,7 @@ static void optmenu_draw_opt(const struct Option *opt, s16 x, s16 y, u8 sel) {
             optmenu_draw_text(x, y-13, buf, sel);
             break;
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
         case OPT_BIND:
             x = 112;
             for (u8 i = 0; i < MAX_BINDS; ++i, x += 48) {
@@ -476,7 +389,7 @@ static void optmenu_opt_change(struct Option *opt, s32 val) {
                 opt->actionFn(opt, val);
             break;
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
         case OPT_BIND:
             if (val == 0xFF) {
                 // clear the bind
@@ -584,7 +497,7 @@ void optmenu_toggle(void) {
 }
 
 void optmenu_check_buttons(void) {
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
     if (optmenu_binding) {
         u32 key = controller_get_raw_key();
         if (key != VK_INVALID) {
@@ -683,7 +596,7 @@ void optmenu_check_buttons(void) {
                 optmenu_toggle();
             }
         }
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
     } else if (gPlayer1Controller->buttonPressed & Z_TRIG) {
         // HACK: clear binds with Z
         if (allowInput && currentMenu->opts[currentMenu->select].type == OPT_BIND)

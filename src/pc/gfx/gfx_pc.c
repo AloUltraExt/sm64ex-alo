@@ -24,6 +24,10 @@
 #include "gfx_rendering_api.h"
 #include "gfx_screen_config.h"
 
+#ifdef TARGET_N3DS
+#include "gfx_3ds.h"
+#endif
+
 #include "../platform.h"
 #include "../configfile.h"
 #include "../fs/fs.h"
@@ -176,7 +180,12 @@ struct GfxDimensions gfx_current_dimensions;
 
 static bool dropped_frame;
 
+#ifdef TARGET_WII_U
+static float buf_vbo[MAX_BUFFERED * (28 * 3)]; // 3 vertices in a triangle and 28 floats per vtx
+#else
 static float buf_vbo[MAX_BUFFERED * (26 * 3)]; // 3 vertices in a triangle and 26 floats per vtx
+#endif
+
 static size_t buf_vbo_len;
 static size_t buf_vbo_num_tris;
 
@@ -202,21 +211,46 @@ static inline size_t string_hash(const uint8_t *str) {
 }
 #endif
 
-static unsigned long get_time(void) {
-    return 0;
+#ifdef TARGET_N3DS
+static void gfx_set_2d(int mode_2d)
+{
+    gfx_rapi->set_2d(mode_2d);
 }
+
+static void gfx_set_iod(unsigned int iod)
+{
+    float z, w;
+    switch(iod) {
+        case iodNormal :
+            z = 8.0f;
+            w = 16.0f;
+            break;
+        case iodGoddard :
+            z = 0.5f;
+            w = 0.5f;
+            break;
+        case iodFileSelect :
+            z = 96.0f;
+            w = 128.0f;
+            break;
+        case iodStarSelect :
+            z = 128.0f;
+            w = 76.0f;
+            break;
+        case iodCannon :
+            z = 0.0f;
+            w = -128.0f;
+            break;
+    }
+    gfx_rapi->set_iod(z, w);
+}
+#endif
 
 static void gfx_flush(void) {
     if (buf_vbo_len > 0) {
-        int num = buf_vbo_num_tris;
-        unsigned long t0 = get_time();
         gfx_rapi->draw_triangles(buf_vbo, buf_vbo_len, buf_vbo_num_tris);
         buf_vbo_len = 0;
         buf_vbo_num_tris = 0;
-        unsigned long t1 = get_time();
-        /*if (t1 - t0 > 1000) {
-            printf("f: %d %d\n", num, (int)(t1 - t0));
-        }*/
     }
 }
 
@@ -653,7 +687,6 @@ static void import_texture(int tile) {
     load_texture(texname);
 #else
     // the texture data is actual texture data
-    int t0 = get_time();
     if (fmt == G_IM_FMT_RGBA) {
         if (siz == G_IM_SIZ_32b) {
             import_texture_rgba32(tile);
@@ -692,8 +725,6 @@ static void import_texture(int tile) {
     } else {
         sys_fatal("unsupported texture format: %u", fmt);
     }
-    int t1 = get_time();
-    //printf("Time diff: %d\n", t1 - t0);
 #endif
 }
 
@@ -860,10 +891,26 @@ static void gfx_sp_vertex(size_t n_vertices, size_t dest_index, const Vtx *verti
         
         // trivial clip rejection
         d->clip_rej = 0;
+#ifdef TARGET_N3DS
+    if ((gGfx3DSMode == GFX_3DS_MODE_NORMAL || gGfx3DSMode == GFX_3DS_MODE_AA_22) && gSliderLevel > 0.0f) {
+        float wMod = w * 1.2f; // expanded w-range for testing clip rejection
+        if (x < -wMod) d->clip_rej |= 1;
+        if (x > wMod) d->clip_rej |= 2;
+        if (y < -wMod) d->clip_rej |= 4;
+        if (y > wMod) d->clip_rej |= 8;
+    }
+    else {
         if (x < -w) d->clip_rej |= 1;
         if (x > w) d->clip_rej |= 2;
         if (y < -w) d->clip_rej |= 4;
         if (y > w) d->clip_rej |= 8;
+    }
+#else
+        if (x < -w) d->clip_rej |= 1;
+        if (x > w) d->clip_rej |= 2;
+        if (y < -w) d->clip_rej |= 4;
+        if (y > w) d->clip_rej |= 8;
+#endif
         if (z < -w) d->clip_rej |= 16;
         if (z > w) d->clip_rej |= 32;
         
@@ -1033,9 +1080,14 @@ static void gfx_sp_tri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx) {
         if (z_is_from_0_to_1) {
             z = (z + w) / 2.0f;
         }
+
         buf_vbo[buf_vbo_len++] = v_arr[i]->x;
         buf_vbo[buf_vbo_len++] = v_arr[i]->y;
+#ifdef TARGET_N3DS
+        buf_vbo[buf_vbo_len++] = -z;
+#else
         buf_vbo[buf_vbo_len++] = z;
+#endif
         buf_vbo[buf_vbo_len++] = w;
         
         if (use_texture) {
@@ -1048,15 +1100,20 @@ static void gfx_sp_tri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx) {
             }
             buf_vbo[buf_vbo_len++] = u / tex_width;
             buf_vbo[buf_vbo_len++] = v / tex_height;
+#ifdef TARGET_WII_U
+            // Padding for faster GPU reading
+            buf_vbo[buf_vbo_len++] = 0.0f;
+            buf_vbo[buf_vbo_len++] = 0.0f;
+#endif
         }
-        
+#ifndef TARGET_N3DS
         if (use_fog) {
             buf_vbo[buf_vbo_len++] = rdp.fog_color.r / 255.0f;
             buf_vbo[buf_vbo_len++] = rdp.fog_color.g / 255.0f;
             buf_vbo[buf_vbo_len++] = rdp.fog_color.b / 255.0f;
             buf_vbo[buf_vbo_len++] = v_arr[i]->color.a / 255.0f; // fog factor (not alpha)
         }
-        
+#endif     
         for (int j = 0; j < num_inputs; j++) {
             struct RGBA *color;
             struct RGBA tmp;
@@ -1187,6 +1244,9 @@ static void gfx_sp_moveword(uint8_t index, uint16_t offset, uint32_t data) {
         case G_MW_FOG:
             rsp.fog_mul = (int16_t)(data >> 16);
             rsp.fog_offset = (int16_t)data;
+#ifdef TARGET_N3DS
+            gfx_rapi->set_fog(rsp.fog_mul, rsp.fog_offset);
+#endif
             break;
     }
 }
@@ -1360,6 +1420,9 @@ static void gfx_dp_set_prim_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 }
 
 static void gfx_dp_set_fog_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+#ifdef TARGET_N3DS
+    gfx_rapi->set_fog_color(r, g, b, a);
+#endif
     rdp.fog_color.r = r;
     rdp.fog_color.g = g;
     rdp.fog_color.b = b;
@@ -1777,6 +1840,17 @@ static void gfx_run_dl(Gfx* cmd) {
             case G_SETCIMG:
                 gfx_dp_set_color_image(C0(21, 3), C0(19, 2), C0(0, 11), seg_addr(cmd->words.w1));
                 break;
+#ifdef TARGET_N3DS
+            case G_SPECIAL_1:
+                gfx_set_2d(cmd->words.w1);
+                break;
+            case G_SPECIAL_2:
+                gfx_flush();
+                break;
+            case G_SPECIAL_4:
+                gfx_set_iod(cmd->words.w1);
+                break;
+#endif
         }
         ++cmd;
     }
@@ -1797,7 +1871,17 @@ void gfx_init(struct GfxWindowManagerAPI *wapi, struct GfxRenderingAPI *rapi, co
     gfx_rapi = rapi;
     gfx_wapi->init(window_title);
     gfx_rapi->init();
-    
+
+#ifdef TARGET_N3DS
+    // dimensions won't change on 3DS, so just do this once
+    gfx_wapi->get_dimensions(&gfx_current_dimensions.width, &gfx_current_dimensions.height);
+    if (gfx_current_dimensions.height == 0) {
+        // Avoid division by zero
+        gfx_current_dimensions.height = 1;
+    }
+    gfx_current_dimensions.aspect_ratio = (float)gfx_current_dimensions.width / (float)gfx_current_dimensions.height;
+#endif
+
     // Used in the 120 star TAS
     static uint32_t precomp_shaders[] = {
         0x01200200,
@@ -1847,31 +1931,28 @@ struct GfxRenderingAPI *gfx_get_current_rendering_api(void) {
 
 void gfx_start_frame(void) {
     gfx_wapi->handle_events();
+#ifndef TARGET_N3DS
     gfx_wapi->get_dimensions(&gfx_current_dimensions.width, &gfx_current_dimensions.height);
     if (gfx_current_dimensions.height == 0) {
         // Avoid division by zero
         gfx_current_dimensions.height = 1;
     }
     gfx_current_dimensions.aspect_ratio = (float)gfx_current_dimensions.width / (float)gfx_current_dimensions.height;
+#endif
 }
 
 void gfx_run(Gfx *commands) {
     gfx_sp_reset();
-    
-    //puts("New frame");
-    
+
     if (!gfx_wapi->start_frame()) {
         dropped_frame = true;
         return;
     }
     dropped_frame = false;
-    
-    double t0 = gfx_wapi->get_time();
+
     gfx_rapi->start_frame();
     gfx_run_dl(commands);
     gfx_flush();
-    double t1 = gfx_wapi->get_time();
-    //printf("Process %f %f\n", t1, t1 - t0);
     gfx_rapi->end_frame();
     gfx_wapi->swap_buffers_begin();
 }

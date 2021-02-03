@@ -28,11 +28,12 @@
 #define MAX_JOYBUTTONS 32  // arbitrary; includes virtual keys for triggers
 #define AXIS_THRESHOLD (30 * 256)
 
+#ifdef BETTERCAM_MOUSE
 int mouse_x;
 int mouse_y;
 
-#ifdef BETTERCAMERA
-extern u8 newcam_mouse;
+#include "extras/bettercamera.h"
+extern s8 sSelectedFileNum;
 #endif
 
 static bool init_ok;
@@ -93,13 +94,6 @@ static void controller_sdl_bind(void) {
 }
 
 static void controller_sdl_init(void) {
-    if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS) != 0) {
-        fprintf(stderr, "SDL init error: %s\n", SDL_GetError());
-        return;
-    }
-
-    haptics_enabled = (SDL_InitSubSystem(SDL_INIT_HAPTIC) == 0);
-
     // try loading an external gamecontroller mapping file
     uint64_t gcsize = 0;
     void *gcdata = fs_load_file("gamecontrollerdb.txt", &gcsize);
@@ -113,8 +107,15 @@ static void controller_sdl_init(void) {
         free(gcdata);
     }
 
-#ifdef BETTERCAMERA
-    if (newcam_mouse == 1)
+    if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS) != 0) {
+        fprintf(stderr, "SDL init error: %s\n", SDL_GetError());
+        return;
+    }
+
+    haptics_enabled = (SDL_InitSubSystem(SDL_INIT_HAPTIC) == 0);
+
+#ifdef BETTERCAM_MOUSE
+    if (newcam_mouse)
         SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
 #endif
@@ -155,13 +156,16 @@ static void controller_sdl_read(OSContPad *pad) {
         return;
     }
 
-#ifdef BETTERCAMERA
-    if (newcam_mouse == 1 && sCurrPlayMode != 2)
+#ifdef BETTERCAM_MOUSE
+    u32 mouse;
+
+    if (newcam_mouse && sCurrPlayMode != 2 && sSelectedFileNum != 0) {
         SDL_SetRelativeMouseMode(SDL_TRUE);
-    else
+        mouse = SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
+    } else {
         SDL_SetRelativeMouseMode(SDL_FALSE);
-    
-    u32 mouse = SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
+        mouse = SDL_GetMouseState(&mouse_x, &mouse_y);
+    }
 
     for (u32 i = 0; i < num_mouse_binds; ++i)
         if (mouse & SDL_BUTTON(mouse_binds[i][0]))

@@ -72,29 +72,6 @@ s32 run_press_start_demo_timer(s32 timer) {
     return timer;
 }
 
-extern int gDemoInputListID_2;
-extern int gPressedStart;
-
-int start_demo(int timer)
-{
-	gCurrDemoInput = NULL;
-	gPressedStart = 0;
-    // start the mario demo animation for the demo list.
-    //func_80278AD4(&gDemo, gDemoInputListID_2);
-
-    // if the next demo sequence ID is the count limit, reset it back to
-    // the first sequence.
-
-    if((++gDemoInputListID_2) == gDemo.animDmaTable->count)
-        gDemoInputListID_2 = 0;
-
-    gCurrDemoInput = ((struct DemoInput *) gDemo.targetAnim) + 1; // add 1 (+4) to the pointer to skip the demoID.
-    timer = (s8)((struct DemoInput *) gDemo.targetAnim)->timer; // TODO: see if making timer s8 matches
-    gCurrSaveFileNum = 1;
-    gCurrActNum = 6;
-    return timer;
-}
-
 // input loop for the level select menu. updates the selected stage
 // count if an input was received. signals the stage to be started
 // or the level select to be exited if start or the quit combo is

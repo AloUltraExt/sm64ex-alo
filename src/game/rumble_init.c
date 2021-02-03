@@ -5,7 +5,7 @@
 #include "main.h"
 #include "rumble_init.h"
 
-#if defined(VERSION_SH) || defined (RUMBLE_FEEDBACK)
+#ifdef RUMBLE_FEEDBACK
 
 OSThread gRumblePakThread;
 
@@ -252,10 +252,11 @@ void queue_rumble_submerged(void) {
 void thread6_rumble_loop(UNUSED void *a0) {
 #ifdef TARGET_N64
     OSMesg msg;
-#endif
+
     cancel_rumble();
 
     sRumblePakThreadActive = TRUE;
+#endif
 
 #ifdef TARGET_N64
     while (TRUE) {

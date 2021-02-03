@@ -29,7 +29,7 @@ void bhv_controllable_platform_sub_loop(void) {
 
             if (gMarioObject->platform == o) {
                 D_80331694 = o->oBehParams2ndByte;
-#if SH_CHANGES
+#if BUGFIX_HMC_VISIBLE_CONTROL_PLATFORM
                 o->parentObj->header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
 #endif
                 o->oAction = 1;

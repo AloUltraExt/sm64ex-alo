@@ -81,9 +81,19 @@ void load_engine_code_segment(void);
 #endif
 
 #ifdef USE_SYSTEM_MALLOC
+#include <stdlib.h>
+#include <malloc.h>
+
 struct AllocOnlyPool *alloc_only_pool_init(void);
 void alloc_only_pool_clear(struct AllocOnlyPool *pool);
 void *alloc_only_pool_alloc(struct AllocOnlyPool *pool, s32 size);
+
+#ifdef TARGET_PORT_CONSOLE
+#define MALLOC_FUNCTION(data) memalign(64, data)
+#else
+#define MALLOC_FUNCTION(data) malloc(data)
+#endif
+
 #else
 struct AllocOnlyPool *alloc_only_pool_init(u32 size, u32 side);
 void *alloc_only_pool_alloc(struct AllocOnlyPool *pool, s32 size);

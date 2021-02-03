@@ -30,6 +30,10 @@
 #include "level_table.h"
 #include "pc/configfile.h"
 
+#ifdef BETTERCAMERA
+#include "extras/bettercamera.h"
+#endif
+
 #define CBUTTON_MASK (U_CBUTTONS | D_CBUTTONS | L_CBUTTONS | R_CBUTTONS)
 
 /**
@@ -662,14 +666,19 @@ void unused_set_camera_pitch_shake_env(s16 shake) {
  *      posOff and focOff are sometimes the same address, which just ignores the pos calculation
  *! Doesn't return anything, but required to match on -O2
  */
-BAD_RETURN(f32) calc_y_to_curr_floor(f32 *posOff, f32 posMul, f32 posBound, f32 *focOff, f32 focMul, f32 focBound) {
+void calc_y_to_curr_floor(f32 *posOff, f32 posMul, f32 posBound, f32 *focOff, f32 focMul, f32 focBound) {
     f32 floorHeight = sMarioGeometry.currFloorHeight;
     f32 waterHeight;
     UNUSED s32 filler;
 
     if (!(sMarioCamState->action & ACT_FLAG_METAL_WATER)) {
+#if QOL_FIX_CAMERA_WATER_HEIGHT
+        if (floorHeight < (waterHeight = sMarioGeometry.waterHeight))
+#else
         //! @bug this should use sMarioGeometry.waterHeight
-        if (floorHeight < (waterHeight = find_water_level(sMarioCamState->pos[0], sMarioCamState->pos[2]))) {
+        if (floorHeight < (waterHeight = find_water_level(sMarioCamState->pos[0], sMarioCamState->pos[2])))
+#endif
+        {
             floorHeight = waterHeight;
         }
     }
@@ -701,10 +710,6 @@ BAD_RETURN(f32) calc_y_to_curr_floor(f32 *posOff, f32 posMul, f32 posBound, f32 
         *focOff = -focBound;
     }
 }
-//Compiler gets mad if I put this any further above. thanks refresh 7
-#ifdef BETTERCAMERA
-#include "bettercamera.inc.h"
-#endif
 
 void focus_on_mario(Vec3f focus, Vec3f pos, f32 posYOff, f32 focYOff, f32 dist, s16 pitch, s16 yaw) {
     Vec3f marioPos;
@@ -1609,9 +1614,15 @@ s32 update_boss_fight_camera(struct Camera *c, Vec3f focus, Vec3f pos) {
         switch (gCurrLevelArea) {
             case AREA_BOB:
                 pos[1] += 125.f;
+#if QOL_FIX_CAMERA_BOSS_FIGHT_HEIGHT
+                break;
+#endif
                 //! fall through, makes the BoB boss fight camera move up twice as high as it should
             case AREA_WF:
                 pos[1] += 125.f;
+#if QOL_FIX_CAMERA_BOSS_FIGHT_HEIGHT
+                break;
+#endif
         }
     }
 
@@ -2790,6 +2801,9 @@ void mode_cannon_camera(struct Camera *c) {
     gCameraMovementFlags &= ~CAM_MOVING_INTO_MODE;
     c->nextYaw = update_in_cannon(c, c->focus, c->pos);
     if (gPlayer1Controller->buttonPressed & A_BUTTON) {
+#ifdef TARGET_N3DS
+        gDPSetIod(gDisplayListHead++, iodNormal);
+#endif
         set_camera_mode(c, CAMERA_MODE_BEHIND_MARIO, 1);
         sPanDistance = 0.f;
         sCannonYOffset = 0.f;
@@ -3943,6 +3957,10 @@ s32 update_camera_hud_status(struct Camera *c) {
         status |= CAM_STATUS_FIXED;
     } else if (set_cam_angle(0) == CAM_ANGLE_MARIO) {
         status |= CAM_STATUS_MARIO;
+#ifdef BETTERCAMERA
+    } else if (c->mode == CAMERA_MODE_NEWCAM) {
+        status |= CAM_STATUS_NEWCAM;
+#endif
     } else {
         status |= CAM_STATUS_LAKITU;
     }
@@ -10670,7 +10688,9 @@ struct Cutscene sCutsceneEnterPyramidTop[] = {
  * Unused cutscene for when the pyramid explodes.
  */
 struct Cutscene sCutscenePyramidTopExplode[] = {
+#if !QOL_FEATURE_SSL_PYRAMID_CUTSCENE
     { cutscene_mario_dialog, CUTSCENE_LOOP },
+#endif
     { cutscene_pyramid_top_explode, 150 },
     { cutscene_pyramid_top_explode_end, 0 }
 };
@@ -11314,7 +11334,12 @@ void play_cutscene(struct Camera *c) {
     if ((cutsceneDuration != 0) && !(gCutsceneTimer & CUTSCENE_STOP)) {
         //! @bug This should check for 0x7FFF (CUTSCENE_LOOP)
         //! instead, cutscenes that last longer than 0x3FFF frames will never end on their own
-        if (gCutsceneTimer < 0x3FFF) {
+#if QOL_FIX_CUTSCENE_LOOP
+        if (gCutsceneTimer < CUTSCENE_LOOP)
+#else
+        if (gCutsceneTimer < 0x3FFF) 
+#endif
+        {
             gCutsceneTimer += 1;
         }
         //! Because gCutsceneTimer is often set to 0x7FFF (CUTSCENE_LOOP), this conditional can only

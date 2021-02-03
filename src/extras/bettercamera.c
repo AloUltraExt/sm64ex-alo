@@ -1,15 +1,25 @@
+#ifdef BETTERCAMERA
+
 #include "sm64.h"
-#include "game/camera.h"
-#include "game/level_update.h"
-#include "game/print.h"
 #include "engine/math_util.h"
+#include "engine/surface_collision.h"
+#include "audio/external.h"
+#include "game/camera.h"
+#include "game/game_init.h"
+#include "game/level_update.h"
+#include "game/object_helpers.h"
+#include "game/object_list_processor.h"
+#include "game/print.h"
 #include "game/segment2.h"
 #include "game/save_file.h"
-#include "bettercamera.h"
 #include "include/text_strings.h"
-#include "engine/surface_collision.h"
+
 #include "pc/configfile.h"
+#ifdef BETTERCAM_MOUSE
 #include "pc/controller/controller_mouse.h"
+#endif
+
+#include "bettercamera.h"
 
 #if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR) 
 //quick and dirty fix for some older MinGW.org mingwrt
@@ -44,7 +54,7 @@ struct newcam_hardpos {
     u8 newcam_hard_areaID;
     u8 newcam_hard_permaswap;
     u16 newcam_hard_modeset;
-    s32 *newcam_hard_script;
+    void *newcam_hard_script;
     s16 newcam_hard_X1;
     s16 newcam_hard_Y1;
     s16 newcam_hard_Z1;
@@ -102,7 +112,7 @@ s16 newcam_degrade = 1;
 s16 newcam_analogue = 0; //Whether to accept inputs from a player 2 joystick, and then disables C button input.
 s16 newcam_distance_values[] = {750,1250,2000};
 u8 newcam_active = 0; // basically the thing that governs if puppycam is on. If you disable this by hand, you need to set the camera mode to the old modes, too.
-#ifndef TARGET_N64
+#ifdef BETTERCAM_MOUSE
 u8 newcam_mouse = 0;
 #endif
 u16 newcam_mode;
@@ -125,6 +135,7 @@ int         configCameraAnalog  = FALSE;
 #endif
 
 ///This is called at every level initialisation.
+///You can edit these if you plan to use custom levels
 void newcam_init(struct Camera *c, u8 dv) {
     newcam_tilt = 1500;
     newcam_distance_target = newcam_distance_values[dv];
@@ -194,7 +205,7 @@ void newcam_init_settings(void) {
     newcam_panlevel     = newcam_clamp(configCameraPan, 0, 100);
     newcam_invertX      = (s16)configCameraInvertX;
     newcam_invertY      = (s16)configCameraInvertY;
-#ifndef TARGET_N64
+#ifdef BETTERCAM_MOUSE
     newcam_mouse        = (u8)configCameraMouse;
 #endif    
     newcam_analogue     = (s16)configCameraAnalog;
@@ -385,8 +396,8 @@ static void newcam_rotate_button(void) {
             newcam_tilt_acc -= (newcam_tilt_acc*((f32)newcam_degrade/100));
     }
 
-#ifndef TARGET_N64
-    if (newcam_mouse == 1) {
+#ifdef BETTERCAM_MOUSE
+    if (newcam_mouse) {
         newcam_yaw += ivrt(0) * mouse_x * 16;
         newcam_tilt += ivrt(1) * mouse_y * 16;
     }
@@ -730,3 +741,5 @@ void newcam_loop(struct Camera *c) {
     newcam_diagnostics();
     #endif // NEWCAM_DEBUG
 }
+
+#endif // BETTERCAMERA

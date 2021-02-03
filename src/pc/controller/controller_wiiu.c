@@ -14,12 +14,7 @@
 #include "controller_api.h"
 #include "../configfile.h"
 
-#ifdef BETTERCAMERA
-int mouse_x = 0;
-int mouse_y = 0;
-
-extern u8 newcam_mouse;
-#endif
+extern void KPADShutdown();
 
 struct WiiUKeymap {
     uint32_t n64Button;
@@ -59,11 +54,6 @@ static void controller_wiiu_init(void) {
     KPADInit();
     WPADEnableURCC(1);
     WPADEnableWiiRemote(1);
-
-    if (configN64FaceButtons) {
-        map[0] = (struct WiiUKeymap) { B_BUTTON, VB(Y) | VB(X), CB(Y) | CB(X), PB(Y) | PB(X) };
-        map[1] = (struct WiiUKeymap) { A_BUTTON, VB(B) | VB(A), CB(B) | CB(A), PB(B) | PB(A) };
-    }
 }
 
 static void read_vpad(OSContPad *pad) {
@@ -198,6 +188,7 @@ static u32 controller_wiiu_rawkey(void) {
 }
 
 static void controller_wiiu_shutdown(void) {
+    KPADShutdown();
 }
 
 struct ControllerAPI controller_wiiu = {

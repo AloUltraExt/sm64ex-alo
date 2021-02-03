@@ -47,7 +47,9 @@ extern struct GfxPool *gGfxPool;
 extern u8 gControllerBits;
 extern s8 gEepromProbe;
 
+#ifdef GODDARD_MFACE
 extern void (*gGoddardVblankCallback)(void);
+#endif
 extern struct Controller *gPlayer1Controller;
 extern struct Controller *gPlayer2Controller;
 extern struct Controller *gPlayer3Controller;

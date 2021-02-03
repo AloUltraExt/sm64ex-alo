@@ -26,6 +26,15 @@
 #include "config.h"
 #include "gfx_dimensions.h"
 
+#ifdef BETTERCAM_MOUSE
+#include "pc/controller/controller_mouse.h"
+#include "pc/configfile.h"
+
+static bool mouseControl = FALSE;
+static int oldMouse_x;
+static int oldMouse_y;
+#endif
+
 #define MAX_GD_DLS 1000
 #define OS_MESG_SI_COMPLETE 0x33333333
 
@@ -584,7 +593,7 @@ static Gfx gd_dl_red_sparkle_4[] = {
     gsSPBranchList(gd_dl_sparkle),
 };
 
-#ifndef QOL_FIXES
+#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
 static Gfx gd_dl_red_sparkle_4_dup[] = {
     gsDPPipeSync(),
     gsSPDisplayList(gd_dl_sparkle_red_color),
@@ -635,7 +644,7 @@ static Gfx gd_dl_silver_sparkle_4[] = {
     gsSPBranchList(gd_dl_sparkle),
 };
 
-#ifndef QOL_FIXES
+#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
 static Gfx gd_dl_silver_sparkle_4_dup[] = {
     gsDPPipeSync(),
     gsSPDisplayList(gd_dl_sparkle_white_color),
@@ -662,7 +671,7 @@ static Gfx *gd_red_sparkle_dl_array[] = {
     gd_dl_red_sparkle_1,
     gd_dl_red_sparkle_0,
     gd_dl_red_sparkle_0,
-#ifndef QOL_FIXES
+#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
     gd_dl_red_sparkle_4_dup,
     gd_dl_red_sparkle_4_dup,
 #else
@@ -682,7 +691,7 @@ static Gfx *gd_silver_sparkle_dl_array[] = {
     gd_dl_silver_sparkle_1,
     gd_dl_silver_sparkle_0,
     gd_dl_silver_sparkle_0,
-#ifndef QOL_FIXES
+#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
     gd_dl_silver_sparkle_4_dup,
     gd_dl_silver_sparkle_4_dup,
 #else
@@ -2451,7 +2460,12 @@ void start_view_dl(struct ObjView *view) {
         uly = lry - 1.0f;
     }
 
-    // gDPSetScissor(next_gfx(), G_SC_NON_INTERLACE, ulx, uly, lrx, lry); // N64 only
+#ifdef TARGET_N64
+    gDPSetScissor(next_gfx(), G_SC_NON_INTERLACE, ulx, uly, lrx, lry);
+#endif
+#ifdef TARGET_N3DS
+    gDPSetIod(next_gfx(), iodGoddard);
+#endif
     gSPClearGeometryMode(next_gfx(), 0xFFFFFFFF);
     gSPSetGeometryMode(next_gfx(), G_LIGHTING | G_CULL_BACK | G_SHADING_SMOOTH | G_SHADE);
     if (view->flags & VIEW_ALLOC_ZBUF) {
@@ -2562,12 +2576,33 @@ void parse_p1_controller(void) {
     // deadzone checks
     if (ABS(gdctrl->stickX) >= 6) {
         gdctrl->csrX += gdctrl->stickX * 0.1;
+#ifdef BETTERCAM_MOUSE
+        mouseControl = FALSE;
+#endif
     }
 
     if (ABS(gdctrl->stickY) >= 6) {
         gdctrl->csrY -= gdctrl->stickY * 0.1;
+#ifdef BETTERCAM_MOUSE 
+        mouseControl = FALSE;
+#endif
     }
 
+#ifdef BETTERCAM_MOUSE
+    if (mouse_x - oldMouse_x != 0 || mouse_y - oldMouse_y != 0)
+        mouseControl = true;
+    if (mouseControl) {
+        float screenScale = (float) gfx_current_dimensions.height / (float)SCREEN_HEIGHT;
+        if (configCameraMouse) {
+            gdctrl->csrX = (mouse_x - (gfx_current_dimensions.width - (screenScale * (float)SCREEN_WIDTH))/ 2)/ screenScale;
+            gdctrl->csrY = mouse_y / screenScale;
+        }
+    }
+    oldMouse_x = mouse_x;
+    oldMouse_y = mouse_y;
+
+if (!mouseControl) {
+#endif
     // clamp cursor position within screen view bounds
     if (gdctrl->csrX < sScreenView->parent->upperLeft.x + (16.0f/aspect)) {
         gdctrl->csrX = sScreenView->parent->upperLeft.x + (16.0f/aspect);
@@ -2588,6 +2623,9 @@ void parse_p1_controller(void) {
     for (i = 0; i < sizeof(OSContPad); i++) {
         ((u8 *) prevInputs)[i] = ((u8 *) currInputs)[i];
     }
+#ifdef BETTERCAM_MOUSE
+}
+#endif
 }
 
 void stub_renderer_4(f32 arg0) {
@@ -3616,6 +3654,10 @@ void gd_put_sprite(u16 *sprite, s32 x, s32 y, s32 wx, s32 wy) {
     f32 aspect = ((float) SCREEN_WIDTH) / ((float) SCREEN_HEIGHT ) * 0.75;
     x *= aspect;
     
+#ifdef TARGET_N3DS
+    gDPForceFlush(next_gfx());
+    gDPSet2d(next_gfx(), 1);
+#endif
     gSPDisplayList(next_gfx(), osVirtualToPhysical(gd_dl_sprite_start_tex_block));
     for (r = 0; r < wy; r += 32) {
         for (c = 0; c < wx; c += 32) {
@@ -3630,6 +3672,11 @@ void gd_put_sprite(u16 *sprite, s32 x, s32 y, s32 wx, s32 wy) {
     gDPSetCycleType(next_gfx(), G_CYC_1CYCLE);
     gDPSetRenderMode(next_gfx(), G_RM_AA_ZB_OPA_INTER, G_RM_NOOP2);
     gSPTexture(next_gfx(), 0x8000, 0x8000, 0, G_TX_RENDERTILE, G_OFF);
+    
+#ifdef TARGET_N3DS
+    gDPForceFlush(next_gfx());
+    gDPSet2d(next_gfx(), 0);
+#endif
 }
 
 /* 254DFC -> 254F94; orig name: proc_dyn_list */

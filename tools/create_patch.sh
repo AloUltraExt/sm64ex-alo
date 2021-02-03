@@ -20,6 +20,6 @@ fi
 # 'git diff' is stupid and doesn't show new untracked files, so we must add them first.
 git add .
 # Generate the patch.
-git diff -p --staged > "$1"
+git diff --binary --patch --staged > "$1"
 # Undo the 'git add'. 
 git reset

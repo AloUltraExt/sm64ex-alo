@@ -38,11 +38,12 @@ enum {
     MAX_AXES,
 };
 
+#ifdef BETTERCAM_MOUSE
 int mouse_x;
 int mouse_y;
 
-#ifdef BETTERCAMERA
-extern u8 newcam_mouse;
+#include "extras/bettercamera.h"
+extern s8 sSelectedFileNum;
 #endif
 
 static bool init_ok;
@@ -120,8 +121,8 @@ static void controller_sdl_init(void) {
                 joy_axis_binds[i] = -1;
     }
 
-#ifdef BETTERCAMERA
-    if (newcam_mouse == 1)
+#ifdef BETTERCAM_MOUSE
+    if (newcam_mouse)
         SDL_WM_GrabInput(SDL_GRAB_ON);
     SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
 #endif
@@ -147,13 +148,16 @@ static inline int16_t get_axis(const int i) {
 static void controller_sdl_read(OSContPad *pad) {
     if (!init_ok) return;
 
-#ifdef BETTERCAMERA
-    if (newcam_mouse == 1 && sCurrPlayMode != 2)
+#ifdef BETTERCAM_MOUSE
+    u32 mouse;
+
+    if (newcam_mouse && sCurrPlayMode != 2 && sSelectedFileNum != 0) {
         SDL_WM_GrabInput(SDL_GRAB_ON);
-    else
+        mouse = SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
+    } else {
         SDL_WM_GrabInput(SDL_GRAB_OFF);
-    
-    u32 mouse = SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
+        mouse = SDL_GetMouseState(&mouse_x, &mouse_y);
+    }
 
     for (u32 i = 0; i < num_mouse_binds; ++i)
         if (mouse & SDL_BUTTON(mouse_binds[i][0]))

@@ -1,3 +1,8 @@
+#ifndef BETTERCAMERA_H
+#define BETTERCAMERA_H
+
+#include "game/camera.h"
+
 enum newcam_flagvalues
 {
     NC_FLAG_XTURN = 0x0001,//If this flag is set, the camera's yaw can be moved by the player.
@@ -26,10 +31,6 @@ enum newcam_flagvalues
 
 };
 
-extern void newcam_init_settings(void);
-extern void newcam_disable(void);
-extern void newcam_diagnostics(void);
-
 extern s16 newcam_sensitivityX; //How quick the camera works.
 extern s16 newcam_sensitivityY;
 extern s16 newcam_invertX;
@@ -44,3 +45,16 @@ extern u8 newcam_xlu;
 
 extern u16 newcam_mode;
 extern s16 newcam_yaw;
+
+#ifdef BETTERCAM_MOUSE
+extern u8 newcam_mouse;
+#endif
+
+extern void newcam_init(struct Camera *c, u8 dv);
+extern void newcam_init_settings(void);
+extern void newcam_disable(void);
+extern void newcam_diagnostics(void);
+extern void newcam_apply_outside_values(struct Camera *c, u8 bit);
+extern void newcam_loop(struct Camera *c);
+
+#endif // BETTERCAMERA_H
