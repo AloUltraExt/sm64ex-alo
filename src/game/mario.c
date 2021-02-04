@@ -394,10 +394,7 @@ void mario_set_forward_vel(struct MarioState *m, f32 forwardVel) {
 s32 mario_get_floor_class(struct MarioState *m) {
     s32 floorClass;
 #ifdef CHEATS_ACTIONS
-    if (Cheats.EnableCheats && Cheats.WalkOn.Slope) {
-        floorClass = SURFACE_CLASS_NOT_SLIPPERY; 
-        return floorClass;
-    }
+    if (Cheats.EnableCheats && Cheats.WalkOn.Slope) return SURFACE_CLASS_NOT_SLIPPERY;
 #endif
 
     // The slide terrain type defaults to slide slipperiness.
@@ -584,6 +581,10 @@ s32 mario_facing_downhill(struct MarioState *m, s32 turnYaw) {
  * Determines if a surface is slippery based on the surface class.
  */
 u32 mario_floor_is_slippery(struct MarioState *m) {
+#ifdef CHEATS_ACTIONS
+    if (Cheats.EnableCheats && Cheats.WalkOn.Slope) return FALSE;
+#endif
+
     f32 normY;
 
     if ((m->area->terrainType & TERRAIN_MASK) == TERRAIN_SLIDE
