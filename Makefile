@@ -74,6 +74,12 @@ QOL_FIXES ?= 1
 # Various workarounds for weird toolchains
 NO_BZERO_BCOPY ?= 0
 NO_LDIV ?= 0
+
+# Enable -no-pie linker option (PC Only)
+# Doesn't apply to TARGET_PORT_CONSOLE because we assume
+# it doesn't use an old version to compile
+NO_PIE ?= 1
+
 # Check if is compiling on a console (N64 doesn't count)
 TARGET_PORT_CONSOLE ?= 0
 
@@ -1025,9 +1031,12 @@ else ifeq ($(OSX_BUILD),1)
   LDFLAGS := -lm $(BACKEND_LDFLAGS) -no-pie -lpthread
 
 else
-  LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -lm $(BACKEND_LDFLAGS) -no-pie -lpthread
+  LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -lm $(BACKEND_LDFLAGS) -lpthread -ldl
+  ifeq ($(NO_PIE), 1)
+    LDFLAGS += -no-pie
+  endif
   ifeq ($(DISCORDRPC),1)
-    LDFLAGS += -ldl -Wl,-rpath .
+    LDFLAGS += -Wl,-rpath .
   endif
 
 endif # End of LDFLAGS
