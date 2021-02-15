@@ -16,7 +16,7 @@
 #define GIVE_UP "give"
 #endif
 
-#ifdef QOL_FIXES
+#ifdef QOL_FIX_YOSHI_DIALOG_TYPO
 #define YOSHI_IT "Is"
 #else
 #define YOSHI_IT "It"

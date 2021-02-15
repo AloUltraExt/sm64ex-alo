@@ -75,5 +75,9 @@
 #define QOL_FIX_DOOR_KEY_CUTSCENE (0 || QOL_FIXES)
 /// Fixes cutscene loop code (see comment in the fix)
 #define QOL_FIX_CUTSCENE_LOOP (0 || QOL_FIXES)
+/// Fixes yoshi "it" typo dialog (english)
+#define QOL_FIX_YOSHI_DIALOG_TYPO (0 || QOL_FIXES)
+/// Fixes missing unused boo dialog (german)
+#define QOL_FIX_MISSING_UNUSED_DIALOG_DE (0 || QOL_FIXES)
 
 #endif // QOL_DEFINES_H

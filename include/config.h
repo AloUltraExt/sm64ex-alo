@@ -8,7 +8,7 @@
  * (maybe eventually) in SM64
  */
 
-// Qol Fixes
+// Qol Defines
 #include "qol_defines.h"
 
 // Bug Fixes

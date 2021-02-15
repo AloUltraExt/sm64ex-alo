@@ -666,18 +666,20 @@ void unused_set_camera_pitch_shake_env(s16 shake) {
  *      posOff and focOff are sometimes the same address, which just ignores the pos calculation
  *! Doesn't return anything, but required to match on -O2
  */
-void calc_y_to_curr_floor(f32 *posOff, f32 posMul, f32 posBound, f32 *focOff, f32 focMul, f32 focBound) {
+BAD_RETURN(f32) calc_y_to_curr_floor(f32 *posOff, f32 posMul, f32 posBound, f32 *focOff, f32 focMul, f32 focBound) {
     f32 floorHeight = sMarioGeometry.currFloorHeight;
-    f32 waterHeight;
+#if QOL_FIX_CAMERA_WATER_HEIGHT
+    f32 waterHeight = sMarioGeometry.waterHeight;
+#else
+    f32 waterHeight
+#endif
     UNUSED s32 filler;
 
     if (!(sMarioCamState->action & ACT_FLAG_METAL_WATER)) {
-#if QOL_FIX_CAMERA_WATER_HEIGHT
-        if (floorHeight < (waterHeight = sMarioGeometry.waterHeight))
-#else
+        #if !QOL_FIX_CAMERA_WATER_HEIGHT
         //! @bug this should use sMarioGeometry.waterHeight
+        #endif
         if (floorHeight < (waterHeight = find_water_level(sMarioCamState->pos[0], sMarioCamState->pos[2])))
-#endif
         {
             floorHeight = waterHeight;
         }
