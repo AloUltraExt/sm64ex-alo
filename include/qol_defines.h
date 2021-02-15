@@ -23,6 +23,8 @@
 #define QOL_FEATURE_SSL_CRACKED_ICE (0 || QOL_FEATURES)
 /// Adds blinking to King Bob-omb, reusing it's unused blinking texture
 #define QOL_FEATURE_KING_BOBOMB_BLINK (0 || QOL_FEATURES)
+/// Changes hanging actions so that you don't need to hold A anymore
+#define QOL_FEATURE_HANGING_ACTION (0 || QOL_FEATURES)
 
 // --| Quality of life fixes
 /// Fixes bug where the castle trap sound in the entrance of Bowser 1 doesn't play
