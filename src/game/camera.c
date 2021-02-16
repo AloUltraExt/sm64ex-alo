@@ -8923,7 +8923,9 @@ BAD_RETURN(s32) cutscene_pyramid_top_explode(struct Camera *c) {
  * End the pyramid top explosion cutscene.
  */
 BAD_RETURN(s32) cutscene_pyramid_top_explode_end(struct Camera *c) {
+#if !QOL_FEATURE_SSL_PYRAMID_CUTSCENE
     cutscene_stop_dialog(c);
+#endif
     stop_cutscene_and_retrieve_stored_info(c);
     // Move the camera back to Mario
     transition_next_state(c, 30);
