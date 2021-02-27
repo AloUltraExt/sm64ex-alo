@@ -68,6 +68,7 @@ static const u8 optMainStr[][32] = {
     { TEXT_OPT_CONTROLS },
     { TEXT_OPT_VIDEO },
     { TEXT_OPT_AUDIO },
+    { TEXT_OPT_SETTINGS },
     { TEXT_EXIT_GAME },
 };
 
@@ -79,7 +80,7 @@ static const u8 optsCameraStr[][32] = {
     { TEXT_OPT_CAMC },
     { TEXT_OPT_CAMP },
     { TEXT_OPT_ANALOGUE },
-    { TEXT_OPT_MOUSE },
+    { TEXT_OPT_CMOUSE },
     { TEXT_OPT_CAMD },
     { TEXT_OPT_CAMON },
 };
@@ -92,7 +93,6 @@ static const u8 optsVideoStr[][32] = {
     { TEXT_OPT_RESETWND },
     { TEXT_OPT_VSYNC },
     { TEXT_OPT_AUTO },
-    { TEXT_OPT_HUD },
     { TEXT_OPT_THREEPT },
     { TEXT_OPT_APPLY },
 };
@@ -102,6 +102,11 @@ static const u8 optsAudioStr[][32] = {
     { TEXT_OPT_MUSVOLUME },
     { TEXT_OPT_SFXVOLUME },
     { TEXT_OPT_ENVVOLUME },
+};
+
+static const u8 optsSettingsStr[][32] = {
+    { TEXT_OPT_HUD },    
+    { TEXT_OPT_MOUSE },
 };
 
 static const u8 optBindStr[][32] = {
@@ -132,7 +137,7 @@ static const u8 optBindStr[][32] = {
 static const u8 *filterChoices[] = {
     optsVideoStr[2],
     optsVideoStr[3],
-    optsVideoStr[8],
+    optsVideoStr[7],
 };
 
 static const u8 *vsyncChoices[] = {
@@ -167,7 +172,7 @@ static void optvideo_apply(UNUSED struct Option *self, s32 arg) {
 static struct Option optsCamera[] = {
     DEF_OPT_TOGGLE( optsCameraStr[9], &configEnableCamera ),
     DEF_OPT_TOGGLE( optsCameraStr[6], &configCameraAnalog ),
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && defined(MOUSE_ACTIONS)
     DEF_OPT_TOGGLE( optsCameraStr[7], &configCameraMouse ),
 #endif
     DEF_OPT_TOGGLE( optsCameraStr[2], &configCameraInvertX ),
@@ -207,24 +212,32 @@ static struct Option optsControls[] = {
 };
 #endif
 
+#ifndef TARGET_N64
 static struct Option optsVideo[] = {
 #ifndef TARGET_PORT_CONSOLE
     DEF_OPT_TOGGLE( optsVideoStr[0], &configWindow.fullscreen ),
     DEF_OPT_TOGGLE( optsVideoStr[5], &configWindow.vsync ),
 #endif
     DEF_OPT_CHOICE( optsVideoStr[1], &configFiltering, filterChoices ),
-    DEF_OPT_TOGGLE( optsVideoStr[7], &configHUD ),
 #ifndef TARGET_PORT_CONSOLE
     DEF_OPT_BUTTON( optsVideoStr[4], optvideo_reset_window ),
 #endif
-    DEF_OPT_BUTTON( optsVideoStr[9], optvideo_apply ),
+    DEF_OPT_BUTTON( optsVideoStr[8], optvideo_apply ),
 };
+#endif
 
 static struct Option optsAudio[] = {
     DEF_OPT_SCROLL( optsAudioStr[0], &configMasterVolume, 0, MAX_VOLUME, 1 ),
     DEF_OPT_SCROLL( optsAudioStr[1], &configMusicVolume, 0, MAX_VOLUME, 1),
     DEF_OPT_SCROLL( optsAudioStr[2], &configSfxVolume, 0, MAX_VOLUME, 1),
     DEF_OPT_SCROLL( optsAudioStr[3], &configEnvVolume, 0, MAX_VOLUME, 1),
+};
+
+static struct Option optsSettings[] = {
+    DEF_OPT_TOGGLE( optsSettingsStr[0], &configHUD ),
+#if !defined(TARGET_N64) && defined(MOUSE_ACTIONS)
+    DEF_OPT_TOGGLE( optsSettingsStr[1], &configMouse ),
+#endif
 };
 
 /* submenu definitions */
@@ -242,6 +255,7 @@ static struct SubMenu menuVideo    = DEF_SUBMENU( optMainStr[3], optsVideo );
 #endif
 
 static struct SubMenu menuAudio    = DEF_SUBMENU( optMainStr[4], optsAudio );
+static struct SubMenu menuSettings = DEF_SUBMENU( optMainStr[5], optsSettings );
 
 /* main options menu definition */
 
@@ -259,9 +273,10 @@ static struct Option optsMain[] = {
 #endif
 
     DEF_OPT_SUBMENU( optMainStr[4], &menuAudio ),
+    DEF_OPT_SUBMENU( optMainStr[5], &menuSettings ),
     
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
-    DEF_OPT_BUTTON ( optMainStr[5], optmenu_act_exit ),
+    DEF_OPT_BUTTON ( optMainStr[6], optmenu_act_exit ),
 #endif
 
 #ifdef CHEATS_ACTIONS

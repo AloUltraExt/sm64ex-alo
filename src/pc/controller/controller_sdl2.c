@@ -28,11 +28,10 @@
 #define MAX_JOYBUTTONS 32  // arbitrary; includes virtual keys for triggers
 #define AXIS_THRESHOLD (30 * 256)
 
-#ifdef BETTERCAM_MOUSE
-int mouse_x;
-int mouse_y;
+#ifdef MOUSE_ACTIONS
+int gMouseXPos;
+int gMouseYPos;
 
-#include "extras/bettercamera.h"
 extern s8 sSelectedFileNum;
 #endif
 
@@ -114,10 +113,10 @@ static void controller_sdl_init(void) {
 
     haptics_enabled = (SDL_InitSubSystem(SDL_INIT_HAPTIC) == 0);
 
-#ifdef BETTERCAM_MOUSE
-    if (newcam_mouse)
+#ifdef MOUSE_ACTIONS
+    if (configMouse)
         SDL_SetRelativeMouseMode(SDL_TRUE);
-    SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
+    SDL_GetRelativeMouseState(&gMouseXPos, &gMouseYPos);
 #endif
 
     controller_sdl_bind();
@@ -156,15 +155,15 @@ static void controller_sdl_read(OSContPad *pad) {
         return;
     }
 
-#ifdef BETTERCAM_MOUSE
+#ifdef MOUSE_ACTIONS
     u32 mouse;
 
-    if (newcam_mouse && sCurrPlayMode != 2 && sSelectedFileNum != 0) {
+    if (configMouse && sCurrPlayMode != 2 && sSelectedFileNum != 0) {
         SDL_SetRelativeMouseMode(SDL_TRUE);
-        mouse = SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
+        mouse = SDL_GetRelativeMouseState(&gMouseXPos, &gMouseYPos);
     } else {
         SDL_SetRelativeMouseMode(SDL_FALSE);
-        mouse = SDL_GetMouseState(&mouse_x, &mouse_y);
+        mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
     }
 
     for (u32 i = 0; i < num_mouse_binds; ++i)

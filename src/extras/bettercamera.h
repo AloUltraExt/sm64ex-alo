@@ -46,7 +46,7 @@ extern u8 newcam_xlu;
 extern u16 newcam_mode;
 extern s16 newcam_yaw;
 
-#ifdef BETTERCAM_MOUSE
+#ifdef MOUSE_ACTIONS
 extern u8 newcam_mouse;
 #endif
 

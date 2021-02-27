@@ -26,13 +26,13 @@
 #include "config.h"
 #include "gfx_dimensions.h"
 
-#ifdef BETTERCAM_MOUSE
+#ifdef MOUSE_ACTIONS
 #include "pc/controller/controller_mouse.h"
 #include "pc/configfile.h"
 
-static bool mouseControl = FALSE;
-static int oldMouse_x;
-static int oldMouse_y;
+static bool sGdMouseControl = FALSE;
+static int sGdOldMouseXPos;
+static int sGdOldMouseYPos;
 #endif
 
 #define MAX_GD_DLS 1000
@@ -2576,32 +2576,32 @@ void parse_p1_controller(void) {
     // deadzone checks
     if (ABS(gdctrl->stickX) >= 6) {
         gdctrl->csrX += gdctrl->stickX * 0.1;
-#ifdef BETTERCAM_MOUSE
-        mouseControl = FALSE;
+#ifdef MOUSE_ACTIONS
+        sGdMouseControl = FALSE;
 #endif
     }
 
     if (ABS(gdctrl->stickY) >= 6) {
         gdctrl->csrY -= gdctrl->stickY * 0.1;
-#ifdef BETTERCAM_MOUSE 
-        mouseControl = FALSE;
+#ifdef MOUSE_ACTIONS 
+        sGdMouseControl = FALSE;
 #endif
     }
 
-#ifdef BETTERCAM_MOUSE
-    if (mouse_x - oldMouse_x != 0 || mouse_y - oldMouse_y != 0)
-        mouseControl = true;
-    if (mouseControl) {
+#ifdef MOUSE_ACTIONS
+    if (gMouseXPos - sGdOldMouseXPos != 0 || gMouseYPos - sGdOldMouseYPos != 0)
+        sGdMouseControl = true;
+    if (sGdMouseControl) {
         float screenScale = (float) gfx_current_dimensions.height / (float)SCREEN_HEIGHT;
-        if (configCameraMouse) {
-            gdctrl->csrX = (mouse_x - (gfx_current_dimensions.width - (screenScale * (float)SCREEN_WIDTH))/ 2)/ screenScale;
-            gdctrl->csrY = mouse_y / screenScale;
+        if (configMouse) {
+            gdctrl->csrX = (gMouseXPos - (gfx_current_dimensions.width - (screenScale * (float)SCREEN_WIDTH))/ 2)/ screenScale;
+            gdctrl->csrY = gMouseYPos / screenScale;
         }
     }
-    oldMouse_x = mouse_x;
-    oldMouse_y = mouse_y;
+    sGdOldMouseXPos = gMouseXPos;
+    sGdOldMouseYPos = gMouseYPos;
 
-if (!mouseControl) {
+if (!sGdMouseControl) {
 #endif
     // clamp cursor position within screen view bounds
     if (gdctrl->csrX < sScreenView->parent->upperLeft.x + (16.0f/aspect)) {
@@ -2623,7 +2623,7 @@ if (!mouseControl) {
     for (i = 0; i < sizeof(OSContPad); i++) {
         ((u8 *) prevInputs)[i] = ((u8 *) currInputs)[i];
     }
-#ifdef BETTERCAM_MOUSE
+#ifdef MOUSE_ACTIONS
 }
 #endif
 }

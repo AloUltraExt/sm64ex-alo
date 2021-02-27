@@ -640,9 +640,9 @@ ifeq ($(TARGET_PORT_CONSOLE),0)
    CUSTOM_C_DEFINES += -DTEXTSAVES
  endif
 
- # Check for Mouse Puppycam Option
- ifeq ($(BETTERCAMERA),1)
-   CUSTOM_C_DEFINES += -DBETTERCAM_MOUSE
+ # Check for Mouse Option
+ ifeq ($(EXT_OPTIONS_MENU),1)
+   CUSTOM_C_DEFINES += -DMOUSE_ACTIONS
  endif
 
 endif

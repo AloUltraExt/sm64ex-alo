@@ -98,10 +98,15 @@ bool         configCameraInvertX = true;
 bool         configCameraInvertY = false;
 bool         configEnableCamera  = false;
 bool         configCameraAnalog  = false;
+#ifdef MOUSE_ACTIONS
 bool         configCameraMouse   = false;
+#endif
 #endif
 bool         configSkipIntro     = 0;
 bool         configHUD           = true;
+#ifdef MOUSE_ACTIONS
+bool         configMouse         = true;
+#endif
 #ifdef DISCORDRPC
 bool         configDiscordRPC    = true;
 #endif
@@ -148,7 +153,9 @@ static const struct ConfigOption options[] = {
     #ifdef BETTERCAMERA
     {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configEnableCamera},
     {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraAnalog},
+    #ifdef MOUSE_ACTIONS
     {.name = "bettercam_mouse_look", .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraMouse},
+    #endif
     {.name = "bettercam_invertx",    .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraInvertX},
     {.name = "bettercam_inverty",    .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraInvertY},
     {.name = "bettercam_xsens",      .type = CONFIG_TYPE_UINT, .uintValue = &configCameraXSens},

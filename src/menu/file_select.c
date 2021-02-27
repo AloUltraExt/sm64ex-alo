@@ -23,13 +23,13 @@
 #include "sm64.h"
 #include "text_strings.h"
 
-#ifdef BETTERCAM_MOUSE
+#ifdef MOUSE_ACTIONS
 #include "pc/controller/controller_mouse.h"
 #include "pc/configfile.h"
 
-static bool mouseControl = FALSE;
-static int oldMouse_x;
-static int oldMouse_y;
+static bool sFileSelectMouseControl = FALSE;
+static int sFileSelectOldMouseXPos;
+static int sFileSelectOldMouseYPos;
 
 extern struct GfxDimensions gfx_current_dimensions;
 #endif
@@ -126,7 +126,7 @@ static s8 sAllFilesExist = FALSE;
 
 // Defines the value of the save slot selected in the menu.
 // Mario A: 1 | Mario B: 2 | Mario C: 3 | Mario D: 4
-#ifndef BETTERCAM_MOUSE
+#ifndef MOUSE_ACTIONS
 static
 #endif
 s8 sSelectedFileNum = 0;
@@ -1698,19 +1698,19 @@ void handle_controller_cursor_input(void) {
     if (rawStickY > -2 && rawStickY < 2) {
         rawStickY = 0;
     }
-    #ifdef BETTERCAM_MOUSE 
+    #ifdef MOUSE_ACTIONS 
     else
     {
-        mouseControl = 0;
+        sFileSelectMouseControl = FALSE;
     }
     #endif
     if (rawStickX > -2 && rawStickX < 2) {
         rawStickX = 0;
     }
-    #ifdef BETTERCAM_MOUSE 
+    #ifdef MOUSE_ACTIONS 
     else
     {
-        mouseControl = 0;
+        sFileSelectMouseControl = FALSE;
     }
     #endif
 
@@ -1718,19 +1718,19 @@ void handle_controller_cursor_input(void) {
     sCursorPos[0] += rawStickX / 8;
     sCursorPos[1] += rawStickY / 8;
 
-#ifdef BETTERCAM_MOUSE
+#ifdef MOUSE_ACTIONS
     static float screenScale;
     screenScale = (float) gfx_current_dimensions.height / SCREEN_HEIGHT;
-    if (mouse_x - oldMouse_x != 0 || mouse_y - oldMouse_y != 0)
-        mouseControl = 1;
-    if (mouseControl && configCameraMouse) {
-        sCursorPos[0] = ((mouse_x - (gfx_current_dimensions.width - (screenScale * 320)) / 2) / screenScale) - 160.0f;
-        sCursorPos[1] = (mouse_y / screenScale - 120.0f) * -1;
+    if (gMouseXPos - sFileSelectOldMouseXPos != 0 || gMouseYPos - sFileSelectOldMouseYPos != 0)
+        sFileSelectMouseControl = TRUE;
+    if (sFileSelectMouseControl && configMouse) {
+        sCursorPos[0] = ((gMouseXPos - (gfx_current_dimensions.width - (screenScale * 320)) / 2) / screenScale) - 160.0f;
+        sCursorPos[1] = (gMouseYPos / screenScale - 120.0f) * -1;
     }
-    oldMouse_x = mouse_x;
-    oldMouse_y = mouse_y;
+    sFileSelectOldMouseXPos = gMouseXPos;
+    sFileSelectOldMouseYPos = gMouseYPos;
 
-if (!mouseControl) {
+if (!sFileSelectMouseControl) {
 #endif
     
     // Stop cursor from going offscreen
@@ -1747,7 +1747,7 @@ if (!mouseControl) {
     if (sCursorPos[1] < -90.0f) {
         sCursorPos[1] = -90.0f;
     }
-#ifdef BETTERCAM_MOUSE
+#ifdef MOUSE_ACTIONS
 }
 #endif
 

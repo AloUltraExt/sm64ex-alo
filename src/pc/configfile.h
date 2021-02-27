@@ -64,10 +64,15 @@ extern unsigned int configCameraDegrade;
 extern bool         configCameraInvertX;
 extern bool         configCameraInvertY;
 extern bool         configEnableCamera;
+#ifdef MOUSE_ACTIONS
 extern bool         configCameraMouse;
+#endif
 extern bool         configCameraAnalog;
 #endif
 extern bool         configHUD;
+#ifdef MOUSE_ACTIONS
+extern bool         configMouse;
+#endif
 extern bool         configSkipIntro;
 #ifdef DISCORDRPC
 extern bool         configDiscordRPC;

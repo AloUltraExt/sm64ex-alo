@@ -3,8 +3,8 @@
 
 #include "controller_api.h"
 
-extern int mouse_x;
-extern int mouse_y;
+extern int gMouseXPos;
+extern int gMouseYPos;
 
 #define VK_BASE_MOUSE 0x2000
 

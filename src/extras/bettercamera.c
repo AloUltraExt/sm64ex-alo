@@ -15,7 +15,7 @@
 #include "include/text_strings.h"
 
 #include "pc/configfile.h"
-#ifdef BETTERCAM_MOUSE
+#ifdef MOUSE_ACTIONS
 #include "pc/controller/controller_mouse.h"
 #endif
 
@@ -112,7 +112,7 @@ s16 newcam_degrade = 1;
 s16 newcam_analogue = 0; //Whether to accept inputs from a player 2 joystick, and then disables C button input.
 s16 newcam_distance_values[] = {750,1250,2000};
 u8 newcam_active = 0; // basically the thing that governs if puppycam is on. If you disable this by hand, you need to set the camera mode to the old modes, too.
-#ifdef BETTERCAM_MOUSE
+#ifdef MOUSE_ACTIONS
 u8 newcam_mouse = 0;
 #endif
 u16 newcam_mode;
@@ -205,7 +205,7 @@ void newcam_init_settings(void) {
     newcam_panlevel     = newcam_clamp(configCameraPan, 0, 100);
     newcam_invertX      = (s16)configCameraInvertX;
     newcam_invertY      = (s16)configCameraInvertY;
-#ifdef BETTERCAM_MOUSE
+#if !defined(TARGET_N64) && defined(MOUSE_ACTIONS)
     newcam_mouse        = (u8)configCameraMouse;
 #endif    
     newcam_analogue     = (s16)configCameraAnalog;
@@ -396,10 +396,10 @@ static void newcam_rotate_button(void) {
             newcam_tilt_acc -= (newcam_tilt_acc*((f32)newcam_degrade/100));
     }
 
-#ifdef BETTERCAM_MOUSE
-    if (newcam_mouse) {
-        newcam_yaw += ivrt(0) * mouse_x * 16;
-        newcam_tilt += ivrt(1) * mouse_y * 16;
+#ifdef MOUSE_ACTIONS
+    if (configMouse && newcam_mouse) {
+        newcam_yaw += ivrt(0) * gMouseXPos * 16;
+        newcam_tilt += ivrt(1) * gMouseYPos * 16;
     }
 #endif
 }

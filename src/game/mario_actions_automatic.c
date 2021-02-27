@@ -17,9 +17,10 @@
 #include "level_table.h"
 #include "rumble_init.h"
 
-#ifdef BETTERCAM_MOUSE
+#include "pc/configfile.h"
+
+#ifdef MOUSE_ACTIONS
 #include "pc/controller/controller_mouse.h"
-#include "extras/bettercamera.h"
 #endif
 
 #define POLE_NONE          0
@@ -739,10 +740,10 @@ s32 act_in_cannon(struct MarioState *m) {
         case 2:
             m->faceAngle[0] -= (s16)(m->controller->stickY * 10.0f);
             marioObj->oMarioCannonInputYaw -= (s16)(m->controller->stickX * 10.0f);
-#ifdef BETTERCAM_MOUSE
-            if (newcam_mouse) {
-                m->faceAngle[0] -= (s16)(mouse_y * 10.0f);
-                marioObj->oMarioCannonInputYaw -= (s16)(mouse_x * 10.0f);
+#ifdef MOUSE_ACTIONS
+            if (configMouse) {
+                m->faceAngle[0] -= (s16)(gMouseYPos * 10.0f);
+                marioObj->oMarioCannonInputYaw -= (s16)(gMouseXPos * 10.0f);
             }
 #endif
 
