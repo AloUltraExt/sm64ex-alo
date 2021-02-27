@@ -541,7 +541,7 @@ static u8 puppycam_check_volume_bounds(struct sPuppyVolume *volume, u16 index)
     return FALSE;
 }
 
-static void puppycam_shake(s16 x, s16 y, s16 z)
+void puppycam_shake(s16 x, s16 y, s16 z)
 {
 
 }
