@@ -22,14 +22,14 @@
 #include "rumble_init.h"
 #include <prevent_bss_reordering.h>
 
+#ifdef BETTERCAMERA
+#include "extras/bettercamera.h"
+#endif
+
 #ifdef TARGET_N3DS
 #ifndef DISABLE_N3DS_AUDIO
 #include "pc/audio/audio_3ds_threading.h"
 #endif
-#endif
-
-#ifdef BETTERCAMERA
-#include "extras/bettercamera.h"
 #endif
 
 // FIXME: I'm not sure all of these variables belong in this file, but I don't
@@ -612,11 +612,6 @@ void init_controllers(void) {
             gControllers[cont++].controllerData = &gControllerPads[port];
         }
     }
-
-#ifdef BETTERCAMERA
-    // load bettercam settings from the config file
-    newcam_init_settings();
-#endif
 }
 
 void setup_game_memory(void) {
@@ -655,6 +650,9 @@ void thread5_game_loop(UNUSED void *arg) {
     create_thread_6();
 #endif
     save_file_load_all();
+#ifdef BETTERCAMERA
+    puppycam_boot();
+#endif
 
     set_vblank_handler(2, &gGameVblankHandler, &gGameVblankQueue, (OSMesg) 1);
 

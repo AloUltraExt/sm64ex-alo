@@ -73,16 +73,14 @@ static const u8 optMainStr[][32] = {
 };
 
 static const u8 optsCameraStr[][32] = {
-    { TEXT_OPT_CAMX },
-    { TEXT_OPT_CAMY },
+    { TEXT_OPT_CAMON },
+    { TEXT_OPT_CAMMOUSE },
     { TEXT_OPT_INVERTX },
     { TEXT_OPT_INVERTY },
+    { TEXT_OPT_CAMX },
+    { TEXT_OPT_CAMY },
     { TEXT_OPT_CAMC },
-    { TEXT_OPT_CAMP },
     { TEXT_OPT_ANALOGUE },
-    { TEXT_OPT_CMOUSE },
-    { TEXT_OPT_CAMD },
-    { TEXT_OPT_CAMON },
 };
 
 static const u8 optsVideoStr[][32] = {
@@ -170,18 +168,16 @@ static void optvideo_apply(UNUSED struct Option *self, s32 arg) {
 
 #ifdef BETTERCAMERA
 static struct Option optsCamera[] = {
-    DEF_OPT_TOGGLE( optsCameraStr[9], &configEnableCamera ),
-    DEF_OPT_TOGGLE( optsCameraStr[6], &configCameraAnalog ),
-#if !defined(TARGET_N64) && defined(MOUSE_ACTIONS)
-    DEF_OPT_TOGGLE( optsCameraStr[7], &configCameraMouse ),
+    DEF_OPT_TOGGLE( optsCameraStr[0], &configEnableCamera ),
+#ifdef MOUSE_ACTIONS
+    DEF_OPT_TOGGLE( optsCameraStr[1], &configCameraMouse ),
 #endif
     DEF_OPT_TOGGLE( optsCameraStr[2], &configCameraInvertX ),
     DEF_OPT_TOGGLE( optsCameraStr[3], &configCameraInvertY ),
-    DEF_OPT_SCROLL( optsCameraStr[0], &configCameraXSens, 1, 100, 1 ),
-    DEF_OPT_SCROLL( optsCameraStr[1], &configCameraYSens, 1, 100, 1 ),
-    DEF_OPT_SCROLL( optsCameraStr[4], &configCameraAggr, 0, 100, 1 ),
-    DEF_OPT_SCROLL( optsCameraStr[5], &configCameraPan, 0, 100, 1 ),
-    DEF_OPT_SCROLL( optsCameraStr[8], &configCameraDegrade, 0, 100, 1 ),
+    DEF_OPT_SCROLL( optsCameraStr[4], &configCameraXSens, 1, 100, 1 ),
+    DEF_OPT_SCROLL( optsCameraStr[5], &configCameraYSens, 1, 100, 1 ),
+    DEF_OPT_SCROLL( optsCameraStr[6], &configCameraAggr, 0, 100, 1 ),
+    DEF_OPT_TOGGLE( optsCameraStr[7], &configCameraAnalog ),
 };
 #endif
 
@@ -535,9 +531,6 @@ void optmenu_toggle(void) {
         play_sound(SOUND_MENU_MARIO_CASTLE_WARP2, gGlobalSoundSource);
         #endif
         optmenu_open = 0;
-        #ifdef BETTERCAMERA
-        newcam_init_settings(); // load bettercam settings from config vars
-        #endif
 #ifndef TARGET_N64
         controller_reconfigure(); // rebind using new config values
         configfile_save(configfile_name());

@@ -112,9 +112,6 @@
 #define CAMERA_MODE_8_DIRECTIONS      0x0E // AKA Parallel Camera, Bowser Courses & Rainbow Ride
 #define CAMERA_MODE_FREE_ROAM         0x10
 #define CAMERA_MODE_SPIRAL_STAIRS     0x11
-#ifdef BETTERCAMERA
-#define CAMERA_MODE_NEWCAM            0x12
-#endif
 
 #define CAM_MOVE_RETURN_TO_MIDDLE       0x0001
 #define CAM_MOVE_ZOOMED_OUT             0x0002
@@ -167,9 +164,6 @@
 #define CAM_STATUS_FIXED  1 << 2
 #define CAM_STATUS_C_DOWN 1 << 3
 #define CAM_STATUS_C_UP   1 << 4
-#ifdef BETTERCAMERA
-#define CAM_STATUS_NEWCAM 1 << 5
-#endif
 
 #define CAM_STATUS_MODE_GROUP   (CAM_STATUS_MARIO | CAM_STATUS_LAKITU | CAM_STATUS_FIXED)
 #define CAM_STATUS_C_MODE_GROUP (CAM_STATUS_C_DOWN | CAM_STATUS_C_UP)

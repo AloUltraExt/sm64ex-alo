@@ -56,17 +56,15 @@ extern unsigned int configRumbleStrength;
 extern bool         configPrecacheRes;
 #endif
 #ifdef BETTERCAMERA
-extern unsigned int configCameraXSens;
-extern unsigned int configCameraYSens;
-extern unsigned int configCameraAggr;
-extern unsigned int configCameraPan;
-extern unsigned int configCameraDegrade;
-extern bool         configCameraInvertX;
-extern bool         configCameraInvertY;
 extern bool         configEnableCamera;
 #ifdef MOUSE_ACTIONS
 extern bool         configCameraMouse;
 #endif
+extern bool         configCameraInvertX;
+extern bool         configCameraInvertY;
+extern unsigned int configCameraXSens;
+extern unsigned int configCameraYSens;
+extern unsigned int configCameraAggr;
 extern bool         configCameraAnalog;
 #endif
 extern bool         configHUD;

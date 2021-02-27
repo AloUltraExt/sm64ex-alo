@@ -32,18 +32,19 @@
 
 #define TEXT_OPT_BUTTON1   _("Ｒ OPTIONS")
 #define TEXT_OPT_BUTTON2   _("Ｒ RETURN")
+
 #define TEXT_OPT_ENABLED   _("ENABLED")
 #define TEXT_OPT_DISABLED  _("DISABLED")
+
+#define TEXT_OPT_CAMON     _("PUPPYCAM 2")
+#define TEXT_OPT_CAMMOUSE  _("CAMERA MOUSE CONTROL")
 #define TEXT_OPT_CAMX      _("CAMERA X SENSITIVITY")
 #define TEXT_OPT_CAMY      _("CAMERA Y SENSITIVITY")
 #define TEXT_OPT_INVERTX   _("INVERT X AXIS")
 #define TEXT_OPT_INVERTY   _("INVERT Y AXIS")
-#define TEXT_OPT_CAMC      _("CAMERA CENTRE AGGRESSION")
-#define TEXT_OPT_CAMP      _("CAMERA PAN LEVEL")
-#define TEXT_OPT_CAMD      _("CAMERA DECELERATION")
-#define TEXT_OPT_CAMON     _("FREE CAMERA")
+#define TEXT_OPT_CAMC      _("CAMERA CENTRE SPEED")
 #define TEXT_OPT_ANALOGUE  _("ANALOGUE CAMERA")
-#define TEXT_OPT_CMOUSE    _("MOUSE LOOK")
+
 #define TEXT_OPT_TEXFILTER _("TEXTURE FILTERING")
 #define TEXT_OPT_FSCREEN   _("FULLSCREEN")
 #define TEXT_OPT_NEAREST   _("NEAREST")
@@ -92,18 +93,19 @@
 
 #define TEXT_OPT_BUTTON1   _("[R] Options")
 #define TEXT_OPT_BUTTON2   _("[R] Return")
+
 #define TEXT_OPT_ENABLED   _("Enabled")
 #define TEXT_OPT_DISABLED  _("Disabled")
+
+#define TEXT_OPT_CAMON     _("PuppyCam 2")
+#define TEXT_OPT_CAMMOUSE  _("Camera Mouse Control")
 #define TEXT_OPT_CAMX      _("Camera X Sensitivity")
 #define TEXT_OPT_CAMY      _("Camera Y Sensitivity")
 #define TEXT_OPT_INVERTX   _("Invert X Axis")
 #define TEXT_OPT_INVERTY   _("Invert Y Axis")
-#define TEXT_OPT_CAMC      _("Camera Centre Aggression")
-#define TEXT_OPT_CAMP      _("Camera Pan Level")
-#define TEXT_OPT_CAMD      _("Camera Deceleration")
-#define TEXT_OPT_CAMON     _("Free Camera")
+#define TEXT_OPT_CAMC      _("Camera Centre Speed")
 #define TEXT_OPT_ANALOGUE  _("Analogue Camera")
-#define TEXT_OPT_CMOUSE    _("Mouse Look")
+
 #define TEXT_OPT_TEXFILTER _("Texture Filtering")
 #define TEXT_OPT_FSCREEN   _("Fullscreen")
 #define TEXT_OPT_NEAREST   _("Nearest")

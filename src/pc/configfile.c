@@ -88,19 +88,17 @@ unsigned int configRumbleStrength = 50;
 bool configPrecacheRes = true;
 #endif
 #ifdef BETTERCAMERA
-// BetterCamera settings
-unsigned int configCameraXSens   = 25;
-unsigned int configCameraYSens   = 25;
-unsigned int configCameraAggr    = 0;
-unsigned int configCameraPan     = 0;
-unsigned int configCameraDegrade = 10; // 0 - 100%
-bool         configCameraInvertX = true;
-bool         configCameraInvertY = false;
-bool         configEnableCamera  = false;
-bool         configCameraAnalog  = false;
+// PuppyCam 2 settings
+bool         configEnableCamera  = true;
 #ifdef MOUSE_ACTIONS
-bool         configCameraMouse   = false;
+bool         configCameraMouse   = true;
 #endif
+bool         configCameraInvertX = true;
+bool         configCameraInvertY = true;
+unsigned int configCameraXSens   = 100;
+unsigned int configCameraYSens   = 100;
+unsigned int configCameraAggr    = 100;
+bool         configCameraAnalog  = false;
 #endif
 bool         configSkipIntro     = 0;
 bool         configHUD           = true;
@@ -150,9 +148,8 @@ static const struct ConfigOption options[] = {
     #ifdef EXTERNAL_DATA
     {.name = "precache",             .type = CONFIG_TYPE_BOOL, .boolValue = &configPrecacheRes},
     #endif
-    #ifdef BETTERCAMERA
-    {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configEnableCamera},
-    {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraAnalog},
+#ifdef BETTERCAMERA
+    {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configEnableCamera},     
     #ifdef MOUSE_ACTIONS
     {.name = "bettercam_mouse_look", .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraMouse},
     #endif
@@ -161,9 +158,8 @@ static const struct ConfigOption options[] = {
     {.name = "bettercam_xsens",      .type = CONFIG_TYPE_UINT, .uintValue = &configCameraXSens},
     {.name = "bettercam_ysens",      .type = CONFIG_TYPE_UINT, .uintValue = &configCameraYSens},
     {.name = "bettercam_aggression", .type = CONFIG_TYPE_UINT, .uintValue = &configCameraAggr},
-    {.name = "bettercam_pan_level",  .type = CONFIG_TYPE_UINT, .uintValue = &configCameraPan},
-    {.name = "bettercam_degrade",    .type = CONFIG_TYPE_UINT, .uintValue = &configCameraDegrade},
-    #endif
+    {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraAnalog},
+#endif
     {.name = "skip_intro",           .type = CONFIG_TYPE_BOOL, .boolValue = &configSkipIntro},
     #ifdef DISCORDRPC
     {.name = "discordrpc_enable",    .type = CONFIG_TYPE_BOOL, .boolValue = &configDiscordRPC},

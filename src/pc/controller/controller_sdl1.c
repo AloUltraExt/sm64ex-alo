@@ -42,7 +42,6 @@ enum {
 int gMouseXPos;
 int gMouseYPos;
 
-#include "extras/bettercamera.h"
 extern s8 sSelectedFileNum;
 #endif
 

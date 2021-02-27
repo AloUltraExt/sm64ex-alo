@@ -26,6 +26,7 @@
 #ifdef GODDARD_MFACE
 #include "goddard/renderer.h"
 #endif
+
 #ifdef BETTERCAMERA
 #include "extras/bettercamera.h"
 #endif
@@ -308,10 +309,6 @@ void bhv_unlock_door_star_loop(void) {
 static Gfx *make_gfx_mario_alpha(struct GraphNodeGenerated *node, s16 alpha) {
     Gfx *gfx;
     Gfx *gfxHead = NULL;
-#ifdef BETTERCAMERA
-    u8 alphaBias;
-    s32 flags = update_and_return_cap_flags(gMarioState);
-#endif
 
     if (alpha == 255) {
         node->fnNode.node.flags = (node->fnNode.node.flags & 0xFF) | (LAYER_OPAQUE << 8);
@@ -322,7 +319,7 @@ static Gfx *make_gfx_mario_alpha(struct GraphNodeGenerated *node, s16 alpha) {
         gfxHead = alloc_display_list(3 * sizeof(*gfxHead));
         gfx = gfxHead;
 #ifdef BETTERCAMERA
-        if (flags & MARIO_VANISH_CAP || gMarioState->flags & MARIO_TELEPORTING) {
+        if (gMarioState->flags & MARIO_VANISH_CAP || gMarioState->flags & MARIO_TELEPORTING) {
             gDPSetAlphaCompare(gfx++, G_AC_DITHER);
         } else {
             gDPSetAlphaCompare(gfx++, G_AC_NONE);
@@ -331,12 +328,7 @@ static Gfx *make_gfx_mario_alpha(struct GraphNodeGenerated *node, s16 alpha) {
         gDPSetAlphaCompare(gfx++, G_AC_DITHER);
 #endif
     }
-#ifdef BETTERCAMERA
-    alphaBias = min(alpha, newcam_xlu);
-    gDPSetEnvColor(gfx++, 255, 255, 255, alphaBias);
-#else
     gDPSetEnvColor(gfx++, 255, 255, 255, alpha);
-#endif
     gSPEndDisplayList(gfx);
     return gfxHead;
 }
@@ -354,6 +346,12 @@ Gfx *geo_mirror_mario_set_alpha(s32 callContext, struct GraphNode *node, UNUSED 
 
     if (callContext == GEO_CONTEXT_RENDER) {
         alpha = (bodyState->modelState & 0x100) ? (bodyState->modelState & 0xFF) : 255;
+#ifdef BETTERCAMERA
+        if (alpha > gPuppyCam.opacity) {
+            alpha = gPuppyCam.opacity;
+           bodyState->modelState = MODEL_STATE_NOISE_ALPHA;
+        }
+#endif
         gfx = make_gfx_mario_alpha(asGenerated, alpha);
     }
     return gfx;

@@ -24,6 +24,10 @@ int configHUD = TRUE;
 #endif
 #endif
 
+#ifdef BETTERCAMERA
+#include "extras/bettercamera.h"
+#endif
+
 /* @file hud.c
  * This file implements HUD rendering and power meter animations.
  * That includes stars, lives, coins, camera status, power meter, timer
@@ -421,13 +425,6 @@ void render_hud_camera_status(void) {
             break;
     }
 
-#ifdef BETTERCAMERA
-extern Texture texture_hud_char_puppycam[];
-    if (sCameraHUD.status & CAM_STATUS_NEWCAM) {
-        render_hud_tex_lut(x + 16, y, texture_hud_char_puppycam);
-    }
-#endif
-
     gSPDisplayList(gDisplayListHead++, dl_hud_img_end);
 }
 
@@ -506,7 +503,16 @@ void render_hud(void) {
 #endif
         ) {
             render_hud_power_meter();
+
+#ifdef BETTERCAMERA
+            if (gPuppyCam.enabled) {
+                puppycam_hud();
+            } else {
+#endif
             render_hud_camera_status();
+#ifdef BETTERCAMERA
+            }
+#endif
         }
 
         if (hudDisplayFlags & HUD_DISPLAY_FLAG_TIMER

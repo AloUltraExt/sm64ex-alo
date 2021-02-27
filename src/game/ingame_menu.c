@@ -27,9 +27,6 @@
 #ifdef CHEATS_ACTIONS
 #include "extras/cheats.h"
 #endif
-#ifdef BETTERCAMERA
-#include "extras/bettercamera.h"
-#endif
 #ifdef EXT_OPTIONS_MENU
 #include "extras/options_menu.h"
 #endif
