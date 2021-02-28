@@ -465,43 +465,28 @@ void render_hud(void) {
             render_hud_cannon_reticle();
         }
 
-        if (hudDisplayFlags & HUD_DISPLAY_FLAG_LIVES
 #ifdef EXT_OPTIONS_MENU
-        && configHUD
+        if (!configHUD) {
+            return;
+        }
 #endif
-        ) {
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_LIVES) {
             render_hud_mario_lives();
         }
 
-        if (hudDisplayFlags & HUD_DISPLAY_FLAG_COIN_COUNT
-#ifdef EXT_OPTIONS_MENU
-        && configHUD
-#endif
-        ) {
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_COIN_COUNT) {
             render_hud_coins();
         }
 
-        if (hudDisplayFlags & HUD_DISPLAY_FLAG_STAR_COUNT
-#ifdef EXT_OPTIONS_MENU
-        && configHUD
-#endif
-        ) {
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_STAR_COUNT) {
             render_hud_stars();
         }
 
-        if (hudDisplayFlags & HUD_DISPLAY_FLAG_KEYS
-#ifdef EXT_OPTIONS_MENU
-        && configHUD
-#endif
-        ) {
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_KEYS) {
             render_hud_keys();
         }
 
-        if (hudDisplayFlags & HUD_DISPLAY_FLAG_CAMERA_AND_POWER
-#ifdef EXT_OPTIONS_MENU
-        && configHUD
-#endif
-        ) {
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_CAMERA_AND_POWER) {
             render_hud_power_meter();
 
 #ifdef BETTERCAMERA
@@ -515,11 +500,7 @@ void render_hud(void) {
 #endif
         }
 
-        if (hudDisplayFlags & HUD_DISPLAY_FLAG_TIMER
-#ifdef EXT_OPTIONS_MENU
-        && configHUD
-#endif
-        ) {
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_TIMER) {
             render_hud_timer();
         }
     }
