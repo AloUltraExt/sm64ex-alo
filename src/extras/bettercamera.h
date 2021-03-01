@@ -91,7 +91,7 @@ struct sPuppyVolume
     Vec3s pos; //The set position of the volume
     Vec3s radius; //Where it extends.
     s16 rot; //The rotational angle of the volume.
-    s32 *func; //a pointer to a function. Optional.
+    void *func; //a pointer to a function. Optional.
     struct sPuppyAngles *angles; //A pointer to a gPuppyAngles struct. Optional
     s32 flagsAdd; //Adds behaviour flags.
     s32 flagsRemove; //Removes behaviour flags.
@@ -138,7 +138,7 @@ extern struct MemoryPool *gPuppyMemoryPool;
 extern void puppycam_boot(void);
 extern void puppycam_init(void);
 extern void puppycam_loop(void);
-extern void puppycam_shake(s16 x, s16 y, s16 z);
+//extern void puppycam_shake(s16 x, s16 y, s16 z);
 extern void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Vec3f hit_pos);
 extern f32 approach_f32_asymptotic(f32 current, f32 target, f32 multiplier);
 extern void puppycam_default_config(void);

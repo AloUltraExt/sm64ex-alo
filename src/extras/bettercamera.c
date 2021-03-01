@@ -517,7 +517,7 @@ static u8 puppycam_check_volume_bounds(struct sPuppyVolume *volume, u16 index)
     Vec3f rel;
 
     if (sPuppyVolumeStack[index]->room != gMarioCurrentRoom && sPuppyVolumeStack[index]->room != -1)
-        return;
+        return FALSE;
 
     //debug_box_pos_rot(sPuppyVolumeStack[index]->pos, sPuppyVolumeStack[index]->radius, sPuppyVolumeStack[index]->rot);
 
@@ -541,10 +541,8 @@ static u8 puppycam_check_volume_bounds(struct sPuppyVolume *volume, u16 index)
     return FALSE;
 }
 
-void puppycam_shake(s16 x, s16 y, s16 z)
-{
-
-}
+//void puppycam_shake(s16 x, s16 y, s16 z) {
+//}
 
 ///This is the highest level of the basic steps that go into the code. Anything above is called from these following functions.
 
@@ -808,7 +806,7 @@ static void puppycam_collision(void)
     camdir[1] = gPuppyCam.pos[1] - target[1];
     camdir[2] = gPuppyCam.pos[2] - target[2];
 
-    find_surface_on_ray(target, camdir, &surf, &hitpos);
+    find_surface_on_ray(target, camdir, &surf, hitpos);
     gPuppyCam.collisionDistance = sqrtf((target[0] - hitpos[0]) * (target[0] - hitpos[0]) + (target[1] - hitpos[1]) * (target[1] - hitpos[1]) + (target[2] - hitpos[2]) * (target[2] - hitpos[2]));
 
     if (surf)
@@ -857,13 +855,12 @@ static void puppycam_apply(void)
 static void puppycam_wingmario_tower(void) {
     if (gMarioState->floor != NULL && gMarioState->floor->type == SURFACE_LOOK_UP_WARP
         && save_file_get_total_star_count(gCurrSaveFileNum - 1, COURSE_MIN - 1, COURSE_MAX - 1) >= 10) {
-        if (gPuppyCam.pitch > 25000 && gMarioState->forwardVel == 0) {
+        if (gPuppyCam.pitch > 0x6000 && gMarioState->forwardVel == 0) {
             level_trigger_warp(gMarioState, WARP_OP_UNKNOWN_01);
         }
     }
 }
 
-extern Texture texture_hud_char_no_camera[];
 extern Texture texture_hud_char_puppycam[];
 extern void render_hud_tex_lut(s32 x, s32 y, u8 *texture);
 extern void render_hud_small_tex_lut(s32 x, s32 y, u8 *texture);
