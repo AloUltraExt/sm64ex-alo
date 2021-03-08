@@ -120,11 +120,16 @@ struct SubMenu menuCheats = DEF_SUBMENU( optCheatMenuStr[0], optsCheats );
 
 void cheats_moon_jump(struct MarioState *m) {
     if (Cheats.MoonJump) {        
-        if (m->controller->buttonPressed & L_TRIG) {
-            set_mario_action(m, ACT_JUMP, 0);
-        }
-
         if (m->controller->buttonDown & L_TRIG) {
+
+            if (m->action != ACT_JUMP && m->heldObj == NULL) {
+                set_mario_action(m, ACT_JUMP, 0);
+            }
+
+            if (m->action != ACT_HOLD_JUMP && m->heldObj != NULL) {
+                set_mario_action(m, ACT_HOLD_JUMP, 0);
+            }
+
             m->vel[1] = 25;
         }
     }
@@ -197,10 +202,10 @@ f32 cheats_walk_on_environment(f32 height, f32 x, f32 z) {
     f32 waterLevel = find_water_level(x, z);
     f32 gasLevel = find_poison_gas_level(x, z);
 
-    if (Cheats.EnableCheats) {
-        if (Cheats.WalkOn.Water && height < waterLevel && gCurrentObject == gMarioObject) {
+    if (Cheats.EnableCheats && gCurrentObject == gMarioObject) {
+        if (Cheats.WalkOn.Water && height < waterLevel) {
             newHeight = waterLevel;
-        } else if (Cheats.WalkOn.Gas && height < gasLevel && gCurrentObject == gMarioObject) {
+        } else if (Cheats.WalkOn.Gas && height < gasLevel) {
             newHeight = gasLevel;
         } else {
             newHeight = height;

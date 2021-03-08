@@ -544,7 +544,8 @@ static u8 puppycam_check_volume_bounds(struct sPuppyVolume *volume, u16 index)
 static void puppycam_wingmario_tower(void) {
     if (gMarioState->floor && gMarioState->floor->type == SURFACE_LOOK_UP_WARP
         && save_file_get_total_star_count(gCurrSaveFileNum - 1, COURSE_MIN - 1, COURSE_MAX - 1) >= 10) {
-        if (gPuppyCam.pitch > -8000 && gMarioState->forwardVel == 0) {
+        if (gPuppyCam.pitch < -8000 && gMarioState->forwardVel == 0 
+            && (gMarioState->action & ACT_GROUP_MASK) != ACT_GROUP_CUTSCENE) {
             level_trigger_warp(gMarioState, WARP_OP_UNKNOWN_01);
         }
     }
