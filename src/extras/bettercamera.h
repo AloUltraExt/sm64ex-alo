@@ -67,7 +67,7 @@ struct gPuppyStruct
     s8 stick2[2];//The value that's set and read for analogue stick.
     u8 stickN[2]; //This is set when the stick is neutral. It's to prevent rapidfire input.
     u8 enabled;
-    s16 waterY;
+    s16 swimPitch;
 #ifdef MOUSE_ACTIONS
     u8 mouse;
 #endif

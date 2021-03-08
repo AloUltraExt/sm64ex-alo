@@ -164,15 +164,14 @@ void puppycam_init(void)
     gPuppyCam.targetFloorHeight = gPuppyCam.pan[1];
     gPuppyCam.lastTargetFloorHeight = gMarioState->pos[1];
     gPuppyCam.opacity = 255;
-    //puppycam_get_save();
-    //puppycam_check_save();
+    gPuppyCam.swimPitch = 0;
 
 }
 
 //Handles C Button inputs for modes that have held inputs, rather than presses.
 static void puppycam_input_hold(void)
 {
-    s8 ivX = ((gPuppyCam.options.invertX*2)-1)*(gPuppyCam.options.sensitivityX/100.f);
+    f32 ivX = ((gPuppyCam.options.invertX*2)-1)*(gPuppyCam.options.sensitivityX/100.f);
     s8 stickMag = 0;
 
     gPuppyCam.framesSinceC[0]++;
@@ -222,7 +221,7 @@ static void puppycam_input_hold(void)
 //Handles C Button inputs for modes that have pressed inputs, rather than held.
 static void puppycam_input_press(void)
 {
-    s8 ivX = ((gPuppyCam.options.invertX*2)-1)*(gPuppyCam.options.sensitivityX/100.f);
+    f32 ivX = ((gPuppyCam.options.invertX*2)-1)*(gPuppyCam.options.sensitivityX/100.f);
 
     //Just in case it happens to be nonzero.
     gPuppyCam.yawAcceleration = 0;
@@ -255,8 +254,8 @@ static void puppycam_input_press(void)
 #ifdef MOUSE_ACTIONS
 //Mouse control support for PC Platforms
 static void puppycam_input_mouse(void) {
-    s8 ivX = ((gPuppyCam.options.invertX*2)-1)*(gPuppyCam.options.sensitivityX/100.f);
-    s8 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
+    f32 ivX = ((gPuppyCam.options.invertX*2)-1)*(gPuppyCam.options.sensitivityX/100.f);
+    f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
 
     if (configMouse && gPuppyCam.mouse) {
         gPuppyCam.yawTarget += ivX * gMouseXPos * 16;
@@ -541,6 +540,16 @@ static u8 puppycam_check_volume_bounds(struct sPuppyVolume *volume, u16 index)
     return FALSE;
 }
 
+//Adds support for wing mario tower
+static void puppycam_wingmario_tower(void) {
+    if (gMarioState->floor && gMarioState->floor->type == SURFACE_LOOK_UP_WARP
+        && save_file_get_total_star_count(gCurrSaveFileNum - 1, COURSE_MIN - 1, COURSE_MAX - 1) >= 10) {
+        if (gPuppyCam.pitch > -8000 && gMarioState->forwardVel == 0) {
+            level_trigger_warp(gMarioState, WARP_OP_UNKNOWN_01);
+        }
+    }
+}
+
 //void puppycam_shake(s16 x, s16 y, s16 z) {
 //}
 
@@ -549,7 +558,7 @@ static u8 puppycam_check_volume_bounds(struct sPuppyVolume *volume, u16 index)
 //The centrepiece behind the input side of PuppyCam. The C buttons branch off.
 static void puppycam_input_core(void)
 {
-    s8 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
+    f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
     s8 stickMag = 0;
 
     puppycam_analogue_stick();
@@ -619,25 +628,31 @@ static void puppycam_projection(void)
     Vec3s targetPos, targetPos2, targetPos3;
     u8 panD = (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_PANSHIFT)/8192;
 
-    if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_SLIDE_CORRECTION && gMarioState->action & ACT_FLAG_BUTT_OR_STOMACH_SLIDE)
+    if (gPuppyCam.targetObj == gMarioState->marioObj)
     {
-        gPuppyCam.yawTarget = gMarioState->faceAngle[1]+0x8000;
-        gPuppyCam.pan[0] = 0;
-        gPuppyCam.pan[1] = 0;
-        gPuppyCam.pan[2] = 0;
+        if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_SLIDE_CORRECTION && gMarioState->action & ACT_FLAG_BUTT_OR_STOMACH_SLIDE)
+        {
+            gPuppyCam.yawTarget = gMarioState->faceAngle[1]+0x8000;
+            gPuppyCam.pan[0] = 0;
+            gPuppyCam.pan[1] = 0;
+            gPuppyCam.pan[2] = 0;
+        }
+        if (!(gMarioState->action & ACT_FLAG_SWIMMING))
+        {
+            gPuppyCam.floorY[0] = CLAMP(gPuppyCam.targetObj->oPosY - gPuppyCam.lastTargetFloorHeight, 0, 300);
+            gPuppyCam.floorY[1] = CLAMP(gPuppyCam.targetObj->oPosY - gPuppyCam.lastTargetFloorHeight, 0, 350);
+            gPuppyCam.swimPitch = approach_f32_asymptotic(gPuppyCam.swimPitch,0,0.2f);
+        }
+        else
+        {
+            gPuppyCam.floorY[0] = 0;
+            gPuppyCam.floorY[1] = 0;
+            gPuppyCam.swimPitch = approach_f32_asymptotic(gPuppyCam.swimPitch,gMarioState->faceAngle[0]/10,0.05f);
+            gPuppyCam.yawTarget  = gMarioState->faceAngle[1]+0x8000 - approach_s32((s16)(gMarioState->faceAngle[1]+0x8000 - gPuppyCam.yawTarget), 0,
+            1000*(gMarioState->forwardVel/32), 1000*(gMarioState->forwardVel/32));
+        }
 
-    }
-
-    if (gMarioState->action & ACT_FLAG_SWIMMING_OR_FLYING && gMarioState->forwardVel > 2.0f)
-    {
-        gPuppyCam.yawTarget = gMarioState->faceAngle[1]+0x8000;
-        gPuppyCam.waterY = gMarioState->faceAngle[0]*0.01;
-    }
-    else
-        gPuppyCam.waterY = 0;
-
-
-    gPuppyCam.targetFloorHeight = find_floor_height(gPuppyCam.targetObj->oPosX, gPuppyCam.targetObj->oPosY, gPuppyCam.targetObj->oPosZ);
+        gPuppyCam.targetFloorHeight = find_floor_height(gPuppyCam.targetObj->oPosX, gPuppyCam.targetObj->oPosY, gPuppyCam.targetObj->oPosZ);
 
     if (gMarioState->vel[1] <= 0.0f)
         gPuppyCam.lastTargetFloorHeight = approach_f32_asymptotic(gPuppyCam.lastTargetFloorHeight,gPuppyCam.targetFloorHeight, 0.1f);
@@ -645,31 +660,36 @@ static void puppycam_projection(void)
     if (gPuppyCam.options.turnAggression > 0 && gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_TURN_HELPER && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_8DIR) &&
         gMarioState->vel[1] == 0.0f && !(gMarioState->action & ACT_FLAG_BUTT_OR_STOMACH_SLIDE) && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR))
     {
-        if (ABS(gPlayer1Controller->rawStickX) > 10)
-            gPuppyCam.yawTarget -= ((gPlayer1Controller->rawStickX*(gMarioState->forwardVel/8))*(gPuppyCam.options.turnAggression/75));
+        if (ABS(gPlayer1Controller->rawStickX) > 20)
+            gPuppyCam.yawTarget  = gMarioState->faceAngle[1]+0x8000 - approach_s32((s16)(gMarioState->faceAngle[1]+0x8000 - gPuppyCam.yawTarget), 0,
+            (gPuppyCam.options.turnAggression*10)*(gMarioState->forwardVel/32) * ABS(gPlayer1Controller->rawStickX/80.0f),
+            (gPuppyCam.options.turnAggression*10)*(gMarioState->forwardVel/32) * ABS(gPlayer1Controller->rawStickX/80.0f));
     }
-
-    gPuppyCam.yaw = gPuppyCam.yawTarget - approach_f32_asymptotic((s16)(gPuppyCam.yawTarget - gPuppyCam.yaw), 0, 0.2f);
-    gPuppyCam.pitch = gPuppyCam.pitchTarget - approach_f32_asymptotic((s16)(gPuppyCam.pitchTarget - gPuppyCam.pitch), 0, 0.1f);
-    gPuppyCam.pitch = CLAMP(gPuppyCam.pitch,0x1000,0x7000);
 
     if (gMarioState->action == ACT_SLEEPING || gMarioState->action == ACT_START_SLEEPING)
         gPuppyCam.zoom = approach_f32_asymptotic(gPuppyCam.zoom,gPuppyCam.zoomPoints[0],0.01f);
     else
         gPuppyCam.zoom = approach_f32_asymptotic(gPuppyCam.zoom,gPuppyCam.zoomTarget,0.1f);
 
-
-
-    if (!(gMarioState->action & ACT_FLAG_SWIMMING))
+    if (gPuppyCam.targetObj == gMarioState->marioObj)
     {
-        gPuppyCam.floorY[0] = CLAMP(gPuppyCam.targetObj->oPosY - gPuppyCam.lastTargetFloorHeight, 0, 300);
-        gPuppyCam.floorY[1] = CLAMP(gPuppyCam.targetObj->oPosY - gPuppyCam.lastTargetFloorHeight, 0, 350);
+        if (gMarioState->action == ACT_SLEEPING || gMarioState->action == ACT_START_SLEEPING)
+            gPuppyCam.zoom = approach_f32_asymptotic(gPuppyCam.zoom,gPuppyCam.zoomPoints[0],0.01f);
+        else
+            gPuppyCam.zoom = approach_f32_asymptotic(gPuppyCam.zoom,gPuppyCam.zoomTarget,0.1f);
     }
     else
     {
         gPuppyCam.floorY[0] = 0;
         gPuppyCam.floorY[1] = 0;
+        gPuppyCam.swimPitch = 0;
     }
+    }
+
+    gPuppyCam.yaw = gPuppyCam.yawTarget - approach_f32_asymptotic((s16)(gPuppyCam.yawTarget - gPuppyCam.yaw), 0, 0.2f);
+    gPuppyCam.pitch = gPuppyCam.pitchTarget - approach_f32_asymptotic((s16)(gPuppyCam.pitchTarget - gPuppyCam.pitch), 0, 0.1f);
+    gPuppyCam.pitch = CLAMP(gPuppyCam.pitch,0x1000,0x7000);
+    gPuppyCam.pitchTarget = CLAMP(gPuppyCam.pitchTarget,0x1000,0x7000);
 
     if (gPuppyCam.targetObj)
     {
@@ -697,14 +717,15 @@ static void puppycam_projection(void)
         }
 
         gPuppyCam.focus[0] = targetPos3[0] + gPuppyCam.shake[0] + (gPuppyCam.pan[0]*gPuppyCam.collisionDistance/gPuppyCam.zoomPoints[2])*panD;
-        gPuppyCam.focus[1] = targetPos3[1] + gPuppyCam.waterY + gPuppyCam.shake[1] + (gPuppyCam.pan[1]*gPuppyCam.collisionDistance/gPuppyCam.zoomPoints[2]) + gPuppyCam.povHeight - gPuppyCam.floorY[0] + gPuppyCam.posHeight[0];
+        gPuppyCam.focus[1] = targetPos3[1] + gPuppyCam.shake[1] + (gPuppyCam.pan[1]*gPuppyCam.collisionDistance/gPuppyCam.zoomPoints[2]) + gPuppyCam.povHeight - gPuppyCam.floorY[0] + gPuppyCam.posHeight[0] + (gPuppyCam.swimPitch/10);
         gPuppyCam.focus[2] = targetPos3[2] + gPuppyCam.shake[2] + (gPuppyCam.pan[2]*gPuppyCam.collisionDistance/gPuppyCam.zoomPoints[2])*panD;
 
         gPuppyCam.pos[0] = gPuppyCam.targetObj->oPosX + LENSIN(LENSIN(gPuppyCam.zoom,gPuppyCam.pitch),gPuppyCam.yaw) + gPuppyCam.shake[0];
-        gPuppyCam.pos[1] = gPuppyCam.targetObj->oPosY + LENCOS(gPuppyCam.zoom,gPuppyCam.pitch) + gPuppyCam.shake[1] - gPuppyCam.floorY[1] + gPuppyCam.posHeight[1];
+        gPuppyCam.pos[1] = gPuppyCam.targetObj->oPosY + LENCOS(gPuppyCam.zoom,gPuppyCam.pitch+(gPuppyCam.swimPitch*5)) + gPuppyCam.shake[1] - gPuppyCam.floorY[1] + gPuppyCam.posHeight[1];
         gPuppyCam.pos[2] = gPuppyCam.targetObj->oPosZ + LENCOS(LENSIN(gPuppyCam.zoom,gPuppyCam.pitch),gPuppyCam.yaw) + gPuppyCam.shake[2];
     }
-
+    
+    puppycam_wingmario_tower();
 }
 
 //Calls any scripts to affect the camera, if applicable.
@@ -851,16 +872,6 @@ static void puppycam_apply(void)
     gCamera->yaw = gPuppyCam.yaw;
 }
 
-//Adds support for wing mario tower
-static void puppycam_wingmario_tower(void) {
-    if (gMarioState->floor != NULL && gMarioState->floor->type == SURFACE_LOOK_UP_WARP
-        && save_file_get_total_star_count(gCurrSaveFileNum - 1, COURSE_MIN - 1, COURSE_MAX - 1) >= 10) {
-        if (gPuppyCam.pitch > 0x6000 && gMarioState->forwardVel == 0) {
-            level_trigger_warp(gMarioState, WARP_OP_UNKNOWN_01);
-        }
-    }
-}
-
 extern Texture texture_hud_char_puppycam[];
 extern void render_hud_tex_lut(s32 x, s32 y, u8 *texture);
 extern void render_hud_small_tex_lut(s32 x, s32 y, u8 *texture);
@@ -915,7 +926,6 @@ void puppycam_loop(void)
         gPuppyCam.opacity = 255;
 
     puppycam_apply();
-    puppycam_wingmario_tower();
 }
 
 #endif
