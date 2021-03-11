@@ -547,8 +547,6 @@ static void puppycam_wingmario_tower(void) {
             level_trigger_warp(gMarioState, WARP_OP_UNKNOWN_01);
         }
     }
-    
-    printf("pitch cam %d\n", gPuppyCam.pitch);
 }
 
 //void puppycam_shake(s16 x, s16 y, s16 z) {
