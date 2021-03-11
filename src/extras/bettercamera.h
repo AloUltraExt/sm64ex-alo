@@ -9,6 +9,7 @@
 #define PUPPY_ERROR_POOL_FULL 0x1
 
 #define PUPPY_NULL 15151
+#define MAX_PUPPYCAM_VOLUMES 50
 
 #include "include/command_macros_base.h"
 
@@ -132,7 +133,7 @@ enum gPuppyCamBeh
 
 extern s32 gPuppyError;
 extern struct gPuppyStruct gPuppyCam;
-extern struct sPuppyVolume *sPuppyVolumeStack[];
+extern struct sPuppyVolume *sPuppyVolumeStack[MAX_PUPPYCAM_VOLUMES];
 extern u16 gPuppyVolumeCount;
 extern struct MemoryPool *gPuppyMemoryPool;
 extern void puppycam_boot(void);

@@ -97,7 +97,7 @@ bool         configCameraInvertX = true;
 bool         configCameraInvertY = true;
 unsigned int configCameraXSens   = 100;
 unsigned int configCameraYSens   = 100;
-unsigned int configCameraAggr    = 100;
+unsigned int configCameraAggr    = 50;
 bool         configCameraAnalog  = false;
 #endif
 bool         configSkipIntro     = 0;
