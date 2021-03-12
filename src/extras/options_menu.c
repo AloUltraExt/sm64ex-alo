@@ -64,23 +64,11 @@ static const u8 optSmallStr[][32] = {
 
 static const u8 optMainStr[][32] = {
     { TEXT_OPT_OPTIONS },
-    { TEXT_OPT_CAMERA },
     { TEXT_OPT_CONTROLS },
     { TEXT_OPT_VIDEO },
     { TEXT_OPT_AUDIO },
     { TEXT_OPT_SETTINGS },
     { TEXT_EXIT_GAME },
-};
-
-static const u8 optsCameraStr[][32] = {
-    { TEXT_OPT_CAMON },
-    { TEXT_OPT_CAMMOUSE },
-    { TEXT_OPT_INVERTX },
-    { TEXT_OPT_INVERTY },
-    { TEXT_OPT_CAMX },
-    { TEXT_OPT_CAMY },
-    { TEXT_OPT_CAMC },
-    { TEXT_OPT_ANALOGUE },
 };
 
 static const u8 optsVideoStr[][32] = {
@@ -166,21 +154,6 @@ static void optvideo_apply(UNUSED struct Option *self, s32 arg) {
 
 /* submenu option lists */
 
-#ifdef BETTERCAMERA
-static struct Option optsCamera[] = {
-    DEF_OPT_TOGGLE( optsCameraStr[0], &configEnableCamera ),
-#ifdef MOUSE_ACTIONS
-    DEF_OPT_TOGGLE( optsCameraStr[1], &configCameraMouse ),
-#endif
-    DEF_OPT_TOGGLE( optsCameraStr[2], &configCameraInvertX ),
-    DEF_OPT_TOGGLE( optsCameraStr[3], &configCameraInvertY ),
-    DEF_OPT_SCROLL( optsCameraStr[4], &configCameraXSens, 1, 100, 1 ),
-    DEF_OPT_SCROLL( optsCameraStr[5], &configCameraYSens, 1, 100, 1 ),
-    DEF_OPT_SCROLL( optsCameraStr[6], &configCameraAggr, 0, 100, 1 ),
-    DEF_OPT_TOGGLE( optsCameraStr[7], &configCameraAnalog ),
-};
-#endif
-
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct Option optsControls[] = {
     DEF_OPT_BIND( optBindStr[ 2], configKeyA ),
@@ -238,41 +211,37 @@ static struct Option optsSettings[] = {
 
 /* submenu definitions */
 
-#ifdef BETTERCAMERA
-static struct SubMenu menuCamera   = DEF_SUBMENU( optMainStr[1], optsCamera );
-#endif
-
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
-static struct SubMenu menuControls = DEF_SUBMENU( optMainStr[2], optsControls );
+static struct SubMenu menuControls = DEF_SUBMENU( optMainStr[1], optsControls );
 #endif
 
 #ifndef TARGET_N64
-static struct SubMenu menuVideo    = DEF_SUBMENU( optMainStr[3], optsVideo );
+static struct SubMenu menuVideo    = DEF_SUBMENU( optMainStr[2], optsVideo );
 #endif
 
-static struct SubMenu menuAudio    = DEF_SUBMENU( optMainStr[4], optsAudio );
-static struct SubMenu menuSettings = DEF_SUBMENU( optMainStr[5], optsSettings );
+static struct SubMenu menuAudio    = DEF_SUBMENU( optMainStr[3], optsAudio );
+static struct SubMenu menuSettings = DEF_SUBMENU( optMainStr[4], optsSettings );
 
 /* main options menu definition */
 
 static struct Option optsMain[] = {
 #ifdef BETTERCAMERA
-    DEF_OPT_SUBMENU( optMainStr[1], &menuCamera ),
+    DEF_OPT_SUBMENU( optsCameraStr[0], &menuCamera ),
 #endif
 
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
-    DEF_OPT_SUBMENU( optMainStr[2], &menuControls ),
+    DEF_OPT_SUBMENU( optMainStr[1], &menuControls ),
 #endif
 
 #ifndef TARGET_N64
-    DEF_OPT_SUBMENU( optMainStr[3], &menuVideo ),
+    DEF_OPT_SUBMENU( optMainStr[2], &menuVideo ),
 #endif
 
-    DEF_OPT_SUBMENU( optMainStr[4], &menuAudio ),
-    DEF_OPT_SUBMENU( optMainStr[5], &menuSettings ),
+    DEF_OPT_SUBMENU( optMainStr[3], &menuAudio ),
+    DEF_OPT_SUBMENU( optMainStr[4], &menuSettings ),
     
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
-    DEF_OPT_BUTTON ( optMainStr[6], optmenu_act_exit ),
+    DEF_OPT_BUTTON ( optMainStr[5], optmenu_act_exit ),
 #endif
 
 #ifdef CHEATS_ACTIONS

@@ -99,6 +99,7 @@ unsigned int configCameraXSens   = 100;
 unsigned int configCameraYSens   = 100;
 unsigned int configCameraAggr    = 50;
 bool         configCameraAnalog  = false;
+unsigned int configCameraScheme  = 0;
 #endif
 bool         configSkipIntro     = 0;
 bool         configHUD           = true;
@@ -159,6 +160,7 @@ static const struct ConfigOption options[] = {
     {.name = "bettercam_ysens",      .type = CONFIG_TYPE_UINT, .uintValue = &configCameraYSens},
     {.name = "bettercam_aggression", .type = CONFIG_TYPE_UINT, .uintValue = &configCameraAggr},
     {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraAnalog},
+    {.name = "bettercam_scheme",     .type = CONFIG_TYPE_UINT, .uintValue = &configCameraScheme},
 #endif
     {.name = "skip_intro",           .type = CONFIG_TYPE_BOOL, .boolValue = &configSkipIntro},
     #ifdef DISCORDRPC

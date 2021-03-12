@@ -817,6 +817,7 @@ static void level_cmd_puppyvolume(void) {
 
     sPuppyVolumeStack[gPuppyVolumeCount]->flagPersistance = CMD_GET(u8, 32);
 
+    sPuppyVolumeStack[gPuppyVolumeCount]->shape = CMD_GET(u8, 33);
     sPuppyVolumeStack[gPuppyVolumeCount]->room = CMD_GET(s16, 34);
 
     gPuppyVolumeCount++;

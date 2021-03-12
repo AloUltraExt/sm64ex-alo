@@ -42,6 +42,7 @@ s16 sFloorHeight = 0;
 u16 gPuppyVolumeCount = 0;
 struct MemoryPool *gPuppyMemoryPool;
 s32 gPuppyError = 0;
+
 //Some macros for the sake of basic human sanity.
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 #define ABS(x) ((x) > 0.f ? (x) : -(x))
@@ -55,28 +56,46 @@ s16 LENCOS(s16 length, s16 direction)
     return (length * coss(direction));
 }
 
-static void puppycam_analogue_stick(void)
-{
-    #ifdef TARGET_N64
-    if (!gPuppyCam.options.analogue)
-        return;
+//CONFIG
 
-    //I make the X axis negative, so that the movement reflects the Cbuttons.
-    gPuppyCam.stick2[0] = -gPlayer2Controller->rawStickX;
-    gPuppyCam.stick2[1] = gPlayer2Controller->rawStickY;
+const u8 optsCameraStr[][32] = {
+    { TEXT_OPT_CAMERA },
+    { TEXT_OPT_CAMON },
+    { TEXT_OPT_CAMMOUSE },
+    { TEXT_OPT_INVERTX },
+    { TEXT_OPT_INVERTY },
+    { TEXT_OPT_CAMX },
+    { TEXT_OPT_CAMY },
+    { TEXT_OPT_CAMC },
+    { TEXT_OPT_ANALOGUE },
+    { TEXT_OPT_CAMSCHEME },
+};
 
-    if (ABS(gPuppyCam.stick2[0]) < DEADZONE)
-    {
-        gPuppyCam.stick2[0] = 0;
-        gPuppyCam.stickN[0] = 0;
-    }
-    if (ABS(gPuppyCam.stick2[1]) < DEADZONE)
-    {
-        gPuppyCam.stick2[1] = 0;
-        gPuppyCam.stickN[1] = 0;
-    }
-    #endif
-}
+static const u8 optsCameraSchemeStr[][64] = {
+    { TEXT_OPT_CAM_SCH1 },
+    { TEXT_OPT_CAM_SCH2 },
+};
+
+static const u8 *cameraChoicesScheme[] = {
+    optsCameraSchemeStr[0],
+    optsCameraSchemeStr[1],
+};
+
+static struct Option optsCamera[] = {
+    DEF_OPT_TOGGLE( optsCameraStr[1], &configEnableCamera ),
+#ifdef MOUSE_ACTIONS
+    DEF_OPT_TOGGLE( optsCameraStr[2], &configCameraMouse ),
+#endif
+    DEF_OPT_TOGGLE( optsCameraStr[3], &configCameraInvertX ),
+    DEF_OPT_TOGGLE( optsCameraStr[4], &configCameraInvertY ),
+    DEF_OPT_SCROLL( optsCameraStr[5], &configCameraXSens, 1, 100, 1 ),
+    DEF_OPT_SCROLL( optsCameraStr[6], &configCameraYSens, 1, 100, 1 ),
+    DEF_OPT_SCROLL( optsCameraStr[7], &configCameraAggr, 0, 100, 1 ),
+    DEF_OPT_TOGGLE( optsCameraStr[8], &configCameraAnalog ),
+    DEF_OPT_CHOICE( optsCameraStr[9], &configCameraScheme, cameraChoicesScheme ),
+};
+
+struct SubMenu menuCamera   = DEF_SUBMENU( optsCameraStr[0], optsCamera );
 
 #ifdef TARGET_N64 // TODO: save to eeprom
 // BetterCamera settings
@@ -87,6 +106,7 @@ unsigned int configCameraXSens   = 100;
 unsigned int configCameraYSens   = 100;
 unsigned int configCameraAggr    = 50;
 bool         configCameraAnalog  = false;
+unsigned int configCameraScheme  = 0;
 #endif
 
 void puppycam_default_config(void) {
@@ -100,6 +120,7 @@ void puppycam_default_config(void) {
     gPuppyCam.options.sensitivityY = configCameraYSens;
     gPuppyCam.options.turnAggression = configCameraAggr;
     gPuppyCam.options.analogue = configCameraAnalog;
+    gPuppyCam.options.inputType = configCameraScheme;
 }
 
 //Initial setup. Ran at the beginning of the game and never again.
@@ -119,7 +140,31 @@ void puppycam_boot(void)
     //puppycam_get_save();
 }
 
-extern struct SaveBuffer gSaveBuffer;
+///CUTSCENE
+
+void puppycam_activate_cutscene(s32 *scene, s32 lockinput)
+{
+    gPuppyCam.cutscene = 1;
+    gPuppyCam.sceneTimer = 0;
+    gPuppyCam.sceneFunc = scene;
+    gPuppyCam.sceneInput = lockinput;
+}
+
+static void newcam_process_cutscene(void)
+{
+    if (gPuppyCam.cutscene)
+    {
+    if ((gPuppyCam.sceneFunc)() == 1)
+    {
+        gPuppyCam.cutscene = 0;
+        gPuppyCam.sceneInput = 0;
+        gPuppyCam.flags = gPuppyCam.intendedFlags;
+    }
+    gPuppyCam.sceneTimer++;
+    }
+}
+
+//extern struct SaveBuffer gSaveBuffer;
 
 ///CORE
 
@@ -167,25 +212,9 @@ void puppycam_init(void)
 
 }
 
-//Handles C Button inputs for modes that have held inputs, rather than presses.
-static void puppycam_input_hold(void)
+//The default control scheme. Hold the button down to turn the camera, and double tap to turn quickly.
+static void puppycam_input_hold_preset1(f32 ivX)
 {
-    f32 ivX = ((gPuppyCam.options.invertX*2)-1)*(gPuppyCam.options.sensitivityX/100.f);
-    s8 stickMag = 0;
-
-    gPuppyCam.framesSinceC[0]++;
-    gPuppyCam.framesSinceC[1]++;
-
-    //Analogue Camera stuff. If it fails to find an input, then it just sets stickmag to 100, which after calculations means the value goes unchanged.
-    if (gPuppyCam.options.analogue)
-        stickMag = gPuppyCam.stick2[0]*1.25f;
-    else
-        stickMag = 100;
-
-    //In theory this shouldn't be necessary, but it's nice to cover all bases.
-    if (!(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_YAW_ROTATION))
-        return;
-
     if (!gPuppyCam.options.analogue && gPlayer1Controller->buttonPressed & L_CBUTTONS && gPuppyCam.framesSinceC[0] <= 5)
     {
         gPuppyCam.yawTarget -= 0x4000*ivX;
@@ -211,6 +240,82 @@ static void puppycam_input_hold(void)
     }
     else
         gPuppyCam.yawAcceleration = approach_f32_asymptotic(gPuppyCam.yawAcceleration, 0, DECELERATION);
+}
+
+//An alternative control scheme, hold the button down to turn the camera, or press it once to turn it quickly.
+static void puppycam_input_hold_preset2(f32 ivX)
+{
+    //These set the initial button press.
+    if (gPlayer1Controller->buttonPressed & L_CBUTTONS)
+    {
+        gPuppyCam.framesSinceC[0] = 0;
+    }
+
+    if (gPlayer1Controller->buttonPressed & R_CBUTTONS)
+    {
+        gPuppyCam.framesSinceC[1] = 0;
+    }
+
+    //These handle when you release the button
+    if ((!(gPlayer1Controller->buttonDown & L_CBUTTONS)) && gPuppyCam.framesSinceC[0] <= 5)
+    {
+        gPuppyCam.yawTarget -= 0x3000*ivX;
+        play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
+        gPuppyCam.framesSinceC[0] = 6;
+    }
+
+    if ((!(gPlayer1Controller->buttonDown & R_CBUTTONS)) && gPuppyCam.framesSinceC[1] <= 5)
+    {
+        gPuppyCam.yawTarget += 0x3000*ivX;
+        play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
+        gPuppyCam.framesSinceC[1] = 6;
+    }
+
+    //Handles continuous movement as normal, as long as the button's held.
+    if (gPlayer1Controller->buttonDown & L_CBUTTONS)
+    {
+        gPuppyCam.yawAcceleration -= 10*(gPuppyCam.options.sensitivityX/100.f);
+    }
+    else
+    if (gPlayer1Controller->buttonDown & R_CBUTTONS)
+    {
+        gPuppyCam.yawAcceleration += 10*(gPuppyCam.options.sensitivityX/100.f);
+    }
+    else
+        gPuppyCam.yawAcceleration = approach_f32_asymptotic(gPuppyCam.yawAcceleration, 0, DECELERATION);
+}
+
+//Handles C Button inputs for modes that have held inputs, rather than presses.
+static void puppycam_input_hold(void)
+{
+    f32 ivX = ((gPuppyCam.options.invertX*2)-1)*(gPuppyCam.options.sensitivityX/100.f);
+    s8 stickMag = 0;
+
+    //Analogue Camera stuff. If it fails to find an input, then it just sets stickmag to 100, which after calculations means the value goes unchanged.
+    if (gPuppyCam.options.analogue)
+        stickMag = gPuppyCam.stick2[0]*1.25f;
+    else
+        stickMag = 100;
+
+    //In theory this shouldn't be necessary, but it's nice to cover all bases.
+    if (!(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_YAW_ROTATION))
+        return;
+
+    if (!gPuppyCam.options.analogue)
+    {
+        switch (gPuppyCam.options.inputType)
+        {
+            default: puppycam_input_hold_preset1(ivX); break;
+            case 1: puppycam_input_hold_preset2(ivX); break;
+        }
+    }
+    else
+    {
+        puppycam_input_hold_preset1(ivX);
+    }
+
+    gPuppyCam.framesSinceC[0]++;
+    gPuppyCam.framesSinceC[1]++;
 
     gPuppyCam.yawAcceleration = CLAMP(gPuppyCam.yawAcceleration, -100, 100);
 
@@ -266,8 +371,8 @@ static void puppycam_input_mouse(void) {
 static void puppycam_view_panning(void)
 {
     f32 panFloor, panMulti;
-    s16 height = gPuppyCam.targetObj->oPosY;
-    u8 panEx = (gPuppyCam.zoomTarget >= 1000) * 250; //Removes the basic panning when idling if the zoom level is at the closest.
+    s32 height = gPuppyCam.targetObj->oPosY;
+    s32 panEx = (gPuppyCam.zoomTarget >= 1000) * 250; //Removes the basic panning when idling if the zoom level is at the closest.
 
     panMulti = CLAMP(gPuppyCam.zoom/(f32)gPuppyCam.zoomPoints[2], 0.f, 1.f);
 
@@ -279,6 +384,8 @@ static void puppycam_view_panning(void)
         {
             panFloor = CLAMP(find_floor_height((s16)(gPuppyCam.targetObj->oPosX+gPuppyCam.pan[0]),(s16)(gPuppyCam.targetObj->oPosY + 200),
             (s16)(gPuppyCam.targetObj->oPosZ+gPuppyCam.pan[2])),gPuppyCam.targetObj->oPosY-50,gPuppyCam.targetObj->oPosY+50);
+            if (panFloor <= gPuppyCam.targetObj->oPosY-50)
+            panFloor = gPuppyCam.targetObj->oPosY;
             gPuppyCam.pan[1] = approach_f32_asymptotic(gPuppyCam.pan[1], panFloor-height, 0.25f);
         }
         else
@@ -299,8 +406,8 @@ static void puppycam_view_height_offset(void)
     s16 tempDist = sqrtf((gPuppyCam.pos[0] - gPuppyCam.focus[0]) * (gPuppyCam.pos[0] - gPuppyCam.focus[0]) + (gPuppyCam.pos[1] - gPuppyCam.focus[1]) *
                          (gPuppyCam.pos[1] - gPuppyCam.focus[1]) + (gPuppyCam.pos[2] - gPuppyCam.focus[2]) * (gPuppyCam.pos[2] - gPuppyCam.focus[2]));
 
-    floorTemp = find_floor_height(gPuppyCam.targetObj->oPosX, gPuppyCam.targetObj->oPosY+200, gPuppyCam.targetObj->oPosZ);
-    if (floorTemp > gPuppyCam.targetObj->oPosY - 200 && !(gMarioState->action & ACT_FLAG_SWIMMING_OR_FLYING))
+    floorTemp = find_floor_height(gPuppyCam.targetObj->oPosX, gPuppyCam.targetObj->oPosY+50, gPuppyCam.targetObj->oPosZ);
+    if (floorTemp > gPuppyCam.targetObj->oPosY - 50 && !(gMarioState->action & ACT_FLAG_SWIMMING_OR_FLYING))
     {
         gPuppyCam.posHeight[0] = approach_f32_asymptotic(gPuppyCam.posHeight[0],floorTemp-gPuppyCam.targetFloorHeight,0.05f);
         //if (gPuppyCam.posHeight[0]-gPuppyCam.shake[1] - gPuppyCam.floorY[1] < floorTemp)
@@ -312,8 +419,8 @@ static void puppycam_view_height_offset(void)
     }
 
 
-    floorTemp = find_floor_height(gPuppyCam.targetObj->oPosX + LENSIN(tempDist,gPuppyCam.yaw), gPuppyCam.targetObj->oPosY+200, gPuppyCam.targetObj->oPosZ + LENCOS(tempDist,gPuppyCam.yaw));
-    if (floorTemp > gPuppyCam.targetObj->oPosY - 200 && !(gMarioState->action & ACT_FLAG_SWIMMING_OR_FLYING) && gPuppyCam.collisionDistance != gPuppyCam.zoomTarget)
+    floorTemp = find_floor_height(gPuppyCam.targetObj->oPosX + LENSIN(tempDist,gPuppyCam.yaw), gPuppyCam.targetObj->oPosY+50, gPuppyCam.targetObj->oPosZ + LENCOS(tempDist,gPuppyCam.yaw));
+    if (floorTemp > gPuppyCam.targetObj->oPosY - 50 && !(gMarioState->action & ACT_FLAG_SWIMMING_OR_FLYING) && gPuppyCam.collisionDistance != gPuppyCam.zoomTarget)
     {
         gPuppyCam.posHeight[1] = approach_f32_asymptotic(gPuppyCam.posHeight[1],floorTemp-gPuppyCam.targetFloorHeight,0.05f);
         //if (gPuppyCam.posHeight[1]-gPuppyCam.shake[1] - gPuppyCam.floorY[0] < floorTemp)
@@ -514,26 +621,49 @@ static s32 puppycam_check_volume_bounds(struct sPuppyVolume *volume, s32 index)
 {
     s32 rel[3];
     s32 pos[2];
+    f32 distCheck;
 
     if (sPuppyVolumeStack[index]->room != gMarioCurrentRoom && sPuppyVolumeStack[index]->room != -1)
         return FALSE;
 
-    //Fetch the relative position. to the triggeree.
-    rel[0] = sPuppyVolumeStack[index]->pos[0] - gPuppyCam.targetObj->oPosX;
-    rel[1] = sPuppyVolumeStack[index]->pos[1] - gPuppyCam.targetObj->oPosY;
-    rel[2] = sPuppyVolumeStack[index]->pos[2] - gPuppyCam.targetObj->oPosZ;
-    //Use the dark, forbidden arts of trig to rotate the volume.
-    pos[0] = rel[2] * sins(sPuppyVolumeStack[index]->rot) + rel[0] * coss(sPuppyVolumeStack[index]->rot);
-    pos[1] = rel[2] * coss(sPuppyVolumeStack[index]->rot) - rel[0] * sins(sPuppyVolumeStack[index]->rot);
+    if (sPuppyVolumeStack[index]->shape == PUPPYVOLUME_SHAPE_BOX)
+    {
+        //Fetch the relative position. to the triggeree.
+        rel[0] = sPuppyVolumeStack[index]->pos[0] - gPuppyCam.targetObj->oPosX;
+        rel[1] = sPuppyVolumeStack[index]->pos[1] - gPuppyCam.targetObj->oPosY;
+        rel[2] = sPuppyVolumeStack[index]->pos[2] - gPuppyCam.targetObj->oPosZ;
+        //Use the dark, forbidden arts of trig to rotate the volume.
+        pos[0] = rel[2] * sins(sPuppyVolumeStack[index]->rot) + rel[0] * coss(sPuppyVolumeStack[index]->rot);
+        pos[1] = rel[2] * coss(sPuppyVolumeStack[index]->rot) - rel[0] * sins(sPuppyVolumeStack[index]->rot);
 
-    //Now compare values.
-    if (-sPuppyVolumeStack[index]->radius[0] < pos[0] && pos[0] < sPuppyVolumeStack[index]->radius[0] &&
-        -sPuppyVolumeStack[index]->radius[1] < rel[1] && rel[1] < sPuppyVolumeStack[index]->radius[1] &&
-        -sPuppyVolumeStack[index]->radius[2] < pos[1] && pos[1] < sPuppyVolumeStack[index]->radius[2])
+        //Now compare values.
+        if (-sPuppyVolumeStack[index]->radius[0] < pos[0] && pos[0] < sPuppyVolumeStack[index]->radius[0] &&
+            -sPuppyVolumeStack[index]->radius[1] < rel[1] && rel[1] < sPuppyVolumeStack[index]->radius[1] &&
+            -sPuppyVolumeStack[index]->radius[2] < pos[1] && pos[1] < sPuppyVolumeStack[index]->radius[2])
         {
             *volume = *sPuppyVolumeStack[index];
             return TRUE;
         }
+    }
+    else
+    if (sPuppyVolumeStack[index]->shape == PUPPYVOLUME_SHAPE_CYLINDER)
+    {
+        //s16 dir;
+        f32 dist;
+        rel[0] = sPuppyVolumeStack[index]->pos[0] - gPuppyCam.targetObj->oPosX;
+        rel[1] = sPuppyVolumeStack[index]->pos[1] - gPuppyCam.targetObj->oPosY;
+        rel[2] = sPuppyVolumeStack[index]->pos[2] - gPuppyCam.targetObj->oPosZ;
+        dist = sqrtf((rel[0] * rel[0]) + (rel[2] * rel[2]));
+
+        distCheck = (dist < sPuppyVolumeStack[index]->radius[0]);
+
+        if (-sPuppyVolumeStack[index]->radius[1] < rel[1] && rel[1] < sPuppyVolumeStack[index]->radius[1] && distCheck)
+        {
+            *volume = *sPuppyVolumeStack[index];
+            return TRUE;
+        }
+
+    }
 
     return FALSE;
 }
@@ -551,6 +681,29 @@ static void puppycam_wingmario_tower(void) {
 
 //void puppycam_shake(s16 x, s16 y, s16 z) {
 //}
+
+static void puppycam_analogue_stick(void)
+{
+    #ifdef TARGET_N64
+    if (!gPuppyCam.options.analogue)
+        return;
+
+    //I make the X axis negative, so that the movement reflects the Cbuttons.
+    gPuppyCam.stick2[0] = -gPlayer2Controller->rawStickX;
+    gPuppyCam.stick2[1] = gPlayer2Controller->rawStickY;
+
+    if (ABS(gPuppyCam.stick2[0]) < DEADZONE)
+    {
+        gPuppyCam.stick2[0] = 0;
+        gPuppyCam.stickN[0] = 0;
+    }
+    if (ABS(gPuppyCam.stick2[1]) < DEADZONE)
+    {
+        gPuppyCam.stick2[1] = 0;
+        gPuppyCam.stickN[1] = 0;
+    }
+    #endif
+}
 
 ///This is the highest level of the basic steps that go into the code. Anything above is called from these following functions.
 
@@ -911,13 +1064,21 @@ void puppycam_hud(void) {
 //The basic loop sequence, which is called outside.
 void puppycam_loop(void)
 {
-    puppycam_input_core();
-    puppycam_projection();
-    puppycam_script();
-    if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_COLLISION)
-        puppycam_collision();
+    if (!gPuppyCam.cutscene)
+    {
+        puppycam_input_core();
+        puppycam_projection();
+        puppycam_script();
+        if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_COLLISION)
+            puppycam_collision();
+        else
+            gPuppyCam.opacity = 255;
+    }
     else
+    {
         gPuppyCam.opacity = 255;
+        newcam_process_cutscene();
+    }
 
     puppycam_apply();
 }

@@ -9,18 +9,29 @@
 #define PUPPY_ERROR_POOL_FULL 0x1
 
 #define PUPPY_NULL 15151
-#define MAX_PUPPYCAM_VOLUMES 50
+#define MAX_PUPPYCAM_VOLUMES 128
+
+#define PUPPYCAM_BEHAVIOUR_TEMPORARY 0x0
+#define PUPPYCAM_BEHAVIOUR_PERMANENT 0x1
+
+#define PUPPYVOLUME_SHAPE_BOX 0x0
+#define PUPPYVOLUME_SHAPE_CYLINDER 0x1
 
 #include "include/command_macros_base.h"
+#include "options_menu.h"
+    
+extern const u8 optsCameraStr[][32];
 
-#define PUPPYVOLUME(x, y, z, length, height, width, yaw, functionptr, anglesptr, addflags, removeflags, flagpersistance, room) \
+extern struct SubMenu menuCamera;
+
+#define PUPPYVOLUME(x, y, z, length, height, width, yaw, functionptr, anglesptr, addflags, removeflags, flagpersistance, room, shape) \
     CMD_BBH(0x3D, 0x24, x), \
     CMD_HHHHHH(y, z, length, height, width, yaw), \
     CMD_PTR(functionptr), \
     CMD_PTR(anglesptr), \
     CMD_W(addflags), \
     CMD_W(removeflags), \
-    CMD_BBH(flagpersistance, 0x0, room)
+    CMD_BBH(flagpersistance, shape, room)
 
 struct gPuppyOptions
 {
@@ -53,8 +64,6 @@ struct gPuppyStruct
     Vec3s pan; //An offset of the camera's focus
     s32 intendedFlags; //The flagset the camera tries to be when it's not held hostage.
     s32 flags; //Behaviour flags that affect different properties of the camera's behaviour
-    Vec3s scenePos; //Where the camera is during a cutscene
-    Vec3s sceneFocus; //Where the camera looks during a cutscene
     Vec3s shake; //How much the camera's shaking
     u8 shakeFrames; //How long the camera's shaking for
     f32 shakeForce; //How violently the camera's shaking
@@ -69,6 +78,14 @@ struct gPuppyStruct
     u8 stickN[2]; //This is set when the stick is neutral. It's to prevent rapidfire input.
     u8 enabled;
     s16 swimPitch;
+    
+    u8 cutscene; //A boolean that decides whether a cutscene is active
+    s32 (*sceneFunc)();
+    u8 sceneInput; //A boolean that decides whether the controller updates during the scene.
+    s32 sceneTimer; //The cutscene timer that goes up during a cutscene.
+    Vec3s scenePos; //Where the camera is during a cutscene
+    Vec3s sceneFocus; //Where the camera looks during a cutscene
+
 #ifdef MOUSE_ACTIONS
     u8 mouse;
 #endif
@@ -97,11 +114,9 @@ struct sPuppyVolume
     s32 flagsAdd; //Adds behaviour flags.
     s32 flagsRemove; //Removes behaviour flags.
     u8 flagPersistance; //Decides if adding or removing the flags is temporary or permanent.
+    u8 shape;
     s16 room;
 };
-
-#define PUPPYCAM_BEHAVIOUR_TEMPORARY 0x0
-#define PUPPYCAM_BEHAVIOUR_PERMANENT 0x1
 
 enum gPuppyCamBeh
 {

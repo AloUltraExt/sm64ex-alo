@@ -66,6 +66,7 @@ extern unsigned int configCameraXSens;
 extern unsigned int configCameraYSens;
 extern unsigned int configCameraAggr;
 extern bool         configCameraAnalog;
+extern unsigned int configCameraScheme;
 #endif
 extern bool         configHUD;
 #ifdef MOUSE_ACTIONS

@@ -579,6 +579,21 @@ void read_controller_inputs(void) {
     gPlayer3Controller->stickMag = gPlayer1Controller->stickMag;
     gPlayer3Controller->buttonPressed = gPlayer1Controller->buttonPressed;
     gPlayer3Controller->buttonDown = gPlayer1Controller->buttonDown;
+
+#ifdef BETTERCAMERA
+    //If a cutscene's active, just kill all controller input.
+    if (gPuppyCam.enabled && gPuppyCam.cutscene && gPuppyCam.sceneInput) {
+        gPlayer1Controller->rawStickX = 0;
+        gPlayer1Controller->rawStickY = 0;
+        gPlayer1Controller->buttonPressed = 0;
+        gPlayer1Controller->buttonDown = 0;
+        gPlayer1Controller->stickX = 0;
+        gPlayer1Controller->stickY = 0;
+        gPlayer1Controller->stickMag = 0;
+        gPlayer1Controller->buttonPressed = 0;
+        gPlayer1Controller->buttonDown = 0;
+    }
+#endif
 }
 
 // initialize the controller structs to point at the OSCont information.
