@@ -158,6 +158,13 @@ extern void puppycam_loop(void);
 extern void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Vec3f hit_pos);
 extern f32 approach_f32_asymptotic(f32 current, f32 target, f32 multiplier);
 extern void puppycam_default_config(void);
+extern s16 LENCOS(s16 length, s16 direction);
+extern s16 LENSIN(s16 length, s16 direction);
+extern void puppycam_display_options(void);
+extern void puppycam_set_save(void);
+extern void puppycam_check_pause_buttons(void);
+extern void puppycam_activate_cutscene(s32 *scene, s32 lockinput);
+extern void puppycam_render_option_text();
 extern void puppycam_hud(void);
 #endif
 

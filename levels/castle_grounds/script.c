@@ -15,6 +15,19 @@
 #include "make_const_nonconst.h"
 #include "levels/castle_grounds/header.h"
 
+#ifdef BETTERCAMERA
+#include "extras/bettercamera.h"
+
+const struct sPuppyAngles puppyAnglestest2 =
+{
+    {PUPPY_NULL, PUPPY_NULL, PUPPY_NULL},
+    {-7408, 100, 10709},
+    {PUPPY_NULL},
+    {PUPPY_NULL},
+    {1000},
+};
+#endif
+
 static const LevelScript script_func_local_1[] = {
     WARP_NODE(/*id*/ 0x00, /*destLevel*/ LEVEL_CASTLE, /*destArea*/ 0x01, /*destNode*/ 0x00, /*flags*/ WARP_NO_CHECKPOINT),
     WARP_NODE(/*id*/ 0x01, /*destLevel*/ LEVEL_CASTLE, /*destArea*/ 0x01, /*destNode*/ 0x01, /*flags*/ WARP_NO_CHECKPOINT),
@@ -127,6 +140,9 @@ const LevelScript level_castle_grounds_entry[] = {
         MACRO_OBJECTS(/*objList*/ castle_grounds_seg7_macro_objs),
         SET_BACKGROUND_MUSIC(/*settingsPreset*/ 0x0000, /*seq*/ SEQ_SOUND_PLAYER),
         TERRAIN_TYPE(/*terrainType*/ TERRAIN_GRASS),
+#ifdef BETTERCAMERA
+        PUPPYVOLUME(0, 0, 0, 500,2000,500,0, NULL, &puppyAnglestest2, NULL, NULL, PUPPYCAM_BEHAVIOUR_TEMPORARY, 1, PUPPYVOLUME_SHAPE_CYLINDER),
+#endif
     END_AREA(),
 
     FREE_LEVEL_POOL(),
