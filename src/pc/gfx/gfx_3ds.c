@@ -17,6 +17,7 @@ Gfx3DSMode gGfx3DSMode;
 
 bool gShowConfigMenu = false;
 bool gShouldRun = true;
+bool gUpdateSliderFlag = false;
 
 static u8 n3ds_model = 0;
 
@@ -54,7 +55,7 @@ static void initialise_screens()
     C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 
     bool useAA = gfx_config.useAA;
-    bool useWide =  gfx_config.useWide && n3ds_model != 3; // old 2DS does not support 800px
+    bool useWide = gfx_config.useWide && n3ds_model != 3; // old 2DS does not support 800px
 
     u32 transferFlags = DISPLAY_TRANSFER_FLAGS;
 
@@ -74,7 +75,6 @@ static void initialise_screens()
     if (!useWide)
     {
         gfxSetWide(false);
-        // TODO: reinitialise screens when iod changes from/to 0.0
         gTargetRight = C3D_RenderTargetCreate(height, width, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
         C3D_RenderTargetSetOutput(gTargetRight, GFX_TOP, GFX_RIGHT, transferFlags);
         gfxSet3D(true);
@@ -107,6 +107,22 @@ static void initialise_screens()
     // consoleInit(GFX_BOTTOM, NULL);
 }
 
+static void gfx_3ds_update_stereoscopy(void)
+{
+	if(gSliderLevel > 0.0)
+    {
+		gfx_config.useAA = false;
+		gfx_config.useWide = false;
+	} else
+    {
+        // default to true; this is different to initialisation where both are false
+		gfx_config.useAA = true;
+		gfx_config.useWide = true;
+	}
+	deinitialise_screens();
+    initialise_screens();
+}
+
 static void gfx_3ds_init(UNUSED const char *game_name)
 {
     if (checkN3DS())
@@ -127,6 +143,8 @@ static void gfx_3ds_init(UNUSED const char *game_name)
     gfx_3ds_menu_init();
 
     initialise_screens();
+    gSliderLevel = osGet3DSliderState();
+    gfx_3ds_update_stereoscopy();
 }
 
 static void gfx_3ds_main_loop(void (*run_one_game_iter)(void))
@@ -149,6 +167,8 @@ static void gfx_3ds_get_dimensions(uint32_t *width, uint32_t *height)
 static int debounce;
 static void gfx_3ds_handle_events(void)
 {
+    float prevSliderLevel = gSliderLevel;
+
     // as good a time as any
     gSliderLevel = osGet3DSliderState();
 
@@ -163,7 +183,7 @@ static void gfx_3ds_handle_events(void)
     touchPosition pos;
     hidTouchRead(&pos);
 
-    if (pos.px || pos.py)
+    if ((pos.px || pos.py) && (pos.px < 160))
     {
         debounce = 8;
         if (gShowConfigMenu)
@@ -182,6 +202,12 @@ static void gfx_3ds_handle_events(void)
             // screen tapped so show menu
             gShowConfigMenu = true;
         }
+    }
+    
+    float st = 0.0;
+    if ((prevSliderLevel > st && gSliderLevel <= st) || (prevSliderLevel <= st && gSliderLevel > st))
+    {
+		gfx_3ds_update_stereoscopy();
     }
 }
 

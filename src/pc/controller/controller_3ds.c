@@ -40,6 +40,24 @@ static void controller_3ds_init(void)
 {
 }
 
+extern bool is_inside_box(int pos_x, int pos_y, int x, int y, int width, int height);
+
+static void controller_3ds_touch(OSContPad *pad)
+{
+    touchPosition pos;
+    hidTouchRead(&pos);
+
+    // x and y button pos from gfx_3ds_menu_draw_cbuttons
+    if (is_inside_box(pos.px, pos.py, 170, 122, 64, 64))
+        pad->button |= L_CBUTTONS;
+    if (is_inside_box(pos.px, pos.py, 245, 122, 64, 64))
+        pad->button |= R_CBUTTONS;
+    if (is_inside_box(pos.px, pos.py, 207, 197, 64, 32))
+        pad->button |= D_CBUTTONS;
+    if (is_inside_box(pos.px, pos.py, 207, 79, 64, 32))
+        pad->button |= U_CBUTTONS;
+}
+
 static void controller_3ds_read(OSContPad *pad)
 {
     hidScanInput();
@@ -64,6 +82,8 @@ static void controller_3ds_read(OSContPad *pad)
         pad->button |= U_CBUTTONS;
     if (kDown & (KEY_DDOWN | KEY_CSTICK_DOWN))
         pad->button |= D_CBUTTONS;
+    
+    controller_3ds_touch(pad);
 
     circlePosition pos;
     hidCircleRead(&pos);
