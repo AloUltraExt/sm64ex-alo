@@ -91,7 +91,7 @@ static void controller_3ds_read(OSContPad *pad)
     pad->stick_y = pos.dy / 2;
 }
 
-static void controller_3ds_rawkey(void)
+static u32 controller_3ds_rawkey(void)
 {
     return VK_INVALID;
 }

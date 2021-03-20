@@ -255,17 +255,31 @@ static void controller_sdl_read(OSContPad *pad) {
     uint32_t magnitude_sq = (uint32_t)(leftx * leftx) + (uint32_t)(lefty * lefty);
     uint32_t stickDeadzoneActual = configStickDeadzone * DEADZONE_STEP;
     if (magnitude_sq > (uint32_t)(stickDeadzoneActual * stickDeadzoneActual)) {
+        #if 0 // not used but leaving just in case
         pad->stick_x = leftx / 0x100;
         int stick_y = -lefty / 0x100;
         pad->stick_y = stick_y == 128 ? 127 : stick_y;
+        #else
+        // Game expects stick coordinates within -80..80
+        // 32768 / 409 = ~80
+        pad->stick_x = leftx / 409;
+        pad->stick_y = -lefty / 409;
+        #endif
     }
 
     magnitude_sq = (uint32_t)(rightx * rightx) + (uint32_t)(righty * righty);
     stickDeadzoneActual = configStickDeadzone * DEADZONE_STEP;
     if (magnitude_sq > (uint32_t)(stickDeadzoneActual * stickDeadzoneActual)) {
+        #if 0 // not used but leaving just in case
         pad->ext_stick_x = rightx / 0x100;
         int stick_y = -righty / 0x100;
         pad->ext_stick_y = stick_y == 128 ? 127 : stick_y;
+        #else
+        // Game expects stick coordinates within -80..80
+        // 32768 / 409 = ~80
+        pad->ext_stick_x = rightx / 409;
+        pad->ext_stick_y = -righty / 409;
+        #endif
     }
 }
 
