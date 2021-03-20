@@ -24,10 +24,6 @@
 
 #include "gfx_dimensions.h"
 
-#ifdef BETTERCAMERA
-#include "extras/bettercamera.h"
-#endif
-
 struct SpawnInfo gPlayerSpawnInfos[1];
 struct GraphNode *D_8033A160[0x100];
 struct Area gAreaData[8];
@@ -195,9 +191,6 @@ void clear_areas(void) {
     gWarpTransition.isActive = FALSE;
     gWarpTransition.pauseRendering = FALSE;
     gMarioSpawnInfo->areaIndex = -1;
-#ifdef BETTERCAMERA
-    gPuppyVolumeCount = 0;
-#endif
 
     for (i = 0; i < 8; i++) {
         gAreaData[i].index = i;

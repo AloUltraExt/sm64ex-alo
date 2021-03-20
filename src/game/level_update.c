@@ -657,6 +657,12 @@ void initiate_warp(s16 destLevel, s16 destArea, s16 destWarpNode, s32 arg3) {
     sWarpDest.areaIdx = destArea;
     sWarpDest.nodeId = destWarpNode;
     sWarpDest.arg = arg3;
+    
+#ifdef BETTERCAMERA
+    if (sWarpDest.type != WARP_TYPE_SAME_AREA) {
+        puppycam_script_clear();
+    }
+#endif
 }
 
 // From Surface 0xD3 to 0xFC
