@@ -638,15 +638,6 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
     }
 }
 
-const struct sPuppyAngles puppyAnglesNull =
-{
-    {PUPPY_NULL, PUPPY_NULL, PUPPY_NULL},
-    {PUPPY_NULL, PUPPY_NULL, PUPPY_NULL},
-    {PUPPY_NULL},
-    {PUPPY_NULL},
-    {PUPPY_NULL},
-};
-
 //Checks the bounding box of a puppycam volume. If it's inside, then set the pointer to the current index.
 static s32 puppycam_check_volume_bounds(struct sPuppyVolume *volume, s32 index)
 {
@@ -1083,8 +1074,8 @@ static void puppycam_collision(void)
     camdir[1][1] = camdir[0][1];
     camdir[1][2] = camdir[0][2];
 
-    find_surface_on_ray(target[0], camdir[0], &surf[0], &hitpos[0]);
-    find_surface_on_ray(target[1], camdir[1], &surf[1], &hitpos[1]);
+    find_surface_on_ray(target[0], camdir[0], &surf[0], hitpos[0]);
+    find_surface_on_ray(target[1], camdir[1], &surf[1], hitpos[1]);
     dist[0] = ((target[0][0] - hitpos[0][0]) * (target[0][0] - hitpos[0][0]) + (target[0][1] - hitpos[0][1]) * (target[0][1] - hitpos[0][1]) + (target[0][2] - hitpos[0][2]) * (target[0][2] - hitpos[0][2]));
     dist[1] = ((target[1][0] - hitpos[1][0]) * (target[1][0] - hitpos[1][0]) + (target[1][1] - hitpos[1][1]) * (target[1][1] - hitpos[1][1]) + (target[1][2] - hitpos[1][2]) * (target[1][2] - hitpos[1][2]));
 
