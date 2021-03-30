@@ -26,12 +26,6 @@
 #ifdef MOUSE_ACTIONS
 #include "pc/controller/controller_mouse.h"
 #include "pc/configfile.h"
-
-static bool sFileSelectMouseControl = FALSE;
-static int sFileSelectOldMouseXPos;
-static int sFileSelectOldMouseYPos;
-
-extern struct GfxDimensions gfx_current_dimensions;
 #endif
 
 #include "eu_translation.h"
@@ -126,10 +120,7 @@ static s8 sAllFilesExist = FALSE;
 
 // Defines the value of the save slot selected in the menu.
 // Mario A: 1 | Mario B: 2 | Mario C: 3 | Mario D: 4
-#ifndef MOUSE_ACTIONS
-static
-#endif
-s8 sSelectedFileNum = 0;
+static s8 sSelectedFileNum = 0;
 
 // Which coin score mode to use when scoring files. 0 for local
 // coin high score, 1 for high score across all files.
@@ -1701,7 +1692,7 @@ void handle_controller_cursor_input(void) {
     #ifdef MOUSE_ACTIONS 
     else
     {
-        sFileSelectMouseControl = FALSE;
+        gMouseHasFreeControl = FALSE;
     }
     #endif
     if (rawStickX > -2 && rawStickX < 2) {
@@ -1710,7 +1701,7 @@ void handle_controller_cursor_input(void) {
     #ifdef MOUSE_ACTIONS 
     else
     {
-        sFileSelectMouseControl = FALSE;
+        gMouseHasFreeControl = FALSE;
     }
     #endif
 
@@ -1719,26 +1710,32 @@ void handle_controller_cursor_input(void) {
     sCursorPos[1] += rawStickY / 8;
 
 #ifdef MOUSE_ACTIONS
+    if (sSelectedFileNum != 0)
+        gMouseHasFreeControl = FALSE;
+        
+    if ((gMouseXPos - gOldMouseXPos != 0 || gMouseYPos - gOldMouseYPos != 0) && sSelectedFileNum == 0)  {
+        gMouseHasFreeControl = TRUE;
+    }
+
     static float screenScale;
     screenScale = (float) gfx_current_dimensions.height / SCREEN_HEIGHT;
-    if (gMouseXPos - sFileSelectOldMouseXPos != 0 || gMouseYPos - sFileSelectOldMouseYPos != 0)
-        sFileSelectMouseControl = TRUE;
-    if (sFileSelectMouseControl && configMouse) {
+    if (gMouseHasFreeControl && configMouse) {
         sCursorPos[0] = ((gMouseXPos - (gfx_current_dimensions.width - (screenScale * 320)) / 2) / screenScale) - 160.0f;
         sCursorPos[1] = (gMouseYPos / screenScale - 120.0f) * -1;
     }
-    sFileSelectOldMouseXPos = gMouseXPos;
-    sFileSelectOldMouseYPos = gMouseYPos;
 
-if (!sFileSelectMouseControl) {
+    gOldMouseXPos = gMouseXPos;
+    gOldMouseYPos = gMouseYPos;
+
+if (!gMouseHasFreeControl) {
 #endif
     
     // Stop cursor from going offscreen
-    if (sCursorPos[0] > GFX_DIMENSIONS_FROM_RIGHT_EDGE(188)) {
-        sCursorPos[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(188);
+    if (sCursorPos[0] > GFX_DIMENSIONS_FROM_RIGHT_EDGE(188.0f)) {
+        sCursorPos[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(188.0f);
     }
-    if (sCursorPos[0] < GFX_DIMENSIONS_FROM_LEFT_EDGE(-132)) {
-        sCursorPos[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(-132);
+    if (sCursorPos[0] < GFX_DIMENSIONS_FROM_LEFT_EDGE(-132.0f)) {
+        sCursorPos[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(-132.0f);
     }
 
     if (sCursorPos[1] > 90.0f) {
@@ -3035,7 +3032,7 @@ static void print_file_select_strings(void) {
  * Geo function that prints file select strings and the cursor.
  */
 Gfx *geo_file_select_strings_and_menu_cursor(s32 callContext, UNUSED struct GraphNode *node, UNUSED Mat4 mtx) {
-    if (callContext == GEO_CONTEXT_RENDER && sSelectedFileNum == 0) {
+    if (callContext == GEO_CONTEXT_RENDER) {
 #ifdef TARGET_N3DS
         gDPForceFlush(gDisplayListHead++);
         gDPSet2d(gDisplayListHead++, 1);

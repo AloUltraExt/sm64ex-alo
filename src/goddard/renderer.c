@@ -29,10 +29,6 @@
 #ifdef MOUSE_ACTIONS
 #include "pc/controller/controller_mouse.h"
 #include "pc/configfile.h"
-
-static bool sGdMouseControl = FALSE;
-static int sGdOldMouseXPos;
-static int sGdOldMouseYPos;
 #endif
 
 #define MAX_GD_DLS 1000
@@ -2482,8 +2478,6 @@ void parse_p1_controller(void) {
     struct GdControl *gdctrl = &gGdCtrl;
     OSContPad *currInputs;
     OSContPad *prevInputs;
-    f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
-    aspect *= 0.75;
 
     // Copy current inputs to previous 
     u8 *src = (u8 *) gdctrl;
@@ -2577,39 +2571,43 @@ void parse_p1_controller(void) {
     if (ABS(gdctrl->stickX) >= 6) {
         gdctrl->csrX += gdctrl->stickX * 0.1;
 #ifdef MOUSE_ACTIONS
-        sGdMouseControl = FALSE;
+        gMouseHasFreeControl = FALSE;
 #endif
     }
 
     if (ABS(gdctrl->stickY) >= 6) {
         gdctrl->csrY -= gdctrl->stickY * 0.1;
 #ifdef MOUSE_ACTIONS 
-        sGdMouseControl = FALSE;
+        gMouseHasFreeControl = FALSE;
 #endif
     }
 
 #ifdef MOUSE_ACTIONS
-    if (gMouseXPos - sGdOldMouseXPos != 0 || gMouseYPos - sGdOldMouseYPos != 0)
-        sGdMouseControl = true;
-    if (sGdMouseControl) {
-        float screenScale = (float) gfx_current_dimensions.height / (float)SCREEN_HEIGHT;
-        if (configMouse) {
-            gdctrl->csrX = (gMouseXPos - (gfx_current_dimensions.width - (screenScale * (float)SCREEN_WIDTH))/ 2)/ screenScale;
-            gdctrl->csrY = gMouseYPos / screenScale;
-        }
-    }
-    sGdOldMouseXPos = gMouseXPos;
-    sGdOldMouseYPos = gMouseYPos;
+    if (!(sHandView->flags & VIEW_UPDATE))
+        gMouseHasFreeControl = FALSE;
 
-if (!sGdMouseControl) {
+    if ((gMouseXPos - gOldMouseXPos != 0 || gMouseYPos - gOldMouseYPos != 0) && (sHandView->flags & VIEW_UPDATE)) {
+        gMouseHasFreeControl = TRUE;
+    }
+
+    float screenScale = (float) gfx_current_dimensions.height / (float)SCREEN_HEIGHT;
+    if (configMouse && gMouseHasFreeControl) {
+        gdctrl->csrX = (gMouseXPos - (gfx_current_dimensions.width - (screenScale * (float)SCREEN_WIDTH))/ 2)/ screenScale;
+        gdctrl->csrY = gMouseYPos / screenScale;
+    }
+
+    gOldMouseXPos = gMouseXPos;
+    gOldMouseYPos = gMouseYPos;
+
+if (!gMouseHasFreeControl) {
 #endif
     // clamp cursor position within screen view bounds
-    if (gdctrl->csrX < sScreenView->parent->upperLeft.x + (16.0f/aspect)) {
-        gdctrl->csrX = sScreenView->parent->upperLeft.x + (16.0f/aspect);
+    if (gdctrl->csrX < sScreenView->parent->upperLeft.x + GFX_DIMENSIONS_FROM_LEFT_EDGE(16.0f)) {
+        gdctrl->csrX = sScreenView->parent->upperLeft.x + GFX_DIMENSIONS_FROM_LEFT_EDGE(16.0f);
     }
 
-    if (gdctrl->csrX > sScreenView->parent->upperLeft.x + sScreenView->parent->lowerRight.x - (48.0/aspect)) {
-        gdctrl->csrX = sScreenView->parent->upperLeft.x + sScreenView->parent->lowerRight.x - (48.0/aspect);
+    if (gdctrl->csrX > sScreenView->parent->upperLeft.x + GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - (sScreenView->parent->lowerRight.x - 48.0f))) {
+        gdctrl->csrX = sScreenView->parent->upperLeft.x + GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - (sScreenView->parent->lowerRight.x - 48.0f));
     }
 
     if (gdctrl->csrY < sScreenView->parent->upperLeft.y + 16.0f) {
@@ -2624,6 +2622,7 @@ if (!sGdMouseControl) {
         ((u8 *) prevInputs)[i] = ((u8 *) currInputs)[i];
     }
 #ifdef MOUSE_ACTIONS
+    
 }
 #endif
 }

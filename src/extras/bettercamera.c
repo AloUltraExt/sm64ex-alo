@@ -380,9 +380,13 @@ static void puppycam_input_mouse(void) {
     f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
 
     if (configMouse && gPuppyCam.mouse) {
+        gMouseHasCenterControl = TRUE;
+
         gPuppyCam.yawTarget += ivX * gMouseXPos * 16;
         gPuppyCam.pitchTarget += ivY * gMouseYPos * 16;
-    }
+    } else {
+        gMouseHasCenterControl = FALSE;
+    }    
 }
 #endif
 

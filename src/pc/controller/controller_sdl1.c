@@ -41,8 +41,10 @@ enum {
 #ifdef MOUSE_ACTIONS
 int gMouseXPos;
 int gMouseYPos;
-
-extern s8 sSelectedFileNum;
+int gOldMouseXPos;
+int gOldMouseYPos;
+int gMouseHasFreeControl;
+int gMouseHasCenterControl;
 #endif
 
 static bool init_ok;
@@ -120,12 +122,6 @@ static void controller_sdl_init(void) {
                 joy_axis_binds[i] = -1;
     }
 
-#ifdef MOUSE_ACTIONS
-    if (configMouse)
-        SDL_WM_GrabInput(SDL_GRAB_ON);
-    SDL_GetRelativeMouseState(&gMouseXPos, &gMouseYPos);
-#endif
-
     controller_sdl_bind();
 
     init_ok = true;
@@ -144,16 +140,26 @@ static inline int16_t get_axis(const int i) {
         return 0;
 }
 
-static void controller_sdl_read(OSContPad *pad) {
-    if (!init_ok) return;
-
 #ifdef MOUSE_ACTIONS
+static void mouse_control_handler(OSContPad *pad) {
     u32 mouse;
 
-    if (configMouse && sCurrPlayMode != 2 && sSelectedFileNum != 0) {
-        SDL_WM_GrabInput(SDL_GRAB_ON);
-        mouse = SDL_GetRelativeMouseState(&gMouseXPos, &gMouseYPos);
+    if (configMouse) {
+        if (gMouseHasFreeControl) {
+            SDL_ShowCursor(SDL_DISABLE);
+        } else {
+            SDL_ShowCursor(SDL_ENABLE);
+        }
+        
+        if (gMouseHasCenterControl && sCurrPlayMode != 2) {
+            SDL_WM_GrabInput(SDL_GRAB_ON);
+            mouse = SDL_GetRelativeMouseState(&gMouseXPos, &gMouseYPos);
+        } else {
+            SDL_WM_GrabInput(SDL_GRAB_OFF);
+            mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
+        }
     } else {
+        SDL_ShowCursor(SDL_ENABLE);
         SDL_WM_GrabInput(SDL_GRAB_OFF);
         mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
     }
@@ -165,6 +171,14 @@ static void controller_sdl_read(OSContPad *pad) {
     // remember buttons that changed from 0 to 1
     last_mouse = (mouse_buttons ^ mouse) & mouse;
     mouse_buttons = mouse;
+}
+#endif
+
+static void controller_sdl_read(OSContPad *pad) {
+    if (!init_ok) return;
+
+#ifdef MOUSE_ACTIONS
+    mouse_control_handler(pad);
 #endif
 
     if (!sdl_joy) return;

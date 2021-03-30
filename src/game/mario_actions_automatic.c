@@ -742,6 +742,8 @@ s32 act_in_cannon(struct MarioState *m) {
             marioObj->oMarioCannonInputYaw -= (s16)(m->controller->stickX * 10.0f);
 #ifdef MOUSE_ACTIONS
             if (configMouse) {
+                gMouseHasCenterControl = TRUE;
+
                 m->faceAngle[0] -= (s16)(gMouseYPos * 10.0f);
                 marioObj->oMarioCannonInputYaw -= (s16)(gMouseXPos * 10.0f);
             }
@@ -775,6 +777,10 @@ s32 act_in_cannon(struct MarioState *m) {
                 play_sound(SOUND_OBJ_POUNDING_CANNON, m->marioObj->header.gfx.cameraToObject);
 
                 m->marioObj->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
+
+#ifdef MOUSE_ACTIONS
+                gMouseHasCenterControl = FALSE;
+#endif
 
                 set_mario_action(m, ACT_SHOT_FROM_CANNON, 0);
 #ifdef RUMBLE_FEEDBACK

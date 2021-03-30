@@ -31,8 +31,10 @@
 #ifdef MOUSE_ACTIONS
 int gMouseXPos;
 int gMouseYPos;
-
-extern s8 sSelectedFileNum;
+int gOldMouseXPos;
+int gOldMouseYPos;
+int gMouseHasFreeControl;
+int gMouseHasCenterControl;
 #endif
 
 static bool init_ok;
@@ -113,12 +115,6 @@ static void controller_sdl_init(void) {
 
     haptics_enabled = (SDL_InitSubSystem(SDL_INIT_HAPTIC) == 0);
 
-#ifdef MOUSE_ACTIONS
-    if (configMouse)
-        SDL_SetRelativeMouseMode(SDL_TRUE);
-    SDL_GetRelativeMouseState(&gMouseXPos, &gMouseYPos);
-#endif
-
     controller_sdl_bind();
 
     init_ok = true;
@@ -150,18 +146,26 @@ static inline void update_button(const int i, const bool new) {
     if (pressed) last_joybutton = i;
 }
 
-static void controller_sdl_read(OSContPad *pad) {
-    if (!init_ok) {
-        return;
-    }
-
 #ifdef MOUSE_ACTIONS
+static void mouse_control_handler(OSContPad *pad) {
     u32 mouse;
 
-    if (configMouse && sCurrPlayMode != 2 && sSelectedFileNum != 0) {
-        SDL_SetRelativeMouseMode(SDL_TRUE);
-        mouse = SDL_GetRelativeMouseState(&gMouseXPos, &gMouseYPos);
+    if (configMouse) {
+        if (gMouseHasFreeControl) {
+            SDL_ShowCursor(SDL_DISABLE);
+        } else {
+            SDL_ShowCursor(SDL_ENABLE);
+        }
+        
+        if (gMouseHasCenterControl && sCurrPlayMode != 2) {
+            SDL_SetRelativeMouseMode(SDL_TRUE);
+            mouse = SDL_GetRelativeMouseState(&gMouseXPos, &gMouseYPos);
+        } else {
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+            mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
+        }
     } else {
+        SDL_ShowCursor(SDL_ENABLE);
         SDL_SetRelativeMouseMode(SDL_FALSE);
         mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
     }
@@ -173,6 +177,16 @@ static void controller_sdl_read(OSContPad *pad) {
     // remember buttons that changed from 0 to 1
     last_mouse = (mouse_buttons ^ mouse) & mouse;
     mouse_buttons = mouse;
+}
+#endif
+
+static void controller_sdl_read(OSContPad *pad) {
+    if (!init_ok) {
+        return;
+    }
+
+#ifdef MOUSE_ACTIONS
+    mouse_control_handler(pad);
 #endif
 
     SDL_GameControllerUpdate();
