@@ -343,7 +343,7 @@ void rendering_init(void) {
 
 #ifdef USE_SYSTEM_MALLOC
 Gfx **alloc_next_dl(void) {
-    u32 size = 1000;
+    u32 size = 10000; // originally 1000
     Gfx *new_chunk = alloc_only_pool_alloc(gGfxAllocOnlyPool, size * sizeof(Gfx));
     gSPBranchList(gDisplayListHeadInChunk++, new_chunk);
     gDisplayListHeadInChunk = new_chunk;

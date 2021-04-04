@@ -5,7 +5,51 @@
 #include <errno.h>
 #define FORCEINLINE // define this to nothing to make gcc happy
 #define USE_LOCKS 1
+/*
+  This is a version (aka dlmalloc) of malloc/free/realloc written by
+  Doug Lea and released to the public domain, as explained at
+  http://creativecommons.org/publicdomain/zero/1.0/ Send questions,
+  comments, complaints, performance data, etc to dl@cs.oswego.edu
+* Version 2.8.6 Wed Aug 29 06:57:58 2012  Doug Lea
+   Note: There may be an updated version of this malloc obtainable at
+           ftp://gee.cs.oswego.edu/pub/misc/malloc.c
+         Check before installing!
+ */
+/*
+ * PackageLicenseDeclared: CC0-1.0
+ */
 
+/* configuration */
+#include <stdint.h>
+#include <stddef.h>
+
+extern void *mbed_sbrk(intptr_t increment);
+
+#define LACKS_UNISTD_H
+#define LACKS_FCNTL_H
+#define LACKS_SYS_PARAM_H
+#define stderr 0
+//#define HAVE_MORECORE 1
+#define MORECORE mbed_sbrk
+//#define MORECORE_CONTIGUOUS 1
+#define MORECORE_CANNOT_TRIM 1
+#define USE_DL_PREFIX
+#define LACKS_TIME_H
+
+#if defined(__ARMCC_VERSION)
+#define LACKS_SYS_TYPES_H
+#include <string.h>
+#endif
+
+//#define HAVE_MMAP 0
+#define HAVE_MREMAP 0
+
+#define NO_MALLINFO 1
+#define NO_MALLOC_STATS 1
+
+#define DEFAULT_GRANULARITY 64
+
+/* end configuration*/
 /*
   This is a version (aka dlmalloc) of malloc/free/realloc written by
   Doug Lea and released to the public domain, as explained at
@@ -1004,7 +1048,7 @@ DLMALLOC_EXPORT size_t dlmalloc_max_footprint(void);
   guarantee that this number of bytes can actually be obtained from
   the system.
 */
-DLMALLOC_EXPORT size_t dlmalloc_footprint_limit();
+DLMALLOC_EXPORT size_t dlmalloc_footprint_limit(void);
 
 /*
   malloc_set_footprint_limit();

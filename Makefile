@@ -173,7 +173,7 @@ ifeq ($(WINDOWS_BUILD),1)
     TARGET_BITS = 32
     NO_BZERO_BCOPY := 1
   else ifeq ($(CROSS),x86_64-w64-mingw32.static-)
-    TARGET_ARCH = i386pe
+    TARGET_ARCH = i386pep
     TARGET_BITS = 64
     NO_BZERO_BCOPY := 1
   endif
@@ -256,6 +256,10 @@ else ifeq ($(GRUCODE),f3d_new) # Fast3D 2.0H (Shindou)
   GRUCODE_DEF := F3D_NEW
   TARGET := $(TARGET).f3d_new
   COMPARE := 0
+else ifeq ($(GRUCODE),f3d_old) # Fast3D 2.0D (US, EU, JP)
+  GRUCODE_DEF := F3D_OLD
+  TARGET := $(TARGET).f3d_old
+  COMPARE := 0
 else ifeq ($(GRUCODE),f3dzex) # Fast3DZEX (2.0J / Animal Forest - Dōbutsu no Mori)
   GRUCODE_DEF := F3DEX_GBI_2
   GRUCODE_ASFLAGS := --defsym F3DEX_GBI_SHARED=1
@@ -270,9 +274,9 @@ GRUCODE_ASFLAGS := $(GRUCODE_ASFLAGS) --defsym $(GRUCODE_DEF)=1
 VERSION_CFLAGS := $(VERSION_CFLAGS) -DNON_MATCHING -DAVOID_UB
 
 ifeq ($(TARGET_RPI),1) # Define RPi to change SDL2 title & GLES2 hints
-      VERSION_CFLAGS += -DUSE_GLES
+  VERSION_CFLAGS += -DUSE_GLES
 else ifeq ($(OSX_BUILD),1) # Modify GFX & SDL2 for OSX GL
-     VERSION_CFLAGS += -DOSX_BUILD
+  VERSION_CFLAGS += -DOSX_BUILD
 else ifeq ($(TARGET_WEB),1)
   VERSION_CFLAGS := $(VERSION_CFLAGS) -DTARGET_WEB -DUSE_GLES
 else ifeq ($(TARGET_WII_U),1)
@@ -310,8 +314,7 @@ endif
 
 PYTHON := python3
 
-ifneq ($(MAKECMDGOALS),clean)
-ifneq ($(MAKECMDGOALS),distclean)
+ifeq (,$(findstring clean,$(MAKECMDGOALS)))
 
 # Make sure assets exist
 NOEXTRACT ?= 0
@@ -328,7 +331,6 @@ ifeq ($(DUMMY),FAIL)
   $(error Failed to build tools)
 endif
 
-endif
 endif
 
 ################ Target Executable and Sources ###############
@@ -429,16 +431,10 @@ ifeq ($(COMPILER_N64),gcc)
 endif
 endif
 
-# to get 32 bit working, use debug
 ifeq ($(DEBUG),1)
   OPT_FLAGS := -g
 else
-# At some point -O2 broke on PC, only -O1 and -g works
-  ifeq ($(TARGET_PORT_CONSOLE),1)
-    OPT_FLAGS := -O2
-  else 
-    OPT_FLAGS := -O1
-  endif
+  OPT_FLAGS := -O2
 endif
 
 # Set BITS (32/64) to compile for
@@ -449,34 +445,32 @@ ifeq ($(TARGET_WEB),1)
 endif
 
 ifeq ($(TARGET_RPI),1)
-	machine = $(shell sh -c 'uname -m 2>/dev/null || echo unknown')
+  machine = $(shell sh -c 'uname -m 2>/dev/null || echo unknown')
 # Raspberry Pi B+, Zero, etc
-	ifneq (,$(findstring armv6l,$(machine)))
-                OPT_FLAGS := -march=armv6zk+fp -mfpu=vfp -Ofast
-        endif
+  ifneq (,$(findstring armv6l,$(machine)))
+   OPT_FLAGS := -march=armv6zk+fp -mfpu=vfp -Ofast
+  endif
 
 # Raspberry Pi 2 and 3 in ARM 32bit mode
-        ifneq (,$(findstring armv7l,$(machine)))
-                model = $(shell sh -c 'cat /sys/firmware/devicetree/base/model 2>/dev/null || echo unknown')
-
-                ifneq (,$(findstring 3,$(model)))
-                         OPT_FLAGS := -march=armv8-a+crc -mtune=cortex-a53 -mfpu=neon-fp-armv8 -O3
-                         else
-                         OPT_FLAGS := -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -O3
-                endif
-        endif
+  ifneq (,$(findstring armv7l,$(machine)))
+    model = $(shell sh -c 'cat /sys/firmware/devicetree/base/model 2>/dev/null || echo unknown')
+    ifneq (,$(findstring 3,$(model)))
+      OPT_FLAGS := -march=armv8-a+crc -mtune=cortex-a53 -mfpu=neon-fp-armv8 -O3
+    else
+      OPT_FLAGS := -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -O3
+    endif
+  endif
 
 # RPi3 or RPi4, in ARM64 (aarch64) mode. NEEDS TESTING 32BIT.
 # DO NOT pass -mfpu stuff here, thats for 32bit ARM only and will fail for 64bit ARM.
-        ifneq (,$(findstring aarch64,$(machine)))
-                model = $(shell sh -c 'cat /sys/firmware/devicetree/base/model 2>/dev/null || echo unknown')
-                ifneq (,$(findstring 3,$(model)))
-                         OPT_FLAGS := -march=armv8-a+crc -mtune=cortex-a53 -O3
-                else ifneq (,$(findstring 4,$(model)))
-                         OPT_FLAGS := -march=armv8-a+crc+simd -mtune=cortex-a72 -O3
-                endif
-
-        endif
+  ifneq (,$(findstring aarch64,$(machine)))
+    model = $(shell sh -c 'cat /sys/firmware/devicetree/base/model 2>/dev/null || echo unknown')
+    ifneq (,$(findstring 3,$(model)))
+      OPT_FLAGS := -march=armv8-a+crc -mtune=cortex-a53 -O3
+    else ifneq (,$(findstring 4,$(model)))
+      OPT_FLAGS := -march=armv8-a+crc+simd -mtune=cortex-a72 -O3
+    endif
+  endif
 endif
 
 # Whether to hide commands or not
@@ -869,8 +863,8 @@ ifeq ($(WINDOWS_BUILD),1) # fixes compilation in MXE on Linux and WSL
   OBJDUMP := $(CROSS)objdump
 else ifeq ($(OSX_BUILD),1)
   CPP := cpp-9 -P
-  OBJDUMP := i686-w64-mingw32-objdump
   OBJCOPY := i686-w64-mingw32-objcopy
+  OBJDUMP := i686-w64-mingw32-objdump
 else # Linux & other builds
   CPP := $(CROSS)cpp -P
   OBJCOPY := $(CROSS)objcopy
@@ -1148,7 +1142,7 @@ clean:
 	$(RM) -r $(BUILD_DIR_BASE)
 
 cleantools:
-	$(MAKE) -s -C tools clean
+	$(MAKE) -C tools clean
 
 distclean:
 	$(RM) -r $(BUILD_DIR_BASE)
@@ -1227,7 +1221,7 @@ $(BUILD_DIR)/text/%/define_courses.inc.c: text/define_courses.inc.c text/%/cours
 
 $(BUILD_DIR)/text/%/define_text.inc.c: text/define_text.inc.c text/%/courses.h text/%/dialogs.h
 	@$(PRINT) "$(GREEN)Preprocessing: $(BLUE)$@ $(NO_COL)\n"
-	$(V)$(CPP) $(VERSION_CFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) charmap.txt - $@
+	$(V)$(CPP) $(VERSION_CFLAGS) -Wno-trigraphs $< -o - -I text/$*/ | $(TEXTCONV) charmap.txt - $@
 
 RSP_DIRS := $(BUILD_DIR)/rsp
 ALL_DIRS := $(BUILD_DIR) $(addprefix $(BUILD_DIR)/,$(SRC_DIRS) $(ASM_DIRS) $(GODDARD_SRC_DIRS) $(ULTRA_SRC_DIRS) $(ULTRA_ASM_DIRS) $(ULTRA_BIN_DIRS) $(BIN_DIRS) $(TEXTURE_DIRS) $(TEXT_DIRS) $(SOUND_SAMPLE_DIRS) $(addprefix levels/,$(LEVEL_DIRS)) include) $(MIO0_DIR) $(addprefix $(MIO0_DIR)/,$(VERSION)) $(SOUND_BIN_DIR) $(SOUND_BIN_DIR)/sequences/$(VERSION) $(RSP_DIRS)
@@ -1643,7 +1637,7 @@ ifeq ($(TARGET_SWITCH), 1)
 
 endif
 
-.PHONY: all clean distclean default diff test load libultra res
+.PHONY: all clean distclean cleantools default diff test load libultra res
 .PRECIOUS: $(BUILD_DIR)/bin/%.elf $(SOUND_BIN_DIR)/%.ctl $(SOUND_BIN_DIR)/%.tbl $(SOUND_SAMPLE_TABLES) $(SOUND_BIN_DIR)/%.s $(BUILD_DIR)/%
 .DELETE_ON_ERROR:
 
