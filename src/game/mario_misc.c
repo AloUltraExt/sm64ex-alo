@@ -347,7 +347,7 @@ Gfx *geo_mirror_mario_set_alpha(s32 callContext, struct GraphNode *node, UNUSED 
     if (callContext == GEO_CONTEXT_RENDER) {
         alpha = (bodyState->modelState & 0x100) ? (bodyState->modelState & 0xFF) : 255;
 #ifdef BETTERCAMERA
-        if (alpha > gPuppyCam.opacity && gPuppyCam.enabled) {
+        if (gPuppyCam.enabled && alpha > gPuppyCam.opacity && !gCamera->cutscene) {
             alpha = gPuppyCam.opacity;
             bodyState->modelState |= MODEL_STATE_NOISE_ALPHA;
         } else {

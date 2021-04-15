@@ -163,7 +163,7 @@ extern s16 LENSIN(s16 length, s16 direction);
 extern void puppycam_display_options(void);
 extern void puppycam_set_save(void);
 extern void puppycam_check_pause_buttons(void);
-extern void puppycam_activate_cutscene(s32 *scene, s32 lockinput);
+extern void puppycam_activate_cutscene(s32 (*scene)(), s32 lockinput);
 extern void puppycam_render_option_text();
 void puppycam_warp(f32 displacementX, f32 displacementY, f32 displacementZ);
 void puppycam_script_clear(void);

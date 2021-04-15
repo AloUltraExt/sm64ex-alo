@@ -158,7 +158,7 @@ void puppycam_warp(f32 displacementX, f32 displacementY, f32 displacementZ)
 
 ///CUTSCENE
 
-void puppycam_activate_cutscene(s32 *scene, s32 lockinput)
+void puppycam_activate_cutscene(s32 (*scene)(), s32 lockinput)
 {
     gPuppyCam.cutscene = 1;
     gPuppyCam.sceneTimer = 0;
@@ -1016,21 +1016,21 @@ static void puppycam_script(void)
             }
 
             //Adds and removes behaviour flags, as set.
-            if (volume.flagsRemove != NULL)
+            if (volume.flagsRemove != 0)
                 gPuppyCam.flags &= ~volume.flagsRemove;
-            if (volume.flagsAdd != NULL)
+            if (volume.flagsAdd != 0)
                 gPuppyCam.flags |= volume.flagsAdd;
             if (volume.flagPersistance == PUPPYCAM_BEHAVIOUR_PERMANENT)
             {
                 //Adds and removes behaviour flags, as set.
-                if (volume.flagsRemove != NULL)
+                if (volume.flagsRemove != 0)
                     gPuppyCam.intendedFlags &= ~volume.flagsRemove;
-                if (volume.flagsAdd != NULL)
+                if (volume.flagsAdd != 0)
                     gPuppyCam.intendedFlags |= volume.flagsAdd;
             }
 
             //Last and probably least, check if there's a function attached, and call it, if so.
-            if (volume.func != NULL)
+            if (volume.func != 0)
             {
                 func = volume.func;
                 (func)();
@@ -1117,6 +1117,7 @@ static void puppycam_collision(void)
 
 extern Vec3f sOldPosition;
 extern Vec3f sOldFocus;
+extern struct PlayerGeometry sMarioGeometry;
 
 //Applies the PuppyCam values to the actual game's camera, giving the final product.
 static void puppycam_apply(void)
@@ -1142,6 +1143,20 @@ static void puppycam_apply(void)
 
     gLakituState.mode = gCamera->mode;
     gLakituState.defMode = gCamera->defMode;
+    
+    gLakituState.roll = approach_s32(gLakituState.roll, 0, 0x80, 0x80);
+    
+    if (gMarioState->floor != NULL) {
+        sMarioGeometry.currFloor = gMarioState->floor;
+        sMarioGeometry.currFloorHeight = gMarioState->floorHeight;
+        sMarioGeometry.currFloorType = gMarioState->floor->type;
+    }
+    
+    if (gMarioState->ceil != NULL) {
+        sMarioGeometry.currCeil = gMarioState->ceil;
+        sMarioGeometry.currCeilHeight = gMarioState->ceilHeight;
+        sMarioGeometry.currCeilType = gMarioState->ceil->type;
+    }
 }
 
 extern Texture texture_hud_char_puppycam[];
