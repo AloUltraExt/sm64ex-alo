@@ -33,8 +33,13 @@
 #include "save_file.h"
 #include "sound_init.h"
 #include "pc/configfile.h"
+
 #ifdef CHEATS_ACTIONS
 #include "extras/cheats.h"
+#endif
+
+#ifdef BETTERCAMERA
+#include "extras/bettercamera.h"
 #endif
 
 u32 unused80339F10;
@@ -1392,12 +1397,19 @@ void update_mario_inputs(struct MarioState *m) {
     m->collidedObjInteractTypes = m->marioObj->collidedObjInteractTypes;
     m->flags &= 0xFFFFFF;
 
+#ifdef BETTERCAMERA
+    if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ENTER_FIRST_PERSON) {
+        m->input |= INPUT_FIRST_PERSON;
+        return;
+    }
+#endif
+
     update_mario_button_inputs(m);
     update_mario_joystick_inputs(m);
     update_mario_geometry_inputs(m);
 
     debug_print_speed_action_normal(m);
-    
+
 #ifdef CHEATS_ACTIONS
     cheats_mario_inputs(m);
 #endif

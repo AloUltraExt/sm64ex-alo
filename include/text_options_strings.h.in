@@ -48,6 +48,7 @@
 
 #define TEXT_OPT_CAM_SCH1  _("DOUBLE TAP")
 #define TEXT_OPT_CAM_SCH2  _("SINGLE PRESS")
+#define TEXT_OPT_CAM_SCH3  _("CLASSIC")
 
 #define TEXT_OPT_TEXFILTER _("TEXTURE FILTERING")
 #define TEXT_OPT_FSCREEN   _("FULLSCREEN")
@@ -113,6 +114,7 @@
 
 #define TEXT_OPT_CAM_SCH1  _("Double Tap")
 #define TEXT_OPT_CAM_SCH2  _("Single Press")
+#define TEXT_OPT_CAM_SCH3  _("Classic")
 
 #define TEXT_OPT_TEXFILTER _("Texture Filtering")
 #define TEXT_OPT_FSCREEN   _("Fullscreen")

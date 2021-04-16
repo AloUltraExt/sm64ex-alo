@@ -78,11 +78,13 @@ const u8 optsCameraStr[][32] = {
 static const u8 optsCameraSchemeStr[][64] = {
     { TEXT_OPT_CAM_SCH1 },
     { TEXT_OPT_CAM_SCH2 },
+    { TEXT_OPT_CAM_SCH3 },
 };
 
 static const u8 *cameraChoicesScheme[] = {
     optsCameraSchemeStr[0],
     optsCameraSchemeStr[1],
+    optsCameraSchemeStr[2],
 };
 
 static struct Option optsCamera[] = {
@@ -227,7 +229,56 @@ void puppycam_init(void)
     gPuppyCam.swimPitch = 0;
     gPuppyCam.framesSinceC[0] = 10; //This just exists to stop input type B being stupid.
     gPuppyCam.framesSinceC[1] = 10; //This just exists to stop input type B being stupid.
+    gPuppyCam.mode3Flags = PUPPYCAM_MODE3_ZOOMED_MED;
+}
 
+void puppycam_input_pitch(void)
+{
+    //f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
+
+    if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_PITCH_ROTATION)
+    {
+        //Handles vertical inputs.
+        if (gPlayer1Controller->buttonDown & U_CBUTTONS || gPuppyCam.stick2[1] != 0)
+            gPuppyCam.pitchAcceleration -= 50*(gPuppyCam.options.sensitivityY/100.f);
+        else
+        if (gPlayer1Controller->buttonDown & D_CBUTTONS || gPuppyCam.stick2[1] != 0)
+            gPuppyCam.pitchAcceleration += 50*(gPuppyCam.options.sensitivityY/100.f);
+        else
+            gPuppyCam.pitchAcceleration = approach_f32_asymptotic(gPuppyCam.pitchAcceleration, 0, DECELERATION);
+
+        gPuppyCam.pitchAcceleration = CLAMP(gPuppyCam.pitchAcceleration, -100, 100);
+
+        //When Mario's moving, his pitch is clamped pretty aggressively, so this exists so you can shift your view up and down momentarily at an actually usable range, rather than the otherwise baby range.
+        if (gMarioState->action & ACT_FLAG_MOVING && (gPuppyCam.pitch >= 0x3800 || gPuppyCam.pitch <= 0x2000))
+            gPuppyCam.moveFlagAdd = 8;
+    }
+}
+
+void puppycam_input_zoom(void)
+{
+    //Handles R button zooming.
+    if (gPlayer1Controller->buttonPressed & R_TRIG && gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_ZOOM_CHANGE)
+    {
+        gPuppyCam.zoomSet++;
+
+        if (gPuppyCam.zoomSet >= 3)
+            gPuppyCam.zoomSet = 0;
+
+        gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[gPuppyCam.zoomSet];
+        play_sound(SOUND_MENU_CLICK_CHANGE_VIEW,gGlobalSoundSource);
+    }
+}
+
+void puppycam_input_centre(void)
+{
+    //Handles L button centering.
+    if (gPlayer1Controller->buttonPressed & L_TRIG && gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_YAW_ROTATION &&
+    !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_8DIR) && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR) && !(gPlayer1Controller->buttonDown & U_JPAD))
+    {
+        gPuppyCam.yawTarget = gMarioState->faceAngle[1]+0x8000;
+        play_sound(SOUND_MENU_CLICK_CHANGE_VIEW,gGlobalSoundSource);
+    }
 }
 
 //The default control scheme. Hold the button down to turn the camera, and double tap to turn quickly.
@@ -303,17 +354,122 @@ static void puppycam_input_hold_preset2(f32 ivX)
         gPuppyCam.yawAcceleration = approach_f32_asymptotic(gPuppyCam.yawAcceleration, 0, DECELERATION);
 }
 
+//Another alternative control scheme. This one aims to mimic the parallel camera scheme down to the last bit from the original game.
+static void puppycam_input_hold_preset3(f32 ivX)
+{
+    f32 stickMag[2] = {gPlayer1Controller->rawStickX*0.65f, gPlayer1Controller->rawStickY*0.2f};
+    //Just in case it happens to be nonzero.
+    gPuppyCam.yawAcceleration = 0;
+
+    //In theory this shouldn't be necessary, but it's nice to cover all bases.
+    if (!(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_YAW_ROTATION))
+        return;
+
+    if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_IN)
+    {
+        //f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
+
+        //Handles continuous movement as normal, as long as the button's held.
+        if (ABS(gPlayer1Controller->rawStickX) > DEADZONE)
+        {
+            gPuppyCam.yawAcceleration -= (gPuppyCam.options.sensitivityX/100.f)*stickMag[0];
+        }
+        else
+            gPuppyCam.yawAcceleration = approach_f32_asymptotic(gPuppyCam.yawAcceleration, 0, DECELERATION);
+
+        if (ABS(gPlayer1Controller->rawStickY) > DEADZONE)
+        {
+            gPuppyCam.pitchAcceleration -= (gPuppyCam.options.sensitivityY/100.f)*stickMag[1];
+        }
+        else
+            gPuppyCam.pitchAcceleration = approach_f32_asymptotic(gPuppyCam.pitchAcceleration, 0, DECELERATION);
+    }
+    else
+    {
+        if (gPlayer1Controller->buttonPressed & R_TRIG)
+        {
+            if (gPuppyCam.yawTarget % 0x2000)
+                gPuppyCam.yawTarget += 0x2000 - gPuppyCam.yawTarget % 0x2000;
+        }
+
+        if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_MED)
+            gPuppyCam.pitchTarget = approach_s32(gPuppyCam.pitchTarget, 0x3800, 0x200, 0x200);
+        if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_OUT)
+            gPuppyCam.pitchTarget = approach_s32(gPuppyCam.pitchTarget, 0x3000, 0x200, 0x200);
+
+        if (gPlayer1Controller->buttonPressed & L_CBUTTONS)
+        {
+            gPuppyCam.yawTarget -= 0x2000*ivX;
+            play_sound(SOUND_MENU_CAMERA_TURN,gGlobalSoundSource);
+        }
+        if (gPlayer1Controller->buttonPressed & R_CBUTTONS)
+        {
+            gPuppyCam.yawTarget += 0x2000*ivX;
+            play_sound(SOUND_MENU_CAMERA_TURN,gGlobalSoundSource);
+        }
+    }
+
+    //Handles zooming in. Works just like vanilla.
+    if (gPlayer1Controller->buttonPressed & U_CBUTTONS)
+    {
+        if ((gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_MED) && !(gMarioState->action & ACT_FLAG_AIR) && !(gMarioState->action & ACT_FLAG_SWIMMING))
+        {
+            gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ZOOMED_IN;
+            gPuppyCam.mode3Flags &= ~PUPPYCAM_MODE3_ZOOMED_MED;
+            gPuppyCam.zoomTarget = 200;
+            gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ENTER_FIRST_PERSON;
+
+            play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
+        }
+        else
+        if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_OUT)
+        {
+            gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ZOOMED_MED;
+            gPuppyCam.mode3Flags &= ~PUPPYCAM_MODE3_ZOOMED_OUT;
+            gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[1];
+
+            play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
+        }
+    }
+    else //Otherwise handle zooming out.
+    if (gPlayer1Controller->buttonPressed & D_CBUTTONS)
+    {
+        if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_MED)
+        {
+            gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ZOOMED_OUT;
+            gPuppyCam.mode3Flags &= ~PUPPYCAM_MODE3_ZOOMED_MED;
+            gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[2];
+
+            play_sound(SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource);
+        }
+    }
+    if (gPlayer1Controller->buttonPressed & D_CBUTTONS || gPlayer1Controller->buttonPressed & B_BUTTON || gPlayer1Controller->buttonPressed & A_BUTTON)
+    {
+        if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_IN)
+        {
+            gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ZOOMED_MED;
+            gPuppyCam.mode3Flags &= ~PUPPYCAM_MODE3_ZOOMED_IN;
+            gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[1];
+            gPuppyCam.mode3Flags &= ~PUPPYCAM_MODE3_ENTER_FIRST_PERSON;
+
+            play_sound(SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource);
+        }
+    }
+}
+
 //Handles C Button inputs for modes that have held inputs, rather than presses.
 static void puppycam_input_hold(void)
 {
     f32 ivX = ((gPuppyCam.options.invertX*2)-1)*(gPuppyCam.options.sensitivityX/100.f);
-    s8 stickMag = 0;
+    f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
+    s8 stickMag[2] = {100, 100};
 
     //Analogue Camera stuff. If it fails to find an input, then it just sets stickmag to 100, which after calculations means the value goes unchanged.
-    if (gPuppyCam.options.analogue)
-        stickMag = gPuppyCam.stick2[0]*1.25f;
-    else
-        stickMag = 100;
+    if (gPuppyCam.options.analogue && gPuppyCam.options.inputType != 2)
+    {
+        stickMag[0] = gPuppyCam.stick2[0]*1.25f;
+        stickMag[1] = gPuppyCam.stick2[1]*1.25f;
+    }
 
     //In theory this shouldn't be necessary, but it's nice to cover all bases.
     if (!(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_YAW_ROTATION))
@@ -323,8 +479,9 @@ static void puppycam_input_hold(void)
     {
         switch (gPuppyCam.options.inputType)
         {
-            default: puppycam_input_hold_preset1(ivX); break;
-            case 1: puppycam_input_hold_preset2(ivX); break;
+            default: puppycam_input_hold_preset1(ivX); puppycam_input_pitch(); puppycam_input_zoom(); puppycam_input_centre(); break;
+            case 1: puppycam_input_hold_preset2(ivX); puppycam_input_pitch(); puppycam_input_zoom(); puppycam_input_centre(); break;
+            case 2: puppycam_input_hold_preset3(ivX); puppycam_input_centre(); break;
         }
     }
     else
@@ -337,13 +494,22 @@ static void puppycam_input_hold(void)
 
     gPuppyCam.yawAcceleration = CLAMP(gPuppyCam.yawAcceleration, -100, 100);
 
-    gPuppyCam.yawTarget += (12*gPuppyCam.yawAcceleration*ivX)*(stickMag*0.01f);
+    gPuppyCam.yawTarget += (12*gPuppyCam.yawAcceleration*ivX)*(stickMag[0]*0.01f);
+    gPuppyCam.pitchTarget += ((4+gPuppyCam.moveFlagAdd)*gPuppyCam.pitchAcceleration*ivY)*(stickMag[1]*0.01f);
 }
 
 //Handles C Button inputs for modes that have pressed inputs, rather than held.
 static void puppycam_input_press(void)
 {
     f32 ivX = ((gPuppyCam.options.invertX*2)-1)*(gPuppyCam.options.sensitivityX/100.f);
+    f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
+    s8 stickMag = 0;
+
+    //Analogue Camera stuff. If it fails to find an input, then it just sets stickmag to 100, which after calculations means the value goes unchanged.
+    if (gPuppyCam.options.analogue)
+        stickMag = gPuppyCam.stick2[0]*1.25f;
+    else
+        stickMag = 100;
 
     //Just in case it happens to be nonzero.
     gPuppyCam.yawAcceleration = 0;
@@ -371,6 +537,8 @@ static void puppycam_input_press(void)
             gPuppyCam.yawTarget += 0x4000*ivX;
         play_sound(SOUND_MENU_CAMERA_ZOOM_IN,gGlobalSoundSource);
     }
+    puppycam_input_pitch();
+    gPuppyCam.pitchTarget += ((4+gPuppyCam.moveFlagAdd)*gPuppyCam.pitchAcceleration*ivY)*(stickMag*0.01f);
 }
 
 #ifdef MOUSE_ACTIONS
@@ -379,14 +547,14 @@ static void puppycam_input_mouse(void) {
     f32 ivX = ((gPuppyCam.options.invertX*2)-1)*(gPuppyCam.options.sensitivityX/100.f);
     f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
 
-    if (configMouse && gPuppyCam.mouse) {
+    if (configMouse && gPuppyCam.mouse && gPuppyCam.options.inputType != 2) {
         gMouseHasCenterControl = TRUE;
 
         gPuppyCam.yawTarget += ivX * gMouseXPos * 16;
         gPuppyCam.pitchTarget += ivY * gMouseYPos * 16;
     } else {
         gMouseHasCenterControl = FALSE;
-    }    
+    }
 }
 #endif
 
@@ -467,7 +635,7 @@ s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface 
     Vec3f norm;
 
     //Ignore certain surface types.
-    if (surface->type == SURFACE_INTANGIBLE || surface->type == SURFACE_WALL_MISC 
+    if (surface->type == SURFACE_INTANGIBLE || surface->type == SURFACE_WALL_MISC
         || surface->type == SURFACE_VANISH_CAP_WALLS || surface->flags & SURFACE_FLAG_NO_CAM_COLLISION)
         return FALSE;
 
@@ -704,7 +872,7 @@ void puppycam_projection_behaviours(void)
     if (gPuppyCam.targetObj == gMarioState->marioObj)
     {
         if (gPuppyCam.options.turnAggression > 0 && gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_TURN_HELPER && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_8DIR) &&
-        gMarioState->vel[1] == 0.0f && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR))
+        gMarioState->vel[1] == 0.0f && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR) && gPuppyCam.options.inputType != 2)
         {//Holy hell this is getting spicy.
             if (gPuppyCam.options.turnAggression > 0 || gMarioState->action & ACT_FLAG_BUTT_OR_STOMACH_SLIDE)
             {
@@ -716,6 +884,20 @@ void puppycam_projection_behaviours(void)
                 gPuppyCam.yawTarget  = gMarioState->faceAngle[1]+0x8000 - approach_s32((s16)(gMarioState->faceAngle[1]+0x8000 - gPuppyCam.yawTarget), 0,
                 ((gPuppyCam.options.turnAggression*10)*ABS(gMarioState->forwardVel/32) * ABS(gPlayer1Controller->rawStickX/80.0f)*turnRate),
                 ((gPuppyCam.options.turnAggression*10)*ABS(gMarioState->forwardVel/32) * ABS(gPlayer1Controller->rawStickX/80.0f)*turnRate));
+            }
+        }
+        else
+        {
+            //If the camera's in these modes, snap the yaw to prevent desync.
+            if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_8DIR)
+            {
+                if (gPuppyCam.yawTarget % 0x2000)
+                    gPuppyCam.yawTarget += 0x2000 - gPuppyCam.yawTarget % 0x2000;
+            }
+            if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR)
+            {
+                if (gPuppyCam.yawTarget % 0x4000)
+                    gPuppyCam.yawTarget += 0x4000 - gPuppyCam.yawTarget % 0x4000;
             }
         }
 
@@ -801,7 +983,7 @@ void puppycam_projection_behaviours(void)
 static void puppycam_wingmario_tower(void) {
     if (gMarioState->floor && gMarioState->floor->type == SURFACE_LOOK_UP_WARP
         && save_file_get_total_star_count(gCurrSaveFileNum - 1, COURSE_MIN - 1, COURSE_MAX - 1) >= 10) {
-        if (gPuppyCam.pitch > 0x6000 && gMarioState->forwardVel == 0 
+        if (gPuppyCam.pitch > 0x6000 && gMarioState->forwardVel == 0
             && (gMarioState->action & ACT_GROUP_MASK) != ACT_GROUP_CUTSCENE) {
             level_trigger_warp(gMarioState, WARP_OP_UNKNOWN_01);
         }
@@ -839,11 +1021,10 @@ static void puppycam_analogue_stick(void)
 //The centrepiece behind the input side of PuppyCam. The C buttons branch off.
 static void puppycam_input_core(void)
 {
-    f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
-    s32 stickMag = 0;
-    s32 moveFlagAdd = 0;
+    UNUSED s32 stickMag = 0;
 
     puppycam_analogue_stick();
+    gPuppyCam.moveFlagAdd = 0;
 
     if (gPuppyCam.options.analogue)
         stickMag = gPuppyCam.stick2[1]*1.25f;
@@ -855,55 +1036,7 @@ static void puppycam_input_core(void)
         puppycam_input_hold();
     if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_8DIR || gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR)
         puppycam_input_press();
-    //Handles R button zooming.
-    if (gPlayer1Controller->buttonPressed & R_TRIG && gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_ZOOM_CHANGE)
-    {
-        gPuppyCam.zoomSet++;
 
-        if (gPuppyCam.zoomSet >= 3)
-            gPuppyCam.zoomSet = 0;
-
-        gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[gPuppyCam.zoomSet];
-        play_sound(SOUND_MENU_CLICK_CHANGE_VIEW,gGlobalSoundSource);
-    }
-
-    //Handles L button centering.
-    if (gPlayer1Controller->buttonPressed & L_TRIG && gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_YAW_ROTATION &&
-    !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_8DIR) && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR) && !(gPlayer1Controller->buttonDown & U_JPAD))
-    {
-        gPuppyCam.yawTarget = gMarioState->faceAngle[1]+0x8000;
-        play_sound(SOUND_MENU_CLICK_CHANGE_VIEW,gGlobalSoundSource);
-    }
-
-    if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_PITCH_ROTATION)
-    {
-        //Handles vertical inputs.
-        if (gPlayer1Controller->buttonDown & U_CBUTTONS || gPuppyCam.stick2[1] != 0)
-            gPuppyCam.pitchAcceleration -= 50*(gPuppyCam.options.sensitivityY/100.f);
-        else
-        if (gPlayer1Controller->buttonDown & D_CBUTTONS || gPuppyCam.stick2[1] != 0)
-            gPuppyCam.pitchAcceleration += 50*(gPuppyCam.options.sensitivityY/100.f);
-        else
-            gPuppyCam.pitchAcceleration = approach_f32_asymptotic(gPuppyCam.pitchAcceleration, 0, DECELERATION);
-
-        gPuppyCam.pitchAcceleration = CLAMP(gPuppyCam.pitchAcceleration, -100, 100);
-
-        //When Mario's moving, his pitch is clamped pretty aggressively, so this exists so you can shift your view up and down momentarily at an actually usable range, rather than the otherwise baby range.
-        if (gMarioState->action & ACT_FLAG_MOVING && (gPuppyCam.pitch >= 0x3800 || gPuppyCam.pitch <= 0x2000))
-            moveFlagAdd = 8;
-
-        gPuppyCam.pitchTarget += ((4+moveFlagAdd)*gPuppyCam.pitchAcceleration*ivY)*(stickMag*0.01f);
-    }
-
-    //If the camera's in these modes, snap the yaw to prevent desync.
-    if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_8DIR)
-    {
-        if (gPuppyCam.yawTarget % 0x2000)
-        gPuppyCam.yawTarget += 0x2000 - gPuppyCam.yawTarget % 0x2000;
-    }
-    if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR)
-        gPuppyCam.yawTarget %= 0x4000;
-        
 #ifdef MOUSE_ACTIONS
     puppycam_input_mouse();
 #endif
@@ -935,7 +1068,7 @@ static void puppycam_projection(void)
             vec3s_set(targetPos2, gPuppyCam.targetObj2->oPosX, gPuppyCam.targetObj2->oPosY, gPuppyCam.targetObj2->oPosZ);
             targetPos3[0] = (s16)approach_f32_asymptotic(targetPos[0], targetPos2[0], 0.5f);
             targetPos3[1] = (s16)approach_f32_asymptotic(targetPos[1], targetPos2[1], 0.5f);
-            targetPos3[2] = (s16)approach_f32_asymptotic(targetPos[2], targetPos2[2], 0.5f);    
+            targetPos3[2] = (s16)approach_f32_asymptotic(targetPos[2], targetPos2[2], 0.5f);
         }
 
         if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_X_MOVEMENT)
@@ -952,7 +1085,7 @@ static void puppycam_projection(void)
         if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_Z_MOVEMENT)
             gPuppyCam.pos[2] = gPuppyCam.targetObj->oPosZ + LENCOS(LENSIN(gPuppyCam.zoom,pitchTotal),gPuppyCam.yaw) + gPuppyCam.shake[2];
     }
-    
+
     puppycam_wingmario_tower();
 }
 
@@ -1046,7 +1179,7 @@ void puppycam_script_clear(void)
     {
         mem_pool_free(gPuppyMemoryPool, sPuppyVolumeStack[i]);
     }
-    gPuppyVolumeCount = 0; 
+    gPuppyVolumeCount = 0;
 }
 
 //Handles collision detection using ray casting.
@@ -1143,15 +1276,15 @@ static void puppycam_apply(void)
 
     gLakituState.mode = gCamera->mode;
     gLakituState.defMode = gCamera->defMode;
-    
+
     gLakituState.roll = approach_s32(gLakituState.roll, 0, 0x80, 0x80);
-    
+
     if (gMarioState->floor != NULL) {
         sMarioGeometry.currFloor = gMarioState->floor;
         sMarioGeometry.currFloorHeight = gMarioState->floorHeight;
         sMarioGeometry.currFloorType = gMarioState->floor->type;
     }
-    
+
     if (gMarioState->ceil != NULL) {
         sMarioGeometry.currCeil = gMarioState->ceil;
         sMarioGeometry.currCeilHeight = gMarioState->ceilHeight;
@@ -1172,9 +1305,9 @@ void puppycam_hud(void) {
     ogCameraLUT = segmented_to_virtual(&main_hud_camera_lut);
     x = GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(54);
     y = 205;
-    
+
     gSPDisplayList(gDisplayListHead++, dl_hud_img_begin);
-    
+
     // Main HUD Icons
     render_hud_tex_lut(x, y, (*ogCameraLUT)[GLYPH_CAM_CAMERA]);
 
@@ -1183,17 +1316,30 @@ void puppycam_hud(void) {
     } else {
         render_hud_tex_lut(x + 16, y, texture_hud_char_puppycam);
     }
-    
-    // Arrow Icons 
-    switch (gPuppyCam.zoomSet) {
-        case 0:
-            render_hud_small_tex_lut(x + 4, y - 8, (*ogCameraLUT)[GLYPH_CAM_ARROW_UP]);
-            break;
-        case 1:
-            break;
-        case 2:
-            render_hud_small_tex_lut(x + 4, y + 16, (*ogCameraLUT)[GLYPH_CAM_ARROW_DOWN]);
-            break;
+
+    // Arrow Icons
+    if (gPuppyCam.options.inputType != 2) {
+        switch (gPuppyCam.zoomSet) {
+            case 0:
+                render_hud_small_tex_lut(x + 4, y - 8, (*ogCameraLUT)[GLYPH_CAM_ARROW_UP]);
+                break;
+            case 1:
+                break;
+            case 2:
+                render_hud_small_tex_lut(x + 4, y + 16, (*ogCameraLUT)[GLYPH_CAM_ARROW_DOWN]);
+                break;
+        }
+    } else {
+        switch (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_GROUP) {
+            case PUPPYCAM_MODE3_ZOOMED_IN:
+                render_hud_small_tex_lut(x + 4, y - 8, (*ogCameraLUT)[GLYPH_CAM_ARROW_UP]);
+                break;
+            case PUPPYCAM_MODE3_ZOOMED_MED:
+                break;
+            case PUPPYCAM_MODE3_ZOOMED_OUT:
+                render_hud_small_tex_lut(x + 4, y + 16, (*ogCameraLUT)[GLYPH_CAM_ARROW_DOWN]);
+                break;
+        }
     }
 
     gSPDisplayList(gDisplayListHead++, dl_hud_img_end);

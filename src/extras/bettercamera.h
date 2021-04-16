@@ -17,6 +17,12 @@
 #define PUPPYVOLUME_SHAPE_BOX 0x0
 #define PUPPYVOLUME_SHAPE_CYLINDER 0x1
 
+#define PUPPYCAM_MODE3_ZOOMED_IN 0x1
+#define PUPPYCAM_MODE3_ZOOMED_MED 0x2
+#define PUPPYCAM_MODE3_ZOOMED_OUT 0x4
+#define PUPPYCAM_MODE3_ENTER_FIRST_PERSON 0x8
+#define PUPPYCAM_MODE3_GROUP (PUPPYCAM_MODE3_ZOOMED_IN | PUPPYCAM_MODE3_ZOOMED_MED | PUPPYCAM_MODE3_ZOOMED_OUT)
+
 #include "include/command_macros_base.h"
 #include "options_menu.h"
     
@@ -78,7 +84,9 @@ struct gPuppyStruct
     u8 stickN[2]; //This is set when the stick is neutral. It's to prevent rapidfire input.
     u8 enabled;
     s16 swimPitch;
-    
+    u8 mode3Flags;
+    u8 moveFlagAdd;
+
     u8 cutscene; //A boolean that decides whether a cutscene is active
     s32 (*sceneFunc)();
     u8 sceneInput; //A boolean that decides whether the controller updates during the scene.
