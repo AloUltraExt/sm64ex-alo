@@ -82,10 +82,13 @@ struct gPuppyStruct
     u8 opacity; //A value set by collision distance, to fade Mario out if you're too close.
     s8 stick2[2];//The value that's set and read for analogue stick.
     u8 stickN[2]; //This is set when the stick is neutral. It's to prevent rapidfire input.
-    u8 enabled;
-    s16 swimPitch;
-    u8 mode3Flags;
-    u8 moveFlagAdd;
+    u8 enabled; //A boolean that decides whether to use vanilla camera or puppy camera. Of course, anybody with this enabled is obligated to a death sentence :)
+    s16 swimPitch; //Pitch adjustment that's applied when swimming. All pitch adjustment is clamped.
+    s16 edgePitch; //Pitch adjustment that's applied when stood near an edge. All pitch adjustment is clamped.
+    s16 moveZoom; //A small zoom value that's added on top of the regular zoom when moving. It's pretty subtle, but gives the feeling of a bit of speed.
+    u8 mode3Flags; //A flagset for classic mode.
+    u8 moveFlagAdd; //A bit that multiplies movement rate of axes when moving, to centre them faster.
+    s16 targetDist[2];
 
     u8 cutscene; //A boolean that decides whether a cutscene is active
     s32 (*sceneFunc)();
