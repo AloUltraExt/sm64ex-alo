@@ -25,6 +25,8 @@
 #define QOL_FEATURE_KING_BOBOMB_BLINK (0 || QOL_FEATURES)
 /// Changes hanging actions so that you don't need to hold A anymore
 #define QOL_FEATURE_HANGING_ACTION (0 || QOL_FEATURES)
+/// Changes blue coin switch to respawn instead of dissapearing
+#define QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH (0 || QOL_FEATURES)
 
 // --| Quality of life fixes
 /// Fixes bug where the castle trap sound in the entrance of Bowser 1 doesn't play
@@ -79,7 +81,17 @@
 #define QOL_FIX_CUTSCENE_LOOP (0 || QOL_FIXES)
 /// Fixes yoshi "it" typo dialog (english)
 #define QOL_FIX_YOSHI_DIALOG_TYPO (0 || QOL_FIXES)
-/// Fixes missing unused boo dialog (german)
-#define QOL_FIX_MISSING_UNUSED_DIALOG_DE (0 || QOL_FIXES)
+/// Fixes (or rather changes) an oversight if Mario is in a room
+#define QOL_FIX_MARIO_IS_IN_ROOM (0 || QOL_FIXES)
+/// Fixes incorrect yellow sparkle offset positions
+#define QOL_FIX_YELLOW_SPARKLES_OFFSET (0 || QOL_FIXES)
+/// Fixes weird overflow when object is in oob away from steep floor
+#define QOL_FIX_OOB_OBJ_CRASH_OVERFLOW (0 || QOL_FIXES)
+/// Fixes Seaweed missing first anim frame
+#define QOL_FIX_MISSING_SEAWEED_ANIMFRAME (0 || QOL_FIXES)
+/// Fixes BITS tilting pyramid y distance
+#define QOL_FIX_TILTING_PYRAMID_Y_DISTANCE (0 || QOL_FIXES)
+/// Fixes huge score course list in file select
+#define QOL_FIX_FILE_SELECT_SCORE_COURSE_LIST (0 || QOL_FIXES)
 
 #endif // QOL_DEFINES_H

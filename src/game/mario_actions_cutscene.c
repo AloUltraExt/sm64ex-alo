@@ -603,11 +603,21 @@ s32 act_debug_free_move(struct MarioState *m) {
 
 void general_star_dance_handler(struct MarioState *m, s32 isInWater) {
     s32 dialogID;
+#if QOL_FEATURE_PROPER_SHOW_COLLECTABLE
+    s16 i;
+    struct Object *initObj;
+    s16 modelForDances[] = { MODEL_TRANSPARENT_STAR, MODEL_STAR, MODEL_BOWSER_KEY_CUTSCENE, MODEL_BOWSER_KEY };
+#endif
     if (m->actionState == 0) {
         switch (++m->actionTimer) {
             case 1:
                 #if QOL_FEATURE_PROPER_SHOW_COLLECTABLE
-                spawn_object(m->marioObj, MODEL_NONE, bhvCelebrationStar)->header.gfx.sharedChild = m->interactObj->header.gfx.sharedChild;
+                initObj = spawn_object(m->marioObj, MODEL_NONE, bhvCelebrationStar);
+                for (i = 0; i < (s16) ARRAY_COUNT(modelForDances); i++) {
+                    if (gLoadedGraphNodes[modelForDances[i]] == m->interactObj->header.gfx.sharedChild) {
+                        initObj->header.gfx.sharedChild = m->interactObj->header.gfx.sharedChild;
+                    }
+                }
                 #else
                 spawn_object(m->marioObj, MODEL_STAR, bhvCelebrationStar);
                 #endif
@@ -615,7 +625,12 @@ void general_star_dance_handler(struct MarioState *m, s32 isInWater) {
                 if (m->actionArg & 1) {
                     play_course_clear();
                 } else {
-                    if (gCurrLevelNum == LEVEL_BOWSER_1 || gCurrLevelNum == LEVEL_BOWSER_2) {
+                    #if QOL_FEATURE_PROPER_SHOW_COLLECTABLE
+                    if (gMarioState->interactObj->header.gfx.sharedChild == gLoadedGraphNodes[MODEL_BOWSER_KEY])
+                    #else
+                    if (gCurrLevelNum == LEVEL_BOWSER_1 || gCurrLevelNum == LEVEL_BOWSER_2)
+                    #endif
+                    {
                         play_music(SEQ_PLAYER_ENV, SEQUENCE_ARGS(15, SEQ_EVENT_CUTSCENE_COLLECT_KEY), 0);
                     } else {
                         play_music(SEQ_PLAYER_ENV, SEQUENCE_ARGS(15, SEQ_EVENT_CUTSCENE_COLLECT_STAR), 0);

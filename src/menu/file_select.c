@@ -2750,10 +2750,11 @@ void print_score_file_star_score(s8 fileIndex, s16 courseIndex, s16 x, s16 y) {
  * Prints save file score strings that shows when a save file is chosen inside the score menu.
  */
 void print_save_file_scores(s8 fileIndex) {
-#ifdef TARGET_N3DS
-    gDPForceFlush(gDisplayListHead++);
-    gDPSet2d(gDisplayListHead++, 2); // vetoed
-#endif 
+#if QOL_FIX_FILE_SELECT_SCORE_COURSE_LIST
+    s16 courseNum;
+    s8 tensDigPad;
+#endif
+
 #ifndef VERSION_EU
     unsigned char textMario[] = { TEXT_MARIO };
 #ifdef VERSION_JP
@@ -2785,6 +2786,11 @@ void print_save_file_scores(s8 fileIndex) {
 
     textFileLetter[0] = fileIndex + ASCII_TO_DIALOG('A'); // get letter of file selected
 
+#ifdef TARGET_N3DS
+    gDPForceFlush(gDisplayListHead++);
+    gDPSet2d(gDisplayListHead++, 2); // vetoed
+#endif
+
     // Print file name at top
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
@@ -2798,6 +2804,17 @@ void print_save_file_scores(s8 fileIndex) {
     gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
 
+#if QOL_FIX_FILE_SELECT_SCORE_COURSE_LIST
+    for (courseNum = COURSE_MIN; courseNum <= COURSE_STAGES_MAX; courseNum++) {
+        courseNum >= 10 ? (tensDigPad = 0) : (tensDigPad = 1);
+
+        print_menu_generic_string(GFX_DIMENSIONS_FROM_LEFT_EDGE(LEVEL_NAME_X) + (tensDigPad * LEVEL_NUM_PAD), 
+            23 + 12 * courseNum, segmented_to_virtual(levelNameTable[courseNum - 1]));
+
+        print_score_file_star_score(fileIndex, courseNum - 1, GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - STAR_SCORE_X), 23 + 12 * courseNum); 
+        print_score_file_course_coin_score(fileIndex, courseNum - 1, GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - 213), 23 + 12 * courseNum);
+    }
+#else
 //! Huge print list, for loops exist for a reason!
 #define PRINT_COURSE_SCORES(courseIndex, pad) \
     print_menu_generic_string(GFX_DIMENSIONS_FROM_LEFT_EDGE(LEVEL_NAME_X + (pad * LEVEL_NUM_PAD)), 23 + 12 * courseIndex, \
@@ -2824,6 +2841,7 @@ void print_save_file_scores(s8 fileIndex) {
 
 #undef PRINT_COURSE_SCORES
 
+#endif
     // Print castle secret stars text
     print_menu_generic_string(GFX_DIMENSIONS_FROM_LEFT_EDGE(LEVEL_NAME_X + SECRET_STARS_PAD), 23 + 12 * 16,
                               segmented_to_virtual(levelNameTable[25]));

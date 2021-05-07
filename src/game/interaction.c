@@ -1529,13 +1529,16 @@ u32 interact_pole(struct MarioState *m, UNUSED u32 interactType, struct Object *
             m->usedObj = o;
             m->vel[1] = 0.0f;
             m->forwardVel = 0.0f;
-#if QOL_FIX_POLE_BOTTOM_GRAB
-            m->pos[1] = max(o->oPosY, m->pos[1]);
-#endif
 
             marioObj->oMarioPoleUnk108 = 0;
             marioObj->oMarioPoleYawVel = 0;
+#if QOL_FIX_POLE_BOTTOM_GRAB
+            marioObj->oMarioPolePos = (m->pos[1] - o->oPosY) < 0
+                ? -o->hitboxDownOffset
+                : (m->pos[1] - o->oPosY);
+#else
             marioObj->oMarioPolePos = m->pos[1] - o->oPosY;
+#endif
 
             if (lowSpeed) {
                 return set_mario_action(m, ACT_GRAB_POLE_SLOW, 0);
