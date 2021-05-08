@@ -891,7 +891,7 @@ void puppycam_projection_behaviours(void)
     f32 turnRate = 1;
 
     //This will only be executed if Mario's the target. If it's not, it'll reset the
-    if (gPuppyCam.targetObj = gMarioState->marioObj)
+    if (gPuppyCam.targetObj == gMarioState->marioObj)
     {
         if (gPuppyCam.options.turnAggression > 0 && gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_TURN_HELPER && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_8DIR) &&
         gMarioState->vel[1] == 0.0f && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR) && gPuppyCam.options.inputType != 2)
@@ -902,7 +902,7 @@ void puppycam_projection_behaviours(void)
                 if (gMarioState->action & ACT_FLAG_BUTT_OR_STOMACH_SLIDE)
                     turnRate = 4; //If he's sliding, do it 4x as fast.
                 //The deal here, is if Mario's moving, or he's sliding and the camera's within 90 degrees behind him, it'll auto focus behind him, with an intensity based on the camera's centre speed.
-                //It also scales with forward velocity, so it's a gradual effect as he speeds up.   
+                //It also scales with forward velocity, so it's a gradual effect as he speeds up.
                 if ((ABS(gPlayer1Controller->rawStickX) > 20 && !(gMarioState->action & ACT_FLAG_BUTT_OR_STOMACH_SLIDE)) ||
                     (gMarioState->action & ACT_FLAG_BUTT_OR_STOMACH_SLIDE &&
                      (s16)ABS(((gPuppyCam.yaw + 0x8000) % 0xFFFF - 0x8000) - ((gMarioState->faceAngle[1]) % 0xFFFF - 0x8000)) < 0x3000 ))
@@ -1017,7 +1017,7 @@ void puppycam_projection_behaviours(void)
 }
 
 //Support for most vanilla camera actions
-static void puppycam_vanilla_actions(void) 
+static void puppycam_vanilla_actions(void)
 {
     //Adds support for wing mario tower
     if (gMarioState->floor && gMarioState->floor->type == SURFACE_LOOK_UP_WARP
@@ -1027,13 +1027,13 @@ static void puppycam_vanilla_actions(void)
             level_trigger_warp(gMarioState, WARP_OP_UNKNOWN_01);
         }
     }
-    
+
     if (gSecondCameraFocus != NULL) {
         //Adds support for Bowser second camera focus
         if (gCurrLevelNum == LEVEL_BOWSER_1 || gCurrLevelNum == LEVEL_BOWSER_2 || gCurrLevelNum == LEVEL_BOWSER_3) {
             gPuppyCam.targetObj2 = gSecondCameraFocus;
         }
-        
+
         //Adds support for BOB - WF bosses second camera focus
         if (gMarioState->floor && gMarioState->floor->type == SURFACE_BOSS_FIGHT_CAMERA) {
             gPuppyCam.targetObj2 = gSecondCameraFocus;

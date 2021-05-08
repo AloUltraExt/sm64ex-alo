@@ -1,3 +1,4 @@
+#include "macros.h"
 #include "audio_api.h"
 
 static bool audio_null_init(void) {
@@ -12,7 +13,7 @@ static int audio_null_get_desired_buffered(void) {
     return 0;
 }
 
-static void audio_null_play(const uint8_t *buf, size_t len) {
+static void audio_null_play(UNUSED const uint8_t *buf, UNUSED size_t len) {
 }
 
 static void audio_null_shutdown(void) {
