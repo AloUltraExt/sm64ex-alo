@@ -13,7 +13,7 @@ fi
 read -p "Do you wish to apply the patch '$1'? [Y/N] " response
 case "$response" in
     Y|y)
-	patch -p1 < "$1"
+	git apply -p1 --reject < "$1"
 	;;
     N|n)
 	echo 'Quit'
