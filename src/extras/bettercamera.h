@@ -3,6 +3,8 @@
 
 #ifdef BETTERCAMERA
 
+#include "level_commands.h"
+
 #define PUPPYCAM_FLAGS_CUTSCENE    0x0001
 #define PUPPYCAM_FLAGS_SMOOTH      0x0002
 
@@ -31,7 +33,7 @@ extern const u8 optsCameraStr[][32];
 extern struct SubMenu menuCamera;
 
 #define PUPPYVOLUME(x, y, z, length, height, width, yaw, functionptr, anglesptr, addflags, removeflags, flagpersistance, room, shape) \
-    CMD_BBH(0x3D, 0x24, x), \
+    CMD_BBH(LVL_SCRIPT_CMD_PUPPYVOLUME, 0x24, x), \
     CMD_HHHHHH(y, z, length, height, width, yaw), \
     CMD_PTR(functionptr), \
     CMD_PTR(anglesptr), \
