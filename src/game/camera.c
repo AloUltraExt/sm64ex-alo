@@ -3033,7 +3033,7 @@ void update_camera(struct Camera *c) {
     update_camera_hud_status(c);
     if (c->cutscene == 0
 #ifdef BETTERCAMERA
-    && !gPuppyCam.enabled && !(gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON)
+    && !gPuppyCam.enabled && !gCurrDemoInput && !(gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON)
 #endif
     ) {
         // Only process R_TRIG if 'fixed' is not selected in the menu
@@ -3058,7 +3058,7 @@ void update_camera(struct Camera *c) {
     }
 
 #ifdef BETTERCAMERA
-    if (!gPuppyCam.enabled || c->cutscene != 0 || gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON) {
+    if (!gPuppyCam.enabled || gCurrDemoInput || c->cutscene != 0 || gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON) {
 #endif
     // Store previous geometry information
     sMarioGeometry.prevFloorHeight = sMarioGeometry.currFloorHeight;
@@ -3191,7 +3191,7 @@ void update_camera(struct Camera *c) {
     gCheckingSurfaceCollisionsForCamera = FALSE;
     
 #ifdef BETTERCAMERA
-    if (!gPuppyCam.enabled || c->cutscene != 0 || gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON) {
+    if (!gPuppyCam.enabled || gCurrDemoInput || c->cutscene != 0 || gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON) {
 #endif
     if (gCurrLevelNum != LEVEL_CASTLE) {
         // If fixed camera is selected as the alternate mode, then fix the camera as long as the right
@@ -3247,7 +3247,7 @@ void update_camera(struct Camera *c) {
         }
     }
 
-    if (c->cutscene == 0 && gPuppyCam.enabled && !(gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON)) {
+    if (c->cutscene == 0 && gPuppyCam.enabled && !gCurrDemoInput && !(gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON)) {
         // Clear the recent cutscene after 8 frames
         if (gRecentCutscene != 0 && sFramesSinceCutsceneEnded < 8) {
             sFramesSinceCutsceneEnded++;
