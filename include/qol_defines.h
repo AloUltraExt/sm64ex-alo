@@ -27,6 +27,8 @@
 #define QOL_FEATURE_HANGING_ACTION (0 || QOL_FEATURES)
 /// Changes blue coin switch to respawn instead of dissapearing
 #define QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH (0 || QOL_FEATURES)
+/// Changes WF breakable wall interaction by no taking damage and returning safely
+#define QOL_FEATURE_BETTER_WF_BREAKEABLE_WALL (0 || QOL_FEATURES)
 
 // --| Quality of life fixes
 /// Fixes bug where the castle trap sound in the entrance of Bowser 1 doesn't play
