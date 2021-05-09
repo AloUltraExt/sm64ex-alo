@@ -401,6 +401,13 @@ void render_hud_camera_status(void) {
         return;
     }
 
+#ifdef BETTERCAMERA
+    if (gPuppyCam.enabled && !gCurrDemoInput) {
+        puppycam_hud();
+        return;
+    }
+#endif
+
     gSPDisplayList(gDisplayListHead++, dl_hud_img_begin);
     render_hud_tex_lut(x, y, (*cameraLUT)[GLYPH_CAM_CAMERA]);
 
@@ -470,6 +477,7 @@ void render_hud(void) {
             return;
         }
 #endif
+
         if (hudDisplayFlags & HUD_DISPLAY_FLAG_LIVES) {
             render_hud_mario_lives();
         }
@@ -489,15 +497,7 @@ void render_hud(void) {
         if (hudDisplayFlags & HUD_DISPLAY_FLAG_CAMERA_AND_POWER) {
             render_hud_power_meter();
 
-#ifdef BETTERCAMERA
-            if (gPuppyCam.enabled) {
-                puppycam_hud();
-            } else {
-#endif
             render_hud_camera_status();
-#ifdef BETTERCAMERA
-            }
-#endif
         }
 
         if (hudDisplayFlags & HUD_DISPLAY_FLAG_TIMER) {
