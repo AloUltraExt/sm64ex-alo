@@ -63,6 +63,8 @@ DISCORDRPC ?= 0
 RUMBLE_FEEDBACK ?= 0
 # Enable Goddard (Mario Face)
 GODDARD_MFACE ?= 1
+# Enable Command Line Options
+COMMAND_LINE_OPTIONS ?= 1
 # Enable PC Port defines
 PC_PORT_DEFINES ?= 0
 
@@ -637,6 +639,11 @@ ifeq ($(TARGET_PORT_CONSOLE),0)
  # Check for Mouse Option
  ifeq ($(EXT_OPTIONS_MENU),1)
    CUSTOM_C_DEFINES += -DMOUSE_ACTIONS
+ endif
+
+ # Check for Command Line Options
+ ifeq ($(COMMAND_LINE_OPTIONS),1)
+   CUSTOM_C_DEFINES += -DCOMMAND_LINE_OPTIONS
  endif
 
 endif

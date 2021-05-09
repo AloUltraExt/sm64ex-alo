@@ -38,9 +38,6 @@
 /// Fixes bug where the angle speed isn't preserved while in a pole
 #define BUGFIX_PRESERVE_VEL_POLE (0 || VERSION_SH || QOL_FIXES)
 
-// Debug Defines
-// Skip Intro Cutscene (N64)
-#define SKIP_PEACH_CUTSCENE 0
 // Test End Cutscene without beating Bowser 3
 #define DEBUG_TEST_ENDCUTSCENE 0
 // Test Credits without beating Bowser 3 (Recommended to use with TEST_ENDCUTSCENE)

@@ -245,7 +245,11 @@ static unsigned int tokenize_string(char *str, int maxTokens, char **tokens) {
 
 // Gets the config file path and caches it
 const char *configfile_name(void) {
+#ifdef COMMAND_LINE_OPTIONS
     return (gCLIOpts.ConfigFile[0]) ? gCLIOpts.ConfigFile : CONFIGFILE_DEFAULT;
+#else
+    return CONFIGFILE_DEFAULT;
+#endif
 }
 
 // Loads the config file specified by 'filename'

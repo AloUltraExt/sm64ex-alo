@@ -187,9 +187,14 @@ static void on_anim_frame(double time) {
 #endif
 
 void main_func(void) {
-
+#ifdef COMMAND_LINE_OPTIONS
     const char *gamedir = gCLIOpts.GameDir[0] ? gCLIOpts.GameDir : FS_BASEDIR;
     const char *userpath = gCLIOpts.SavePath[0] ? gCLIOpts.SavePath : sys_user_path();
+#else
+    const char *gamedir = FS_BASEDIR;
+    const char *userpath = sys_user_path();
+#endif
+    
     fs_init(sys_ropaths, gamedir, userpath);
 
     #ifndef TARGET_N3DS
@@ -198,7 +203,9 @@ void main_func(void) {
 
     #ifdef TARGET_WII_U
     configfile_save(configfile_name()); // Mount SD write now
-    #else
+    #endif
+    
+    #ifdef COMMAND_LINE_OPTIONS
     if (gCLIOpts.FullScreen == 1)
         configWindow.fullscreen = true;
     else if (gCLIOpts.FullScreen == 2)
@@ -209,11 +216,12 @@ void main_func(void) {
     main_pool_init();
     gGfxAllocOnlyPool = alloc_only_pool_init();
 #else
-    const size_t poolsize = 
-    #ifndef TARGET_PORT_CONSOLE
-    gCLIOpts.PoolSize ? gCLIOpts.PoolSize : 
+
+    #ifdef COMMAND_LINE_OPTIONS
+    const size_t poolsize = gCLIOpts.PoolSize ? gCLIOpts.PoolSize : DEFAULT_POOL_SIZE;
+    #else
+    const size_t poolsize = DEFAULT_POOL_SIZE;
     #endif
-    DEFAULT_POOL_SIZE;
 
     u64 *pool = malloc(poolsize);
     if (!pool) sys_fatal("Could not alloc %u bytes for main pool.\n", poolsize);

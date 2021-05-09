@@ -24,6 +24,8 @@
 
 #include "gfx_dimensions.h"
 
+#include "extras/misc_functions.h"
+
 struct SpawnInfo gPlayerSpawnInfos[1];
 struct GraphNode *D_8033A160[0x100];
 struct Area gAreaData[8];

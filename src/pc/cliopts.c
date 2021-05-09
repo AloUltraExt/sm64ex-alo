@@ -1,3 +1,5 @@
+#ifdef COMMAND_LINE_OPTIONS
+
 #include "cliopts.h"
 #include "configfile.h"
 #include "pc_main.h"
@@ -65,11 +67,15 @@ void parse_cli_opts(int argc, char* argv[]) {
             Cheats.EnableCheats = true;
 #endif
 
+#ifdef USE_SYSTEM_MALLOC
         else if (strcmp(argv[i], "--poolsize") == 0) // Main pool size
             arg_uint("--poolsize", argv[++i], &gCLIOpts.PoolSize);
+#endif
 
+#ifdef WAPI_SDL2
         else if (strcmp(argv[i], "--syncframes") == 0) // VBlanks to wait
             arg_uint("--syncframes", argv[++i], &gCLIOpts.SyncFrames);
+#endif
 
         else if (strcmp(argv[i], "--configfile") == 0 && (i + 1) < argc)
             arg_string("--configfile", argv[++i], gCLIOpts.ConfigFile);
@@ -87,3 +93,5 @@ void parse_cli_opts(int argc, char* argv[]) {
         }
     }
 }
+
+#endif
