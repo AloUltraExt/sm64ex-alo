@@ -1266,6 +1266,9 @@ $(BUILD_DIR)/src/menu/file_select.o:    $(BUILD_DIR)/include/text_strings.h $(LA
 $(BUILD_DIR)/src/menu/star_select.o:    $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
 $(BUILD_DIR)/src/game/ingame_menu.o:    $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
 
+ifeq ($(TARGET_N64),1)
+  $(BUILD_DIR)/src/game/mem_error_screen.o: $(BUILD_DIR)/include/text_strings.h
+endif
 
 ifeq ($(EXT_OPTIONS_MENU),1)
 

@@ -57,10 +57,6 @@
 #include "pc/cliopts.h"
 #endif
 
-// Define Settings
-// Ignores checks and fully defines if intro should be skipped
-#define SKIP_PEACH_CUTSCENE FALSE
-
 // Ifdef hell but it does the job
 u8 should_intro_be_skipped(void) {
 #if SKIP_PEACH_CUTSCENE

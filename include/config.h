@@ -38,6 +38,14 @@
 /// Fixes bug where the angle speed isn't preserved while in a pole
 #define BUGFIX_PRESERVE_VEL_POLE (0 || VERSION_SH || QOL_FIXES)
 
+// Define Settings
+// Enables extended ram on N64
+#define N64_USE_EXTENDED_RAM TRUE
+// Enables crash screen on N64
+#define N64_CRASH_SCREEN TRUE
+// Ignores checks and fully defines if intro should be skipped
+#define SKIP_PEACH_CUTSCENE FALSE
+
 // Test End Cutscene without beating Bowser 3
 #define DEBUG_TEST_ENDCUTSCENE 0
 // Test Credits without beating Bowser 3 (Recommended to use with TEST_ENDCUTSCENE)

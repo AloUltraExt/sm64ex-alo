@@ -11,6 +11,9 @@
 #include "segments.h"
 #include "main.h"
 #include "rumble_init.h"
+#if N64_USE_EXTENDED_RAM
+#include "extras/n64_mem_error_screen.h"
+#endif
 
 /**
  * This entry point is only used in TARGET_N64.
@@ -129,6 +132,12 @@ void setup_mesg_queues(void) {
 void alloc_pool(void) {
     void *start = (void *) SEG_POOL_START;
     void *end = (void *) (SEG_POOL_START + POOL_SIZE);
+
+#if N64_USE_EXTENDED_RAM
+    // Detect memory size
+    if (does_pool_end_lie_out_of_bounds(end))
+        end = (void *) (SEG_POOL_START + POOL_SIZE_4MB);
+#endif
 
     main_pool_init(start, end);
     gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);
@@ -334,7 +343,15 @@ void thread3_main(UNUSED void *arg) {
     create_thread(&gSoundThread, 4, thread4_sound, NULL, gThread4Stack + 0x2000, 20);
     osStartThread(&gSoundThread);
 
+#if N64_USE_EXTENDED_RAM
+    if (!gNotEnoughMemory)
+        create_thread(&gGameLoopThread, 5, thread5_game_loop, NULL, gThread5Stack + 0x2000, 10);
+    else
+        create_thread(&gGameLoopThread, 5, thread5_mem_error_message_loop, NULL, gThread5Stack + 0x2000, 10);
+#else
     create_thread(&gGameLoopThread, 5, thread5_game_loop, NULL, gThread5Stack + 0x2000, 10);
+#endif
+
     osStartThread(&gGameLoopThread);
 
     while (TRUE) {
@@ -437,6 +454,10 @@ void thread1_idle(UNUSED void *arg) {
     osViSetSpecialFeatures(OS_VI_DITHER_FILTER_ON);
     osViSetSpecialFeatures(OS_VI_GAMMA_OFF);
     osCreatePiManager(OS_PRIORITY_PIMGR, &gPIMesgQueue, gPIMesgBuf, ARRAY_COUNT(gPIMesgBuf));
+#if N64_CRASH_SCREEN
+    extern void crash_screen_init(void);
+    crash_screen_init();
+#endif
     create_thread(&gMainThread, 3, thread3_main, NULL, gThread3Stack + 0x2000, 100);
     if (D_8032C650 == 0) {
         osStartThread(&gMainThread);

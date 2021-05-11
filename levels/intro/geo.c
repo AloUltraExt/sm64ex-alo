@@ -15,6 +15,28 @@
 
 #include "levels/intro/header.h"
 
+#ifdef TARGET_N64
+#if N64_USE_EXTENDED_RAM
+const GeoLayout intro_geo_error_screen[] = {
+    GEO_NODE_SCREEN_AREA(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2),
+    GEO_OPEN_NODE(),
+        GEO_ZBUFFER(0),
+        GEO_OPEN_NODE(),
+            GEO_NODE_ORTHO(100),
+            GEO_OPEN_NODE(),
+                GEO_BACKGROUND_COLOR(0x0001),
+            GEO_CLOSE_NODE(),
+        GEO_CLOSE_NODE(),
+        GEO_ZBUFFER(0),
+        GEO_OPEN_NODE(),
+            GEO_ASM(0, geo_display_error_message),
+        GEO_CLOSE_NODE(),
+    GEO_CLOSE_NODE(),
+    GEO_END(),
+};
+#endif
+#endif
+
 // 0x0E0002D0
 const GeoLayout intro_geo_0002D0[] = {
    GEO_NODE_SCREEN_AREA(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2),
