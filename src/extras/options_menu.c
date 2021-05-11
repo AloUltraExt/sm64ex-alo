@@ -72,19 +72,7 @@ static const u8 optMainStr[][32] = {
     { TEXT_EXIT_GAME },
 };
 
-static const u8 optsAudioStr[][32] = {
-    { TEXT_OPT_MVOLUME },    
-    { TEXT_OPT_MUSVOLUME },
-    { TEXT_OPT_SFXVOLUME },
-    { TEXT_OPT_ENVVOLUME },
-};
-
-static const u8 optsSettingsStr[][32] = {
-    { TEXT_OPT_HUD },    
-    { TEXT_OPT_MOUSE },
-};
-
-#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
+#ifndef TARGET_N64
 static const u8 optsVideoStr[][32] = {
     { TEXT_OPT_FSCREEN },
     { TEXT_OPT_TEXFILTER },
@@ -96,7 +84,21 @@ static const u8 optsVideoStr[][32] = {
     { TEXT_OPT_THREEPT },
     { TEXT_OPT_APPLY },
 };
+#endif
 
+static const u8 optsAudioStr[][32] = {
+    { TEXT_OPT_MVOLUME },
+    { TEXT_OPT_MUSVOLUME },
+    { TEXT_OPT_SFXVOLUME },
+    { TEXT_OPT_ENVVOLUME },
+};
+
+static const u8 optsSettingsStr[][32] = {
+    { TEXT_OPT_HUD },
+    { TEXT_OPT_MOUSE },
+};
+
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static const u8 optBindStr[][32] = {
     { TEXT_OPT_UNBOUND },
     { TEXT_OPT_PRESSKEY },
@@ -121,7 +123,9 @@ static const u8 optBindStr[][32] = {
     { TEXT_OPT_DEADZONE },
     { TEXT_OPT_RUMBLE },
 };
+#endif
 
+#ifndef TARGET_N64
 static const u8 *filterChoices[] = {
     optsVideoStr[2],
     optsVideoStr[3],
@@ -242,7 +246,7 @@ static struct Option optsMain[] = {
 
     DEF_OPT_SUBMENU( optMainStr[3], &menuAudio ),
     DEF_OPT_SUBMENU( optMainStr[4], &menuSettings ),
-    
+
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
     DEF_OPT_BUTTON ( optMainStr[5], optmenu_act_exit ),
 #endif
