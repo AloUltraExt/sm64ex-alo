@@ -22,7 +22,6 @@
 
 #ifndef TARGET_N64
 #include "pc/pc_main.h"
-#include "pc/cliopts.h"
 #include "pc/controller/controller_api.h"
 
 #include <stdbool.h>
@@ -37,8 +36,10 @@
 
 u8 optmenu_open = 0;
 
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static u8 optmenu_binding = 0;
 static u8 optmenu_bind_idx = 0;
+#endif
 
 /* Keeps track of how many times the user has pressed L while in the options menu, so cheats can be unlocked */
 static s32 l_counter = 0;
@@ -71,18 +72,6 @@ static const u8 optMainStr[][32] = {
     { TEXT_EXIT_GAME },
 };
 
-static const u8 optsVideoStr[][32] = {
-    { TEXT_OPT_FSCREEN },
-    { TEXT_OPT_TEXFILTER },
-    { TEXT_OPT_NEAREST },
-    { TEXT_OPT_LINEAR },
-    { TEXT_OPT_RESETWND },
-    { TEXT_OPT_VSYNC },
-    { TEXT_OPT_AUTO },
-    { TEXT_OPT_THREEPT },
-    { TEXT_OPT_APPLY },
-};
-
 static const u8 optsAudioStr[][32] = {
     { TEXT_OPT_MVOLUME },    
     { TEXT_OPT_MUSVOLUME },
@@ -93,6 +82,19 @@ static const u8 optsAudioStr[][32] = {
 static const u8 optsSettingsStr[][32] = {
     { TEXT_OPT_HUD },    
     { TEXT_OPT_MOUSE },
+};
+
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
+static const u8 optsVideoStr[][32] = {
+    { TEXT_OPT_FSCREEN },
+    { TEXT_OPT_TEXFILTER },
+    { TEXT_OPT_NEAREST },
+    { TEXT_OPT_LINEAR },
+    { TEXT_OPT_RESETWND },
+    { TEXT_OPT_VSYNC },
+    { TEXT_OPT_AUTO },
+    { TEXT_OPT_THREEPT },
+    { TEXT_OPT_APPLY },
 };
 
 static const u8 optBindStr[][32] = {
@@ -131,6 +133,7 @@ static const u8 *vsyncChoices[] = {
     toggleStr[1],
     optsVideoStr[6],
 };
+#endif
 
 /* button action functions */
 
@@ -138,7 +141,6 @@ static const u8 *vsyncChoices[] = {
 static void optmenu_act_exit(UNUSED struct Option *self, s32 arg) {
     if (!arg) game_exit(); // only exit on A press and not directions
 }
-#endif
 
 static void optvideo_reset_window(UNUSED struct Option *self, s32 arg) {
     if (!arg) {
@@ -151,6 +153,7 @@ static void optvideo_reset_window(UNUSED struct Option *self, s32 arg) {
 static void optvideo_apply(UNUSED struct Option *self, s32 arg) {
     if (!arg) configWindow.settings_changed = true;
 }
+#endif
 
 /* submenu option lists */
 

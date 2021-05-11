@@ -52,16 +52,26 @@
 #include "options_menu.h"
 #include "cheats.h"
 
-#ifndef TARGET_N64
+#ifdef COMMAND_LINE_OPTIONS
 #include "pc/cliopts.h"
 #endif
 
-// Ifdef hell but it does the job
+#define SM64_KEY_COMBO (Z_TRIG | START_BUTTON | L_CBUTTONS | R_CBUTTONS)
+
+s16 gSkipIntroKeyCombo = FALSE;
+
+u8 game_key_combo_triggered(void) {   
+    if (gPlayer1Controller->buttonDown == SM64_KEY_COMBO) {
+        play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+// ifdef hell but it does the job
 u8 should_intro_be_skipped(void) {
-#if SKIP_PEACH_CUTSCENE
-    return TRUE;
-#else
-    return save_file_exists(gCurrSaveFileNum - 1)
+    return save_file_exists(gCurrSaveFileNum - 1) || gSkipIntroKeyCombo == TRUE
 #ifndef TARGET_N64
 #ifdef COMMAND_LINE_OPTIONS
     || gCLIOpts.SkipIntro == TRUE
@@ -69,5 +79,4 @@ u8 should_intro_be_skipped(void) {
     || configSkipIntro == TRUE
 #endif
     ;
-#endif
 }

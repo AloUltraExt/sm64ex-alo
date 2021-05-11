@@ -10,7 +10,11 @@
 
 #include "platform.h"
 #include "configfile.h"
+
+#ifdef COMMAND_LINE_OPTIONS
 #include "cliopts.h"
+#endif
+
 #include "gfx/gfx_screen_config.h"
 #include "gfx/gfx_window_manager_api.h"
 #include "controller/controller_api.h"

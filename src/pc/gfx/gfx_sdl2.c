@@ -32,7 +32,10 @@
 #include "gfx_screen_config.h"
 #include "../pc_main.h"
 #include "../configfile.h"
+
+#ifdef COMMAND_LINE_OPTIONS
 #include "../cliopts.h"
+#endif
 
 #include "src/pc/controller/controller_keyboard.h"
 

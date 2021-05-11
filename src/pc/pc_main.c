@@ -30,7 +30,11 @@
 #include "audio/audio_3ds_threading.h"
 
 #include "pc_main.h"
+
+#ifdef COMMAND_LINE_OPTIONS
 #include "cliopts.h"
+#endif
+
 #include "configfile.h"
 #include "controller/controller_api.h"
 #include "controller/controller_keyboard.h"

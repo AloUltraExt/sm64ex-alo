@@ -15,7 +15,6 @@
 #include "gfx_screen_config.h"
 #include "../pc_main.h"
 #include "../configfile.h"
-#include "../cliopts.h"
 #include "../platform.h"
 
 #include "src/pc/controller/controller_keyboard.h"

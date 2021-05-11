@@ -34,6 +34,8 @@
 #define LANGUAGE_FUNCTION sLanguageMode
 #endif
 
+#include "extras/misc_functions.h"
+
 /**
  * @file file_select.c
  * This file implements how the file select and it's menus render and function.
@@ -3043,7 +3045,13 @@ static void print_file_select_strings(void) {
     
 #ifdef WIDESCREEN
     file_select_fit_screen();
-#endif    
+#endif
+
+#if SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
+    if (game_key_combo_triggered()) {
+        gSkipIntroKeyCombo = TRUE;
+    }
+#endif
 }
 
 /**
@@ -3121,6 +3129,10 @@ s32 lvl_init_menu_values_and_cursor_pos(UNUSED s32 arg, UNUSED s32 unused) {
             sOpenLangSettings = TRUE;
         }
     }
+#endif
+
+#if SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
+    gSkipIntroKeyCombo = FALSE;
 #endif
     //! no return value
 #ifdef AVOID_UB

@@ -43,9 +43,10 @@
 #define N64_USE_EXTENDED_RAM TRUE
 // Enables crash screen on N64
 #define N64_CRASH_SCREEN TRUE
-// Ignores checks and fully defines if intro should be skipped
-#define SKIP_PEACH_CUTSCENE FALSE
-
+// Sets a key combo to skip Peach cutscene
+#define SET_KEY_COMBO_SKIP_PEACH_CUTSCENE TRUE
+// Sets a key combo to get to the debug level select on Mario Head
+#define SET_KEY_COMBO_LEVEL_SELECT TRUE
 // Test End Cutscene without beating Bowser 3
 #define DEBUG_TEST_ENDCUTSCENE 0
 // Test Credits without beating Bowser 3 (Recommended to use with TEST_ENDCUTSCENE)
