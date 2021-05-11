@@ -25,3 +25,7 @@
 #include "white_particle/geo.inc.c"
 #include "wooden_signpost/geo.inc.c"
 #include "tree/geo.inc.c"
+
+#ifdef PORT_MOP_OBJS
+#include "src/extras/mop/geo.inc.c"
+#endif

@@ -112,6 +112,23 @@ const LevelScript level_main_scripts_entry[] = {
     LOAD_MODEL_FROM_GEO(MODEL_EXPLOSION,               explosion_geo),
     LOAD_MODEL_FROM_GEO(MODEL_DIRT_ANIMATION,          dirt_animation_geo),
     LOAD_MODEL_FROM_GEO(MODEL_CARTOON_STAR,            cartoon_star_geo),
+#ifdef PORT_MOP_OBJS
+    LOAD_MODEL_FROM_GEO(MODEL_MOP_NOTEBLOCK,            Noteblock_MOP),
+    LOAD_MODEL_FROM_DL( MODEL_MOP_CHECKPOINT_FLAG,      DL_Checkpoint_Flag_MOP_0x606660, LAYER_OPAQUE),
+    LOAD_MODEL_FROM_GEO(MODEL_MOP_FLIPBLOCK,            FlipBlock_MOP),
+	LOAD_MODEL_FROM_DL( MODEL_MOP_FLIPSWAP_PLATFORM,     DL_Flipswap_Platform_MOP_0x5f9ac0, LAYER_OPAQUE),
+    LOAD_MODEL_FROM_DL( MODEL_MOP_FLIPSWAP_PLATFORM_BORDER,DL_Flipswap_Platform_Border_MOP_0x5f8560, LAYER_OPAQUE),
+	LOAD_MODEL_FROM_GEO(MODEL_MOP_FLIPSWITCH_PANEL,     Flipswitch_Panel_MOP),
+	LOAD_MODEL_FROM_DL( MODEL_MOP_SWITCHBOARD,          DL_Green_Switchboard_MOP_0x5fd8b0, LAYER_OPAQUE),
+    LOAD_MODEL_FROM_DL( MODEL_MOP_SWITCHBOARD_GEARS,    DL_Green_Switchboard_Gears_MOP_0x600460, LAYER_OPAQUE),
+    LOAD_MODEL_FROM_DL( MODEL_MOP_SHRINKPLAT_BORDER,    DL_Shrink_Platform_Border_MOP, LAYER_OPAQUE),
+	LOAD_MODEL_FROM_DL( MODEL_MOP_SPRING,               DL_Spring_MOP_0x301fc98, LAYER_OPAQUE),
+	LOAD_MODEL_FROM_GEO(MODEL_MOP_ROTATING_BLOCK,       Moving_Rotating_Block_MOP),
+	LOAD_MODEL_FROM_GEO(MODEL_MOP_SANDBLOCK,            Sandblock_MOP),
+	LOAD_MODEL_FROM_GEO(MODEL_MOP_SHRINKPLAT,           Shrink_Platform_MOP),
+	LOAD_MODEL_FROM_GEO(MODEL_MOP_SWITCHBLOCK,          Switchblock_MOP),
+	LOAD_MODEL_FROM_GEO(MODEL_MOP_SWITCHBLOCK_SWITCH,   Switchblock_Switch_MOP),
+#endif
     FREE_LEVEL_POOL(),
     CALL(/*arg*/ 0, /*func*/ lvl_init_from_save_file),
     LOOP_BEGIN(),
@@ -192,7 +209,11 @@ const LevelScript script_func_global_1[] = {
     LOAD_MODEL_FROM_GEO(MODEL_HEART,                   heart_geo),
     LOAD_MODEL_FROM_GEO(MODEL_FLYGUY,                  flyguy_geo),
     LOAD_MODEL_FROM_GEO(MODEL_CHUCKYA,                 chuckya_geo),
-    LOAD_MODEL_FROM_GEO(MODEL_TRAJECTORY_MARKER_BALL,      bowling_ball_track_geo),
+    LOAD_MODEL_FROM_GEO(MODEL_TRAJECTORY_MARKER_BALL,  bowling_ball_track_geo),
+#ifdef PORT_MOP_OBJS
+	LOAD_MODEL_FROM_GEO(MODEL_MOP_SHELL_GREEN,         koopa_shell2_geo),
+	LOAD_MODEL_FROM_GEO(MODEL_MOP_SHELL_RED,           koopa_shell3_geo),
+#endif
     RETURN(),
 };
 
@@ -259,6 +280,11 @@ const LevelScript script_func_global_9[] = {
     LOAD_MODEL_FROM_DL( MODEL_CAP_SWITCH_EXCLAMATION,  cap_switch_exclamation_seg5_dl_05002E00, LAYER_ALPHA),
     LOAD_MODEL_FROM_GEO(MODEL_CAP_SWITCH,              cap_switch_geo),
     LOAD_MODEL_FROM_DL( MODEL_CAP_SWITCH_BASE,         cap_switch_base_seg5_dl_05003120,        LAYER_OPAQUE),
+#ifdef PORT_MOP_OBJS
+    LOAD_MODEL_FROM_GEO(MODEL_TRAMPOLINE,              springboard_top_geo),
+    LOAD_MODEL_FROM_GEO(MODEL_TRAMPOLINE_CENTER,       springboard_spring_geo),
+    LOAD_MODEL_FROM_GEO(MODEL_TRAMPOLINE_BASE,         springboard_bottom_geo),
+#endif
     RETURN(),
 };
 

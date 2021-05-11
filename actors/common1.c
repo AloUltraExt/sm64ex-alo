@@ -1,6 +1,7 @@
 #include <PR/ultratypes.h>
 #include <PR/gbi.h>
 
+#include "sm64.h"
 #include "macros.h"
 #include "surface_terrains.h"
 #include "types.h"
@@ -84,3 +85,7 @@ UNUSED static const u64 binid_21 = 21;
 
 #include "tree/model.inc.c"
 UNUSED static const u64 binid_22 = 22;
+
+#ifdef PORT_MOP_OBJS
+#include "src/extras/mop/models.inc.c"
+#endif

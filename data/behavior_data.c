@@ -56,6 +56,10 @@
 #include "make_const_nonconst.h"
 #include "behavior_data.h"
 
+#ifdef PORT_MOP_OBJS
+#include "src/extras/mop/include_code.h"
+#endif
+
 #define BC_B(a) _SHIFTL(a, 24, 8)
 #define BC_BB(a, b) (_SHIFTL(a, 24, 8) | _SHIFTL(b, 16, 8))
 #define BC_BBBB(a, b, c, d) (_SHIFTL(a, 24, 8) | _SHIFTL(b, 16, 8) | _SHIFTL(c, 8, 8) | _SHIFTL(d, 0, 8))
@@ -6175,3 +6179,7 @@ const BehaviorScript bhvIntroScene[] = {
         CALL_NATIVE(bhv_intro_scene_loop),
     END_LOOP(),
 };
+
+#ifdef PORT_MOP_OBJS
+#include "src/extras/mop/behaviors.inc.c"
+#endif

@@ -43,6 +43,9 @@
 #include "spawn_object.h"
 #include "spawn_sound.h"
 #include "rumble_init.h"
+#ifdef MOP_PORT_OBJS
+#include "src/extras/mop/include_code.h"
+#endif
 
 #define o gCurrentObject
 
@@ -182,7 +185,9 @@ Gfx *geo_move_mario_part_from_parent(s32 run, UNUSED struct GraphNode *node, Mat
 #include "behaviors/heave_ho.inc.c"
 #include "behaviors/spawn_star_exit.inc.c"
 #include "behaviors/unused_poundable_platform.inc.c"
+#ifndef PORT_MOP_OBJS
 #include "behaviors/beta_trampoline.inc.c"
+#endif
 #include "behaviors/jumping_box.inc.c"
 #include "behaviors/boo_cage.inc.c"
 
@@ -279,3 +284,7 @@ s32 set_obj_anim_with_accel_and_sound(s16 a0, s16 a1, s32 a2) {
 #include "behaviors/strong_wind_particle.inc.c"
 #include "behaviors/sl_snowman_wind.inc.c"
 #include "behaviors/sl_walking_penguin.inc.c"
+
+#ifdef PORT_MOP_OBJS
+#include "src/extras/mop/code.inc.c"
+#endif

@@ -126,6 +126,7 @@
 #define /*0x19C*/ oDrawingDistance            OBJECT_FIELD_F32(0x45)
 #define /*0x1A0*/ oRoom                       OBJECT_FIELD_S32(0x46)
 // 0x1A4 is unused, possibly related to 0x1A8 in removed macro purposes.
+#define /*0x1A4*/ oUnk1A4                     OBJECT_FIELD_S32(0x47)
 #define /*0x1A8*/ oUnk1A8                     OBJECT_FIELD_U32(0x48)
 // 0x1AC-0x1B2 (0x48-0x4A) are object specific and defined below the common fields.
 #define /*0x1B4*/ oWallAngle                  OBJECT_FIELD_S32(0x4B)
@@ -1025,7 +1026,8 @@
 #define /*0x0F8*/ oTTCChangeDirTimer OBJECT_FIELD_S32(0x1C)
 
 /* Beta Trampoline */
-#define /*0x110*/ oBetaTrampolineMarioOnTrampoline OBJECT_FIELD_S32(0x22)
+#define /*0x110*/ oBetaTrampolineMarioOnTrampoline OBJECT_FIELD_S32(0x1B)
+#define /*0x114*/ oBetaTrampolineAdditiveYVel      OBJECT_FIELD_F32(0x1C)
 
 /* Treasure Chest */
 #define /*0x0F4*/ oTreasureChestUnkF4 OBJECT_FIELD_S32(0x1B)

@@ -6,7 +6,6 @@
 #include "model_ids.h"
 #include "object_fields.h"
 #include "seq_ids.h"
-#include "text_strings.h"
 
 #include "extras/misc_functions.h"
 

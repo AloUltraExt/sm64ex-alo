@@ -543,4 +543,8 @@ extern const BehaviorScript bhvEndBirds2[];
 extern const BehaviorScript bhvIntroScene[];
 extern const BehaviorScript bhvUnusedFakeStar[];
 
+#ifdef PORT_MOP_OBJS
+#include "src/extras/mop/include_behaviors.h"
+#endif
+
 #endif // BEHAVIOR_DATA_H

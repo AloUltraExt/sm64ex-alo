@@ -561,6 +561,26 @@
 #define MODEL_WHITE_PUFF                  0xE0        // white_puff_geo
 #define MODEL_TRAJECTORY_MARKER_BALL          0xE1        // bowling_ball_track_geo - duplicate used in SSL Pyramid small sized and as a track ball
 
+#ifdef PORT_MOP_OBJS
+#define MODEL_MOP_NOTEBLOCK 0x7B
+#define MODEL_MOP_CHECKPOINT_FLAG 0x2E
+#define MODEL_MOP_FLIPBLOCK 0xF0
+#define MODEL_MOP_FLIPSWAP_PLATFORM 0x2F
+#define MODEL_MOP_FLIPSWAP_PLATFORM_BORDER 0x30
+#define MODEL_MOP_FLIPSWITCH_PANEL 0x2A
+#define MODEL_MOP_SWITCHBOARD 0x2B
+#define MODEL_MOP_SWITCHBOARD_GEARS 0x2C
+#define MODEL_MOP_SHRINKPLAT_BORDER 0x97
+#define MODEL_MOP_SPRING 0x92
+#define MODEL_MOP_ROTATING_BLOCK 0x2D
+#define MODEL_MOP_SANDBLOCK 0x99
+#define MODEL_MOP_SHELL_GREEN 0x9B
+#define MODEL_MOP_SHELL_RED 0x9D
+#define MODEL_MOP_SHRINKPLAT 0x98
+#define MODEL_MOP_SWITCHBLOCK 0xF1
+#define MODEL_MOP_SWITCHBLOCK_SWITCH 0xF2
+#endif
+
 // Menu Models (overwrites Level Geometry IDs)
 #define MODEL_MAIN_MENU_MARIO_SAVE_BUTTON         MODEL_LEVEL_GEOMETRY_03   // main_menu_geo_0001D0
 #define MODEL_MAIN_MENU_RED_ERASE_BUTTON          MODEL_LEVEL_GEOMETRY_04   // main_menu_geo_000290

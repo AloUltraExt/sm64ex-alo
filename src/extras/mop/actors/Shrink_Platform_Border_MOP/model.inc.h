@@ -1,0 +1,6 @@
+#ifndef Shrink_Platform_Border_MOP_Shrink_Platform_Border_MOP_model_HEADER_H
+#define Shrink_Platform_Border_MOP_Shrink_Platform_Border_MOP_model_HEADER_H
+#include "types.h"
+extern Vtx VB_Shrink_Platform_Border_MOP[];
+extern const Gfx DL_Shrink_Platform_Border_MOP[];
+#endif

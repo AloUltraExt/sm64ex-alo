@@ -65,6 +65,8 @@ RUMBLE_FEEDBACK ?= 0
 GODDARD_MFACE ?= 1
 # Enable Command Line Options
 COMMAND_LINE_OPTIONS ?= 1
+# Kaze MOP Objects Port, disabled by default
+PORT_MOP_OBJS ?= 0
 # Enable PC Port defines
 PC_PORT_DEFINES ?= 0
 
@@ -682,6 +684,11 @@ ifeq ($(GODDARD_MFACE),1)
   CUSTOM_C_DEFINES += -DGODDARD_MFACE
 endif
 
+# Check for MOP option
+ifeq ($(PORT_MOP_OBJS),1)
+  CUSTOM_C_DEFINES += -DPORT_MOP_OBJS
+endif
+
 # Check for QoL fixes option
 ifeq ($(QOL_FIXES),1)
   CUSTOM_C_DEFINES += -DQOL_FIXES
@@ -1267,7 +1274,7 @@ $(BUILD_DIR)/src/menu/star_select.o:    $(BUILD_DIR)/include/text_strings.h $(LA
 $(BUILD_DIR)/src/game/ingame_menu.o:    $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
 
 ifeq ($(TARGET_N64),1)
-  $(BUILD_DIR)/src/game/mem_error_screen.o: $(BUILD_DIR)/include/text_strings.h
+  $(BUILD_DIR)/src/extras/n64_mem_error_screen.o: $(BUILD_DIR)/include/text_strings.h
 endif
 
 ifeq ($(EXT_OPTIONS_MENU),1)

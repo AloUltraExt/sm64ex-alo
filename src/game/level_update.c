@@ -42,6 +42,8 @@
 #include "extras/bettercamera.h"
 #endif
 
+#include "extras/misc_functions.h"
+
 #define PLAY_MODE_NORMAL 0
 #define PLAY_MODE_PAUSED 2
 #define PLAY_MODE_CHANGE_AREA 3

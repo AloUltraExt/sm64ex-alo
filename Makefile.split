@@ -14,6 +14,10 @@ TEXTURE_DIRS := \
     $(wildcard textures/*/custom/) \
     $(filter %/,$(wildcard actors/*/))
 
+ifeq ($(PORT_MOP_OBJS),1)
+  TEXTURE_DIRS += $(filter %/,$(wildcard src/extras/mop/actors/*/))
+endif
+
 # NOTE: textures assume naming convention "texture.<encoding>.png" generates "texture.<encoding>"
 
 ACTOR_GROUPS := \
@@ -79,6 +83,10 @@ PEACH_DIRS       := bird peach yoshi
 BOWSER_DIRS      := bowser_flame impact_ring yellow_sphere bowser bomb impact_smoke
 MARIO_DIRS       := mario bubble walk_smoke burn_smoke stomp_smoke water_wave sparkle water_splash white_particle_small sparkle_animation
 
+ifeq ($(PORT_MOP_OBJS),1)
+  MOP_DIRS       := Noteblock_MOP FlipBlock_MOP Checkpoint_Flag_MOP Flipswap_Platform_MOP Flipswap_Platform_Border_MOP Flipswitch_Panel_MOP Green_Switchboard_MOP Green_Switchboard_Gears_MOP Moving_Rotating_Block_MOP SandBlock_MOP Shrink_Platform_MOP Shrink_Platform_Border_MOP Spring_MOP Switchblock_MOP Switchblock_Switch_MOP
+endif
+
 # Actor Textures
 AMP_CHUCKYA_TEXTURES            := $(foreach dir,$(AMP_DIRS),        $(wildcard actors/$(dir)/*.png))
 BOBOMBS_BUBBLE_TEXTURES         := $(foreach dir,$(KING_BOBOMB_DIRS),$(wildcard actors/$(dir)/*.png))
@@ -101,6 +109,10 @@ SEA_CREATURES_TEXTURES          := $(foreach dir,$(SEA_DIRS),        $(wildcard 
 SKEETER_FISH_TEXTURES           := $(foreach dir,$(SKEETER_DIRS),    $(wildcard actors/$(dir)/*.png))
 SPINDRIFT_PENGUIN_TEXTURES      := $(foreach dir,$(SPINDRIFT_DIRS),  $(wildcard actors/$(dir)/*.png))
 
+ifeq ($(PORT_MOP_OBJS),1)
+  MORE_OBJECTS_PATCH_TEXTURES   := $(foreach dir,$(MOP_DIRS),  $(wildcard src/extras/mop/actors/$(dir)/*.png))
+endif
+
 # Actor dependencies
 $(BUILD_DIR)/actors/group0.o:  $(MARIO_WATER_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
 $(BUILD_DIR)/actors/group1.o:  $(HOOT_THWOMP_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
@@ -122,6 +134,10 @@ $(BUILD_DIR)/actors/group16.o: $(CHILLYCHIEF_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c
 $(BUILD_DIR)/actors/group17.o: $(MR_I_SWOOP_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
 $(BUILD_DIR)/actors/common0.o: $(AMP_CHUCKYA_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
 $(BUILD_DIR)/actors/common1.o: $(COINS_PIPE_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
+
+ifeq ($(PORT_MOP_OBJS),1)
+  $(BUILD_DIR)/actors/common1.o: $(MORE_OBJECTS_PATCH_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
+endif
 
 # Actor Elf Files
 $(BUILD_DIR)/actors/group0.elf:  SEGMENT_ADDRESS := 0x04000000
