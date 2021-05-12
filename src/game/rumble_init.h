@@ -1,7 +1,7 @@
 #ifndef RUMBLE_INIT_H
 #define RUMBLE_INIT_H
 
-#if defined(VERSION_SH) || defined(RUMBLE_FEEDBACK)
+#ifdef RUMBLE_FEEDBACK
 
 extern s32 gRumblePakTimer;
 
@@ -19,6 +19,6 @@ void create_thread_6(void);
 void rumble_thread_update_vi(void);
 void thread6_rumble_loop(void *a0);
 
-#endif // VERSION_SH
+#endif // RUMBLE_FEEDBACK
 
 #endif // RUMBLE_INIT_H

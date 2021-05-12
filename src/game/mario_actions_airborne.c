@@ -1515,13 +1515,14 @@ s32 act_hold_butt_slide_air(struct MarioState *m) {
 }
 
 s32 act_lava_boost(struct MarioState *m) {
+#ifdef RUMBLE_FEEDBACK
     if (!(m->flags & MARIO_MARIO_SOUND_PLAYED)) {
+#endif
         play_sound_if_no_flag(m, SOUND_MARIO_ON_FIRE, MARIO_MARIO_SOUND_PLAYED);
 #ifdef RUMBLE_FEEDBACK
         queue_rumble_data(5, 80);
-#endif
     }
-    play_sound_if_no_flag(m, SOUND_MARIO_ON_FIRE, MARIO_MARIO_SOUND_PLAYED);
+#endif
 
     if (!(m->input & INPUT_NONZERO_ANALOG)) {
         m->forwardVel = approach_f32(m->forwardVel, 0.0f, 0.35f, 0.35f);

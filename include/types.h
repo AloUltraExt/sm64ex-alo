@@ -30,9 +30,13 @@ struct Controller
   /*0x12*/ u16 buttonPressed;
   /*0x14*/ OSContStatus *statusData;
   /*0x18*/ OSContPad *controllerData;
-  /*0x1C*/ int port;
+#ifdef RUMBLE_FEEDBACK
+  /*0x1C*/ s32 port;
+#endif
+#ifndef TARGET_N64
   /*ext */ s16 extStickX;       // additional (right) stick values
   /*ext */ s16 extStickY;
+#endif
 };
 
 typedef f32 Vec2f[2];

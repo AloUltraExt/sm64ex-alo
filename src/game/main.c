@@ -265,7 +265,7 @@ void handle_vblank(void) {
             start_sptask(M_GFXTASK);
         }
     }
-#ifdef VERSION_SH
+#ifdef RUMBLE_FEEDBACK
     rumble_thread_update_vi();
 #endif
     // Notify the game loop about the vblank.
