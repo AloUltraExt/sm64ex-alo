@@ -551,8 +551,10 @@ void read_controller_inputs(void) {
         if (controller->controllerData != NULL) {
             controller->rawStickX = controller->controllerData->stick_x;
             controller->rawStickY = controller->controllerData->stick_y;
+#ifndef TARGET_N64
             controller->extStickX = controller->controllerData->ext_stick_x;
             controller->extStickY = controller->controllerData->ext_stick_y;
+#endif
             controller->buttonPressed = controller->controllerData->button
                                         & (controller->controllerData->button ^ controller->buttonDown);
             // 0.5x A presses are a good meme
@@ -562,8 +564,10 @@ void read_controller_inputs(void) {
             // otherwise, if the controllerData is NULL, 0 out all of the inputs.
             controller->rawStickX = 0;
             controller->rawStickY = 0;
+#ifndef TARGET_N64
             controller->extStickX = 0;
             controller->extStickY = 0;
+#endif
             controller->buttonPressed = 0;
             controller->buttonDown = 0;
             controller->stickX = 0;
