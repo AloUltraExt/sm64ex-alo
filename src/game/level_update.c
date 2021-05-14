@@ -1206,15 +1206,12 @@ s32 update_level(void) {
     return changeLevel;
 }
 
-#if DEBUG_TEST_ENDCUTSCENE
-#define ACT_IDLE ACT_JUMBO_STAR_CUTSCENE
-#endif
-
 s32 init_level(void) {
+    s32 val4 = 0;
+
 #ifdef TARGET_N3DS
     gDPSetIod(gDisplayListHead++, iodNormal);
 #endif
-    s32 val4 = 0;
 
     set_play_mode(PLAY_MODE_NORMAL);
 
@@ -1339,11 +1336,7 @@ s32 lvl_init_from_save_file(UNUSED s16 arg0, s32 levelNum) {
     select_mario_cam_mode();
     set_yoshi_as_not_dead();
 
-#if DEBUG_TEST_ENDCUTSCENE
-    return LEVEL_BOWSER_3;
-#else
     return levelNum;
-#endif
 }
 
 s32 lvl_set_current_level(UNUSED s16 arg0, s32 levelNum) {

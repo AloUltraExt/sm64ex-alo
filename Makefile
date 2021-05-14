@@ -1214,7 +1214,7 @@ $(BUILD_DIR)/include/text_cheats_strings.h: include/text_cheats_strings.h.in
 	$(V)$(TEXTCONV) charmap.txt $< $@
 endif
 
-ifeq ($(CHEATS_ACTIONS),1)
+ifeq ($(DEBUG),1)
 $(BUILD_DIR)/include/text_debug_strings.h: include/text_debug_strings.h.in
 	$(call print,Encoding:,$<,$@)
 	$(V)$(TEXTCONV) charmap.txt $< $@

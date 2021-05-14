@@ -47,10 +47,6 @@
 #define SET_KEY_COMBO_SKIP_PEACH_CUTSCENE TRUE
 // Sets a key combo to get to the debug level select on Mario Head
 #define SET_KEY_COMBO_LEVEL_SELECT TRUE
-// Test End Cutscene without beating Bowser 3
-#define DEBUG_TEST_ENDCUTSCENE 0
-// Test Credits without beating Bowser 3 (Recommended to use with TEST_ENDCUTSCENE)
-#define DEBUG_TEST_CREDITS 0
 
 // Screen Size Defines
 #define SCREEN_WIDTH 320

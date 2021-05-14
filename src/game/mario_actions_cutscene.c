@@ -1998,11 +1998,7 @@ static s32 jumbo_star_cutscene_flying(struct MarioState *m) {
     vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
     m->particleFlags |= PARTICLE_SPARKLES;
 
-#ifdef DEBUG_TEST_ENDCUTSCENE
-    if (m->actionTimer++ == 1) {
-#else
     if (m->actionTimer++ == 500) {
-#endif
         level_trigger_warp(m, WARP_OP_CREDITS_START);
     }
 
@@ -2585,11 +2581,7 @@ enum {
 static s32 act_end_peach_cutscene(struct MarioState *m) {
     switch (m->actionArg) {
         case END_PEACH_CUTSCENE_MARIO_FALLING:
-#if DEBUG_TEST_CREDITS
-            end_peach_cutscene_fade_out(m);
-#else
             end_peach_cutscene_mario_falling(m);
-#endif
             break;
         case END_PEACH_CUTSCENE_MARIO_LANDING:
             end_peach_cutscene_mario_landing(m);

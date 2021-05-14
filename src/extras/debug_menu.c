@@ -9,15 +9,17 @@
 #include "engine/math_util.h"
 #include "game/camera.h"
 #include "game/debug.h"
+#include "game/game_init.h"
 #include "game/level_update.h"
 #include "game/mario.h"
 #include "game/mario_misc.h"
+#include "game/moving_texture.h"
 #include "game/object_list_processor.h"
+#include "game/object_helpers.h"
 #include "game/print.h"
 #include "game/segment2.h"
 #include "game/save_file.h"
-#include "game/mario_misc.h"
-#include "game/game_init.h"
+#include "game/sound_init.h"
 #include "game/ingame_menu.h"
 
 #include "options_menu.h"
@@ -31,16 +33,21 @@
 extern s8 gShowDebugText;
 extern s8 gDebugLevelSelect;
 extern s8 gShowProfiler;
+extern s16 gMenuMode;
+extern s8 gDialogBoxState;
+extern struct CreditsEntry sCreditsSequence[];
 extern void try_modify_debug_controls(void);
 extern void try_change_debug_page(void);
 extern void debug_update_mario_cap(u16 button, s32 flags, u16 capTimer, u16 capMusic);
-
+extern void set_play_mode(s16 playMode);
 bool gShowComplexDebugText;
 bool gDebugFreeMoveAct;
 bool gDebugCapChanger;
+bool gDebugWarptoPeachEnd;
 
 const u8 optDebugMenuStr[][32] = {
     { TEXT_OPT_DEBUG },
+    { TEXT_OPT_DEBUG_WARP },
 };
 
 static const u8 optsDebugStr[][64] = {
@@ -50,7 +57,53 @@ static const u8 optsDebugStr[][64] = {
     { TEXT_OPT_DEBUG3 },
     { TEXT_OPT_DEBUG4 },
     { TEXT_OPT_DEBUG5 },
+    { TEXT_OPT_DEBUG6 },
 };
+
+static const u8 optsDebugWarpDestStr[][64] = {
+    { TEXT_DEBUG_WARP0 },
+    { TEXT_DEBUG_WARP1 },
+};
+
+static void force_quit_pause_debug(void) {
+    level_set_transition(0, NULL);
+    optmenu_open = 0;
+    gMenuMode = -1;
+    gDialogBoxState = 0;
+    raise_background_noise(1);
+    gCameraMovementFlags &= ~CAM_MOVE_PAUSE_SCREEN;
+    set_play_mode(0);
+}
+
+static void opt_debug_warp_0(UNUSED struct Option *self, s32 arg) {
+    if (!arg) {
+        force_quit_pause_debug();
+        level_trigger_warp(gMarioState, WARP_OP_CREDITS_START);
+    }
+}
+
+static void opt_debug_warp_1(UNUSED struct Option *self, s32 arg) {
+    if (!arg) {
+        force_quit_pause_debug();
+        level_trigger_warp(gMarioState, WARP_OP_CREDITS_NEXT);
+        // ensure medium water level in WDW credits cutscene
+        gPaintingMarioYEntry = 1500.0f; 
+        // Define credits sequence (if not then crashes)
+        if (gCurrCreditsEntry == NULL) {
+            gCurrCreditsEntry = &sCreditsSequence[0];
+        }
+        // Play music (sounds off but it's better than no music)
+        seq_player_unlower_volume(SEQ_PLAYER_LEVEL, 60);
+        play_cutscene_music(SEQUENCE_ARGS(15, SEQ_EVENT_CUTSCENE_CREDITS));
+    }
+}
+
+static struct Option optDebugWarpDest[] = {
+    DEF_OPT_BUTTON( optsDebugWarpDestStr[0], opt_debug_warp_0 ),
+    DEF_OPT_BUTTON( optsDebugWarpDestStr[1], opt_debug_warp_1 ),
+};
+
+static struct SubMenu menuDebugWarpDest = DEF_SUBMENU( optDebugMenuStr[1], optDebugWarpDest );
 
 struct Option optsDebug[] = {
     DEF_OPT_TOGGLE( optsDebugStr[0], (bool *) &gShowDebugText ),
@@ -59,6 +112,7 @@ struct Option optsDebug[] = {
     DEF_OPT_TOGGLE( optsDebugStr[3], &gDebugFreeMoveAct ),
     DEF_OPT_TOGGLE( optsDebugStr[4], &gDebugCapChanger ),
     DEF_OPT_TOGGLE( optsDebugStr[5], (bool *) &gShowProfiler ),
+    DEF_OPT_SUBMENU( optsDebugStr[6], &menuDebugWarpDest ),
 };
 
 struct SubMenu menuDebug = DEF_SUBMENU( optDebugMenuStr[0], optsDebug );
