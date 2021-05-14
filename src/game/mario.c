@@ -34,12 +34,16 @@
 #include "sound_init.h"
 #include "pc/configfile.h"
 
+#ifdef BETTERCAMERA
+#include "extras/bettercamera.h"
+#endif
+
 #ifdef CHEATS_ACTIONS
 #include "extras/cheats.h"
 #endif
 
-#ifdef BETTERCAMERA
-#include "extras/bettercamera.h"
+#ifdef DEBUG
+#include "extras/debug_menu.h"
 #endif
 
 u32 unused80339F10;
@@ -1699,7 +1703,7 @@ void mario_update_hitbox_and_cap_model(struct MarioState *m) {
  * An unused and possibly a debug function. Z + another button input
  * sets Mario with a different cap.
  */
-static void debug_update_mario_cap(u16 button, s32 flags, u16 capTimer, u16 capMusic) {
+void debug_update_mario_cap(u16 button, s32 flags, u16 capTimer, u16 capMusic) {
     // This checks for Z_TRIG instead of Z_DOWN flag
     // (which is also what other debug functions do),
     // so likely debug behavior rather than unused behavior.
@@ -1738,6 +1742,10 @@ s32 execute_mario_action(UNUSED struct Object *o) {
 
 #ifdef CHEATS_ACTIONS
     cheats_mario_action(gMarioState);
+#endif
+
+#ifdef DEBUG
+    set_debug_mario_action(gMarioState);
 #endif
 
     if (gMarioState->action) {

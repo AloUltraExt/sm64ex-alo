@@ -16,22 +16,26 @@
 
 #include "options_menu.h"
 
-#ifdef BETTERCAMERA
-#include "bettercamera.h"
-#endif
-
 #ifndef TARGET_N64
 #include "pc/pc_main.h"
 #include "pc/controller/controller_api.h"
+#include "pc/configfile.h"
 
 #include <stdbool.h>
 #include "../../include/libc/stdlib.h"
 #endif
 
-#include "pc/configfile.h"
+
+#ifdef BETTERCAMERA
+#include "bettercamera.h"
+#endif
 
 #ifdef CHEATS_ACTIONS
 #include "cheats.h"
+#endif
+
+#ifdef DEBUG
+#include "debug_menu.h"
 #endif
 
 u8 optmenu_open = 0;
@@ -247,13 +251,18 @@ static struct Option optsMain[] = {
     DEF_OPT_SUBMENU( optMainStr[3], &menuAudio ),
     DEF_OPT_SUBMENU( optMainStr[4], &menuSettings ),
 
+#ifdef DEBUG
+    // NOTE: always keep cheats the last option here because of the half-assed way I toggle them
+    DEF_OPT_SUBMENU( optDebugMenuStr[0], &menuDebug ),
+#endif
+
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
     DEF_OPT_BUTTON ( optMainStr[5], optmenu_act_exit ),
 #endif
 
 #ifdef CHEATS_ACTIONS
     // NOTE: always keep cheats the last option here because of the half-assed way I toggle them
-    DEF_OPT_SUBMENU( optCheatMenuStr[0], &menuCheats )
+    DEF_OPT_SUBMENU( optCheatMenuStr[0], &menuCheats ),
 #endif
 };
 

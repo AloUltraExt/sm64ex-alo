@@ -1,7 +1,6 @@
 #include <ultra64.h>
 
 #include "sm64.h"
-#include "text_strings.h"
 #include "gfx_dimensions.h"
 #include "engine/math_util.h"
 #include "audio/external.h"

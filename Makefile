@@ -429,16 +429,23 @@ MIPSISET := -mips2
 MIPSBIT := -32
 
 ifeq ($(TARGET_N64),1)
-ifeq ($(COMPILER_N64),gcc)
+  ifeq ($(COMPILER_N64),gcc)
     MIPSISET := -mips3
-    OPT_FLAGS := -O2
-endif
-endif
+    ifeq ($(DEBUG),1)
+      OPT_FLAGS := -O2 -g3
+    else
+      OPT_FLAGS := -O2
+    endif
+  endif
 
-ifeq ($(DEBUG),1)
-  OPT_FLAGS := -g
 else
-  OPT_FLAGS := -O2
+
+  ifeq ($(DEBUG),1)
+    OPT_FLAGS := -g
+  else
+    OPT_FLAGS := -O2
+  endif
+
 endif
 
 # Set BITS (32/64) to compile for
@@ -633,23 +640,28 @@ ifeq ($(TARGET_PORT_CONSOLE),0)
     CUSTOM_C_DEFINES += -DDISCORDRPC
   endif
   
- # Check for PC text save format
- ifeq ($(TEXTSAVES),1)
-   CUSTOM_C_DEFINES += -DTEXTSAVES
- endif
+  # Check for PC text save format
+  ifeq ($(TEXTSAVES),1)
+    CUSTOM_C_DEFINES += -DTEXTSAVES
+  endif
 
- # Check for Mouse Option
- ifeq ($(EXT_OPTIONS_MENU),1)
-   CUSTOM_C_DEFINES += -DMOUSE_ACTIONS
- endif
+  # Check for Mouse Option
+  ifeq ($(EXT_OPTIONS_MENU),1)
+    CUSTOM_C_DEFINES += -DMOUSE_ACTIONS
+  endif
 
- # Check for Command Line Options
- ifeq ($(COMMAND_LINE_OPTIONS),1)
-   CUSTOM_C_DEFINES += -DCOMMAND_LINE_OPTIONS
- endif
+  # Check for Command Line Options
+  ifeq ($(COMMAND_LINE_OPTIONS),1)
+    CUSTOM_C_DEFINES += -DCOMMAND_LINE_OPTIONS
+  endif
 
 endif
 
+endif
+
+# Check for Debug option
+ifeq ($(DEBUG),1)
+  CUSTOM_C_DEFINES += -DDEBUG
 endif
 
 # Check for Puppycam option
@@ -1202,6 +1214,12 @@ $(BUILD_DIR)/include/text_cheats_strings.h: include/text_cheats_strings.h.in
 	$(V)$(TEXTCONV) charmap.txt $< $@
 endif
 
+ifeq ($(CHEATS_ACTIONS),1)
+$(BUILD_DIR)/include/text_debug_strings.h: include/text_debug_strings.h.in
+	$(call print,Encoding:,$<,$@)
+	$(V)$(TEXTCONV) charmap.txt $< $@
+endif
+
 endif
 
 ifeq ($(VERSION),eu)
@@ -1261,6 +1279,7 @@ $(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_menu_strings.h
 ifeq ($(EXT_OPTIONS_MENU),1)
 $(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_options_strings.h
 $(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_cheats_strings.h
+$(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_debug_strings.h
 endif
 
 ifeq ($(VERSION),eu)
@@ -1285,6 +1304,10 @@ ifeq ($(EXT_OPTIONS_MENU),1)
 
   ifeq ($(CHEATS_ACTIONS),1)
     $(BUILD_DIR)/src/extras/cheats.o:       $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
+  endif
+  
+  ifeq ($(DEBUG),1)
+    $(BUILD_DIR)/src/extras/debug_menu.o:   $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
   endif
 
   $(BUILD_DIR)/src/extras/options_menu.o:   $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)

@@ -11,6 +11,10 @@
 #include "text_cheats_strings.h"
 #endif
 
+#ifdef DEBUG
+#include "text_debug_strings.h"
+#endif
+
 /**
  * Global Symbols
  */

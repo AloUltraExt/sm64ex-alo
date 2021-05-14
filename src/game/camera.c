@@ -671,7 +671,7 @@ BAD_RETURN(f32) calc_y_to_curr_floor(f32 *posOff, f32 posMul, f32 posBound, f32 
 #if QOL_FIX_CAMERA_WATER_HEIGHT
     f32 waterHeight = sMarioGeometry.waterHeight;
 #else
-    f32 waterHeight
+    f32 waterHeight;
 #endif
     UNUSED s32 filler;
 
