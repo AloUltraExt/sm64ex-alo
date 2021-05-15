@@ -23,12 +23,7 @@
 #include "game/ingame_menu.h"
 
 #include "options_menu.h"
-
-#ifndef TARGET_N64
-#include <stdbool.h>
-#else
-#define bool int
-#endif
+#include "debug_menu.h"
 
 extern s8 gShowDebugText;
 extern s8 gDebugLevelSelect;
@@ -40,10 +35,8 @@ extern void try_modify_debug_controls(void);
 extern void try_change_debug_page(void);
 extern void debug_update_mario_cap(u16 button, s32 flags, u16 capTimer, u16 capMusic);
 extern void set_play_mode(s16 playMode);
-bool gShowComplexDebugText;
-bool gDebugFreeMoveAct;
-bool gDebugCapChanger;
-bool gDebugWarptoPeachEnd;
+
+struct DebugOptList DebugOpt;
 
 const u8 optDebugMenuStr[][32] = {
     { TEXT_OPT_DEBUG },
@@ -106,19 +99,19 @@ static struct Option optDebugWarpDest[] = {
 static struct SubMenu menuDebugWarpDest = DEF_SUBMENU( optDebugMenuStr[1], optDebugWarpDest );
 
 struct Option optsDebug[] = {
-    DEF_OPT_TOGGLE( optsDebugStr[0], (bool *) &gShowDebugText ),
-    DEF_OPT_TOGGLE( optsDebugStr[1], &gShowComplexDebugText ),
-    DEF_OPT_TOGGLE( optsDebugStr[2], (bool *) &gDebugLevelSelect ),
-    DEF_OPT_TOGGLE( optsDebugStr[3], &gDebugFreeMoveAct ),
-    DEF_OPT_TOGGLE( optsDebugStr[4], &gDebugCapChanger ),
-    DEF_OPT_TOGGLE( optsDebugStr[5], (bool *) &gShowProfiler ),
+    DEF_OPT_TOGGLE( optsDebugStr[0], &DebugOpt.SimpleDbgTxt ),
+    DEF_OPT_TOGGLE( optsDebugStr[1], &DebugOpt.ComplexDbgTxt ),
+    DEF_OPT_TOGGLE( optsDebugStr[2], &DebugOpt.LevelSelect ),
+    DEF_OPT_TOGGLE( optsDebugStr[3], &DebugOpt.FreeMoveAct ),
+    DEF_OPT_TOGGLE( optsDebugStr[4], &DebugOpt.CapChanger ),
+    DEF_OPT_TOGGLE( optsDebugStr[5], &DebugOpt.ShowProfiler ),
     DEF_OPT_SUBMENU( optsDebugStr[6], &menuDebugWarpDest ),
 };
 
 struct SubMenu menuDebug = DEF_SUBMENU( optDebugMenuStr[0], optsDebug );
 
 void activate_complex_debug_display(void) {
-    if (gShowComplexDebugText) {
+    if (DebugOpt.ComplexDbgTxt) {
         gDebugInfoFlags |= 0xFF; // DEBUG_INFO_FLAG_ALL
         try_modify_debug_controls();
         try_change_debug_page();
@@ -140,13 +133,17 @@ void set_debug_cap_changer(void) {
 }
 
 void set_debug_mario_action(struct MarioState *m) {
-    if (gDebugFreeMoveAct) {
+    if (DebugOpt.FreeMoveAct) {
         set_debug_free_move_action(m);
     }
     
-    if (gDebugCapChanger) {
+    if (DebugOpt.CapChanger) {
         set_debug_cap_changer();
     }
+    
+    gShowDebugText = DebugOpt.SimpleDbgTxt;
+    gDebugLevelSelect = DebugOpt.LevelSelect;
+    gShowProfiler = DebugOpt.ShowProfiler;
 }
 
 #endif

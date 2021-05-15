@@ -1277,9 +1277,15 @@ DUMMY != mkdir -p $(ALL_DIRS)
 $(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_menu_strings.h
 
 ifeq ($(EXT_OPTIONS_MENU),1)
-$(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_options_strings.h
-$(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_cheats_strings.h
-$(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_debug_strings.h
+  $(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_options_strings.h
+endif
+
+ifeq ($(CHEATS_ACTIONS),1)
+  $(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_cheats_strings.h
+endif
+
+ifeq ($(DEBUG),1)
+  $(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_debug_strings.h
 endif
 
 ifeq ($(VERSION),eu)

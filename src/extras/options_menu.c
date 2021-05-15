@@ -16,10 +16,11 @@
 
 #include "options_menu.h"
 
+#include "pc/configfile.h"
+
 #ifndef TARGET_N64
 #include "pc/pc_main.h"
 #include "pc/controller/controller_api.h"
-#include "pc/configfile.h"
 
 #include <stdbool.h>
 #include "../../include/libc/stdlib.h"
