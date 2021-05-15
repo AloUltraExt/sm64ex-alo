@@ -4,6 +4,7 @@
  * This enhancement should be used for ROM hacks that require the expansion pak.
  *
  */
+#ifdef TARGET_N64
 
 #include <types.h>
 #include "segments.h"
@@ -15,8 +16,8 @@
 #include "game/segment2.h"
 #include "engine/level_script.h"
 
-#ifdef TARGET_N64
 #if N64_USE_EXTENDED_RAM
+
 // Require 8 MB of RAM, even if the pool doesn't go into extended memory.
 // Change the '8' to whatever MB limit you want.
 // Note: only special emulators allow for RAM sizes above 8 MB.

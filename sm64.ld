@@ -122,6 +122,9 @@ SECTIONS
 #ifdef VERSION_SH
       BUILD_DIR/src/game/rumble_init.o(.text);
 #endif
+#ifndef GODDARD_MFACE
+      BUILD_DIR/src/menu*.o(.text);
+#endif
       BUILD_DIR/src/game/level_update.o(.text);
       BUILD_DIR/src/game/interaction.o(.text);
       BUILD_DIR/src/game/mario.o(.text);
@@ -452,6 +455,9 @@ SECTIONS
 #ifdef VERSION_SH
       BUILD_DIR/src/game/rumble_init.o(.data*);
 #endif
+#ifndef GODDARD_MFACE
+      BUILD_DIR/src/menu*.o(.data*);
+#endif
       BUILD_DIR/src/game/level_update.o(.data*);
       BUILD_DIR/src/game/interaction.o(.data*);
       BUILD_DIR/src/game/mario.o(.data*);
@@ -563,6 +569,9 @@ SECTIONS
       BUILD_DIR/src/game/main.o(.rodata*);
       BUILD_DIR/src/game/game_init.o(.rodata*);
       BUILD_DIR/src/game/sound_init.o(.rodata*);
+#ifndef GODDARD_MFACE
+      BUILD_DIR/src/menu*.o(.rodata*);
+#endif
       BUILD_DIR/src/game/level_update.o(.rodata*);
       BUILD_DIR/src/game/interaction.o(.rodata*);
       BUILD_DIR/src/game/mario.o(.rodata*);
@@ -672,6 +681,9 @@ SECTIONS
       BUILD_DIR/src/game/sound_init.o(.bss*);
 #ifdef VERSION_SH
       BUILD_DIR/src/game/rumble_init.o(.bss*);
+#endif
+#ifndef GODDARD_MFACE
+      BUILD_DIR/src/menu*.o(.bss*);
 #endif
       BUILD_DIR/src/game/level_update.o(.bss*);
       BUILD_DIR/src/game/interaction.o(.bss*);
@@ -914,6 +926,7 @@ SECTIONS
    }
    END_SEG(behavior)
 
+#ifdef GODDARD_MFACE
    /* 0x8016F000 21D7D0-255EC0 [386F0] */
    BEGIN_SEG(goddard, SEG_GODDARD)
    {
@@ -922,7 +935,6 @@ SECTIONS
       BUILD_DIR/src/menu/file_select.o(.text);
       BUILD_DIR/src/menu/star_select.o(.text);
       BUILD_DIR/src/menu*.o(.text);
-#ifdef GODDARD_MFACE
       BUILD_DIR/libgoddard.a:gd_main.o(.text);
       BUILD_DIR/libgoddard.a:gd_memory.o(.text);
       BUILD_DIR/libgoddard.a:sfx.o(.text);
@@ -939,7 +951,7 @@ SECTIONS
       BUILD_DIR/libgoddard.a:shape_helper.o(.text);
       BUILD_DIR/libgoddard.a:renderer.o(.text);
       BUILD_DIR/libgoddard.a:*.o(.text);
-#endif
+
       /* data, rodata, per file */
       BUILD_DIR/src/menu/level_select_menu.o(.data*);
       BUILD_DIR/src/menu/level_select_menu.o(.rodata*);
@@ -950,7 +962,6 @@ SECTIONS
       BUILD_DIR/src/menu/star_select.o(.rodata*);
       BUILD_DIR/src/menu*.o(.data*);
       BUILD_DIR/src/menu*.o(.rodata*);
-#ifdef GODDARD_MFACE
       /* goddard subsystem data */
       BUILD_DIR/libgoddard.a:gd_main.o(.data*);
       BUILD_DIR/libgoddard.a:draw_objects.o(.data*);
@@ -976,7 +987,6 @@ SECTIONS
       BUILD_DIR/libgoddard.a:gd_math.o(.rodata*);
       BUILD_DIR/libgoddard.a:shape_helper.o(.rodata*);
       BUILD_DIR/libgoddard.a:renderer.o(.rodata*);
-#endif
    }
    END_SEG(goddard)
    BEGIN_NOLOAD(goddard)
@@ -985,7 +995,6 @@ SECTIONS
       BUILD_DIR/src/menu/file_select.o(.bss*);
       BUILD_DIR/src/menu/star_select.o(.bss*);
       BUILD_DIR/src/menu*.o(.bss*);
-#ifdef GODDARD_MFACE
       BUILD_DIR/libgoddard.a:gd_main.o(.bss*);
       BUILD_DIR/libgoddard.a:gd_memory.o(.bss*);
       BUILD_DIR/libgoddard.a:sfx.o(.bss*);
@@ -1001,9 +1010,9 @@ SECTIONS
       BUILD_DIR/libgoddard.a:shape_helper.o(.bss*);
       BUILD_DIR/libgoddard.a:renderer.o(.bss*);
       BUILD_DIR/libgoddard.a:*.o(.bss*);
-#endif
    }
    END_NOLOAD(goddard)
+#endif
 
    ASSERT((. <= (SEG_POOL_START + POOL_SIZE)), "Error: extended past pool end.")
 
