@@ -1,13 +1,14 @@
+#ifdef TARGET_N64
+
 #include <ultra64.h>
 #include <stdarg.h>
 #include <string.h>
 
 #include "sm64.h"
 
-#ifdef TARGET_N64
-#if N64_CRASH_SCREEN
-
 #include "lib/src/printf.h"
+
+#if N64_CRASH_SCREEN
 
 u8 gCrashScreenCharToGlyph[128] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -19,7 +20,7 @@ u8 gCrashScreenCharToGlyph[128] = {
 };
 
 u32 gCrashScreenFont[7 * 9 + 1] = {
-    #include "textures/crash_screen/crash_screen_font.ia1.inc.c"
+    #include "textures/crash_screen/crash_screen_font_custom.ia1.inc.c"
 };
 
 

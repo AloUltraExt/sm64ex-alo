@@ -61,7 +61,6 @@
 "textures/ipl3_raw/ipl3_font_47.ia1.png": [13,14,23,{"jp":[4009],"us":[4009],"eu":[4009],"sh":[4009]}],
 "textures/ipl3_raw/ipl3_font_48.ia1.png": [13,14,23,{"jp":[4032],"us":[4032],"eu":[4032],"sh":[4032]}],
 "textures/ipl3_raw/ipl3_font_49.ia1.png": [13,14,23,{"jp":[4055],"us":[4055],"eu":[4055],"sh":[4055]}],
-"textures/crash_screen/crash_screen_font.ia1.png": [32,63,252,{"eu":[757168],"sh":[805680]}],
 "actors/amp/amp_body.rgba16.png": [32,32,2048,{"jp":[2032944,6936],"us":[2040320,6936],"eu":[1912288,6936],"sh":[1888800,6936]}],
 "actors/amp/amp_electricity.rgba16.png": [16,32,1024,{"jp":[2032944,3864],"us":[2040320,3864],"eu":[1912288,3864],"sh":[1888800,3864]}],
 "actors/amp/amp_eyes.rgba16.png": [32,32,2048,{"jp":[2032944,4888],"us":[2040320,4888],"eu":[1912288,4888],"sh":[1888800,4888]}],
