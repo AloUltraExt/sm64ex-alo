@@ -57,39 +57,39 @@ void bhv_move_rotate_loop(void) {
 		o->oAngleVelPitch=0;
 		o->oTimer=0;
 	}
-	Direction = Paths[o->oBehParams2ndByte][o->oUnk1A4];
+	Direction = Paths[o->oBehParams2ndByte][o->oMopMovingRotatingPath];
 	switch(Direction){
 		case ZPLUS:
-			o->oUnk1A8+=1;
+			o->oMopMovingRotatingTimer++;
 			o->oVelZ = PLAT_SPEED;
 			o->oVelX = 0;
 			break;
 		
 		case ZMINUS:
-			o->oUnk1A8+=1;
+			o->oMopMovingRotatingTimer++;
 			o->oVelZ = -PLAT_SPEED;
 			o->oVelX = 0;
 			break;
 		
 		case XPLUS:
-			o->oUnk1A8+=1;
+			o->oMopMovingRotatingTimer++;
 			o->oVelX = PLAT_SPEED;
 			o->oVelZ = 0;
 			break;
 
 		case XMINUS:
-			o->oUnk1A8+=1;
+			o->oMopMovingRotatingTimer++;
 			o->oVelX = -PLAT_SPEED;
 			o->oVelZ = 0;
 			break;
 		
 		default:
-			o->oUnk1A4=0;
+			o->oMopMovingRotatingPath=0;
 			break;
 	}
-	if (o->oUnk1A8==0x3C){
-		o->oUnk1A4+=1;
-		o->oUnk1A8=0;
+	if (o->oMopMovingRotatingTimer == 60){
+		o->oMopMovingRotatingPath++;
+		o->oMopMovingRotatingTimer=0;
 	}
 	cur_obj_rotate_face_angle_using_vel();
 	cur_obj_move_using_vel();

@@ -126,7 +126,6 @@
 #define /*0x19C*/ oDrawingDistance            OBJECT_FIELD_F32(0x45)
 #define /*0x1A0*/ oRoom                       OBJECT_FIELD_S32(0x46)
 // 0x1A4 is unused, possibly related to 0x1A8 in removed macro purposes.
-#define /*0x1A4*/ oUnk1A4                     OBJECT_FIELD_S32(0x47)
 #define /*0x1A8*/ oUnk1A8                     OBJECT_FIELD_U32(0x48)
 // 0x1AC-0x1B2 (0x48-0x4A) are object specific and defined below the common fields.
 #define /*0x1B4*/ oWallAngle                  OBJECT_FIELD_S32(0x4B)
@@ -1161,5 +1160,16 @@
 #define /*0x0F4*/ oYoshiBlinkTimer OBJECT_FIELD_S32(0x1B)
 #define /*0x0FC*/ oYoshiChosenHome OBJECT_FIELD_S32(0x1D)
 #define /*0x100*/ oYoshiTargetYaw  OBJECT_FIELD_S32(0x1E)
+
+#ifdef PORT_MOP_OBJS
+
+/* Moving Rotating */
+#define oMopMovingRotatingPath      OBJECT_FIELD_S32(0x1B)
+#define oMopMovingRotatingTimer     OBJECT_FIELD_S32(0x1D)
+
+/* Green Switchboard */
+#define oMopGreenSwitchboardGear    OBJECT_FIELD_S32(0x1B)
+
+#endif
 
 #endif // OBJECT_FIELDS_H
