@@ -282,8 +282,11 @@ void puppycam_input_zoom(void)
 
 void puppycam_input_centre(void)
 {
+    s32 inputDefault = L_TRIG;
+    if (gPuppyCam.options.inputType == 2)
+        inputDefault = R_TRIG;
     //Handles L button centering.
-    if (gPlayer1Controller->buttonPressed & L_TRIG && gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_YAW_ROTATION &&
+    if (gPlayer1Controller->buttonPressed & inputDefault && gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_YAW_ROTATION &&
     !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_8DIR) && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR) && !(gPlayer1Controller->buttonDown & U_JPAD))
     {
         gPuppyCam.yawTarget = gMarioState->faceAngle[1]+0x8000;
@@ -378,6 +381,7 @@ static void puppycam_input_hold_preset3(f32 ivX)
     if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_IN)
     {
         //f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
+        gPuppyCam.flags &= ~PUPPYCAM_BEHAVIOUR_COLLISION;
 
         //Handles continuous movement as normal, as long as the button's held.
         if (ABS(gPlayer1Controller->rawStickX) > DEADZONE)
@@ -396,7 +400,7 @@ static void puppycam_input_hold_preset3(f32 ivX)
     }
     else
     {
-        if (gPlayer1Controller->buttonPressed & R_TRIG)
+        if (gPlayer1Controller->buttonPressed & L_TRIG)
         {
             if (gPuppyCam.yawTarget % 0x2000)
                 gPuppyCam.yawTarget += 0x2000 - gPuppyCam.yawTarget % 0x2000;
@@ -663,9 +667,9 @@ s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface 
         return FALSE;
 
     // Get surface normal and some other stuff
-    norm[0] = surface->normal.x;
+    norm[0] = 0;
     norm[1] = surface->normal.y;
-    norm[2] = surface->normal.z;
+    norm[2] = 0;
     vec3f_mul(norm,OFFSET);
 
     vec3s_to_vec3f(v0, surface->vertex1);
@@ -1161,9 +1165,6 @@ static void puppycam_script(void)
     struct sPuppyVolume volume;
     void (*func)();
 
-    //Sets this before going through any possible modifications.
-    gPuppyCam.flags = gPuppyCam.intendedFlags;
-
     if (gPuppyVolumeCount == 0 || !gPuppyCam.targetObj)
         return;
 
@@ -1214,21 +1215,21 @@ static void puppycam_script(void)
             }
 
             //Adds and removes behaviour flags, as set.
-            if (volume.flagsRemove != 0)
+            if (volume.flagsRemove)
                 gPuppyCam.flags &= ~volume.flagsRemove;
-            if (volume.flagsAdd != 0)
+            if (volume.flagsAdd)
                 gPuppyCam.flags |= volume.flagsAdd;
             if (volume.flagPersistance == PUPPYCAM_BEHAVIOUR_PERMANENT)
             {
                 //Adds and removes behaviour flags, as set.
-                if (volume.flagsRemove != 0)
+                if (volume.flagsRemove)
                     gPuppyCam.intendedFlags &= ~volume.flagsRemove;
-                if (volume.flagsAdd != 0)
+                if (volume.flagsAdd)
                     gPuppyCam.intendedFlags |= volume.flagsAdd;
             }
 
             //Last and probably least, check if there's a function attached, and call it, if so.
-            if (volume.func != 0)
+            if (volume.func)
             {
                 func = volume.func;
                 (func)();
@@ -1279,6 +1280,8 @@ static void puppycam_collision(void)
 
     find_surface_on_ray(target[0], camdir[0], &surf[0], hitpos[0]);
     find_surface_on_ray(target[1], camdir[1], &surf[1], hitpos[1]);
+    resolve_and_return_wall_collisions(hitpos[0], 0.0f, 50.0f);
+    resolve_and_return_wall_collisions(hitpos[1], 0.0f, 50.0f);
     dist[0] = ((target[0][0] - hitpos[0][0]) * (target[0][0] - hitpos[0][0]) + (target[0][1] - hitpos[0][1]) * (target[0][1] - hitpos[0][1]) + (target[0][2] - hitpos[0][2]) * (target[0][2] - hitpos[0][2]));
     dist[1] = ((target[1][0] - hitpos[1][0]) * (target[1][0] - hitpos[1][0]) + (target[1][1] - hitpos[1][1]) * (target[1][1] - hitpos[1][1]) + (target[1][2] - hitpos[1][2]) * (target[1][2] - hitpos[1][2]));
 
@@ -1417,6 +1420,8 @@ void puppycam_loop(void)
 {
     if (!gPuppyCam.cutscene && sDelayedWarpOp == 0)
     {
+        //Sets this before going through any possible modifications.
+        gPuppyCam.flags = gPuppyCam.intendedFlags;
         puppycam_input_core();
         puppycam_projection();
         puppycam_script();
