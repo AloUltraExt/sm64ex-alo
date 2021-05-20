@@ -496,8 +496,10 @@ void spawn_objects_from_info(UNUSED s32 unused, struct SpawnInfo *spawnInfo) {
             // Record death/collection in the SpawnInfo
             object->respawnInfoType = RESPAWN_INFO_TYPE_32;
             object->respawnInfo = &spawnInfo->behaviorArg;
-
-            if (spawnInfo->behaviorArg & 0x01) {
+            
+            // ex-alo change
+            // adds checks for Mario behavior so beh param 4 can be freely used
+            if (spawnInfo->behaviorArg & 0x01 && object->behavior == segmented_to_virtual(bhvMario)) {
                 gMarioObject = object;
                 geo_make_first_child(&object->header.gfx.node);
             }

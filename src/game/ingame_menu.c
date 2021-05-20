@@ -137,6 +137,9 @@ void create_dl_identity_matrix(void) {
         return;
     }
 
+    // ex-alo change
+    // Originally for GBI_FLOATS but it works on N64 and
+    // its smaller that the original long matrix code
     guMtxIdent(matrix);
 
     gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(matrix), G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);

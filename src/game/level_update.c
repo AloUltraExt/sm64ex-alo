@@ -158,6 +158,8 @@ const char *credits20[] = { "1EXECUTIVE PRODUCER", "HIROSHI YAMAUCHI" };
 // Screen bottom right - Top text
 #define CREDITS_POS_FOUR 3*16
 
+// ex-alo change
+// Changed credits struct so its more understandable
 struct CreditsEntry sCreditsSequence[] = {
     { LEVEL_CASTLE_GROUNDS, 
         1, CREDITS_POS_ONE, 1, -128, { 0, 8000, 0 }, NULL },
@@ -1246,7 +1248,9 @@ s32 init_level(void) {
                 set_mario_action(gMarioState, ACT_IDLE, 0);
             } else if (!gDebugLevelSelect) {
                 if (gMarioState->action != ACT_UNINITIALIZED) {
-                    if (should_intro_be_skipped()) { // save_file_exists(gCurrSaveFileNum - 1)
+                    // ex-alo change
+                    // Checks for peach intro skip
+                    if (should_intro_be_skipped()) {
                         set_mario_action(gMarioState, ACT_IDLE, 0);
                         val4 = 0;
                     } else {
@@ -1318,11 +1322,9 @@ s32 lvl_init_from_save_file(UNUSED s16 arg0, s32 levelNum) {
 #endif
     sWarpDest.type = WARP_TYPE_NOT_WARPING;
     sDelayedWarpOp = WARP_OP_NONE;
-#if 0 // original code
-    gNeverEnteredCastle = !save_file_exists(gCurrSaveFileNum - 1);
-#else
+    // ex-alo change
+    // Checks for peach intro skip
     gNeverEnteredCastle = !should_intro_be_skipped();
-#endif
 
     gCurrLevelNum = levelNum;
     gCurrCourseNum = COURSE_NONE;

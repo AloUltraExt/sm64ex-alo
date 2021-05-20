@@ -877,7 +877,10 @@ u32 interact_warp(struct MarioState *m, UNUSED u32 interactType, struct Object *
             m->interactObj = o;
             m->usedObj = o;
 
-            if (o->collisionData == segmented_to_virtual(warp_pipe_seg3_collision_03009AC8)) {
+            // ex-alo change
+            // replaces check to behavior so collision can be freely replaced
+            // without changing pipe sound effect
+            if (o->behavior == segmented_to_virtual(bhvWarpPipe)) {
                 play_sound(SOUND_MENU_ENTER_PIPE, m->marioObj->header.gfx.cameraToObject);
 #ifdef RUMBLE_FEEDBACK           
                 queue_rumble_data(15, 80);
