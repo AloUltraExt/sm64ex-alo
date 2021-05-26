@@ -15,8 +15,6 @@
 #include "seq_ids.h"
 #include "sm64.h"
 
-#include "extras/misc_functions.h"
-
 #define PRESS_START_DEMO_TIMER 800
 
 #define STUB_LEVEL(textname, _1, _2, _3, _4, _5, _6, _7, _8) textname,
@@ -154,7 +152,7 @@ s32 intro_default(void) {
     print_intro_text();
 
 #if SET_KEY_COMBO_LEVEL_SELECT
-    if (game_key_combo_triggered()) {
+    if (gPlayer1Controller->buttonDown == QUIT_LEVEL_SELECT_COMBO) {
         gDebugLevelSelect = 1;
     } else {
         gDebugLevelSelect = 0;

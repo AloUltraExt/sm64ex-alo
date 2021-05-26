@@ -34,8 +34,6 @@
 #define LANGUAGE_FUNCTION sLanguageMode
 #endif
 
-#include "extras/misc_functions.h"
-
 /**
  * @file file_select.c
  * This file implements how the file select and it's menus render and function.
@@ -2984,6 +2982,10 @@ void file_select_fit_screen(void) {
 }
 #endif
 
+#if SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
+extern s16 gSkipIntroKeyCombo;
+#endif
+
 /**
  * Prints file select strings depending on the menu selected.
  * Also checks if all saves exists and defines text and main menu timers.
@@ -3048,7 +3050,8 @@ static void print_file_select_strings(void) {
 #endif
 
 #if SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
-    if (game_key_combo_triggered()) {
+    if (gPlayer1Controller->buttonDown == (Z_TRIG | START_BUTTON | L_CBUTTONS | R_CBUTTONS)) {
+        play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
         gSkipIntroKeyCombo = TRUE;
     }
 #endif

@@ -38,11 +38,13 @@
 #include "pc/configfile.h"
 #endif
 
+#ifdef COMMAND_LINE_OPTIONS
+#include "pc/cliopts.h"
+#endif
+
 #ifdef BETTERCAMERA
 #include "extras/bettercamera.h"
 #endif
-
-#include "extras/misc_functions.h"
 
 #define PLAY_MODE_NORMAL 0
 #define PLAY_MODE_PAUSED 2
@@ -1177,6 +1179,23 @@ static s32 play_mode_unused(void) {
     }
 
     return 0;
+}
+
+#if SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
+s16 gSkipIntroKeyCombo = FALSE;
+#endif
+
+// ex-alo change
+// Checks for peach intro skip
+u8 should_intro_be_skipped(void) {
+    return save_file_exists(gCurrSaveFileNum - 1) || gSkipIntroKeyCombo == TRUE
+#ifndef TARGET_N64
+#ifdef COMMAND_LINE_OPTIONS
+    || gCLIOpts.SkipIntro == TRUE
+#endif
+    || configSkipIntro == TRUE
+#endif
+    ;
 }
 
 s32 update_level(void) {
