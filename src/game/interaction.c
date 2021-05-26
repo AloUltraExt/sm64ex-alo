@@ -802,6 +802,12 @@ u32 interact_star_or_key(struct MarioState *m, UNUSED u32 interactType, struct O
             starGrabAction = ACT_FALL_AFTER_STAR_GRAB;
         }
 
+#if QOL_FEATURE_STAR_GRAB_NO_FALL_DEATH
+        if (m->floor->type == SURFACE_DEATH_PLANE || m->floor->type == SURFACE_VERTICAL_WIND) {
+            starGrabAction = ACT_STAR_DANCE_WATER;
+        }
+#endif
+
         spawn_object(o, MODEL_NONE, bhvStarKeyCollectionPuffSpawner);
 
         o->oInteractStatus = INT_STATUS_INTERACTED;

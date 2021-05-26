@@ -2676,6 +2676,9 @@ s32 update_c_up(UNUSED struct Camera *c, Vec3f focus, Vec3f pos) {
 void move_mario_head_c_up(UNUSED struct Camera *c) {
     UNUSED s16 pitch = sCUpCameraPitch;
     UNUSED s16 yaw = sModeOffsetYaw;
+#if QOL_FEATURE_C_UP_DS
+    s16 tempYaw;
+#endif
 
     sCUpCameraPitch += (s16)(gPlayer1Controller->stickY * 10.f);
     sModeOffsetYaw -= (s16)(gPlayer1Controller->stickX * 10.f);
@@ -2689,6 +2692,28 @@ void move_mario_head_c_up(UNUSED struct Camera *c) {
         sCUpCameraPitch = -0x2000;
     }
 
+#if QOL_FEATURE_C_UP_DS
+    // Bound the camera yaw to...
+    if (gCameraMovementFlags & CAM_MOVE_C_UP_MODE) {
+        tempYaw = 0x2000; // +-45 degrees
+    } else {
+        tempYaw = 0x4000; // +-90 degrees
+    }
+
+    if (sModeOffsetYaw > tempYaw) {
+        if (gCameraMovementFlags & CAM_MOVE_C_UP_MODE) {
+            gMarioState->faceAngle[1] += 0x200;
+        }
+        sModeOffsetYaw = tempYaw;
+    }
+
+    if (sModeOffsetYaw < -tempYaw) {
+        if (gCameraMovementFlags & CAM_MOVE_C_UP_MODE) {
+            gMarioState->faceAngle[1] -= 0x200;
+        }
+        sModeOffsetYaw = -tempYaw;
+    }
+#else
     // Bound the camera yaw to +-120 degrees
     if (sModeOffsetYaw > 0x5555) {
         sModeOffsetYaw = 0x5555;
@@ -2696,6 +2721,7 @@ void move_mario_head_c_up(UNUSED struct Camera *c) {
     if (sModeOffsetYaw < -0x5555) {
         sModeOffsetYaw = -0x5555;
     }
+#endif
 
     // Give Mario's neck natural-looking constraints
     sMarioCamState->headRotation[0] = sCUpCameraPitch * 3 / 4;

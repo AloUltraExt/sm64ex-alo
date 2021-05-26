@@ -217,6 +217,12 @@ void king_bobomb_act_4(void) { // bobomb been thrown
                 o->oAction = 5; // Go back to top of hill
             o->oSubAction++;
         }
+        
+#if QOL_FIX_KING_BOBOMB_MUSIC_THROWN_OFF
+        if (o->oDistanceToMario > 2000.0f) {
+            stop_background_music(SEQUENCE_ARGS(4, SEQ_EVENT_BOSS));
+        }
+#endif
     }
 }
 
@@ -254,7 +260,12 @@ void king_bobomb_act_5(void) { // bobomb returns home
                 o->oSubAction++;
             break;
         case 3:
-            if (mario_is_far_below_object(1200.0f)) {
+#if QOL_FIX_KING_BOBOMB_MUSIC_THROWN_OFF
+            if (o->oDistanceToMario > 2000.0f)
+#else
+            if (mario_is_far_below_object(1200.0f))
+#endif
+            {
                 o->oAction = 0;
                 stop_background_music(SEQUENCE_ARGS(4, SEQ_EVENT_BOSS));
             }
@@ -324,9 +335,10 @@ void bhv_king_bobomb_loop(void) {
             o->oPosY += 20.0f;
             break;
     }
-    o->oInteractStatus = 0;
 
 #if QOL_FEATURE_KING_BOBOMB_BLINK
     curr_obj_random_blink(&o->oKingBobombBlinkTimer);
 #endif
+
+    o->oInteractStatus = 0;
 }

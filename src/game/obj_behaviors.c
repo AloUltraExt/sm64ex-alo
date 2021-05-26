@@ -182,8 +182,10 @@ s8 turn_obj_away_from_steep_floor(struct Surface *objFloor, f32 floorY, f32 objV
     f32 floor_nX, floor_nY, floor_nZ, objVelXCopy, objVelZCopy, objYawX, objYawZ;
 
     if (objFloor == NULL) {
+#if !QOL_FIX_OOB_OBJ_CRASH_OVERFLOW
         //! (OOB Object Crash) TRUNC overflow exception after 36 minutes
         o->oMoveAngleYaw += 32767.999200000002; /* ¯\_(ツ)_/¯ */
+#endif
         return FALSE;
     }
 

@@ -29,6 +29,10 @@
 #define QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH (0 || QOL_FEATURES)
 /// Changes WF breakable wall interaction by no taking damage and returning safely
 #define QOL_FEATURE_BETTER_WF_BREAKEABLE_WALL (0 || QOL_FEATURES)
+/// Changes C-Up vanilla camera similar to the DS version
+#define QOL_FEATURE_C_UP_DS (0 || QOL_FEATURES)
+/// Adds "new" star grab action that uses floating star dance if on a lethal floor
+#define QOL_FEATURE_STAR_GRAB_NO_FALL_DEATH (0 || QOL_FEATURES)
 
 // --| Quality of life fixes
 /// Fixes bug where the castle trap sound in the entrance of Bowser 1 doesn't play
@@ -95,5 +99,9 @@
 #define QOL_FIX_TILTING_PYRAMID_Y_DISTANCE (0 || QOL_FIXES)
 /// Fixes huge score course list in file select
 #define QOL_FIX_FILE_SELECT_SCORE_COURSE_LIST (0 || QOL_FIXES)
+/// Fixes surface wind detection (avoid grabbed star wind softlock)
+#define QOL_FIX_SURFACE_WIND_DETECTION (0 || QOL_FIXES)
+/// Fixes King Bob-omb music still playing while you go away after throwing him off
+#define QOL_FIX_KING_BOBOMB_MUSIC_THROWN_OFF (0 || QOL_FIXES)
 
 #endif // QOL_DEFINES_H
