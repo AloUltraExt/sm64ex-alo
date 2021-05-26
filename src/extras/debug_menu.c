@@ -1,5 +1,7 @@
 #ifdef DEBUG
 
+#include <stdio.h>
+
 #include "sm64.h"
 #include "text_strings.h"
 #include "gfx_dimensions.h"
@@ -51,6 +53,7 @@ static const u8 optsDebugStr[][64] = {
     { TEXT_OPT_DEBUG4 },
     { TEXT_OPT_DEBUG5 },
     { TEXT_OPT_DEBUG6 },
+    { TEXT_OPT_DEBUG7 },
 };
 
 static const u8 optsDebugWarpDestStr[][64] = {
@@ -80,7 +83,7 @@ static void opt_debug_warp_1(UNUSED struct Option *self, s32 arg) {
         force_quit_pause_debug();
         level_trigger_warp(gMarioState, WARP_OP_CREDITS_NEXT);
         // ensure medium water level in WDW credits cutscene
-        gPaintingMarioYEntry = 1500.0f; 
+        gPaintingMarioYEntry = 1500.0f;
         // Define credits sequence (if not then crashes)
         if (gCurrCreditsEntry == NULL) {
             gCurrCreditsEntry = &sCreditsSequence[0];
@@ -105,7 +108,8 @@ struct Option optsDebug[] = {
     DEF_OPT_TOGGLE( optsDebugStr[3], &DebugOpt.FreeMoveAct ),
     DEF_OPT_TOGGLE( optsDebugStr[4], &DebugOpt.CapChanger ),
     DEF_OPT_TOGGLE( optsDebugStr[5], &DebugOpt.ShowProfiler ),
-    DEF_OPT_SUBMENU( optsDebugStr[6], &menuDebugWarpDest ),
+    DEF_OPT_TOGGLE( optsDebugStr[6], &DebugOpt.ShowFps ),
+    DEF_OPT_SUBMENU( optsDebugStr[7], &menuDebugWarpDest ),
 };
 
 struct SubMenu menuDebug = DEF_SUBMENU( optDebugMenuStr[0], optsDebug );
@@ -132,15 +136,57 @@ void set_debug_cap_changer(void) {
     debug_update_mario_cap(CONT_RIGHT, MARIO_VANISH_CAP, 600, SEQUENCE_ARGS(4, SEQ_EVENT_POWERUP));
 }
 
+#ifdef TARGET_N64
+#include "lib/src/os.h"
+
+#define FRAMETIME_COUNT 30
+
+OSTime frameTimes[FRAMETIME_COUNT];
+u8 curFrameTimeIndex = 0;
+
+void debug_calculate_and_print_fps(void) {
+    f32 fps;
+    OSTime newTime = osGetTime();
+    OSTime oldTime = frameTimes[curFrameTimeIndex];
+    frameTimes[curFrameTimeIndex] = newTime;
+
+    curFrameTimeIndex++;
+    if (curFrameTimeIndex >= FRAMETIME_COUNT)
+        curFrameTimeIndex = 0;
+
+
+    fps = ((f32)FRAMETIME_COUNT * 1000000.0f) / (s32)OS_CYCLES_TO_USEC(newTime - oldTime);
+    
+    print_text_fmt_int(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(22), 184, "FPS %d", (s16) fps);
+}
+#else
+static OSTime gLastOSTime = 0;
+
+void debug_calculate_and_print_fps(void) {
+    f32 fps;
+    f32 multiplier = 1.0f; // change to 2.0f if using 60fps patch
+    OSTime newTime = osGetTime();
+
+    fps = multiplier * 1000000.0f / (newTime - gLastOSTime);
+    
+    print_text_fmt_int(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(22), 184, "FPS %d", (s16) fps);
+    gLastOSTime = newTime;
+}
+#endif
+
 void set_debug_mario_action(struct MarioState *m) {
     if (DebugOpt.FreeMoveAct) {
         set_debug_free_move_action(m);
     }
-    
+
     if (DebugOpt.CapChanger) {
         set_debug_cap_changer();
     }
-    
+
+    if (DebugOpt.ShowFps) {
+        debug_calculate_and_print_fps();
+    }
+
     gShowDebugText = DebugOpt.SimpleDbgTxt;
     gDebugLevelSelect = DebugOpt.LevelSelect;
     gShowProfiler = DebugOpt.ShowProfiler;

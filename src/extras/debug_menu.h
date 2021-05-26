@@ -32,6 +32,7 @@ struct DebugOptList {
     bool    FreeMoveAct;
     bool    CapChanger;
     bool    ShowProfiler;
+    bool    ShowFps;
 };
 
 extern struct DebugOptList DebugOpt;
