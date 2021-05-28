@@ -15,6 +15,7 @@
 #include "game/ingame_menu.h"
 
 #include "options_menu.h"
+#include "draw_utils.h"
 
 #include "pc/configfile.h"
 
@@ -25,7 +26,6 @@
 #include <stdbool.h>
 #include "../../include/libc/stdlib.h"
 #endif
-
 
 #ifdef BETTERCAMERA
 #include "bettercamera.h"
@@ -293,26 +293,6 @@ static void uint_to_hex(u32 num, u8 *dst) {
     dst[4] = DIALOG_CHAR_TERMINATOR;
 }
 
-#define BLANK 0, 0, 0, ENVIRONMENT, 0, 0, 0, ENVIRONMENT
-
-static void optmenu_draw_box(s16 x1, s16 y1, s16 x2, s16 y2, u8 r, u8 g, u8 b, u8 a) {
-    gDPSetCombineMode(gDisplayListHead++, BLANK, BLANK);
-    gDPSetCycleType(gDisplayListHead++, G_CYC_1CYCLE);
-    if (a != 255) {
-        gDPSetRenderMode(gDisplayListHead++, G_RM_XLU_SURF, G_RM_XLU_SURF2);
-    } else {
-        gDPSetRenderMode(gDisplayListHead++, G_RM_OPA_SURF, G_RM_OPA_SURF);
-    }
-    gDPSetEnvColor(gDisplayListHead++, r, g, b, a);
-    gDPFillRectangle(gDisplayListHead++, x1, y1, x2, y2);
-    gDPPipeSync(gDisplayListHead++);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
-    gDPSetCycleType(gDisplayListHead++, G_CYC_1CYCLE);
-    gSPDisplayList(gDisplayListHead++,dl_hud_img_end);
-}
-
-#undef BLANK
-
 static void optmenu_draw_text(s16 x, s16 y, const u8 str[], u8 col) {
     u8 textX = get_str_x_pos_from_center(x, (u8 *) str, 10.0f);
     gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
@@ -332,11 +312,11 @@ static void optmenu_draw_opt_scroll(const struct Option *opt, s16 i) {
     minvar = *opt->uval - opt->scrMin;
 
     // Grey bar
-    optmenu_draw_box(96,111+(32*i)-(currentMenu->scroll*32),224,117+(32*i)-(currentMenu->scroll*32),0x80,0x80,0x80, 0xFF);
+    ext_print_quad_rect(96,111+(32*i)-(currentMenu->scroll*32),224,117+(32*i)-(currentMenu->scroll*32),0x80,0x80,0x80, 0xFF);
     // White bar
-    optmenu_draw_box(96,111+(32*i)-(currentMenu->scroll*32),96+(((f32)minvar/maxvar)*128),117+(32*i)-(currentMenu->scroll*32),0xFF,0xFF,0xFF, 0xFF);
+    ext_print_quad_rect(96,111+(32*i)-(currentMenu->scroll*32),96+(((f32)minvar/maxvar)*128),117+(32*i)-(currentMenu->scroll*32),0xFF,0xFF,0xFF, 0xFF);
     // Red middle bar
-    optmenu_draw_box(94+(((f32)minvar/maxvar)*128),109+(32*i)-(currentMenu->scroll*32),98+(((f32)minvar/maxvar)*128),119+(32*i)-(currentMenu->scroll*32),0xFF,0x0,0x0, 0xFF);
+    ext_print_quad_rect(94+(((f32)minvar/maxvar)*128),109+(32*i)-(currentMenu->scroll*32),98+(((f32)minvar/maxvar)*128),119+(32*i)-(currentMenu->scroll*32),0xFF,0x0,0x0, 0xFF);
     // To fix strings
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
 }
@@ -445,13 +425,13 @@ void optmenu_draw(void) {
     s16 scrollpos;
     f32 sinpos;
 
-    optmenu_draw_box(47, 83, 281, 84, 0x0, 0x0, 0x0, 0xFF);
-    optmenu_draw_box(47, 218, 281, 219, 0x0, 0x0, 0x0, 0xFF);
-    optmenu_draw_box(47, 83, 48, 219, 0x0, 0x0, 0x0, 0xFF);
-    optmenu_draw_box(280, 83, 281, 219, 0x0, 0x0, 0x0, 0xFF);
-    optmenu_draw_box(271, 83, 272, 219, 0x0, 0x0, 0x0, 0xFF);
+    ext_print_quad_rect(47, 83, 281, 84, 0x0, 0x0, 0x0, 0xFF);
+    ext_print_quad_rect(47, 218, 281, 219, 0x0, 0x0, 0x0, 0xFF);
+    ext_print_quad_rect(47, 83, 48, 219, 0x0, 0x0, 0x0, 0xFF);
+    ext_print_quad_rect(280, 83, 281, 219, 0x0, 0x0, 0x0, 0xFF);
+    ext_print_quad_rect(271, 83, 272, 219, 0x0, 0x0, 0x0, 0xFF);
 
-    optmenu_draw_box(48, 84, 272, 218, 0x0, 0x0, 0x0, 0x50);
+    ext_print_quad_rect(48, 84, 272, 218, 0x0, 0x0, 0x0, 0x50);
 
     const s16 labelX = get_hudstr_centered_x(160, currentMenu->label);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
@@ -461,9 +441,9 @@ void optmenu_draw(void) {
 
     if (currentMenu->numOpts > 4)
     {
-        optmenu_draw_box(272, 84, 280, 218, 0x80, 0x80, 0x80, 0xFF);
+        ext_print_quad_rect(272, 84, 280, 218, 0x80, 0x80, 0x80, 0xFF);
         scrollpos = (62)*((f32)currentMenu->scroll/(currentMenu->numOpts-4));
-        optmenu_draw_box(272, 84 + scrollpos,280,156+scrollpos,0xFF,0xFF,0xFF, 0xFF);
+        ext_print_quad_rect(272, 84 + scrollpos,280,156+scrollpos,0xFF,0xFF,0xFF, 0xFF);
     }
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);

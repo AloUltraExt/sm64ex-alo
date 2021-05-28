@@ -18,6 +18,7 @@
 void *memset(void *dest, int c, size_t n);
 int memcmp(const void *str1, const void *str2, size_t n);
 void *memmove(void *str1, const void *str2, size_t n);
+int strcmp(char *s, char *t);
 #endif
 
 // Crash handler enhancement

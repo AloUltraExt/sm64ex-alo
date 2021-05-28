@@ -37,4 +37,14 @@ void *memmove(void *str1, const void *str2, size_t n) {
     bcopy(str2, str1, n);
     return str1;
 }
+
+int strcmp(char *s, char *t) {
+    int i;
+
+    for (i = 0; s[i] == t[i]; i++)
+        if (s[i] == '\0')
+            return 0;
+    return s[i] - t[i];
+}
+
 #endif
