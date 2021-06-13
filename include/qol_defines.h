@@ -103,5 +103,11 @@
 #define QOL_FIX_SURFACE_WIND_DETECTION (0 || QOL_FIXES)
 /// Fixes King Bob-omb music still playing while you go away after throwing him off
 #define QOL_FIX_KING_BOBOMB_MUSIC_THROWN_OFF (0 || QOL_FIXES)
+/// Fixes instant warp offset not working when warping across different areas
+#define QOL_FIX_INSTANT_WARP_OFFSET (0 || QOL_FIXES)
+/// Fixes handle menu scrolling weird index positions
+#define QOL_FIX_MENU_SCROLLING (0 || QOL_FIXES)
+/// Fixes missing surface wind in obj_check_floor_death
+#define QOL_FIX_OBJ_FLOOR_WIND_DEATH (0 || QOL_FIXES)
 
 #endif // QOL_DEFINES_H

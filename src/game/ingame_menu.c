@@ -748,6 +748,14 @@ void handle_menu_scrolling(s8 scrollDirection, s8 *currentIndex, s8 minIndex, s8
     }
 
     if (((index ^ gMenuHoldKeyIndex) & index) == 2) {
+        #if QOL_FIX_MENU_SCROLLING
+        // if <=, this could cause an OOB array access and crash. Use < instead here to fix this.
+        // >= is incorrect and will cause the menu to not function correctly
+        if (currentIndex[0] < maxIndex) {
+            play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
+            currentIndex[0]++;
+        }
+        #else
         if (currentIndex[0] == maxIndex) {
             //! Probably originally a >=, but later replaced with an == and an else statement.
             currentIndex[0] = maxIndex;
@@ -755,15 +763,24 @@ void handle_menu_scrolling(s8 scrollDirection, s8 *currentIndex, s8 minIndex, s8
             play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
             currentIndex[0]++;
         }
+        #endif
     }
 
     if (((index ^ gMenuHoldKeyIndex) & index) == 1) {
+        #if QOL_FIX_MENU_SCROLLING
+        // if >=, this could cause an OOB array access and crash. Use > instead here to fix this.
+        if (currentIndex[0] > minIndex) {
+            play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
+            currentIndex[0]--;
+        }
+        #else
         if (currentIndex[0] == minIndex) {
             // Same applies to here as above
         } else {
             play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
             currentIndex[0]--;
         }
+        #endif
     }
 
     if (gMenuHoldKeyTimer == 10) {

@@ -6,9 +6,9 @@ void bhv_squishable_platform_loop(void) {
 }
 
 void bhv_bitfs_sinking_platform_loop(void) {
-    o->oPosY -=
-        sins(o->oPlatformTimer)
-        * 0.58; //! f32 double conversion error accumulates on Wii VC causing the platform to rise up
+    // ex-alo change
+    // Adds missing "f" symbol to "0.58"
+    o->oPosY -= sins(o->oPlatformTimer) * 0.58f;
     o->oPlatformTimer += 0x100;
 }
 
