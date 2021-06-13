@@ -6,6 +6,8 @@
 #include "game/game_init.h"
 #include "game/segment2.h"
 
+extern u8 gDialogCharWidths[];
+
 const Gfx dl_ex_texrect_block_start[] = {
     gsDPPipeSync(),
     gsDPSetTexturePersp(G_TP_NONE),
@@ -60,7 +62,7 @@ static u8 ascii_to_font_char(u8 c) {
 
 void print_generic_str_ascii(s16 x, s16 y, const char *str) {
     s16 i;
-    u8  buf[40];
+    u8  buf[50];
     for (i = 0; str[i] != 0; i++)
         buf[i] = ascii_to_font_char(str[i]);
     buf[i] = DIALOG_CHAR_TERMINATOR;
@@ -68,22 +70,42 @@ void print_generic_str_ascii(s16 x, s16 y, const char *str) {
     print_generic_string(x, y, buf);
 }
 
+s16 get_string_width_ascii(char *str) {
+    s16 i;
+    u8  buf[50];
+    s16 bufPos = 0;
+    s16 width = 0;
+
+    for (i = 0; str[i] != 0; i++)
+        buf[i] = ascii_to_font_char(str[i]);
+    buf[i] = DIALOG_CHAR_TERMINATOR;
+
+    while (buf[bufPos] != DIALOG_CHAR_TERMINATOR) {
+        width += gDialogCharWidths[buf[bufPos]];
+        bufPos++;
+    }
+
+    return width;
+}
+
 static s8 ext_f3d_res_to_mask(s16 res) {
-    if(res == 2)    return 1;
-    if(res == 4)    return 2;
-    if(res == 8)    return 3;
-    if(res == 16)   return 4;
-    if(res == 32)   return 5;
-    if(res == 64)   return 6;
-    if(res == 128)  return 7;
-    if(res == 256)  return 8;
-    if(res == 512)  return 9;
-    if(res == 1024) return 10;
+    if(res >= 2)    return 1;
+    if(res >= 4)    return 2;
+    if(res >= 8)    return 3;
+    if(res >= 16)   return 4;
+    if(res >= 32)   return 5;
+    if(res >= 64)   return 6;
+    if(res >= 128)  return 7;
+    if(res >= 256)  return 8;
+    if(res >= 512)  return 9;
+    if(res >= 1024) return 10;
     
     return 0;
 }
 
 void ext_print_generic_string_ascii_adv(s16 x, s16 y, char *text, u8 r, u8 g, u8 b, u8 a, s8 dropShadow) {
+    create_dl_ortho_matrix();
+
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
     if (dropShadow) {
         gDPSetEnvColor(gDisplayListHead++, 10, 10, 10, 255);
