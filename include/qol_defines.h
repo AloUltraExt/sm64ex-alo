@@ -51,10 +51,6 @@
 #define QOL_FIX_KOOPA_SHORTS_COLORS (0 || QOL_FIXES)
 /// Fixes missing sounds in key exit cutscene caused by missing "breaks" in code
 #define QOL_FIX_MISSING_SOUNDS_KEY_EXIT (0 || QOL_FIXES)
-/// Corrects UV value of the US IA font, slightly noticeable in Non-N64 targets
-#define QOL_FIX_US_FONT_TEXTURE_UV (0 || QOL_FIXES)
-/// Corrects hud texture fillter, only noticeable on N64 old plugins
-#define QOL_FIX_HUD_TEXTURE_FILTER (0 || QOL_FIXES)
 /// Fixes fake pole grab on the bottom of it, allowing to be properly grabbed
 #define QOL_FIX_POLE_BOTTOM_GRAB (0 || QOL_FIXES)
 /// Fixes an oddly defined interaction sub type in penguin mother behavior 

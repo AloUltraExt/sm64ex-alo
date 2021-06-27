@@ -2091,19 +2091,10 @@ const Gfx dl_hud_img_begin[] = {
     gsDPSetTexturePersp(G_TP_NONE),
     gsDPSetAlphaCompare(G_AC_THRESHOLD),
     gsDPSetBlendColor(255, 255, 255, 255),
-#if QOL_FIX_HUD_TEXTURE_FILTER
+    // ex-alo change
+    // Forces HUD Filter
     gsDPSetRenderMode(G_RM_NOOP, G_RM_NOOP2),
     gsDPSetTextureFilter(G_TF_POINT),
-#else
-#if defined(VERSION_EU) || defined(VERSION_SH)
-    gsDPSetRenderMode(G_RM_NOOP, G_RM_NOOP2),
-#endif
-#ifdef VERSION_EU
-    gsDPSetTextureFilter(G_TF_POINT),
-#elif defined(VERSION_JP) || defined(VERSION_US)
-    gsDPSetRenderMode(G_RM_AA_XLU_SURF, G_RM_AA_XLU_SURF2),
-#endif
-#endif
     gsSPEndDisplayList(),
 };
 
@@ -2123,18 +2114,10 @@ const Gfx dl_hud_img_end[] = {
     gsDPSetTexturePersp(G_TP_PERSP),
     gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
     gsDPSetAlphaCompare(G_AC_NONE),
-#if QOL_FIX_HUD_TEXTURE_FILTER
+    // ex-alo change
+    // Forces HUD Filter
     gsDPSetTextureFilter(G_TF_BILERP),
     gsDPSetCycleType(G_CYC_1CYCLE),
-#else
-#ifdef VERSION_EU
-    gsDPSetTextureFilter(G_TF_BILERP),
-#endif
-    gsDPSetCycleType(G_CYC_1CYCLE),
-#if defined(VERSION_JP) || defined(VERSION_US)
-    gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_OFF),
-#endif
-#endif
     gsSPEndDisplayList(),
 };
 
@@ -2190,12 +2173,6 @@ const Gfx dl_draw_text_bg_box[] = {
     gsSPEndDisplayList(),
 };
 
-#if QOL_FIX_US_FONT_TEXTURE_UV
-#define UV 512
-#else
-#define UV 480
-#endif
-
 #ifndef VERSION_EU
 // 0x0200EE28 - 0x0200EE68
 static const Vtx vertex_ia8_char[] = {
@@ -2205,10 +2182,12 @@ static const Vtx vertex_ia8_char[] = {
     {{{     8,     16,      0}, 0, {   512,      0}, {0xff, 0xff, 0xff, 0xff}}},
     {{{     0,     16,      0}, 0, {     0,      0}, {0xff, 0xff, 0xff, 0xff}}},
 #else
+    // ex-alo change
+    // Corrects IA font UV 
     {{{     0,      0,      0}, 0, {     0,    256}, {0xff, 0xff, 0xff, 0xff}}},
     {{{     8,      0,      0}, 0, {     0,      0}, {0xff, 0xff, 0xff, 0xff}}},
-    {{{     8,     16,      0}, 0, {    UV,      0}, {0xff, 0xff, 0xff, 0xff}}},
-    {{{     0,     16,      0}, 0, {    UV,    256}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{     8,     16,      0}, 0, {   512,      0}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{     0,     16,      0}, 0, {   512,    256}, {0xff, 0xff, 0xff, 0xff}}},
 #endif
 };
 // !EU
