@@ -76,7 +76,7 @@ static void klepto_anim_dive(void) {
 void bhv_klepto_init(void) {
     if (o->oBehParams2ndByte != 0) {
 #if QOL_FEATURE_KLEPTO_HOLDING_BLUE_STAR
-        if (save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_SSL) & 1) {
+        if (save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_SSL - 1) & 1) {
             o->oAnimState = KLEPTO_ANIM_STATE_HOLDING_BLUE_STAR;
         } else {
             o->oAnimState = KLEPTO_ANIM_STATE_HOLDING_STAR;

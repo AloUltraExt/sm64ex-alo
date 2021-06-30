@@ -157,11 +157,11 @@ s32 write_text_save(s32 fileIndex) {
             format = "%05d";
         } else if (i == 3) {
             // Process Princess's Secret Slide
-            stars = save_file_get_star_flags(fileIndex, 18);
+            stars = save_file_get_star_flags(fileIndex, COURSE_PSS - 1);
             format = "%02d";
         } else {
             // Process bonus courses
-            stars = save_file_get_star_flags(fileIndex, i+15);
+            stars = save_file_get_star_flags(fileIndex, i + COURSE_STAGES_MAX);
             format = "%d";
         }
 
