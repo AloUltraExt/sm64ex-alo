@@ -144,8 +144,12 @@ void bhv_hidden_red_coin_star_init(void) {
     s16 sp36;
     struct Object *sp30;
 
+#if !QOL_FIX_RED_COIN_STAR_MARKER_POSITION
     if (gCurrCourseNum != COURSE_JRB)
         spawn_object(o, MODEL_TRANSPARENT_STAR, bhvRedCoinStarMarker);
+#else
+    spawn_object(o, MODEL_TRANSPARENT_STAR, bhvRedCoinStarMarker);
+#endif
 
     sp36 = count_objects_with_behavior(bhvRedCoin);
     if (sp36 == 0) {
@@ -159,6 +163,13 @@ void bhv_hidden_red_coin_star_init(void) {
 }
 
 void bhv_hidden_red_coin_star_loop(void) {
+#if QOL_FIX_RED_COIN_STAR_MARKER_POSITION
+    struct Object *starMarker = cur_obj_nearest_object_with_behavior(bhvRedCoinStarMarker);
+    if (starMarker != NULL && ((o->oPosY - starMarker->oPosY) > 2000.0f)) {
+        obj_mark_for_deletion(starMarker);
+    }
+#endif
+
     gRedCoinsCollected = o->oHiddenStarTriggerCounter;
     switch (o->oAction) {
         case 0:

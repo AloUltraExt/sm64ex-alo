@@ -105,5 +105,11 @@
 #define QOL_FIX_MENU_SCROLLING (0 || QOL_FIXES)
 /// Fixes missing surface wind in obj_check_floor_death
 #define QOL_FIX_OBJ_FLOOR_WIND_DEATH (0 || QOL_FIXES)
+/// Fixes hardcoded snow tree leaf particles
+#define QOL_FIX_HARDCODED_TREE_PARTICLES (0 || QOL_FIXES)
+/// Fixes red coin star marker floor position if more than 2000 units
+#define QOL_FIX_RED_COIN_STAR_MARKER_POSITION (0 || QOL_FIXES)
+/// Fixes monty mole hide in hole check
+#define QOL_FIX_HIDE_IN_HOLE_NULL_CHECK (0 || QOL_FIXES)
 
 #endif // QOL_DEFINES_H

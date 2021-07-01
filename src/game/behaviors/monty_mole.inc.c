@@ -266,10 +266,18 @@ static void monty_mole_act_jump_into_hole(void) {
  * Become intangible and enter the select hole action.
  */
 static void monty_mole_hide_in_hole(void) {
+#if QOL_FIX_HIDE_IN_HOLE_NULL_CHECK
+    if (o->oMontyMoleCurrentHole != NULL) {
+        o->oMontyMoleCurrentHole->oMontyMoleHoleCooldown = 30;
+    }
+#else
     o->oMontyMoleCurrentHole->oMontyMoleHoleCooldown = 30;
+#endif
+
     o->oAction = MONTY_MOLE_ACT_SELECT_HOLE;
     o->oVelY = 0.0f;
 
+#if !QOL_FIX_HIDE_IN_HOLE_NULL_CHECK
     //! Even though the object becomes intangible here, it is still possible
     //  for a bob-omb to interact with it later in the frame (since bob-ombs
     //  come after monty moles in processing order).
@@ -277,6 +285,7 @@ static void monty_mole_hide_in_hole(void) {
     //  action. If no hole is available (e.g. because mario is too far away),
     //  the game will crash because of the line above that accesses
     //  oMontyMoleCurrentHole.
+#endif
     cur_obj_become_intangible();
 }
 
