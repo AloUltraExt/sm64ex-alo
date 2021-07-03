@@ -51,6 +51,7 @@ static bool joy_buttons[MAX_JOYBUTTONS] = { false };
 static u32 mouse_buttons = 0;
 static u32 last_mouse = VK_INVALID;
 static u32 last_joybutton = VK_INVALID;
+bool last_cursor_status = false;
 
 static inline void controller_add_binds(const u32 mask, const u32 *btns) {
     for (u32 i = 0; i < MAX_BINDS; ++i) {
@@ -147,21 +148,19 @@ static inline void update_button(const int i, const bool new) {
 }
 
 #ifdef MOUSE_ACTIONS
+
+void set_cursor_visibility(bool newVisibility ){
+    if(last_cursor_status != newVisibility){
+        SDL_ShowCursor( newVisibility ? SDL_DISABLE : SDL_ENABLE );
+        last_cursor_status = newVisibility;
+    }
+}
+
 static void mouse_control_handler(OSContPad *pad) {
     u32 mouse;
 
     if (configMouse) {
-        if (gMouseHasFreeControl) {
-            SDL_ShowCursor(SDL_DISABLE);
-        } else {
-            SDL_ShowCursor(SDL_ENABLE);
-        }
-
-        if (configWindow.fullscreen) {
-            SDL_ShowCursor(SDL_DISABLE);
-        } else {
-            SDL_ShowCursor(SDL_ENABLE);
-        }
+        set_cursor_visibility(gMouseHasFreeControl || configWindow.fullscreen);
 
         if (gMouseHasCenterControl && sCurrPlayMode != 2) {
             SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -171,7 +170,7 @@ static void mouse_control_handler(OSContPad *pad) {
             mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
         }
     } else {
-        SDL_ShowCursor(SDL_ENABLE);
+        set_cursor_visibility(false);
         SDL_SetRelativeMouseMode(SDL_FALSE);
         mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
     }
@@ -319,7 +318,7 @@ static u32 controller_sdl_rawkey(void) {
         last_joybutton = VK_INVALID;
         return ret;
     }
-    
+
     if (configMouse) {
         for (int i = 0; i < MAX_MOUSEBUTTONS; ++i) {
             if (last_mouse & SDL_BUTTON(i)) {

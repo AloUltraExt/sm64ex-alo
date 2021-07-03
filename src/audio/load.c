@@ -1798,15 +1798,10 @@ static inline void *load_sound_res(const char *path) {
 
 // (void) must be omitted from parameters
 void audio_init() {
-#if defined(VERSION_EU)
-    UNUSED s8 pad[16];
-#elif defined(VERSION_SH)
-    UNUSED s8 pad[24];
-#else
-    UNUSED s8 pad[32];
-#endif
+    UNUSED s8 pad[16]; // EU: 16 - SH: 24 - US: 32
+
 #if defined(VERSION_JP) || defined(VERSION_US)
-    u8 buf[0x10];
+    UNUSED u8 buf[0x10]; // buf unused in EXTERNAL_DATA
 #endif
     s32 i, j, UNUSED k;
     UNUSED s32 lim1; // lim1 unused in EU
@@ -1842,7 +1837,7 @@ void audio_init() {
     for (i = 0; i <= lim2 / 8 - 1; i++) {
         ((u64 *) gAudioHeap)[i] = 0;
     }
-    
+
 #ifdef TARGET_N64
     // It seems boot.s doesn't clear the .bss area for audio, so do it here.
     i = 0;
@@ -1989,7 +1984,7 @@ void audio_init() {
     gCtlEntries = soundAlloc(&gAudioInitPool, gAlCtlHeader->seqCount * sizeof(struct CtlEntry));
     gAlCtlHeader = soundAlloc(&gAudioInitPool, size);
     audio_dma_copy_immediate((uintptr_t) data, gAlCtlHeader, size);
-    alSeqFileNew(gAlCtlHeader, data);   
+    alSeqFileNew(gAlCtlHeader, data);
 
     // Load header for TBL (assets/sound_data.tbl.s, i.e. raw data)
     gAlTbl = (ALSeqFile *) buf;

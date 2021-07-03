@@ -28,6 +28,8 @@
 #define MAX_JOYBUTTONS 32  // arbitrary; includes virtual keys for triggers
 #define AXIS_THRESHOLD (30 * 256)
 
+bool last_cursor_status = false;
+
 enum {
     JOY_AXIS_LEFTX,
     JOY_AXIS_LEFTY,
@@ -141,21 +143,19 @@ static inline int16_t get_axis(const int i) {
 }
 
 #ifdef MOUSE_ACTIONS
+
+void set_cursor_visibility(bool newVisibility ){
+    if(last_cursor_status != newVisibility){
+        SDL_ShowCursor( newVisibility ? SDL_DISABLE : SDL_ENABLE );
+        last_cursor_status = newVisibility;
+    }
+}
+
 static void mouse_control_handler(OSContPad *pad) {
     u32 mouse;
 
     if (configMouse) {
-        if (gMouseHasFreeControl) {
-            SDL_ShowCursor(SDL_DISABLE);
-        } else {
-            SDL_ShowCursor(SDL_ENABLE);
-        }
-
-        if (configWindow.fullscreen) {
-            SDL_ShowCursor(SDL_DISABLE);
-        } else {
-            SDL_ShowCursor(SDL_ENABLE);
-        }
+        set_cursor_visibility(gMouseHasFreeControl || configWindow.fullscreen);
 
         if (gMouseHasCenterControl && sCurrPlayMode != 2) {
             SDL_WM_GrabInput(SDL_GRAB_ON);
@@ -165,7 +165,7 @@ static void mouse_control_handler(OSContPad *pad) {
             mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
         }
     } else {
-        SDL_ShowCursor(SDL_ENABLE);
+        set_cursor_visibility(false);
         SDL_WM_GrabInput(SDL_GRAB_OFF);
         mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
     }
@@ -285,7 +285,7 @@ static u32 controller_sdl_rawkey(void) {
         last_joybutton = VK_INVALID;
         return ret;
     }
-    
+
     if (configMouse) {
         for (int i = 0; i < MAX_MOUSEBUTTONS; ++i) {
             if (last_mouse & SDL_BUTTON(i)) {
