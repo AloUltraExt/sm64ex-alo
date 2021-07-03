@@ -68,7 +68,7 @@ static int num_joy_hats = 0;
 static inline void controller_add_binds(const u32 mask, const u32 *btns) {
     for (u32 i = 0; i < MAX_BINDS; ++i) {
         if (btns[i] >= VK_BASE_SDL_GAMEPAD && btns[i] <= VK_BASE_SDL_GAMEPAD + VK_SIZE) {
-            if (btns[i] >= VK_BASE_SDL_MOUSE && num_joy_binds < MAX_JOYBINDS) {
+            if (btns[i] >= VK_BASE_SDL_MOUSE && num_joy_binds < MAX_JOYBINDS && configMouse) {
                 mouse_binds[num_mouse_binds][0] = btns[i] - VK_BASE_SDL_MOUSE;
                 mouse_binds[num_mouse_binds][1] = mask;
                 ++num_mouse_binds;
@@ -150,7 +150,13 @@ static void mouse_control_handler(OSContPad *pad) {
         } else {
             SDL_ShowCursor(SDL_ENABLE);
         }
-        
+
+        if (configWindow.fullscreen) {
+            SDL_ShowCursor(SDL_DISABLE);
+        } else {
+            SDL_ShowCursor(SDL_ENABLE);
+        }
+
         if (gMouseHasCenterControl && sCurrPlayMode != 2) {
             SDL_WM_GrabInput(SDL_GRAB_ON);
             mouse = SDL_GetRelativeMouseState(&gMouseXPos, &gMouseYPos);
@@ -279,12 +285,14 @@ static u32 controller_sdl_rawkey(void) {
         last_joybutton = VK_INVALID;
         return ret;
     }
-
-    for (int i = 0; i < MAX_MOUSEBUTTONS; ++i) {
-        if (last_mouse & SDL_BUTTON(i)) {
-            const u32 ret = VK_OFS_SDL_MOUSE + i;
-            last_mouse = 0;
-            return ret;
+    
+    if (configMouse) {
+        for (int i = 0; i < MAX_MOUSEBUTTONS; ++i) {
+            if (last_mouse & SDL_BUTTON(i)) {
+                const u32 ret = VK_OFS_SDL_MOUSE + i;
+                last_mouse = 0;
+                return ret;
+            }
         }
     }
     return VK_INVALID;

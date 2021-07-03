@@ -45,7 +45,7 @@ struct ConfigOption {
 
 // Video/audio stuff
 ConfigWindow configWindow       = {
-#ifdef TARGET_WII_U
+#ifdef TARGET_PORT_CONSOLE
     .reset = false,
     .settings_changed = false,
 #else
@@ -153,6 +153,7 @@ static const struct ConfigOption options[] = {
     #ifdef EXTERNAL_DATA
     {.name = "precache",             .type = CONFIG_TYPE_BOOL, .boolValue = &configPrecacheRes},
     #endif
+    {.name = "mouse_enable",         .type = CONFIG_TYPE_BOOL, .boolValue = &configMouse},
 #ifdef BETTERCAMERA
     {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configEnableCamera},     
     #ifdef MOUSE_ACTIONS
