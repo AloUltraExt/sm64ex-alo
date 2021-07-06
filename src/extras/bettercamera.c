@@ -267,6 +267,12 @@ void puppycam_input_pitch(void)
 
 void puppycam_input_zoom(void)
 {
+    
+    //Update zoom if it doesn't match with the zoom target point
+    if (gPuppyCam.zoomTarget != gPuppyCam.zoomPoints[gPuppyCam.zoomSet]) {
+        gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[gPuppyCam.zoomSet];
+    }
+
     //Handles R button zooming.
     if (gPlayer1Controller->buttonPressed & R_TRIG && gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_ZOOM_CHANGE)
     {
@@ -283,7 +289,7 @@ void puppycam_input_zoom(void)
 void puppycam_input_centre(void)
 {
     s32 inputDefault = L_TRIG;
-    if (gPuppyCam.options.inputType == 2)
+    if (gPuppyCam.options.inputType == PUPPYCAM_INPUT_TYPE_CLASSIC)
         inputDefault = R_TRIG;
     //Handles L button centering.
     if (gPlayer1Controller->buttonPressed & inputDefault && gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_YAW_ROTATION &&
@@ -479,7 +485,7 @@ static void puppycam_input_hold(void)
     s8 stickMag[2] = {100, 100};
 
     //Analogue Camera stuff. If it fails to find an input, then it just sets stickmag to 100, which after calculations means the value goes unchanged.
-    if (gPuppyCam.options.analogue && gPuppyCam.options.inputType != 2)
+    if (gPuppyCam.options.analogue && gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC)
     {
         stickMag[0] = gPuppyCam.stick2[0]*1.25f;
         stickMag[1] = gPuppyCam.stick2[1]*1.25f;
@@ -503,6 +509,7 @@ static void puppycam_input_hold(void)
         puppycam_input_hold_preset1(ivX);
     }
 
+    
     gPuppyCam.framesSinceC[0]++;
     gPuppyCam.framesSinceC[1]++;
 
@@ -561,7 +568,7 @@ static void puppycam_input_mouse(void) {
     f32 ivX = ((gPuppyCam.options.invertX*2)-1)*(gPuppyCam.options.sensitivityX/100.f);
     f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
 
-    if (configMouse && gPuppyCam.mouse && gPuppyCam.options.inputType != 2) {
+    if (configMouse && gPuppyCam.mouse && gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC) {
         gMouseHasCenterControl = TRUE;
 
         gPuppyCam.yawTarget += ivX * gMouseXPos * 16;
@@ -898,7 +905,7 @@ void puppycam_projection_behaviours(void)
     if (gPuppyCam.targetObj == gMarioState->marioObj)
     {
         if (gPuppyCam.options.turnAggression > 0 && gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_TURN_HELPER && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_8DIR) &&
-        gMarioState->vel[1] == 0.0f && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR) && gPuppyCam.options.inputType != 2)
+        gMarioState->vel[1] == 0.0f && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR) && gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC)
         {//Holy hell this is getting spicy.
             //With turn aggression enabled, or if Mario's sliding, adjust the camera view behind mario.
             if (gPuppyCam.options.turnAggression > 0 || gMarioState->action & ACT_FLAG_BUTT_OR_STOMACH_SLIDE)
@@ -1386,7 +1393,7 @@ void puppycam_hud(void) {
     }
 
     // Arrow Icons
-    if (gPuppyCam.options.inputType != 2) {
+    if (gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC) {
         switch (gPuppyCam.zoomSet) {
             case 0:
                 render_hud_small_tex_lut(x + 4, y - 8, (*ogCameraLUT)[GLYPH_CAM_ARROW_UP]);

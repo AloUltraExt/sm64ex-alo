@@ -153,7 +153,9 @@ static const struct ConfigOption options[] = {
     #ifdef EXTERNAL_DATA
     {.name = "precache",             .type = CONFIG_TYPE_BOOL, .boolValue = &configPrecacheRes},
     #endif
+    #ifdef MOUSE_ACTIONS
     {.name = "mouse_enable",         .type = CONFIG_TYPE_BOOL, .boolValue = &configMouse},
+    #endif
 #ifdef BETTERCAMERA
     {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configEnableCamera},     
     #ifdef MOUSE_ACTIONS

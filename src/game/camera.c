@@ -3259,15 +3259,15 @@ void update_camera(struct Camera *c) {
 
 #ifdef BETTERCAMERA
     }
-    
+
     puppycam_default_config(); // load bettercam settings from config vars
 
-    //Just a cute little bit that syncs puppycamera up to vanilla when playing a vanilla cutscene :3
+    // Just a cute little bit that syncs puppycamera up to vanilla when playing a vanilla cutscene :3
     if (c->cutscene != 0) {
         gPuppyCam.yawTarget = gCamera->yaw;
         gPuppyCam.yaw = gCamera->yaw;
         if (gMarioState->action == ACT_ENTERING_STAR_DOOR)
-        { //god this is stupid and the fact I have to continue doing this is testament to the idiocy of the star door cutscene >:(
+        { // god this is stupid and the fact I have to continue doing this is testament to the idiocy of the star door cutscene >:(
             gPuppyCam.yawTarget = gMarioState->faceAngle[1]+0x8000;
             gPuppyCam.yaw = gMarioState->faceAngle[1]+0x8000;
         }
@@ -3282,6 +3282,13 @@ void update_camera(struct Camera *c) {
                 sFramesSinceCutsceneEnded = 0;
             }
         }
+        
+        // Deactivate vanilla C-Up mode if puppycamera is enabled
+        if (gCameraMovementFlags & CAM_MOVE_C_UP_MODE) {
+            gCameraMovementFlags |= CAM_MOVE_STARTED_EXITING_C_UP;
+            gCameraMovementFlags &= ~CAM_MOVE_C_UP_MODE;
+        }
+
         puppycam_loop();
         // Apply camera shakes
         shake_camera_pitch(gLakituState.pos, gLakituState.focus);
