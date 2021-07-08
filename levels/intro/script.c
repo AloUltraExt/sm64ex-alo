@@ -117,14 +117,12 @@ const LevelScript level_intro_mario_head_dizzy[] = {
     JUMP(script_intro_L4),
 };
 #else
-extern const LevelScript script_intro_L1[];
-
 const LevelScript level_intro_mario_head_regular[] = {
-    JUMP(script_intro_L1),
+    EXIT_AND_EXECUTE(/*seg*/ 0x14, _menuSegmentRomStart, _menuSegmentRomEnd, level_main_menu_entry_1),
 };
 
 const LevelScript level_intro_mario_head_dizzy[] = {
-    JUMP(script_intro_L1),
+    EXIT_AND_EXECUTE(/*seg*/ 0x14, _introSegmentRomStart, _introSegmentRomEnd, level_intro_splash_screen),
 };
 #endif
 

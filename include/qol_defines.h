@@ -111,5 +111,7 @@
 #define QOL_FIX_RED_COIN_STAR_MARKER_POSITION (0 || QOL_FIXES)
 /// Fixes monty mole hide in hole check
 #define QOL_FIX_HIDE_IN_HOLE_NULL_CHECK (0 || QOL_FIXES)
+/// Fixes cutscene door Mario action check
+#define QOL_FIX_CUTSCENE_DOOR_CHECK (0 || QOL_FIXES)
 
 #endif // QOL_DEFINES_H
