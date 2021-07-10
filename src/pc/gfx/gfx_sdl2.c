@@ -164,7 +164,7 @@ static inline void gfx_sdl_set_vsync(const bool enabled) {
     #ifdef HIGH_FPS_PC
         int vblanks = test_vsync();
         if (vblanks & 1)
-            vblanks = 0; // not divisible by 60, fuck that
+            vblanks = 0; // not divisible by 60, screw that
         else
             vblanks /= 2;
     #else
@@ -275,7 +275,11 @@ static void gfx_sdl_init(const char *window_title) {
     gfx_sdl_set_fullscreen();
 
     perf_freq = SDL_GetPerformanceFrequency();
+    #ifdef HIGH_FPS_PC
     frame_time = perf_freq / (2 * FRAMERATE);
+    #else
+    frame_time = perf_freq / FRAMERATE;
+    #endif
 
     for (size_t i = 0; i < sizeof(windows_scancode_table) / sizeof(SDL_Scancode); i++) {
         inverted_scancode_table[windows_scancode_table[i]] = i;
