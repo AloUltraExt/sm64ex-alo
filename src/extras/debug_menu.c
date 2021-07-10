@@ -156,7 +156,7 @@ void debug_calculate_and_print_fps(void) {
 
 
     fps = ((f32)FRAMETIME_COUNT * 1000000.0f) / (s32)OS_CYCLES_TO_USEC(newTime - oldTime);
-    
+
     print_text_fmt_int(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(22), 184, "FPS %d", (s16) fps);
 }
 #else
@@ -164,11 +164,16 @@ static OSTime gLastOSTime = 0;
 
 void debug_calculate_and_print_fps(void) {
     f32 fps;
-    f32 multiplier = 1.0f; // change to 2.0f if using 60fps patch
+#ifdef HIGH_FPS_PATCH
+    f32 multiplier = 2.0f;
+#else
+    f32 multiplier = 1.0f;
+#endif
+
     OSTime newTime = osGetTime();
 
     fps = multiplier * 1000000.0f / (newTime - gLastOSTime);
-    
+
     print_text_fmt_int(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(22), 184, "FPS %d", (s16) fps);
     gLastOSTime = newTime;
 }
