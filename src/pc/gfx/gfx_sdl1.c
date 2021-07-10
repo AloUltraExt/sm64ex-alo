@@ -33,7 +33,11 @@ static kb_callback_t kb_key_up = NULL;
 static void (*kb_all_keys_up)(void) = NULL;
 
 // time between consequtive game frames
+#ifdef HIGH_FPS_PC
+static const int frame_time = 1000 / (2 * FRAMERATE);
+#else
 static const int frame_time = 1000 / FRAMERATE;
+#endif
 
 static int desktop_w = 640;
 static int desktop_h = 480;

@@ -30,4 +30,9 @@ extern u16 gAreaUpdateCounter;
 void geo_process_node_and_siblings(struct GraphNode *firstNode);
 void geo_process_root(struct GraphNodeRoot *node, Vp *b, Vp *c, s32 clearColor);
 
+#ifdef HIGH_FPS_PC
+void interpolate_vectors(Vec3f res, Vec3f a, Vec3f b);
+void interpolate_vectors_s16(Vec3s res, Vec3s a, Vec3s b);
+#endif
+
 #endif // RENDERING_GRAPH_NODE_H

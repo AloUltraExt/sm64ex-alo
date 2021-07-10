@@ -67,6 +67,8 @@ GODDARD_MFACE ?= 1
 COMMAND_LINE_OPTIONS ?= 1
 # Kaze MOP Objects Port, disabled by default
 PORT_MOP_OBJS ?= 0
+# Enable 60 fps interpolation (PC Port only)
+HIGH_FPS_PC ?= 0
 # Enable PC Port defines
 PC_PORT_DEFINES ?= 0
 
@@ -630,6 +632,10 @@ endif
 # Use Console exclusive defines
 ifeq ($(TARGET_PORT_CONSOLE),1)
   CUSTOM_C_DEFINES += -DTARGET_PORT_CONSOLE
+endif
+
+ifeq ($(HIGH_FPS_PC),1)
+  CUSTOM_C_DEFINES += -DHIGH_FPS_PC
 endif
 
 # Use PC-only exclusive defines

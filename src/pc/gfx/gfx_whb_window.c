@@ -57,8 +57,11 @@ static void gfx_whb_window_init(UNUSED const char *game_name) {
 
     WHBGfxInit();
 
-    // Remove this line when using the 60FPS patch
+#ifdef HIGH_FPS_PC
+    GX2SetSwapInterval(1);
+#else
     GX2SetSwapInterval(2);
+#endif
 }
 
 static void gfx_whb_window_main_loop(void (*run_one_game_iter)(void)) {

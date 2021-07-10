@@ -1549,6 +1549,9 @@ void cur_obj_set_pos_to_home(void) {
     o->oPosX = o->oHomeX;
     o->oPosY = o->oHomeY;
     o->oPosZ = o->oHomeZ;
+#ifdef HIGH_FPS_PC
+    o->header.gfx.skipInterpolationTimestamp = gGlobalTimer;
+#endif
 }
 
 void cur_obj_set_pos_to_home_and_stop(void) {

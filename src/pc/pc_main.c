@@ -94,6 +94,27 @@ void send_display_list(struct SPTask *spTask) {
 #define SAMPLES_LOW 528
 #endif
 
+#ifdef HIGH_FPS_PC
+static inline void patch_interpolations(void) {
+    extern void mtx_patch_interpolated(void);
+    extern void patch_screen_transition_interpolated(void);
+    extern void patch_title_screen_scales(void);
+    extern void patch_interpolated_dialog(void);
+    extern void patch_interpolated_hud(void);
+    extern void patch_interpolated_paintings(void);
+    extern void patch_interpolated_bubble_particles(void);
+    extern void patch_interpolated_snow_particles(void);
+    mtx_patch_interpolated();
+    patch_screen_transition_interpolated();
+    patch_title_screen_scales();
+    patch_interpolated_dialog();
+    patch_interpolated_hud();
+    patch_interpolated_paintings();
+    patch_interpolated_bubble_particles();
+    patch_interpolated_snow_particles();
+}
+#endif
+
 void produce_one_frame(void) {
     gfx_start_frame();
 
@@ -120,6 +141,14 @@ void produce_one_frame(void) {
 #endif
 
     gfx_end_frame();
+
+#ifdef HIGH_FPS_PC
+    gfx_start_frame();
+    patch_interpolations();
+    send_display_list(gGfxSPTask);
+    gfx_end_frame();
+#endif
+
 #ifdef TARGET_N3DS
 #ifndef DISABLE_N3DS_AUDIO
     LightEvent_Wait(&s_event_main);

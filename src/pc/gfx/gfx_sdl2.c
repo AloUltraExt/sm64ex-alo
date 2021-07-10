@@ -150,19 +150,30 @@ static int test_vsync(void) {
 }
 
 static inline void gfx_sdl_set_vsync(const bool enabled) {
-    #ifdef TARGET_SWITCH
-    SDL_GL_SetSwapInterval(2); // change to 1 if 60 fps patch is applied
-    use_timer = false;
+#ifdef TARGET_SWITCH
+    #ifdef HIGH_FPS_PC
+    SDL_GL_SetSwapInterval(1);
     #else
+    SDL_GL_SetSwapInterval(2);
+    #endif
+    use_timer = false;
+#else
     if (enabled) {
         // try to detect refresh rate
         SDL_GL_SetSwapInterval(1);
-
+    #ifdef HIGH_FPS_PC
+        int vblanks = test_vsync();
+        if (vblanks & 1)
+            vblanks = 0; // not divisible by 60, fuck that
+        else
+            vblanks /= 2;
+    #else
         #ifdef COMMAND_LINE_OPTIONS
         const int vblanks = gCLIOpts.SyncFrames ? (int)gCLIOpts.SyncFrames : test_vsync();
         #else
         const int vblanks = test_vsync();
         #endif
+    #endif
 
         if (vblanks) {
             printf("determined swap interval: %d\n", vblanks);
@@ -264,7 +275,7 @@ static void gfx_sdl_init(const char *window_title) {
     gfx_sdl_set_fullscreen();
 
     perf_freq = SDL_GetPerformanceFrequency();
-    frame_time = perf_freq / FRAMERATE;
+    frame_time = perf_freq / (2 * FRAMERATE);
 
     for (size_t i = 0; i < sizeof(windows_scancode_table) / sizeof(SDL_Scancode); i++) {
         inverted_scancode_table[windows_scancode_table[i]] = i;
