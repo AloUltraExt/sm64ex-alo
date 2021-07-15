@@ -496,8 +496,10 @@ void spawn_objects_from_info(UNUSED s32 unused, struct SpawnInfo *spawnInfo) {
             // Record death/collection in the SpawnInfo
             object->respawnInfoType = RESPAWN_INFO_TYPE_32;
             object->respawnInfo = &spawnInfo->behaviorArg;
-
-            if (spawnInfo->behaviorArg & 0x01) {
+            
+            // ex-alo change
+            // adds checks for Mario behavior so beh param 4 can be freely used
+            if (spawnInfo->behaviorArg & 0x01 && object->behavior == segmented_to_virtual(bhvMario)) {
                 gMarioObject = object;
                 geo_make_first_child(&object->header.gfx.node);
             }
@@ -612,7 +614,7 @@ void unload_deactivated_objects(void) {
 /**
  * Unused profiling function.
  */
-static u16 unused_get_elapsed_time(u64 *cycleCounts, s32 index) {
+UNUSED static u16 unused_get_elapsed_time(u64 *cycleCounts, s32 index) {
     u16 time;
     f64 cycles;
 

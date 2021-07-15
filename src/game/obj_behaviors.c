@@ -182,8 +182,10 @@ s8 turn_obj_away_from_steep_floor(struct Surface *objFloor, f32 floorY, f32 objV
     f32 floor_nX, floor_nY, floor_nZ, objVelXCopy, objVelZCopy, objYawX, objYawZ;
 
     if (objFloor == NULL) {
+#if !QOL_FIX_OOB_OBJ_CRASH_OVERFLOW
         //! (OOB Object Crash) TRUNC overflow exception after 36 minutes
         o->oMoveAngleYaw += 32767.999200000002; /* ¯\_(ツ)_/¯ */
+#endif
         return FALSE;
     }
 
@@ -689,14 +691,14 @@ s16 trigger_obj_dialog_when_facing(s32 *inDialog, s16 dialogID, f32 dist, s32 ac
     if ((is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, (s32) dist) == TRUE
          && obj_check_if_facing_toward_angle(o->oFaceAngleYaw, gMarioObject->header.gfx.angle[1] + 0x8000, 0x1000) == TRUE
          && obj_check_if_facing_toward_angle(o->oMoveAngleYaw, o->oAngleToMario, 0x1000) == TRUE)
-        || (*inDialog == 1)) {
-        *inDialog = 1;
+        || (*inDialog == TRUE)) {
+        *inDialog = TRUE;
 
-        if (set_mario_npc_dialog(actionArg) == 2) { //If Mario is speaking.
+        if (set_mario_npc_dialog(actionArg) == MARIO_DIALOG_STATUS_SPEAK) { //If Mario is speaking.
             dialogueResponse = cutscene_object_with_dialog(CUTSCENE_DIALOG, o, dialogID);
-            if (dialogueResponse != 0) {
-                set_mario_npc_dialog(0);
-                *inDialog = 0;
+            if (dialogueResponse) {
+                set_mario_npc_dialog(MARIO_DIALOG_STOP);
+                *inDialog = FALSE;
                 return dialogueResponse;
             }
             return 0;
@@ -719,6 +721,9 @@ void obj_check_floor_death(s16 collisionFlags, struct Surface *floor) {
             case SURFACE_BURNING:
                 o->oAction = OBJ_ACT_LAVA_DEATH;
                 break;
+            #if QOL_FIX_OBJ_FLOOR_WIND_DEATH
+            case SURFACE_VERTICAL_WIND:
+            #endif
             //! @BUG Doesn't check for the vertical wind death floor.
             case SURFACE_DEATH_PLANE:
                 o->oAction = OBJ_ACT_DEATH_PLANE_DEATH;

@@ -7,7 +7,12 @@ void bhv_celebration_star_init(void) {
     o->oMoveAngleYaw = gMarioObject->header.gfx.angle[1] + 0x8000;
     o->oCelebStarDiameterOfRotation = 100;
 #if BUGFIX_STAR_BOWSER_KEY
-    if (gCurrLevelNum == LEVEL_BOWSER_1 || gCurrLevelNum == LEVEL_BOWSER_2) {
+    #if QOL_FEATURE_PROPER_SHOW_COLLECTABLE
+    if (gMarioState->interactObj->header.gfx.sharedChild == gLoadedGraphNodes[MODEL_BOWSER_KEY])
+    #else
+    if (gCurrLevelNum == LEVEL_BOWSER_1 || gCurrLevelNum == LEVEL_BOWSER_2)
+    #endif
+    {
         #if !QOL_FEATURE_PROPER_SHOW_COLLECTABLE
         o->header.gfx.sharedChild = gLoadedGraphNodes[MODEL_BOWSER_KEY];
         #endif

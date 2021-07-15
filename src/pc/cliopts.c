@@ -1,9 +1,14 @@
+#ifdef COMMAND_LINE_OPTIONS
+
 #include "cliopts.h"
 #include "configfile.h"
-#include "game/cheats.h"
 #include "pc_main.h"
 #include "platform.h"
 #include "macros.h"
+
+#ifdef CHEATS_ACTIONS
+#include "extras/cheats.h"
+#endif
 
 #include <strings.h>
 #include <stdlib.h>
@@ -15,7 +20,9 @@ struct PCCLIOptions gCLIOpts = { 0 };
 
 static void print_help(void) {
     printf("Super Mario 64 PC Port\n");
+#ifdef CHEATS_ACTIONS
     printf("%-20s\tEnables the cheat menu.\n", "--cheats");
+#endif
     printf("%-20s\tSaves the configuration file as CONFIGNAME.\n", "--configfile CONFIGNAME");
     printf("%-20s\tSets additional data directory name (only 'res' is used by default).\n", "--gamedir DIRNAME");
     printf("%-20s\tOverrides the default save/config path ('!' expands to executable path).\n", "--savepath SAVEPATH");
@@ -55,14 +62,20 @@ void parse_cli_opts(int argc, char* argv[]) {
         else if (strcmp(argv[i], "--windowed") == 0) // Open game in windowed mode
             gCLIOpts.FullScreen = 2;
 
+#ifdef CHEATS_ACTIONS
         else if (strcmp(argv[i], "--cheats") == 0) // Enable cheats menu
             Cheats.EnableCheats = true;
+#endif
 
+#ifdef USE_SYSTEM_MALLOC
         else if (strcmp(argv[i], "--poolsize") == 0) // Main pool size
             arg_uint("--poolsize", argv[++i], &gCLIOpts.PoolSize);
+#endif
 
+#ifdef WAPI_SDL2
         else if (strcmp(argv[i], "--syncframes") == 0) // VBlanks to wait
             arg_uint("--syncframes", argv[++i], &gCLIOpts.SyncFrames);
+#endif
 
         else if (strcmp(argv[i], "--configfile") == 0 && (i + 1) < argc)
             arg_string("--configfile", argv[++i], gCLIOpts.ConfigFile);
@@ -80,3 +93,5 @@ void parse_cli_opts(int argc, char* argv[]) {
         }
     }
 }
+
+#endif

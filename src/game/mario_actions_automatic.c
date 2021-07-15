@@ -17,6 +17,12 @@
 #include "level_table.h"
 #include "rumble_init.h"
 
+#include "pc/configfile.h"
+
+#ifdef MOUSE_ACTIONS
+#include "pc/controller/controller_mouse.h"
+#endif
+
 #define POLE_NONE          0
 #define POLE_TOUCHED_FLOOR 1
 #define POLE_FELL_OFF      2
@@ -345,7 +351,11 @@ s32 perform_hanging_step(struct MarioState *m, Vec3f nextPos) {
 s32 update_hang_moving(struct MarioState *m) {
     s32 stepResult;
     Vec3f nextPos;
+#if QOL_FEATURE_HANGING_ACTION
+    f32 maxSpeed = 8.0f;
+#else
     f32 maxSpeed = 4.0f;
+#endif
 
     m->forwardVel += 1.0f;
     if (m->forwardVel > maxSpeed) {
@@ -390,13 +400,20 @@ s32 act_start_hanging(struct MarioState *m) {
         queue_rumble_data(5, 80);
     }
 #endif
+
     if ((m->input & INPUT_NONZERO_ANALOG) && m->actionTimer >= 31) {
         return set_mario_action(m, ACT_HANGING, 0);
     }
 
+#if QOL_FEATURE_HANGING_ACTION
+    if ((m->input & INPUT_A_PRESSED)) {
+        return set_mario_action(m, ACT_FREEFALL, 0);
+    }
+#else
     if (!(m->input & INPUT_A_DOWN)) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
+#endif
 
     if (m->input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
@@ -423,9 +440,15 @@ s32 act_hanging(struct MarioState *m) {
         return set_mario_action(m, ACT_HANG_MOVING, m->actionArg);
     }
 
+#if QOL_FEATURE_HANGING_ACTION
+    if ((m->input & INPUT_A_PRESSED)) {
+        return set_mario_action(m, ACT_FREEFALL, 0);
+    }
+#else
     if (!(m->input & INPUT_A_DOWN)) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
+#endif
 
     if (m->input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
@@ -447,9 +470,15 @@ s32 act_hanging(struct MarioState *m) {
 }
 
 s32 act_hang_moving(struct MarioState *m) {
+#if QOL_FEATURE_HANGING_ACTION
+    if ((m->input & INPUT_A_PRESSED)) {
+        return set_mario_action(m, ACT_FREEFALL, 0);
+    }
+#else
     if (!(m->input & INPUT_A_DOWN)) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
+#endif
 
     if (m->input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
@@ -459,11 +488,21 @@ s32 act_hang_moving(struct MarioState *m) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
 
+
     if (m->actionArg & 1) {
+#if QOL_FEATURE_HANGING_ACTION
+        set_mario_anim_with_accel(m, MARIO_ANIM_MOVE_ON_WIRE_NET_RIGHT, (s32)(m->forwardVel / 8.0f * 0x10000));
+#else
         set_mario_animation(m, MARIO_ANIM_MOVE_ON_WIRE_NET_RIGHT);
+#endif
     } else {
+#if QOL_FEATURE_HANGING_ACTION
+        set_mario_anim_with_accel(m, MARIO_ANIM_MOVE_ON_WIRE_NET_LEFT, (s32)(m->forwardVel / 8.0f * 0x10000));
+#else
         set_mario_animation(m, MARIO_ANIM_MOVE_ON_WIRE_NET_LEFT);
+#endif
     }
+
 
     if (m->marioObj->header.gfx.animInfo.animFrame == 12) {
         play_sound(SOUND_ACTION_HANGING_STEP, m->marioObj->header.gfx.cameraToObject);
@@ -479,9 +518,13 @@ s32 act_hang_moving(struct MarioState *m) {
         }
     }
 
+#if QOL_FEATURE_HANGING_ACTION
+    update_hang_moving(m);
+#else
     if (update_hang_moving(m) == HANG_LEFT_CEIL) {
         set_mario_action(m, ACT_FREEFALL, 0);
     }
+#endif
 
     return FALSE;
 }
@@ -560,8 +603,8 @@ s32 act_ledge_grab(struct MarioState *m) {
         return set_mario_action(m, ACT_LEDGE_CLIMB_FAST, 0);
     }
 
-    if (m->input & INPUT_UNKNOWN_10) {
-        if (m->marioObj->oInteractStatus & INT_STATUS_MARIO_UNK1) {
+    if (m->input & INPUT_STOMPED) {
+        if (m->marioObj->oInteractStatus & INT_STATUS_MARIO_KNOCKBACK_DMG) {
             m->hurtCounter += (m->flags & MARIO_CAP_ON_HEAD) ? 12 : 18;
         }
         return let_go_of_ledge(m);
@@ -710,6 +753,14 @@ s32 act_in_cannon(struct MarioState *m) {
         case 2:
             m->faceAngle[0] -= (s16)(m->controller->stickY * 10.0f);
             marioObj->oMarioCannonInputYaw -= (s16)(m->controller->stickX * 10.0f);
+#ifdef MOUSE_ACTIONS
+            if (configMouse) {
+                gMouseHasCenterControl = TRUE;
+
+                m->faceAngle[0] -= (s16)(gMouseYPos * 10.0f);
+                marioObj->oMarioCannonInputYaw -= (s16)(gMouseXPos * 10.0f);
+            }
+#endif
 
             if (m->faceAngle[0] > 0x38E3) {
                 m->faceAngle[0] = 0x38E3;
@@ -739,6 +790,10 @@ s32 act_in_cannon(struct MarioState *m) {
                 play_sound(SOUND_OBJ_POUNDING_CANNON, m->marioObj->header.gfx.cameraToObject);
 
                 m->marioObj->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
+
+#ifdef MOUSE_ACTIONS
+                gMouseHasCenterControl = FALSE;
+#endif
 
                 set_mario_action(m, ACT_SHOT_FROM_CANNON, 0);
 #ifdef RUMBLE_FEEDBACK

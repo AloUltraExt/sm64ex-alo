@@ -3,6 +3,10 @@
 
 #include "types.h"
 
+#ifdef TARGET_N64
+#include "extras/n64_mem_error_screen.h"
+#endif
+
 // geo
 extern const GeoLayout intro_geo_0002D0[];
 extern const GeoLayout intro_geo_mario_head_regular[];
@@ -25,5 +29,10 @@ extern const LevelScript script_intro_L2[];
 extern const LevelScript script_intro_L3[];
 extern const LevelScript script_intro_L4[];
 extern const LevelScript script_intro_L5[];
+
+#ifdef TARGET_N64
+extern const GeoLayout intro_geo_error_screen[];
+extern const LevelScript level_intro_entry_error_screen[];
+#endif
 
 #endif

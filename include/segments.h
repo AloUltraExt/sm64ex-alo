@@ -1,9 +1,7 @@
 #ifndef SEGMENTS_H
 #define SEGMENTS_H
 
-#ifdef BETTERCAMERA
-#define USE_EXT_RAM
-#endif
+#include "config.h"
 
 #ifndef LINKER
 #include "segment_symbols.h"
@@ -17,11 +15,11 @@
  * to cast the addresses to pointers in this file, since that would be invalid
  * linker script syntax.
 */
-
-#ifndef USE_EXT_RAM
-#define RAM_END          0x80400000
-#else
+#if N64_USE_EXTENDED_RAM
 #define RAM_END          0x80800000
+#define RAM_END_4MB      0x80400000
+#else
+#define RAM_END          0x80400000
 #endif
 
 /*
@@ -30,7 +28,13 @@
  */
 
 #define SEG_POOL_START   _framebuffersSegmentNoloadEnd // 0x0165000 in size
+#ifdef GODDARD_MFACE
 #define SEG_GODDARD      SEG_POOL_START + 0x113000
+#endif
+
+#if N64_USE_EXTENDED_RAM
+#define POOL_SIZE_4MB    RAM_END_4MB - SEG_POOL_START
+#endif
 
 #define POOL_SIZE        RAM_END - SEG_POOL_START
 

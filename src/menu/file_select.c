@@ -23,6 +23,11 @@
 #include "sm64.h"
 #include "text_strings.h"
 
+#ifdef MOUSE_ACTIONS
+#include "pc/controller/controller_mouse.h"
+#include "pc/configfile.h"
+#endif
+
 #include "eu_translation.h"
 #ifdef VERSION_EU
 #undef LANGUAGE_FUNCTION
@@ -1684,20 +1689,53 @@ void handle_controller_cursor_input(void) {
     if (rawStickY > -2 && rawStickY < 2) {
         rawStickY = 0;
     }
+    #ifdef MOUSE_ACTIONS 
+    else
+    {
+        gMouseHasFreeControl = FALSE;
+    }
+    #endif
     if (rawStickX > -2 && rawStickX < 2) {
         rawStickX = 0;
     }
+    #ifdef MOUSE_ACTIONS 
+    else
+    {
+        gMouseHasFreeControl = FALSE;
+    }
+    #endif
 
     // Move cursor
     sCursorPos[0] += rawStickX / 8;
     sCursorPos[1] += rawStickY / 8;
 
-    // Stop cursor from going offscreen
-    if (sCursorPos[0] > GFX_DIMENSIONS_FROM_RIGHT_EDGE(188)) {
-        sCursorPos[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(188);
+#ifdef MOUSE_ACTIONS
+    if (sSelectedFileNum != 0)
+        gMouseHasFreeControl = FALSE;
+        
+    if ((gMouseXPos - gOldMouseXPos != 0 || gMouseYPos - gOldMouseYPos != 0) && sSelectedFileNum == 0)  {
+        gMouseHasFreeControl = TRUE;
     }
-    if (sCursorPos[0] < GFX_DIMENSIONS_FROM_LEFT_EDGE(-132)) {
-        sCursorPos[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(-132);
+
+    static float screenScale;
+    screenScale = (float) gfx_current_dimensions.height / SCREEN_HEIGHT;
+    if (gMouseHasFreeControl && configMouse) {
+        sCursorPos[0] = ((gMouseXPos - (gfx_current_dimensions.width - (screenScale * 320)) / 2) / screenScale) - 160.0f;
+        sCursorPos[1] = (gMouseYPos / screenScale - 120.0f) * -1;
+    }
+
+    gOldMouseXPos = gMouseXPos;
+    gOldMouseYPos = gMouseYPos;
+
+if (!gMouseHasFreeControl) {
+#endif
+    
+    // Stop cursor from going offscreen
+    if (sCursorPos[0] > GFX_DIMENSIONS_FROM_RIGHT_EDGE(188.0f)) {
+        sCursorPos[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(188.0f);
+    }
+    if (sCursorPos[0] < GFX_DIMENSIONS_FROM_LEFT_EDGE(-132.0f)) {
+        sCursorPos[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(-132.0f);
     }
 
     if (sCursorPos[1] > 90.0f) {
@@ -1706,6 +1744,9 @@ void handle_controller_cursor_input(void) {
     if (sCursorPos[1] < -90.0f) {
         sCursorPos[1] = -90.0f;
     }
+#ifdef MOUSE_ACTIONS
+}
+#endif
 
     if (sCursorClickingTimer == 0) {
         handle_cursor_button_input();
@@ -2709,10 +2750,11 @@ void print_score_file_star_score(s8 fileIndex, s16 courseIndex, s16 x, s16 y) {
  * Prints save file score strings that shows when a save file is chosen inside the score menu.
  */
 void print_save_file_scores(s8 fileIndex) {
-#ifdef TARGET_N3DS
-    gDPForceFlush(gDisplayListHead++);
-    gDPSet2d(gDisplayListHead++, 2); // vetoed
-#endif 
+#if QOL_FIX_FILE_SELECT_SCORE_COURSE_LIST
+    s16 courseNum;
+    s8 tensDigPad;
+#endif
+
 #ifndef VERSION_EU
     unsigned char textMario[] = { TEXT_MARIO };
 #ifdef VERSION_JP
@@ -2744,6 +2786,11 @@ void print_save_file_scores(s8 fileIndex) {
 
     textFileLetter[0] = fileIndex + ASCII_TO_DIALOG('A'); // get letter of file selected
 
+#ifdef TARGET_N3DS
+    gDPForceFlush(gDisplayListHead++);
+    gDPSet2d(gDisplayListHead++, 2); // vetoed
+#endif
+
     // Print file name at top
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
@@ -2757,6 +2804,17 @@ void print_save_file_scores(s8 fileIndex) {
     gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
 
+#if QOL_FIX_FILE_SELECT_SCORE_COURSE_LIST
+    for (courseNum = COURSE_MIN; courseNum <= COURSE_STAGES_MAX; courseNum++) {
+        courseNum >= 10 ? (tensDigPad = 0) : (tensDigPad = 1);
+
+        print_menu_generic_string(GFX_DIMENSIONS_FROM_LEFT_EDGE(LEVEL_NAME_X) + (tensDigPad * LEVEL_NUM_PAD), 
+            23 + 12 * courseNum, segmented_to_virtual(levelNameTable[courseNum - 1]));
+
+        print_score_file_star_score(fileIndex, courseNum - 1, GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - STAR_SCORE_X), 23 + 12 * courseNum); 
+        print_score_file_course_coin_score(fileIndex, courseNum - 1, GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - 213), 23 + 12 * courseNum);
+    }
+#else
 //! Huge print list, for loops exist for a reason!
 #define PRINT_COURSE_SCORES(courseIndex, pad) \
     print_menu_generic_string(GFX_DIMENSIONS_FROM_LEFT_EDGE(LEVEL_NAME_X + (pad * LEVEL_NUM_PAD)), 23 + 12 * courseIndex, \
@@ -2783,6 +2841,7 @@ void print_save_file_scores(s8 fileIndex) {
 
 #undef PRINT_COURSE_SCORES
 
+#endif
     // Print castle secret stars text
     print_menu_generic_string(GFX_DIMENSIONS_FROM_LEFT_EDGE(LEVEL_NAME_X + SECRET_STARS_PAD), 23 + 12 * 16,
                               segmented_to_virtual(levelNameTable[25]));
@@ -2923,6 +2982,10 @@ void file_select_fit_screen(void) {
 }
 #endif
 
+#if SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
+extern s16 gSkipIntroKeyCombo;
+#endif
+
 /**
  * Prints file select strings depending on the menu selected.
  * Also checks if all saves exists and defines text and main menu timers.
@@ -2984,7 +3047,14 @@ static void print_file_select_strings(void) {
     
 #ifdef WIDESCREEN
     file_select_fit_screen();
-#endif    
+#endif
+
+#if SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
+    if (gPlayer1Controller->buttonDown == (Z_TRIG | START_BUTTON | L_CBUTTONS | R_CBUTTONS)) {
+        play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
+        gSkipIntroKeyCombo = TRUE;
+    }
+#endif
 }
 
 /**
@@ -3062,6 +3132,10 @@ s32 lvl_init_menu_values_and_cursor_pos(UNUSED s32 arg, UNUSED s32 unused) {
             sOpenLangSettings = TRUE;
         }
     }
+#endif
+
+#if SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
+    gSkipIntroKeyCombo = FALSE;
 #endif
     //! no return value
 #ifdef AVOID_UB

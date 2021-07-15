@@ -11,7 +11,12 @@ SEGMENTS := \
 # Directories containing PNG files
 TEXTURE_DIRS := \
     $(wildcard textures/*/) \
+    $(wildcard textures/*/custom/) \
     $(filter %/,$(wildcard actors/*/))
+
+ifeq ($(PORT_MOP_OBJS),1)
+  TEXTURE_DIRS += $(filter %/,$(wildcard src/extras/mop/actors/*/))
+endif
 
 # NOTE: textures assume naming convention "texture.<encoding>.png" generates "texture.<encoding>"
 
@@ -78,6 +83,10 @@ PEACH_DIRS       := bird peach yoshi
 BOWSER_DIRS      := bowser_flame impact_ring yellow_sphere bowser bomb impact_smoke
 MARIO_DIRS       := mario bubble walk_smoke burn_smoke stomp_smoke water_wave sparkle water_splash white_particle_small sparkle_animation
 
+ifeq ($(PORT_MOP_OBJS),1)
+  MOP_DIRS       := Noteblock_MOP FlipBlock_MOP Checkpoint_Flag_MOP Flipswap_Platform_MOP Flipswap_Platform_Border_MOP Flipswitch_Panel_MOP Green_Switchboard_MOP Green_Switchboard_Gears_MOP Moving_Rotating_Block_MOP SandBlock_MOP Shrink_Platform_MOP Shrink_Platform_Border_MOP Spring_MOP Switchblock_MOP Switchblock_Switch_MOP
+endif
+
 # Actor Textures
 AMP_CHUCKYA_TEXTURES            := $(foreach dir,$(AMP_DIRS),        $(wildcard actors/$(dir)/*.png))
 BOBOMBS_BUBBLE_TEXTURES         := $(foreach dir,$(KING_BOBOMB_DIRS),$(wildcard actors/$(dir)/*.png))
@@ -100,6 +109,10 @@ SEA_CREATURES_TEXTURES          := $(foreach dir,$(SEA_DIRS),        $(wildcard 
 SKEETER_FISH_TEXTURES           := $(foreach dir,$(SKEETER_DIRS),    $(wildcard actors/$(dir)/*.png))
 SPINDRIFT_PENGUIN_TEXTURES      := $(foreach dir,$(SPINDRIFT_DIRS),  $(wildcard actors/$(dir)/*.png))
 
+ifeq ($(PORT_MOP_OBJS),1)
+  MORE_OBJECTS_PATCH_TEXTURES   := $(foreach dir,$(MOP_DIRS),  $(wildcard src/extras/mop/actors/$(dir)/*.png))
+endif
+
 # Actor dependencies
 $(BUILD_DIR)/actors/group0.o:  $(MARIO_WATER_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
 $(BUILD_DIR)/actors/group1.o:  $(HOOT_THWOMP_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
@@ -121,6 +134,10 @@ $(BUILD_DIR)/actors/group16.o: $(CHILLYCHIEF_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c
 $(BUILD_DIR)/actors/group17.o: $(MR_I_SWOOP_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
 $(BUILD_DIR)/actors/common0.o: $(AMP_CHUCKYA_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
 $(BUILD_DIR)/actors/common1.o: $(COINS_PIPE_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
+
+ifeq ($(PORT_MOP_OBJS),1)
+  $(BUILD_DIR)/actors/common1.o: $(MORE_OBJECTS_PATCH_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
+endif
 
 # Actor Elf Files
 $(BUILD_DIR)/actors/group0.elf:  SEGMENT_ADDRESS := 0x04000000
@@ -158,13 +175,11 @@ define level_rules =
     $$(BUILD_DIR)/levels/$(1)/leveldata.elf: TEXTURE_BIN := $(2)
 endef
 
-ifneq ($(MAKECMDGOALS),clean)
-ifneq ($(MAKECMDGOALS),distclean)
+ifeq (,$(findstring clean,$(MAKECMDGOALS)))
 $(BUILD_DIR)/level_rules.mk: levels/level_rules.mk levels/level_defines.h
-	@$(PRINT) "$(GREEN)Preprocessing level make rules: $(BLUE)$@ $(NO_COL)\n"
-	@$(CPP) $(VERSION_CFLAGS) -I . -o $@ $<
+	$(call print,Preprocessing level make rules:,$<,$@)
+	$(V)$(CPP) $(CPPFLAGS) $(VERSION_CFLAGS) -I . -o $@ $<
 include $(BUILD_DIR)/level_rules.mk
-endif
 endif
 
 # --------------------------------------
@@ -179,18 +194,18 @@ $(eval $(call level_rules,menu,generic)) # Menu (File Select)
 
 # Ending cake textures are generated in a special way
 $(BUILD_DIR)/levels/ending/cake_eu.inc.c: levels/ending/cake_eu.png
-	@$(PRINT) "$(GREEN)Splitting $(YELLOW)$< $(GREEN)to:  $(BLUE)$@ $(NO_COL)\n"
-	@$(SKYCONV) $(SKYCONV_ARGS) --type cake-eu --split $^ $(BUILD_DIR)/levels/ending
+	$(call print,Splitting:,$<,$@)
+	$(V)$(SKYCONV) --type cake-eu --split $^ $(BUILD_DIR)/levels/ending
 $(BUILD_DIR)/levels/ending/cake.inc.c: levels/ending/cake.png
-	@$(PRINT) "$(GREEN)Splitting $(YELLOW)$< $(GREEN)to:  $(BLUE)$@ $(NO_COL)\n"
-	@$(SKYCONV) $(SKYCONV_ARGS) --type cake --split $^ $(BUILD_DIR)/levels/ending
+	$(call print,Splitting:,$<,$@)
+	$(V)$(SKYCONV) --type cake --split $^ $(BUILD_DIR)/levels/ending
 
 # --------------------------------------
 # Texture Bin Rules
 # --------------------------------------
 
 # Others
-SEGMENT2_TEXTURES               := $(wildcard $(TEXTURE_DIR)/segment2/*.png)
+SEGMENT2_TEXTURES               := $(wildcard $(TEXTURE_DIR)/segment2/*.png) $(wildcard $(TEXTURE_DIR)/segment2/custom/*.png)
 TITLE_SCREEN_BG_TEXTURES        := $(wildcard $(TEXTURE_DIR)/title_screen_bg/*.png)
 SPOOKY_TEXTURES                 := $(wildcard $(TEXTURE_DIR)/spooky/*.png)
 GENERIC_TEXTURES                := $(wildcard $(TEXTURE_DIR)/generic/*.png)
@@ -251,8 +266,8 @@ $(BUILD_DIR)/bin/eu/translation_fr.elf:  SEGMENT_ADDRESS := 0x19000000
 # --------------------------------------
 
 $(BUILD_DIR)/bin/%_skybox.c: textures/skyboxes/%.png
-	@$(PRINT) "$(GREEN)Splitting $(YELLOW)$< $(GREEN)to:  $(BLUE)$@ $(NO_COL)\n"
-	@$(SKYCONV) $(SKYCONV_ARGS) --type sky --split $^ $(BUILD_DIR)/bin
+	$(call print,Splitting:,$<,$@)
+	$(V)$(SKYCONV) $(SKYCONV_ARGS) --type sky --split $^ $(BUILD_DIR)/bin
 
 $(BUILD_DIR)/bin/%_skybox.elf: SEGMENT_ADDRESS := 0x0A000000
 

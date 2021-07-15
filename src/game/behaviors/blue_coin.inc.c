@@ -13,7 +13,11 @@ void bhv_hidden_blue_coin_loop(void) {
     switch (o->oAction) {
         case HIDDEN_BLUE_COIN_ACT_INACTIVE:
             // Become invisible and intangible
+#if QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH
+            cur_obj_hide();
+#else
             cur_obj_disable_rendering();
+#endif
             cur_obj_become_intangible();
 
             // Set action to HIDDEN_BLUE_COIN_ACT_WAITING after the blue coin switch is found.
@@ -35,7 +39,11 @@ void bhv_hidden_blue_coin_loop(void) {
             break;
         case HIDDEN_BLUE_COIN_ACT_ACTIVE:
             // Become tangible
+#if QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH
+            cur_obj_unhide();
+#else
             cur_obj_enable_rendering();
+#endif
             cur_obj_become_tangible();
 
             // Delete the coin once collected
@@ -47,7 +55,11 @@ void bhv_hidden_blue_coin_loop(void) {
             // After 200 frames of waiting and 20 2-frame blinks (for 240 frames total),
             // delete the object.
             if (cur_obj_wait_then_blink(200, 20)) {
+#if QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH
+                o->oAction = HIDDEN_BLUE_COIN_ACT_INACTIVE;
+#else
                 obj_mark_for_deletion(o);
+#endif
             }
 
             break;
@@ -94,8 +106,11 @@ void bhv_blue_coin_switch_loop(void) {
 
                 // Set to BLUE_COIN_SWITCH_ACT_TICKING
                 o->oAction++;
+                
+#if !QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH
                 // ???
                 o->oPosY = gMarioObject->oPosY - 40.0f;
+#endif
 
                 // Spawn particles. There's a function that calls this same function
                 // with the same arguments, spawn_mist_particles, why didn't they just call that?
@@ -116,11 +131,25 @@ void bhv_blue_coin_switch_loop(void) {
                 play_sound(SOUND_GENERAL2_SWITCH_TICK_SLOW, gGlobalSoundSource);
             }
 
+#if QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH
+            // Delete the switch (which stops the sound) after the last coin is collected
+            if (cur_obj_nearest_object_with_behavior(bhvHiddenBlueCoin) == NULL) {
+                obj_mark_for_deletion(o);
+            }
+            
+            // Respawn after the 240-frame time expires and there's still coins left
+            if (o->oTimer > 240) {
+                cur_obj_unhide();
+                o->oAction = BLUE_COIN_SWITCH_ACT_IDLE;
+                o->oPosY = o->oPosY + 120.0f;
+            }
+#else
             // Delete the switch (which stops the sound) after the last coin is collected,
             // or after the coins unload after the 240-frame timer expires.
             if (cur_obj_nearest_object_with_behavior(bhvHiddenBlueCoin) == NULL || o->oTimer > 240) {
                 obj_mark_for_deletion(o);
             }
+#endif
 
             break;
     }

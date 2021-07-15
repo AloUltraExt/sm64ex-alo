@@ -15,7 +15,6 @@
 #include "gfx_screen_config.h"
 #include "../pc_main.h"
 #include "../configfile.h"
-#include "../cliopts.h"
 #include "../platform.h"
 
 #include "src/pc/controller/controller_keyboard.h"
@@ -34,7 +33,11 @@ static kb_callback_t kb_key_up = NULL;
 static void (*kb_all_keys_up)(void) = NULL;
 
 // time between consequtive game frames
+#ifdef HIGH_FPS_PC
+static const int frame_time = 1000 / (2 * FRAMERATE);
+#else
 static const int frame_time = 1000 / FRAMERATE;
+#endif
 
 static int desktop_w = 640;
 static int desktop_h = 480;
@@ -226,11 +229,13 @@ static void gfx_sdl_handle_events(void) {
     }
 }
 
+#ifndef TARGET_PORT_CONSOLE
 static void gfx_sdl_set_keyboard_callbacks(kb_callback_t on_key_down, kb_callback_t on_key_up, void (*on_all_keys_up)(void)) {
     kb_key_down = on_key_down;
     kb_key_up = on_key_up;
     kb_all_keys_up = on_all_keys_up;
 }
+#endif
 
 static bool gfx_sdl_start_frame(void) {
     return true;
@@ -266,7 +271,9 @@ static void gfx_sdl_shutdown(void) {
 
 struct GfxWindowManagerAPI gfx_sdl = {
     gfx_sdl_init,
+#ifndef TARGET_PORT_CONSOLE
     gfx_sdl_set_keyboard_callbacks,
+#endif
     gfx_sdl_main_loop,
     gfx_sdl_get_dimensions,
     gfx_sdl_handle_events,

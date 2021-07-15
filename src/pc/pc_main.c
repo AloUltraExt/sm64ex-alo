@@ -30,10 +30,20 @@
 #include "audio/audio_3ds_threading.h"
 
 #include "pc_main.h"
+
+#ifdef COMMAND_LINE_OPTIONS
 #include "cliopts.h"
+#endif
+
 #include "configfile.h"
 #include "controller/controller_api.h"
 #include "controller/controller_keyboard.h"
+
+#ifdef TARGET_SWITCH
+#include "controller/controller_switch.h"
+#include "nx_main.h"
+#endif
+
 #include "fs/fs.h"
 
 #include "game/game_init.h"
@@ -44,11 +54,11 @@
 #include "pc/discord/discordrpc.h"
 #endif
 
-OSMesg D_80339BEC;
+OSMesg gMainReceivedMesg;
 OSMesgQueue gSIEventMesgQueue;
 
 s8 gResetTimer;
-s8 D_8032C648;
+s8 gNmiResetBarsTimer;
 s8 gDebugLevelSelect;
 s8 gShowProfiler;
 s8 gShowDebugText;
@@ -62,16 +72,16 @@ extern void thread5_game_loop(void *arg);
 extern void create_next_audio_buffer(s16 *samples, u32 num_samples);
 void game_loop_one_iteration(void);
 
-void dispatch_audio_sptask(struct SPTask *spTask) {
+void dispatch_audio_sptask(UNUSED struct SPTask *spTask) {
 }
 
-void set_vblank_handler(s32 index, struct VblankHandler *handler, OSMesgQueue *queue, OSMesg *msg) {
+void set_vblank_handler(UNUSED s32 index, UNUSED struct VblankHandler *handler, UNUSED OSMesgQueue *queue, UNUSED OSMesg *msg) {
 }
 
 static bool inited = false;
 
 #include "game/game_init.h" // for gGlobalTimer
-void send_display_list(struct SPTask *spTask) {
+void exec_display_list(struct SPTask *spTask) {
     if (!inited) return;
     gfx_run((Gfx *)spTask->task.t.data_ptr);
 }
@@ -84,6 +94,27 @@ void send_display_list(struct SPTask *spTask) {
 #define SAMPLES_LOW 528
 #endif
 
+#ifdef HIGH_FPS_PC
+static inline void patch_interpolations(void) {
+    extern void mtx_patch_interpolated(void);
+    extern void patch_screen_transition_interpolated(void);
+    extern void patch_title_screen_scales(void);
+    extern void patch_interpolated_dialog(void);
+    extern void patch_interpolated_hud(void);
+    extern void patch_interpolated_paintings(void);
+    extern void patch_interpolated_bubble_particles(void);
+    extern void patch_interpolated_snow_particles(void);
+    mtx_patch_interpolated();
+    patch_screen_transition_interpolated();
+    patch_title_screen_scales();
+    patch_interpolated_dialog();
+    patch_interpolated_hud();
+    patch_interpolated_paintings();
+    patch_interpolated_bubble_particles();
+    patch_interpolated_snow_particles();
+}
+#endif
+
 void produce_one_frame(void) {
     gfx_start_frame();
 
@@ -94,6 +125,9 @@ void produce_one_frame(void) {
 
     game_loop_one_iteration();
     thread6_rumble_loop(NULL);
+#ifdef TARGET_SWITCH
+    controller_nx_rumble_loop();
+#endif
 
 #ifndef TARGET_N3DS
     int samples_left = audio_api->buffered();
@@ -107,6 +141,14 @@ void produce_one_frame(void) {
 #endif
 
     gfx_end_frame();
+
+#ifdef HIGH_FPS_PC
+    gfx_start_frame();
+    patch_interpolations();
+    send_display_list(gGfxSPTask);
+    gfx_end_frame();
+#endif
+
 #ifdef TARGET_N3DS
 #ifndef DISABLE_N3DS_AUDIO
     LightEvent_Wait(&s_event_main);
@@ -178,9 +220,14 @@ static void on_anim_frame(double time) {
 #endif
 
 void main_func(void) {
-
+#ifdef COMMAND_LINE_OPTIONS
     const char *gamedir = gCLIOpts.GameDir[0] ? gCLIOpts.GameDir : FS_BASEDIR;
     const char *userpath = gCLIOpts.SavePath[0] ? gCLIOpts.SavePath : sys_user_path();
+#else
+    const char *gamedir = FS_BASEDIR;
+    const char *userpath = sys_user_path();
+#endif
+    
     fs_init(sys_ropaths, gamedir, userpath);
 
     #ifndef TARGET_N3DS
@@ -189,7 +236,9 @@ void main_func(void) {
 
     #ifdef TARGET_WII_U
     configfile_save(configfile_name()); // Mount SD write now
-    #else
+    #endif
+    
+    #ifdef COMMAND_LINE_OPTIONS
     if (gCLIOpts.FullScreen == 1)
         configWindow.fullscreen = true;
     else if (gCLIOpts.FullScreen == 2)
@@ -200,11 +249,12 @@ void main_func(void) {
     main_pool_init();
     gGfxAllocOnlyPool = alloc_only_pool_init();
 #else
-    const size_t poolsize = 
-    #ifndef TARGET_PORT_CONSOLE
-    gCLIOpts.PoolSize ? gCLIOpts.PoolSize : 
+
+    #ifdef COMMAND_LINE_OPTIONS
+    const size_t poolsize = gCLIOpts.PoolSize ? gCLIOpts.PoolSize : DEFAULT_POOL_SIZE;
+    #else
+    const size_t poolsize = DEFAULT_POOL_SIZE;
     #endif
-    DEFAULT_POOL_SIZE;
 
     u64 *pool = malloc(poolsize);
     if (!pool) sys_fatal("Could not alloc %u bytes for main pool.\n", poolsize);
@@ -324,7 +374,13 @@ void main_func(void) {
 
 #ifdef TARGET_PORT_CONSOLE
 int main(UNUSED int argc, UNUSED char *argv[]) {
+#ifdef TARGET_SWITCH
+    initNX();
+#endif
     main_func();
+#ifdef TARGET_SWITCH
+    exitNX();
+#endif
     return 0;
 }
 #else

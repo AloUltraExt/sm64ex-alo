@@ -7,6 +7,14 @@
 #include "text_options_strings.h"
 #endif
 
+#ifdef CHEATS_ACTIONS
+#include "text_cheats_strings.h"
+#endif
+
+#ifdef DEBUG
+#include "text_debug_strings.h"
+#endif
+
 /**
  * Global Symbols
  */
@@ -28,6 +36,13 @@
 // Ingame Menu
 #define TEXT_PAUSE _("PAUSE") // Pause text, Castle Courses
 #define TEXT_HUD_CONGRATULATIONS _("CONGRATULATIONS") // Course Complete Text, Bowser Courses
+
+#ifdef TARGET_N64
+// Memory Expansion Error Screen
+#define TEXT_CONSOLE_8MB _("If you're using an N64 console, then you will need to buy an\nExpansion Pak to play this ROM hack.")
+#define TEXT_PJ64 _("If you are using PJ64 1.6, go to:\nOptions > Settings > Rom Settings Tab > Memory Size\nthen select 8 MB from the drop-down box.")
+#define TEXT_PJ64_2 _("If you are using PJ64 2.X, go to:\nOptions > Settings > Config: > Memory Size, select 8 MB")
+#endif
 
 #if defined(VERSION_JP) || defined(VERSION_SH)
 

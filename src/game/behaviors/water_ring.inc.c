@@ -16,16 +16,16 @@ void water_ring_init(void) {
     o->oWaterRingScalePhaseY = (s32)(random_float() * 4096.0f) + 0x1000;
     o->oWaterRingScalePhaseZ = (s32)(random_float() * 4096.0f) + 0x1000;
 
-    //! This normal calculation assumes a facing yaw of 0, which is not the case
-    //  for the manta ray rings. It also errs by multiplying the normal X by -1.
-    //  This cause the ring's orientation for the purposes of collision to be
-    //  different than the graphical orientation, which means that Mario won't
-    //  necessarily collect a ring even if he appears to swim through it.
 #if QOL_FIX_WATER_RING
     o->oWaterRingNormalX = sins(o->oFaceAngleYaw)   * sins(o->oFaceAngleRoll);
     o->oWaterRingNormalY = coss(o->oFaceAnglePitch) * coss(o->oFaceAngleRoll);
     o->oWaterRingNormalZ = coss(o->oFaceAngleYaw)   * sins(o->oFaceAnglePitch);
 #else
+    //! This normal calculation assumes a facing yaw of 0, which is not the case
+    //  for the manta ray rings. It also errs by multiplying the normal X by -1.
+    //  This cause the ring's orientation for the purposes of collision to be
+    //  different than the graphical orientation, which means that Mario won't
+    //  necessarily collect a ring even if he appears to swim through it.
     o->oWaterRingNormalX = coss(o->oFaceAnglePitch) * sins(o->oFaceAngleRoll) * -1.0f;
     o->oWaterRingNormalY = coss(o->oFaceAnglePitch) * coss(o->oFaceAngleRoll);
     o->oWaterRingNormalZ = sins(o->oFaceAnglePitch);

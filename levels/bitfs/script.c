@@ -35,6 +35,9 @@ static const LevelScript script_func_local_1[] = {
     OBJECT(/*model*/ MODEL_BITFS_SLIDING_PLATFORM,        /*pos*/  2103,   198,  312, /*angle*/ 0, 0, 0,   /*behParam*/ 0x019F0000, /*beh*/ bhvSlidingPlatform2),
     OBJECT(/*model*/ MODEL_BITFS_TUMBLING_PLATFORM,       /*pos*/  4979,  4250,   96, /*angle*/ 0, 0, 0,   /*behParam*/ 0x00030000, /*beh*/ bhvWfTumblingBridge),
     OBJECT(/*model*/ MODEL_NONE,                          /*pos*/  3890, -2043,  266, /*angle*/ 0, 0, 0,   /*behParam*/ 0x00520000, /*beh*/ bhvPoleGrabbing),
+#ifdef PORT_MOP_OBJS
+    OBJECT(/*model*/ MODEL_BLARGG, /*pos*/   7900, -3071, 266, /*angle*/ 0, 0, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBlargg),
+#endif
     RETURN(),
 };
 

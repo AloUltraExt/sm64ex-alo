@@ -35,8 +35,15 @@
 
 #ifndef TARGET_N64
 #include "pc/pc_main.h"
-#include "pc/cliopts.h"
 #include "pc/configfile.h"
+#endif
+
+#ifdef COMMAND_LINE_OPTIONS
+#include "pc/cliopts.h"
+#endif
+
+#ifdef BETTERCAMERA
+#include "extras/bettercamera.h"
 #endif
 
 #define PLAY_MODE_NORMAL 0
@@ -153,6 +160,8 @@ const char *credits20[] = { "1EXECUTIVE PRODUCER", "HIROSHI YAMAUCHI" };
 // Screen bottom right - Top text
 #define CREDITS_POS_FOUR 3*16
 
+// ex-alo change
+// Changed credits struct so its more understandable
 struct CreditsEntry sCreditsSequence[] = {
     { LEVEL_CASTLE_GROUNDS, 
         1, CREDITS_POS_ONE, 1, -128, { 0, 8000, 0 }, NULL },
@@ -235,10 +244,10 @@ u16 level_control_timer(s32 timerOp) {
 }
 
 u32 pressed_pause(void) {
-    u32 val4 = get_dialog_id() >= 0;
+    u32 dialogActive = get_dialog_id() >= 0;
     u32 intangible = (gMarioState->action & ACT_FLAG_INTANGIBLE) != 0;
 
-    if (!intangible && !val4 && !gWarpTransition.isActive && sDelayedWarpOp == WARP_OP_NONE
+    if (!intangible && !dialogActive && !gWarpTransition.isActive && sDelayedWarpOp == WARP_OP_NONE
         && (gPlayer1Controller->buttonPressed & START_BUTTON)) {
         return TRUE;
     }
@@ -289,7 +298,7 @@ void load_level_init_text(u32 arg) {
             gotAchievement = save_file_get_flags() & SAVE_FLAG_HAVE_WING_CAP;
             break;
 
-        case 255:
+        case (u8)DIALOG_NONE: // 255, cast value to u8 to match (-1)
             gotAchievement = TRUE;
             break;
 
@@ -581,6 +590,12 @@ void check_instant_warp(void) {
                 gMarioState->marioObj->oPosY = gMarioState->pos[1];
                 gMarioState->marioObj->oPosZ = gMarioState->pos[2];
 
+            #if QOL_FIX_INSTANT_WARP_OFFSET
+                gMarioObject->header.gfx.pos[0] = gMarioState->pos[0];
+                gMarioObject->header.gfx.pos[1] = gMarioState->pos[1];
+                gMarioObject->header.gfx.pos[2] = gMarioState->pos[2];               
+            #endif
+
                 cameraAngle = gMarioState->area->camera->yaw;
 
                 change_area(warp->area);
@@ -657,6 +672,12 @@ void initiate_warp(s16 destLevel, s16 destArea, s16 destWarpNode, s32 arg3) {
     sWarpDest.areaIdx = destArea;
     sWarpDest.nodeId = destWarpNode;
     sWarpDest.arg = arg3;
+    
+#ifdef BETTERCAMERA
+    if (sWarpDest.type != WARP_TYPE_SAME_AREA) {
+        puppycam_script_clear();
+    }
+#endif
 }
 
 // From Surface 0xD3 to 0xFC
@@ -1039,18 +1060,13 @@ s32 play_mode_normal(void) {
 }
 
 s32 play_mode_paused(void) {
-    if (gPauseScreenMode == 0) {
-        set_menu_mode(RENDER_PAUSE_SCREEN);
-    } else if (gPauseScreenMode == 1) {
+    if (gMenuOptSelectIndex == MENU_OPT_NONE) {
+        set_menu_mode(MENU_MODE_RENDER_PAUSE_SCREEN);
+    } else if (gMenuOptSelectIndex == MENU_OPT_DEFAULT) {
         raise_background_noise(1);
         gCameraMovementFlags &= ~CAM_MOVE_PAUSE_SCREEN;
         set_play_mode(PLAY_MODE_NORMAL);
-    } else
-#ifndef TARGET_N64
-        if (gPauseScreenMode == 2)
-#endif
-        {
-        // Exit level
+    } else { // MENU_OPT_EXIT_COURSE
         if (gDebugLevelSelect) {
             fade_into_special_warp(-9, 1);
         } else {
@@ -1060,15 +1076,7 @@ s32 play_mode_paused(void) {
         }
         
         gCameraMovementFlags &= ~CAM_MOVE_PAUSE_SCREEN;
-    } 
-#ifndef TARGET_N64
-    else if (gPauseScreenMode == 3) {
-        // We should only be getting "int 3" to here
-        initiate_warp(LEVEL_CASTLE, 1, 0x1F, 0);
-        fade_into_special_warp(0, 0);
-        game_exit();
     }
-#endif
 
     return 0;
 }
@@ -1106,9 +1114,9 @@ void level_set_transition(s16 length, void (*updateFunction)(s16 *)) {
  * Play the transition and then return to normal play mode.
  */
 s32 play_mode_change_area(void) {
-    //! This maybe was supposed to be sTransitionTimer == -1? sTransitionUpdate
-    // is never set to -1.
-    if (sTransitionUpdate == (void (*)(s16 *)) - 1) {
+    // ex-alo change
+    // change weird sTransitionUpdate value to proper sTransitionTimer value
+    if (sTransitionTimer == -1) {
         update_camera(gCurrentArea->camera);
     } else if (sTransitionUpdate != NULL) {
         sTransitionUpdate(&sTransitionTimer);
@@ -1152,7 +1160,7 @@ s32 play_mode_change_level(void) {
 /**
  * Unused play mode. Doesn't call transition update and doesn't reset transition at the end.
  */
-static s32 play_mode_unused(void) {
+UNUSED static s32 play_mode_unused(void) {
     if (--sTransitionTimer == -1) {
         gHudDisplay.flags = HUD_DISPLAY_NONE;
 
@@ -1164,6 +1172,23 @@ static s32 play_mode_unused(void) {
     }
 
     return 0;
+}
+
+#if SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
+s16 gSkipIntroKeyCombo = FALSE;
+#endif
+
+// ex-alo change
+// Checks for peach intro skip
+u8 should_intro_be_skipped(void) {
+    return save_file_exists(gCurrSaveFileNum - 1) || gSkipIntroKeyCombo == TRUE
+#ifndef TARGET_N64
+#ifdef COMMAND_LINE_OPTIONS
+    || gCLIOpts.SkipIntro == TRUE
+#endif
+    || configSkipIntro == TRUE
+#endif
+    ;
 }
 
 s32 update_level(void) {
@@ -1195,15 +1220,12 @@ s32 update_level(void) {
     return changeLevel;
 }
 
-#if DEBUG_TEST_ENDCUTSCENE
-#define ACT_IDLE ACT_JUMBO_STAR_CUTSCENE
-#endif
-
 s32 init_level(void) {
+    s32 val4 = 0;
+
 #ifdef TARGET_N3DS
     gDPSetIod(gDisplayListHead++, iodNormal);
 #endif
-    s32 val4 = 0;
 
     set_play_mode(PLAY_MODE_NORMAL);
 
@@ -1238,24 +1260,14 @@ s32 init_level(void) {
                 set_mario_action(gMarioState, ACT_IDLE, 0);
             } else if (!gDebugLevelSelect) {
                 if (gMarioState->action != ACT_UNINITIALIZED) {
-                    if (save_file_exists(gCurrSaveFileNum - 1)) {
+                    // ex-alo change
+                    // Checks for peach intro skip
+                    if (should_intro_be_skipped()) {
                         set_mario_action(gMarioState, ACT_IDLE, 0);
                         val4 = 0;
-                    } else
-#ifndef TARGET_N64
-                        if (gCLIOpts.SkipIntro == 0 && configSkipIntro == 0) {
-                            set_mario_action(gMarioState, ACT_INTRO_CUTSCENE, 0);
-                            val4 = 1;
-#else
-                        {
-#if !SKIP_INTRO_CUTSCENE
+                    } else {
                         set_mario_action(gMarioState, ACT_INTRO_CUTSCENE, 0);
                         val4 = 1;
-#else
-                        set_mario_action(gMarioState, ACT_IDLE, 0);
-                        val4 = 0;
-#endif
-#endif
                     }
                 }
             }
@@ -1322,16 +1334,9 @@ s32 lvl_init_from_save_file(UNUSED s16 arg0, s32 levelNum) {
 #endif
     sWarpDest.type = WARP_TYPE_NOT_WARPING;
     sDelayedWarpOp = WARP_OP_NONE;
-    gNeverEnteredCastle =
-#if !SKIP_INTRO_CUTSCENE
-    !save_file_exists(gCurrSaveFileNum - 1) 
-#else
-    TRUE
-#endif
-#ifndef TARGET_N64
-    && gCLIOpts.SkipIntro == 0 && configSkipIntro == 0
-#endif
-    ;
+    // ex-alo change
+    // Checks for peach intro skip
+    gNeverEnteredCastle = !should_intro_be_skipped();
 
     gCurrLevelNum = levelNum;
     gCurrCourseNum = COURSE_NONE;
@@ -1345,11 +1350,7 @@ s32 lvl_init_from_save_file(UNUSED s16 arg0, s32 levelNum) {
     select_mario_cam_mode();
     set_yoshi_as_not_dead();
 
-#if DEBUG_TEST_ENDCUTSCENE
-    return LEVEL_BOWSER_3;
-#else
     return levelNum;
-#endif
 }
 
 s32 lvl_set_current_level(UNUSED s16 arg0, s32 levelNum) {

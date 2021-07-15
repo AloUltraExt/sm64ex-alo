@@ -796,8 +796,12 @@ static void gfx_citro3d_init(void)
     C3D_DepthMap(true, -1.0f, 0);
     C3D_DepthTest(false, GPU_LEQUAL, GPU_WRITE_ALL);
     C3D_AlphaTest(true, GPU_GREATER, 0x00);
-    
+
+#ifdef HIGH_FPS_PC
+    C3D_FrameRate(60);
+#else
     C3D_FrameRate(30);
+#endif
 }
 
 static void gfx_citro3d_start_frame(void)

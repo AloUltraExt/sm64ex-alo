@@ -35,6 +35,9 @@ static const LevelScript script_func_local_1[] = {
     // A likely explanation is that this object was added in after the collision model was made, and they didn't want
     // to redo the collision so they just added a new behavior for it.
     OBJECT(/*model*/ MODEL_LEVEL_GEOMETRY_0E, /*pos*/ -5115, 300, -3200, /*angle*/ 0,  90, 0, /*behParam*/ 0x00000000, /*beh*/ bhvLllHexagonalMesh),
+#ifdef PORT_MOP_OBJS
+    OBJECT(/*model*/ MODEL_BLARGG, /*pos*/   -7200, 0, -7200, /*angle*/ 0, 0, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBlargg),
+#endif
     RETURN(),
 };
 

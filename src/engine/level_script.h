@@ -6,6 +6,9 @@
 struct LevelCommand;
 
 extern u8 level_script_entry[];
+#ifdef TARGET_N64
+extern u8 level_script_entry_error_screen[];
+#endif
 
 struct LevelCommand *level_script_execute(struct LevelCommand *cmd);
 

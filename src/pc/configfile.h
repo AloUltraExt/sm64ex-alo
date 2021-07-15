@@ -32,9 +32,6 @@ extern unsigned int configMasterVolume;
 extern unsigned int configMusicVolume;
 extern unsigned int configSfxVolume;
 extern unsigned int configEnvVolume;
-#ifdef TARGET_WII_U
-extern bool configN64FaceButtons;
-#else
 extern unsigned int configKeyA[];
 extern unsigned int configKeyB[];
 extern unsigned int configKeyStart[];
@@ -53,25 +50,28 @@ extern unsigned int configKeyStickUp[];
 extern unsigned int configKeyStickDown[];
 extern unsigned int configKeyStickLeft[];
 extern unsigned int configKeyStickRight[];
-#endif
 extern unsigned int configStickDeadzone;
 extern unsigned int configRumbleStrength;
 #ifdef EXTERNAL_DATA
 extern bool         configPrecacheRes;
 #endif
 #ifdef BETTERCAMERA
+extern bool         configEnableCamera;
+#ifdef MOUSE_ACTIONS
+extern bool         configCameraMouse;
+#endif
+extern bool         configCameraInvertX;
+extern bool         configCameraInvertY;
 extern unsigned int configCameraXSens;
 extern unsigned int configCameraYSens;
 extern unsigned int configCameraAggr;
-extern unsigned int configCameraPan;
-extern unsigned int configCameraDegrade;
-extern bool         configCameraInvertX;
-extern bool         configCameraInvertY;
-extern bool         configEnableCamera;
-extern bool         configCameraMouse;
 extern bool         configCameraAnalog;
+extern unsigned int configCameraScheme;
 #endif
 extern bool         configHUD;
+#ifdef MOUSE_ACTIONS
+extern bool         configMouse;
+#endif
 extern bool         configSkipIntro;
 #ifdef DISCORDRPC
 extern bool         configDiscordRPC;

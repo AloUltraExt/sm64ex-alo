@@ -14,7 +14,7 @@
 #include "rumble_init.h"
 #include "pc/configfile.h"
 #ifdef CHEATS_ACTIONS
-#include "cheats.h"
+#include "extras/cheats.h"
 #endif
 
 struct LandingAction {
@@ -463,18 +463,13 @@ void update_walking_speed(struct MarioState *m) {
         m->forwardVel = 48.0f;
     }
 
+/* Handles the "Super responsive controls" cheat. The content of the "else" is Mario's original code for turning around.*/
 #ifdef CHEATS_ACTIONS
-    /* Handles the "Super responsive controls" cheat. The content of the "else" is Mario's original code for turning around.*/
-
-    if (Cheats.Responsive == true && Cheats.EnableCheats == true ) {
-        m->faceAngle[1] = m->intendedYaw;
-    }
-    else {
+    cheats_responsive_controls(m);
+#else
+    m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0x800, 0x800);
 #endif
-         m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0x800, 0x800);
-#ifdef CHEATS_ACTIONS
-    } 
-#endif    
+
     apply_slope_accel(m);
 }
 
@@ -1978,7 +1973,7 @@ s32 check_common_moving_cancels(struct MarioState *m) {
         return set_water_plunge_action(m);
     }
 
-    if (!(m->action & ACT_FLAG_INVULNERABLE) && (m->input & INPUT_UNKNOWN_10)) {
+    if (!(m->action & ACT_FLAG_INVULNERABLE) && (m->input & INPUT_STOMPED)) {
         return drop_and_set_mario_action(m, ACT_SHOCKWAVE_BOUNCE, 0);
     }
 

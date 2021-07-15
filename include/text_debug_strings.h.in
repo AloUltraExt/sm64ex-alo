@@ -1,0 +1,36 @@
+#ifndef TEXT_DEBUG_STRINGS_H
+#define TEXT_DEBUG_STRINGS_H
+
+#define TEXT_OPT_DEBUG          _("DEBUG")
+#define TEXT_OPT_DEBUG_WARP     _("WARP DEBUG")
+
+#if defined(VERSION_JP) || defined(VERSION_SH)
+// TODO: Actually translate this to JP
+#define TEXT_OPT_DEBUG0         _("SIMPLE DEBUG DISPLAY")
+#define TEXT_OPT_DEBUG1         _("COMPLEX DEBUG DISPLAY")
+#define TEXT_OPT_DEBUG2         _("LEVEL SELECT")
+#define TEXT_OPT_DEBUG3         _("FREE MOVEMENT (PRESS L)")
+#define TEXT_OPT_DEBUG4         _("DEBUG CAP CHANGER")
+#define TEXT_OPT_DEBUG5         _("SHOW PROFILER")
+#define TEXT_OPT_DEBUG6         _("SHOW FPS")
+#define TEXT_OPT_DEBUG7         _("WARP DEBUG")
+
+#define TEXT_DEBUG_WARP0        _("WARP TO ENDING")
+#define TEXT_DEBUG_WARP1        _("WARP TO CREDITS")
+
+#else
+#define TEXT_OPT_DEBUG0         _("Simple Debug Display")
+#define TEXT_OPT_DEBUG1         _("Complex Debug Display")
+#define TEXT_OPT_DEBUG2         _("Level Select")
+#define TEXT_OPT_DEBUG3         _("Free Movement (Press L)")
+#define TEXT_OPT_DEBUG4         _("Debug Cap Changer")
+#define TEXT_OPT_DEBUG5         _("Show Profiler")
+#define TEXT_OPT_DEBUG6         _("Show FPS")
+#define TEXT_OPT_DEBUG7         _("Warp Debug")
+
+#define TEXT_DEBUG_WARP0        _("Warp to Ending")
+#define TEXT_DEBUG_WARP1        _("Warp to Credits")
+
+#endif
+
+#endif // TEXT_DEBUG_STRINGS_H

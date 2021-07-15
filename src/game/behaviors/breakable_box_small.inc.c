@@ -16,7 +16,13 @@ void bhv_breakable_box_small_init(void) {
     o->oGravity = 2.5f;
     o->oFriction = 0.99f;
     o->oBuoyancy = 1.4f;
+#ifdef PORT_MOP_OBJS
+    if (cur_obj_has_model(MODEL_BREAKABLE_BOX_SMALL)) {
+        cur_obj_scale(0.4f);
+    }
+#else
     cur_obj_scale(0.4f);
+#endif
     obj_set_hitbox(o, &sBreakableBoxSmallHitbox);
     o->oAnimState = 1;
     o->activeFlags |= ACTIVE_FLAG_UNK9;
@@ -43,7 +49,7 @@ void small_breakable_box_act_move(void) {
 
     if (sp1E & 2) {
         spawn_mist_particles();
-        spawn_triangle_break_particles(20, 138, 0.7f, 3);
+        spawn_triangle_break_particles(20, MODEL_DIRT_ANIMATION, 0.7f, 3);
         obj_spawn_yellow_coins(o, 3);
         create_sound_spawner(SOUND_GENERAL_BREAK_BOX);
         o->activeFlags = ACTIVE_FLAG_DEACTIVATED;
@@ -65,7 +71,11 @@ void breakable_box_small_released_loop(void) {
 
     // Despawn, and create a corkbox respawner
     if (o->oBreakableBoxSmallFramesSinceReleased > 900) {
+#ifdef PORT_MOP_OBJS
+        create_respawner(o->header.gfx.sharedChild, bhvBreakableBoxSmall, 3000);
+#else
         create_respawner(MODEL_BREAKABLE_BOX_SMALL, bhvBreakableBoxSmall, 3000);
+#endif
         o->activeFlags = ACTIVE_FLAG_DEACTIVATED;
     }
 }
@@ -82,7 +92,11 @@ void breakable_box_small_idle_loop(void) {
 
         case 101:
             o->activeFlags = ACTIVE_FLAG_DEACTIVATED;
+#ifdef PORT_MOP_OBJS
+            create_respawner(o->header.gfx.sharedChild, bhvBreakableBoxSmall, 3000);
+#else
             create_respawner(MODEL_BREAKABLE_BOX_SMALL, bhvBreakableBoxSmall, 3000);
+#endif
             break;
     }
 

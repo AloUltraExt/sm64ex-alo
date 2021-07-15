@@ -16,7 +16,6 @@
 #include "game/profiler.h"
 #include "game/save_file.h"
 #include "game/sound_init.h"
-#include "goddard/renderer.h"
 #include "geo_layout.h"
 #include "graph_node.h"
 #include "level_script.h"
@@ -25,6 +24,13 @@
 #include "surface_collision.h"
 #include "surface_load.h"
 #include "level_table.h"
+#ifdef GODDARD_MFACE
+#include "goddard/renderer.h"
+#endif
+
+#ifdef BETTERCAMERA
+#include "extras/bettercamera.h"
+#endif
 
 #define CMD_GET(type, offset) (*(type *) (CMD_PROCESS_OFFSET(offset) + (u8 *) sCurrentCmd))
 
@@ -285,7 +291,7 @@ static void level_cmd_load_mio0(void) {
     sCurrentCmd = CMD_NEXT;
 }
 
-#ifdef USE_SYSTEM_MALLOC
+#if defined(USE_SYSTEM_MALLOC) && defined(GODDARD_MFACE)
 static void *alloc_for_goddard(u32 size) {
     return mem_pool_alloc(sMemPoolForGoddard, size);
 }
@@ -296,6 +302,8 @@ static void free_for_goddard(void *ptr) {
 #endif
 
 static void level_cmd_load_mario_head(void) {
+#ifdef GODDARD_MFACE
+
 #ifdef USE_SYSTEM_MALLOC
     sMemPoolForGoddard = mem_pool_init(0, 0);
     gdm_init(alloc_for_goddard, free_for_goddard);
@@ -314,6 +322,7 @@ static void level_cmd_load_mario_head(void) {
     }
 #endif
 
+#endif
     sCurrentCmd = CMD_NEXT;
 }
 
@@ -782,6 +791,40 @@ static void level_cmd_get_or_set_var(void) {
     sCurrentCmd = CMD_NEXT;
 }
 
+#ifdef BETTERCAMERA
+static void level_cmd_puppyvolume(void) {
+    if ((sPuppyVolumeStack[gPuppyVolumeCount] = mem_pool_alloc(gPuppyMemoryPool,sizeof(struct sPuppyVolume))) == NULL) {
+        sCurrentCmd = CMD_NEXT;
+        gPuppyError |= PUPPY_ERROR_POOL_FULL;
+        return;
+    }
+
+    sPuppyVolumeStack[gPuppyVolumeCount]->pos[0] = CMD_GET(s16, 2);
+    sPuppyVolumeStack[gPuppyVolumeCount]->pos[1] = CMD_GET(s16, 4);
+    sPuppyVolumeStack[gPuppyVolumeCount]->pos[2] = CMD_GET(s16, 6);
+
+    sPuppyVolumeStack[gPuppyVolumeCount]->radius[0] = CMD_GET(s16, 8);
+    sPuppyVolumeStack[gPuppyVolumeCount]->radius[1] = CMD_GET(s16, 10);
+    sPuppyVolumeStack[gPuppyVolumeCount]->radius[2] = CMD_GET(s16, 12);
+
+    sPuppyVolumeStack[gPuppyVolumeCount]->rot = CMD_GET(s16, 14);
+
+    sPuppyVolumeStack[gPuppyVolumeCount]->func = CMD_GET(void *, 16);
+    sPuppyVolumeStack[gPuppyVolumeCount]->angles = segmented_to_virtual(CMD_GET(void *, 20));
+
+    sPuppyVolumeStack[gPuppyVolumeCount]->flagsAdd = CMD_GET(s32, 24);
+    sPuppyVolumeStack[gPuppyVolumeCount]->flagsRemove = CMD_GET(s32, 28);
+
+    sPuppyVolumeStack[gPuppyVolumeCount]->flagPersistance = CMD_GET(u8, 32);
+
+    sPuppyVolumeStack[gPuppyVolumeCount]->shape = CMD_GET(u8, 33);
+    sPuppyVolumeStack[gPuppyVolumeCount]->room = CMD_GET(s16, 34);
+
+    gPuppyVolumeCount++;
+    sCurrentCmd = CMD_NEXT;
+}
+#endif
+
 static void (*LevelScriptJumpTable[])(void) = {
     /*00*/ level_cmd_load_and_execute,
     /*01*/ level_cmd_exit_and_execute,
@@ -844,6 +887,9 @@ static void (*LevelScriptJumpTable[])(void) = {
     /*3A*/ level_cmd_3A,
     /*3B*/ level_cmd_create_whirlpool,
     /*3C*/ level_cmd_get_or_set_var,
+#ifdef BETTERCAMERA
+    /*3D*/ level_cmd_puppyvolume,
+#endif
 };
 
 struct LevelCommand *level_script_execute(struct LevelCommand *cmd) {
@@ -855,7 +901,7 @@ struct LevelCommand *level_script_execute(struct LevelCommand *cmd) {
     }
 
     profiler_log_thread5_time(LEVEL_SCRIPT_EXECUTE);
-    init_render_image();
+    init_rcp();
     render_game();
     end_master_display_list();
     alloc_display_list(0);

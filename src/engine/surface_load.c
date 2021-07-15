@@ -14,6 +14,8 @@
 #include "game/mario.h"
 #include "game/object_list_processor.h"
 #include "surface_load.h"
+#include "game/game_init.h"
+#include "engine/math_util.h"
 
 s32 unused8038BE90;
 
@@ -315,7 +317,7 @@ static void add_surface(struct Surface *surface, s32 dynamic) {
     }
 }
 
-static void stub_surface_load_1(void) {
+UNUSED static void stub_surface_load_1(void) {
 }
 
 /**
@@ -382,6 +384,13 @@ static struct Surface *read_surface_data(s16 *vertexData, s16 **vertexIndices) {
     nz *= mag;
 
     surface = alloc_surface();
+
+#ifdef HIGH_FPS_PC
+    vec3s_copy(surface->prevVertex1, surface->vertex1);
+    vec3s_copy(surface->prevVertex2, surface->vertex2);
+    vec3s_copy(surface->prevVertex3, surface->vertex3);
+    surface->modifiedTimestamp = gGlobalTimer;
+#endif
 
     surface->vertex1[0] = x1;
     surface->vertex2[0] = x2;
@@ -707,7 +716,7 @@ void clear_dynamic_surfaces(void) {
     }
 }
 
-static void unused_80383604(void) {
+UNUSED static void unused_80383604(void) {
 }
 
 /**

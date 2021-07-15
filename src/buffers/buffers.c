@@ -1,6 +1,7 @@
 #include <ultra64.h>
 
 #include "buffers.h"
+#include "config.h"
 
 ALIGNED8 u8 gDecompressionHeap[0xD000];
 
@@ -11,7 +12,7 @@ ALIGNED8 u8 gThread3Stack[0x2000];
 ALIGNED8 u8 gThread4Stack[0x2000];
 ALIGNED8 u8 gThread5Stack[0x2000];
 
-#ifdef VERSION_SH
+#ifdef RUMBLE_FEEDBACK
 ALIGNED8 u8 gThread6Stack[0x2000];
 #endif
 // 0x400 bytes

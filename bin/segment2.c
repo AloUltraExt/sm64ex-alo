@@ -87,7 +87,7 @@ ALIGNED8 static const Texture texture_hud_char_I[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_J[] = {
-#include "textures/segment2/segment2.02600_custom.rgba16.inc.c"
+#include "textures/segment2/custom/segment2.02600.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_K[] = {
@@ -115,7 +115,7 @@ ALIGNED8 static const Texture texture_hud_char_P[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_Q[] = {
-#include "textures/segment2/segment2.03400_custom.rgba16.inc.c"
+#include "textures/segment2/custom/segment2.03400.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_R[] = {
@@ -135,7 +135,7 @@ ALIGNED8 static const Texture texture_hud_char_U[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_V[] = {
-#include "textures/segment2/segment2.03E00_custom.rgba16.inc.c"
+#include "textures/segment2/custom/segment2.03E00.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_W[] = {
@@ -143,7 +143,7 @@ ALIGNED8 static const Texture texture_hud_char_W[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_X[] = {
-#include "textures/segment2/segment2.04200_custom.rgba16.inc.c"
+#include "textures/segment2/custom/segment2.04200.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_Y[] = {
@@ -151,7 +151,7 @@ ALIGNED8 static const Texture texture_hud_char_Y[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_Z[] = {
-#include "textures/segment2/segment2.04600_custom.rgba16.inc.c"
+#include "textures/segment2/custom/segment2.04600.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_apostrophe[] = {
@@ -169,23 +169,23 @@ ALIGNED8 static const Texture texture_hud_char_umlaut[] = {
 #endif
 
 ALIGNED8 static const Texture texture_hud_char_exclamation[] = {
-#include "textures/segment2/segment2.04C00_custom.rgba16.inc.c"// JP !
+#include "textures/segment2/custom/segment2.04C00.rgba16.inc.c"// JP !
 };
 
 ALIGNED8 static const Texture texture_hud_char_double_exclamation[] = {
-#include "textures/segment2/segment2.04E00_custom.rgba16.inc.c"// JP !!
+#include "textures/segment2/custom/segment2.04E00.rgba16.inc.c"// JP !!
 };
 
 ALIGNED8 static const Texture texture_hud_char_question[] = {
-#include "textures/segment2/segment2.05000_custom.rgba16.inc.c"// JP ?
+#include "textures/segment2/custom/segment2.05000.rgba16.inc.c"// JP ?
 };
 
 ALIGNED8 static const Texture texture_hud_char_ampersand[] = {
-#include "textures/segment2/segment2.05200_custom.rgba16.inc.c"// JP &
+#include "textures/segment2/custom/segment2.05200.rgba16.inc.c"// JP &
 };
 
 ALIGNED8 static const Texture texture_hud_char_percent[] = {
-#include "textures/segment2/segment2.05400_custom.rgba16.inc.c"// JP %
+#include "textures/segment2/custom/segment2.05400.rgba16.inc.c"// JP %
 };
 
 ALIGNED8 static const Texture texture_hud_char_multiply[] = {
@@ -213,6 +213,12 @@ ALIGNED8 static const Texture texture_hud_char_decimal_point[] = {
 #if defined(VERSION_JP) || defined(VERSION_SH)
 ALIGNED8 static const Texture texture_hud_char_beta_key[] = {
 #include "textures/segment2/segment2.06000.rgba16.inc.c"
+};
+#endif
+
+#ifdef BETTERCAMERA
+ALIGNED8 const Texture texture_hud_char_puppycam[] = {
+#include "textures/segment2/custom/tex_puppycam_icon.rgba16.inc.c"
 };
 #endif
 
@@ -2085,19 +2091,10 @@ const Gfx dl_hud_img_begin[] = {
     gsDPSetTexturePersp(G_TP_NONE),
     gsDPSetAlphaCompare(G_AC_THRESHOLD),
     gsDPSetBlendColor(255, 255, 255, 255),
-#if QOL_FIX_HUD_TEXTURE_FILTER
+    // ex-alo change
+    // Forces HUD Filter
     gsDPSetRenderMode(G_RM_NOOP, G_RM_NOOP2),
     gsDPSetTextureFilter(G_TF_POINT),
-#else
-#if defined(VERSION_EU) || defined(VERSION_SH)
-    gsDPSetRenderMode(G_RM_NOOP, G_RM_NOOP2),
-#endif
-#ifdef VERSION_EU
-    gsDPSetTextureFilter(G_TF_POINT),
-#elif defined(VERSION_JP) || defined(VERSION_US)
-    gsDPSetRenderMode(G_RM_AA_XLU_SURF, G_RM_AA_XLU_SURF2),
-#endif
-#endif
     gsSPEndDisplayList(),
 };
 
@@ -2117,18 +2114,10 @@ const Gfx dl_hud_img_end[] = {
     gsDPSetTexturePersp(G_TP_PERSP),
     gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
     gsDPSetAlphaCompare(G_AC_NONE),
-#if QOL_FIX_HUD_TEXTURE_FILTER
+    // ex-alo change
+    // Forces HUD Filter
     gsDPSetTextureFilter(G_TF_BILERP),
     gsDPSetCycleType(G_CYC_1CYCLE),
-#else
-#ifdef VERSION_EU
-    gsDPSetTextureFilter(G_TF_BILERP),
-#endif
-    gsDPSetCycleType(G_CYC_1CYCLE),
-#if defined(VERSION_JP) || defined(VERSION_US)
-    gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_OFF),
-#endif
-#endif
     gsSPEndDisplayList(),
 };
 
@@ -2184,12 +2173,6 @@ const Gfx dl_draw_text_bg_box[] = {
     gsSPEndDisplayList(),
 };
 
-#if QOL_FIX_US_FONT_TEXTURE_UV
-#define UV 512
-#else
-#define UV 480
-#endif
-
 #ifndef VERSION_EU
 // 0x0200EE28 - 0x0200EE68
 static const Vtx vertex_ia8_char[] = {
@@ -2199,10 +2182,12 @@ static const Vtx vertex_ia8_char[] = {
     {{{     8,     16,      0}, 0, {   512,      0}, {0xff, 0xff, 0xff, 0xff}}},
     {{{     0,     16,      0}, 0, {     0,      0}, {0xff, 0xff, 0xff, 0xff}}},
 #else
+    // ex-alo change
+    // Corrects IA font UV 
     {{{     0,      0,      0}, 0, {     0,    256}, {0xff, 0xff, 0xff, 0xff}}},
     {{{     8,      0,      0}, 0, {     0,      0}, {0xff, 0xff, 0xff, 0xff}}},
-    {{{     8,     16,      0}, 0, {    UV,      0}, {0xff, 0xff, 0xff, 0xff}}},
-    {{{     0,     16,      0}, 0, {    UV,    256}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{     8,     16,      0}, 0, {   512,      0}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{     0,     16,      0}, 0, {   512,    256}, {0xff, 0xff, 0xff, 0xff}}},
 #endif
 };
 // !EU
@@ -2504,7 +2489,7 @@ const Texture texture_waterbox_lava[] = {
 };
 
 // Unreferenced light group
-static const Lights1 segment2_lights_unused = gdSPDefLights1(
+UNUSED static const Lights1 segment2_lights_unused = gdSPDefLights1(
     0x40, 0x40, 0x40,
     0xff, 0xff, 0xff, 0x28, 0x28, 0x28
 );

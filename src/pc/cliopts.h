@@ -1,6 +1,8 @@
 #ifndef _CLIOPTS_H
 #define _CLIOPTS_H
 
+#ifdef COMMAND_LINE_OPTIONS
+
 #include "platform.h"
 
 struct PCCLIOptions  {
@@ -16,5 +18,7 @@ struct PCCLIOptions  {
 extern struct PCCLIOptions gCLIOpts;
 
 void parse_cli_opts(int argc, char* argv[]);
+
+#endif
 
 #endif // _CLIOPTS_H

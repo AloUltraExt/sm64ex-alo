@@ -32,7 +32,10 @@
 #include "gfx_screen_config.h"
 #include "../pc_main.h"
 #include "../configfile.h"
+
+#ifdef COMMAND_LINE_OPTIONS
 #include "../cliopts.h"
+#endif
 
 #include "src/pc/controller/controller_keyboard.h"
 
@@ -147,14 +150,31 @@ static int test_vsync(void) {
 }
 
 static inline void gfx_sdl_set_vsync(const bool enabled) {
-    #ifdef TARGET_SWITCH
-    SDL_GL_SetSwapInterval(2); // change to 1 if 60 fps patch is applied
-    use_timer = false;
+#ifdef TARGET_SWITCH
+    #ifdef HIGH_FPS_PC
+    SDL_GL_SetSwapInterval(1);
     #else
+    SDL_GL_SetSwapInterval(2);
+    #endif
+    use_timer = false;
+#else
     if (enabled) {
         // try to detect refresh rate
         SDL_GL_SetSwapInterval(1);
+    #ifdef HIGH_FPS_PC
+        int vblanks = test_vsync();
+        if (vblanks & 1)
+            vblanks = 0; // not divisible by 60, screw that
+        else
+            vblanks /= 2;
+    #else
+        #ifdef COMMAND_LINE_OPTIONS
         const int vblanks = gCLIOpts.SyncFrames ? (int)gCLIOpts.SyncFrames : test_vsync();
+        #else
+        const int vblanks = test_vsync();
+        #endif
+    #endif
+
         if (vblanks) {
             printf("determined swap interval: %d\n", vblanks);
             SDL_GL_SetSwapInterval(vblanks);
@@ -257,7 +277,11 @@ static void gfx_sdl_init(const char *window_title) {
     gfx_sdl_set_fullscreen();
 
     perf_freq = SDL_GetPerformanceFrequency();
+    #ifdef HIGH_FPS_PC
+    frame_time = perf_freq / (2 * FRAMERATE);
+    #else
     frame_time = perf_freq / FRAMERATE;
+    #endif
 
     for (size_t i = 0; i < sizeof(windows_scancode_table) / sizeof(SDL_Scancode); i++) {
         inverted_scancode_table[windows_scancode_table[i]] = i;
@@ -351,11 +375,13 @@ static void gfx_sdl_handle_events(void) {
     }
 }
 
+#ifndef TARGET_PORT_CONSOLE
 static void gfx_sdl_set_keyboard_callbacks(kb_callback_t on_key_down, kb_callback_t on_key_up, void (*on_all_keys_up)(void)) {
     kb_key_down = on_key_down;
     kb_key_up = on_key_up;
     kb_all_keys_up = on_all_keys_up;
 }
+#endif
 
 static bool gfx_sdl_start_frame(void) {
     return true;
@@ -407,7 +433,9 @@ static void gfx_sdl_shutdown(void) {
 
 struct GfxWindowManagerAPI gfx_sdl = {
     gfx_sdl_init,
+#ifndef TARGET_PORT_CONSOLE
     gfx_sdl_set_keyboard_callbacks,
+#endif
     gfx_sdl_main_loop,
     gfx_sdl_get_dimensions,
     gfx_sdl_handle_events,

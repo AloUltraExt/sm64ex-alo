@@ -8,8 +8,10 @@
 static void gfx_dummy_wm_init(const char *game_name, bool start_in_fullscreen) {
 }
 
+#ifndef TARGET_PORT_CONSOLE
 static void gfx_dummy_wm_set_keyboard_callbacks(bool (*on_key_down)(int scancode), bool (*on_key_up)(int scancode), void (*on_all_keys_up)(void)) {
 }
+#endif
 
 static void gfx_dummy_wm_main_loop(void (*run_one_game_iter)(void)) {
     while (1) {
@@ -156,7 +158,9 @@ static void gfx_dummy_renderer_shutdown(void) {
 
 struct GfxWindowManagerAPI gfx_dummy_wm_api = {
     gfx_dummy_wm_init,
+#ifndef TARGET_PORT_CONSOLE
     gfx_dummy_wm_set_keyboard_callbacks,
+#endif
     gfx_dummy_wm_main_loop,
     gfx_dummy_wm_get_dimensions,
     gfx_dummy_wm_handle_events,

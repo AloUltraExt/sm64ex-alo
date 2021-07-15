@@ -18,6 +18,7 @@
 void *memset(void *dest, int c, size_t n);
 int memcmp(const void *str1, const void *str2, size_t n);
 void *memmove(void *str1, const void *str2, size_t n);
+int strcmp(char *s, char *t);
 #endif
 
 // Crash handler enhancement
@@ -65,7 +66,7 @@ void *memmove(void *str1, const void *str2, size_t n);
 #define INPUT_A_DOWN                 0x0080
 #define INPUT_IN_POISON_GAS          0x0100
 #define INPUT_IN_WATER               0x0200
-#define INPUT_UNKNOWN_10             0x0400
+#define INPUT_STOMPED                0x0400
 #define INPUT_INTERACT_OBJ_GRABBABLE 0x0800
 #define INPUT_UNKNOWN_12             0x1000
 #define INPUT_B_PRESSED              0x2000
@@ -351,7 +352,11 @@ void *memmove(void *str1, const void *str2, size_t n);
 #define ACT_READING_SIGN               0x00001308 // (0x108 | ACT_FLAG_STATIONARY | ACT_FLAG_INTANGIBLE)
 #define ACT_JUMBO_STAR_CUTSCENE        0x00001909 // (0x109 | ACT_FLAG_AIR | ACT_FLAG_INTANGIBLE)
 #define ACT_WAITING_FOR_DIALOG         0x0000130A // (0x10A | ACT_FLAG_STATIONARY | ACT_FLAG_INTANGIBLE)
+#ifdef DEBUG
+#define ACT_DEBUG_FREE_MOVE            0x0000190F // (0x10F | ACT_FLAG_AIR | ACT_FLAG_INTANGIBLE)
+#else
 #define ACT_DEBUG_FREE_MOVE            0x0000130F // (0x10F | ACT_FLAG_STATIONARY | ACT_FLAG_INTANGIBLE)
+#endif
 #define ACT_STANDING_DEATH             0x00021311 // (0x111 | ACT_FLAG_STATIONARY | ACT_FLAG_INTANGIBLE | ACT_FLAG_INVULNERABLE)
 #define ACT_QUICKSAND_DEATH            0x00021312 // (0x112 | ACT_FLAG_STATIONARY | ACT_FLAG_INTANGIBLE | ACT_FLAG_INVULNERABLE)
 #define ACT_ELECTROCUTION              0x00021313 // (0x113 | ACT_FLAG_STATIONARY | ACT_FLAG_INTANGIBLE | ACT_FLAG_INVULNERABLE)

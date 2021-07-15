@@ -135,7 +135,7 @@ void *segmented_to_virtual(const void *addr) {
     return (void *) addr;
 }
 
-void *virtual_to_segmented(u32 segment, const void *addr) {
+void *virtual_to_segmented(UNUSED u32 segment, const void *addr) {
     return (void *) addr;
 }
 
@@ -180,7 +180,7 @@ void main_pool_init(void *start, void *end) {
 
 #ifdef USE_SYSTEM_MALLOC
 void *main_pool_alloc(u32 size, void (*releaseHandler)(void *addr)) {
-    struct MainPoolBlock *newListHead = (struct MainPoolBlock *) memalign(64, sizeof(struct MainPoolBlock) + size);
+    struct MainPoolBlock *newListHead = (struct MainPoolBlock *) MALLOC_FUNCTION(sizeof(struct MainPoolBlock) + size);
     if (newListHead == NULL) {
         abort();
     }
@@ -351,15 +351,15 @@ u32 main_pool_pop_state(void) {
  * function blocks until completion.
  */
 static void dma_read(u8 *dest, u8 *srcStart, u8 *srcEnd) {
-    u32 size = ALIGN16(srcEnd - srcStart);
 #ifdef TARGET_N64
+    u32 size = ALIGN16(srcEnd - srcStart);
     osInvalDCache(dest, size);
     while (size != 0) {
         u32 copySize = (size >= 0x1000) ? 0x1000 : size;
 
         osPiStartDma(&gDmaIoMesg, OS_MESG_PRI_NORMAL, OS_READ, (uintptr_t) srcStart, dest, copySize,
                      &gDmaMesgQueue);
-        osRecvMesg(&gDmaMesgQueue, &D_80339BEC, OS_MESG_BLOCK);
+        osRecvMesg(&gDmaMesgQueue, &gMainReceivedMesg, OS_MESG_BLOCK);
 
         dest += copySize;
         srcStart += copySize;
@@ -529,7 +529,7 @@ void *alloc_only_pool_alloc(struct AllocOnlyPool *pool, s32 size) {
         if (nextSize < s) {
             nextSize = s;
         }
-        block = (struct AllocOnlyPoolBlock *) memalign(64, sizeof(struct AllocOnlyPoolBlock) + nextSize);
+        block = (struct AllocOnlyPoolBlock *) MALLOC_FUNCTION(sizeof(struct AllocOnlyPoolBlock) + nextSize);
         if (block == NULL) {
             abort();
         }
@@ -598,7 +598,7 @@ void mem_pool_free(struct MemoryPool *pool, void *addr) {
 }
 
 void *alloc_display_list(u32 size) {
-    size = ALIGN16(size);
+    size = ALIGN8(size);
     return alloc_only_pool_alloc(gGfxAllocOnlyPool, size);
 }
 #else
@@ -764,41 +764,37 @@ void *alloc_display_list(u32 size) {
 }
 #endif
 
-static struct MarioAnimDmaRelatedThing *func_802789F0(u8 *srcAddr) {
-    struct MarioAnimDmaRelatedThing *sp1C = dynamic_dma_read(srcAddr, srcAddr + sizeof(u32),
+static struct DmaTable *load_dma_table_address(u8 *srcAddr) {
+    struct DmaTable *table = dynamic_dma_read(srcAddr, srcAddr + sizeof(u32),
                                                              MEMORY_POOL_LEFT);
-    u32 size = sizeof(u32) + (sizeof(u8 *) - sizeof(u32)) + sizeof(u8 *) +
-               sp1C->count * sizeof(struct OffsetSizePair);
-    main_pool_free(sp1C);
+    u32 size = table->count * sizeof(struct OffsetSizePair) + 
+        sizeof(struct DmaTable) - sizeof(struct OffsetSizePair);
+    main_pool_free(table);
 
-    sp1C = dynamic_dma_read(srcAddr, srcAddr + size, MEMORY_POOL_LEFT);
-    sp1C->srcAddr = srcAddr;
-    return sp1C;
+    table = dynamic_dma_read(srcAddr, srcAddr + size, MEMORY_POOL_LEFT);
+    table->srcAddr = srcAddr;
+    return table;
 }
 
-void func_80278A78(struct MarioAnimation *a, void *b, struct Animation *target) {
-    if (b != NULL) {
-        a->animDmaTable = func_802789F0(b);
+void setup_dma_table_list(struct DmaHandlerList *list, void *srcAddr, void *buffer) {
+    if (srcAddr != NULL) {
+        list->dmaTable = load_dma_table_address(srcAddr);
     }
-    a->currentAnimAddr = NULL;
-    a->targetAnim = target;
+    list->currentAddr = NULL;
+    list->bufTarget = buffer;
 }
 
-// TODO: (Scrub C)
-s32 load_patchable_table(struct MarioAnimation *a, u32 index) {
+s32 load_patchable_table(struct DmaHandlerList *list, s32 index) {
     s32 ret = FALSE;
-    struct MarioAnimDmaRelatedThing *sp20 = a->animDmaTable;
-    u8 *addr;
-    u32 size;
+    struct DmaTable *table = list->dmaTable;
 
-    if (index < sp20->count) {
-        do {
-            addr = sp20->srcAddr + sp20->anim[index].offset;
-            size = sp20->anim[index].size;
-        } while (0);
-        if (a->currentAnimAddr != addr) {
-            dma_read((u8 *) a->targetAnim, addr, addr + size);
-            a->currentAnimAddr = addr;
+    if ((u32)index < table->count) {
+        u8 *addr = table->srcAddr + table->anim[index].offset;
+        s32 size = table->anim[index].size;
+
+        if (list->currentAddr != addr) {
+            dma_read(list->bufTarget, addr, addr + size);
+            list->currentAddr = addr;
             ret = TRUE;
         }
     }

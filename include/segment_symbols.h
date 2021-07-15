@@ -39,9 +39,13 @@ DECLARE_SEGMENT(entry)
 DECLARE_SEGMENT(engine)
 DECLARE_SEGMENT(behavior)
 DECLARE_SEGMENT(scripts)
+#ifdef GODDARD_MFACE
 DECLARE_SEGMENT(goddard)
+#endif
 DECLARE_SEGMENT(framebuffers)
+#ifdef GODDARD_MFACE
 extern u8 _goddardSegmentStart[];
+#endif
 extern u8 _engineSegmentStart[];
 extern u8 _engineSegmentNoloadEnd[];
 extern u8 _engineSegmentEnd[];

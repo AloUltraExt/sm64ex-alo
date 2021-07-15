@@ -9,12 +9,23 @@
 #include "interaction.h"
 #include "mario_step.h"
 
+#ifdef CHEATS_ACTIONS
+#include "extras/cheats.h"
+#endif
+
 static s16 sMovingSandSpeeds[] = { 12, 8, 4, 0 };
 
+#ifdef HIGH_FPS_PC
+struct Surface gWaterSurfacePseudoFloor = {
+    SURFACE_VERY_SLIPPERY, 0,    0,    0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 },
+    { 0.0f, 1.0f, 0.0f },  0.0f, NULL, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, 0
+};
+#else
 struct Surface gWaterSurfacePseudoFloor = {
     SURFACE_VERY_SLIPPERY, 0,    0,    0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 },
     { 0.0f, 1.0f, 0.0f },  0.0f, NULL,
 };
+#endif
 
 /**
  * Always returns zero. This may have been intended
@@ -105,6 +116,13 @@ void mario_bonk_reflection(struct MarioState *m, u32 negateSpeed) {
 }
 
 u32 mario_update_quicksand(struct MarioState *m, f32 sinkingSpeed) {
+#ifdef CHEATS_ACTIONS
+    if (Cheats.EnableCheats && Cheats.WalkOn.Quicksand) {
+        m->quicksandDepth = 0.0f;
+        return FALSE;
+    }
+#endif
+
     if (m->action & ACT_FLAG_RIDING_SHELL) {
         m->quicksandDepth = 0.0f;
     } else {
@@ -587,7 +605,11 @@ void apply_vertical_wind(struct MarioState *m) {
     if (m->action != ACT_GROUND_POUND) {
         offsetY = m->pos[1] - -1500.0f;
 
-        if (m->floor->type == SURFACE_VERTICAL_WIND && -3000.0f < offsetY && offsetY < 2000.0f) {
+        if (m->floor->type == SURFACE_VERTICAL_WIND && -3000.0f < offsetY && offsetY < 2000.0f
+#if QOL_FIX_SURFACE_WIND_DETECTION
+        && (m->action == ACT_VERTICAL_WIND)
+#endif
+        ) {
             if (offsetY >= 0.0f) {
                 maxVelY = 10000.0f / (offsetY + 200.0f);
             } else {

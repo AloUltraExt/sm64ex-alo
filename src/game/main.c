@@ -11,6 +11,9 @@
 #include "segments.h"
 #include "main.h"
 #include "rumble_init.h"
+#if N64_USE_EXTENDED_RAM
+#include "extras/n64_mem_error_screen.h"
+#endif
 
 /**
  * This entry point is only used in TARGET_N64.
@@ -31,7 +34,7 @@ OSThread gGameLoopThread;
 OSThread gSoundThread;
 
 OSIoMesg gDmaIoMesg;
-OSMesg D_80339BEC;
+OSMesg gMainReceivedMesg;
 OSMesgQueue gDmaMesgQueue;
 OSMesgQueue gSIEventMesgQueue;
 OSMesgQueue gPIMesgQueue;
@@ -53,7 +56,7 @@ struct SPTask *sNextDisplaySPTask = NULL;
 s8 sAudioEnabled = TRUE;
 u32 gNumVblanks = 0;
 s8 gResetTimer = 0;
-s8 D_8032C648 = 0;
+s8 gNmiResetBarsTimer = 0;
 s8 gDebugLevelSelect = FALSE;
 s8 D_8032C650 = 0;
 
@@ -92,6 +95,10 @@ void unknown_main_func(void) {
     // uninitialized
     OSTime time;
     u32 b;
+#ifdef AVOID_UB
+    time = 0;
+    b = 0;
+#endif
 
     osSetTime(time);
     osMapTLB(0, b, NULL, 0, 0, 0);
@@ -130,6 +137,12 @@ void alloc_pool(void) {
     void *start = (void *) SEG_POOL_START;
     void *end = (void *) (SEG_POOL_START + POOL_SIZE);
 
+#if N64_USE_EXTENDED_RAM
+    // Detect memory size
+    if (does_pool_end_lie_out_of_bounds(end))
+        end = (void *) (SEG_POOL_START + POOL_SIZE_4MB);
+#endif
+
     main_pool_init(start, end);
     gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);
 }
@@ -146,7 +159,7 @@ extern void func_sh_802f69cc(void);
 
 void handle_nmi_request(void) {
     gResetTimer = 1;
-    D_8032C648 = 0;
+    gNmiResetBarsTimer = 0;
     stop_sounds_in_continuous_banks();
     sound_banks_disable(SEQ_PLAYER_SFX, SOUND_BANKS_BACKGROUND);
     fadeout_music(90);
@@ -256,7 +269,7 @@ void handle_vblank(void) {
             start_sptask(M_GFXTASK);
         }
     }
-#ifdef VERSION_SH
+#ifdef RUMBLE_FEEDBACK
     rumble_thread_update_vi();
 #endif
     // Notify the game loop about the vblank.
@@ -334,7 +347,15 @@ void thread3_main(UNUSED void *arg) {
     create_thread(&gSoundThread, 4, thread4_sound, NULL, gThread4Stack + 0x2000, 20);
     osStartThread(&gSoundThread);
 
+#if N64_USE_EXTENDED_RAM
+    if (!gNotEnoughMemory)
+        create_thread(&gGameLoopThread, 5, thread5_game_loop, NULL, gThread5Stack + 0x2000, 10);
+    else
+        create_thread(&gGameLoopThread, 5, thread5_mem_error_message_loop, NULL, gThread5Stack + 0x2000, 10);
+#else
     create_thread(&gGameLoopThread, 5, thread5_game_loop, NULL, gThread5Stack + 0x2000, 10);
+#endif
+
     osStartThread(&gGameLoopThread);
 
     while (TRUE) {
@@ -388,7 +409,7 @@ void dispatch_audio_sptask(struct SPTask *spTask) {
     }
 }
 
-void send_display_list(struct SPTask *spTask) {
+void exec_display_list(struct SPTask *spTask) {
     if (spTask != NULL) {
         osWritebackDCacheAll();
         spTask->state = SPTASK_STATE_NOT_STARTED;
@@ -437,6 +458,10 @@ void thread1_idle(UNUSED void *arg) {
     osViSetSpecialFeatures(OS_VI_DITHER_FILTER_ON);
     osViSetSpecialFeatures(OS_VI_GAMMA_OFF);
     osCreatePiManager(OS_PRIORITY_PIMGR, &gPIMesgQueue, gPIMesgBuf, ARRAY_COUNT(gPIMesgBuf));
+#if N64_CRASH_SCREEN
+    extern void crash_screen_init(void);
+    crash_screen_init();
+#endif
     create_thread(&gMainThread, 3, thread3_main, NULL, gThread3Stack + 0x2000, 100);
     if (D_8032C650 == 0) {
         osStartThread(&gMainThread);

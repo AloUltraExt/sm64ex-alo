@@ -31,7 +31,7 @@
 static u16 gRandomSeed16;
 
 // Unused function that directly jumps to a behavior command and resets the object's stack index.
-static void goto_behavior_unused(const BehaviorScript *bhvAddr) {
+UNUSED static void goto_behavior_unused(const BehaviorScript *bhvAddr) {
     gCurBhvCommand = segmented_to_virtual(bhvAddr);
     gCurrentObject->bhvStackIndex = 0;
 }
@@ -107,7 +107,7 @@ static uintptr_t cur_obj_bhv_stack_pop(void) {
     return bhvAddr;
 }
 
-static void stub_behavior_script_1(void) {
+UNUSED static void stub_behavior_script_1(void) {
     for (;;) {
         ;
     }
@@ -140,7 +140,7 @@ static s32 bhv_cmd_billboard(void) {
     return BHV_PROC_CONTINUE;
 }
 
-// Command 0x
+// Custom bhv that doesn't face billboards upwards
 static s32 bhv_cmd_cylboard(void) {
     gCurrentObject->header.gfx.node.flags |= GRAPH_RENDER_CYLBOARD;
 
@@ -695,7 +695,7 @@ static s32 bhv_cmd_begin(void) {
 // It cannot be simply re-added to the table, as unlike all other bhv commands it takes a parameter.
 // Theoretically this command would have been of variable size.
 // Included below is a modified/repaired version of this function that would work properly.
-static void bhv_cmd_set_int_random_from_table(s32 tableSize) {
+UNUSED static void bhv_cmd_set_int_random_from_table(s32 tableSize) {
     u8 field = BHV_CMD_GET_2ND_U8(0);
     s32 table[16];
     s32 i;
@@ -908,7 +908,7 @@ static BhvCommandProc BehaviorCmdTable[] = {
     bhv_cmd_disable_rendering, //35
     bhv_cmd_set_int_unused, //36
     bhv_cmd_spawn_water_droplet, //37
-    bhv_cmd_cylboard //38
+    bhv_cmd_cylboard, //38
 };
 
 // Execute the behavior script of the current object, process the object flags, and other miscellaneous code for updating objects.

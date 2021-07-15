@@ -6,7 +6,7 @@
 
 #include <ultra64.h>
 #include "macros.h"
-
+#include "config.h"
 
 // Certain functions are marked as having return values, but do not
 // actually return a value. This causes undefined behavior, which we'd rather
@@ -30,9 +30,13 @@ struct Controller
   /*0x12*/ u16 buttonPressed;
   /*0x14*/ OSContStatus *statusData;
   /*0x18*/ OSContPad *controllerData;
-  /*0x1C*/ int port;
+#ifdef RUMBLE_FEEDBACK
+  /*0x1C*/ s32 port;
+#endif
+#ifndef TARGET_N64
   /*ext */ s16 extStickX;       // additional (right) stick values
   /*ext */ s16 extStickY;
+#endif
 };
 
 typedef f32 Vec2f[2];
@@ -118,6 +122,12 @@ struct AnimInfo
     /*0x0A 0x42*/ u16 animTimer;
     /*0x0C 0x44*/ s32 animFrameAccelAssist;
     /*0x10 0x48*/ s32 animAccel;
+#ifdef HIGH_FPS_PC
+    s16 prevAnimFrame;
+    s16 prevAnimID;
+    u32 prevAnimFrameTimestamp;
+    struct Animation *prevAnimPtr;
+#endif
 };
 
 struct GraphNodeObject
@@ -129,10 +139,27 @@ struct GraphNodeObject
     /*0x1A*/ Vec3s angle;
     /*0x20*/ Vec3f pos;
     /*0x2C*/ Vec3f scale;
+#ifdef HIGH_FPS_PC
+    Vec3s prevAngle;
+    Vec3f prevPos;
+    u32 prevTimestamp;
+    Vec3f prevShadowPos;
+    u32 prevShadowPosTimestamp;
+    Vec3f prevScale;
+    u32 prevScaleTimestamp;
+#endif
     /*0x38*/ struct AnimInfo animInfo;
     /*0x4C*/ struct SpawnInfo *unk4C;
     /*0x50*/ Mat4 *throwMatrix; // matrix ptr
+#ifdef HIGH_FPS_PC
+    Mat4 prevThrowMatrix;
+    u32 prevThrowMatrixTimestamp;
+    Mat4 *throwMatrixInterpolated;
+#endif
     /*0x54*/ Vec3f cameraToObject;
+#ifdef HIGH_FPS_PC
+    u32 skipInterpolationTimestamp;
+#endif
 };
 
 struct ObjectNode
@@ -243,6 +270,12 @@ struct Surface
     } normal;
     /*0x28*/ f32 originOffset;
     /*0x2C*/ struct Object *object;
+#ifdef HIGH_FPS_PC
+    Vec3s prevVertex1;
+    Vec3s prevVertex2;
+    Vec3s prevVertex3;
+    u32 modifiedTimestamp;
+#endif
 };
 
 struct MarioBodyState
@@ -258,27 +291,6 @@ struct MarioBodyState
     /*0x0C*/ Vec3s torsoAngle;
     /*0x12*/ Vec3s headAngle;
     /*0x18*/ Vec3f heldObjLastPosition; /// also known as HOLP
-    u8 padding[4];
-};
-
-struct OffsetSizePair
-{
-    u32 offset;
-    u32 size;
-};
-
-struct MarioAnimDmaRelatedThing
-{
-    u32 count;
-    u8 *srcAddr;
-    struct OffsetSizePair anim[1]; // dynamic size
-};
-
-struct MarioAnimation
-{
-    struct MarioAnimDmaRelatedThing *animDmaTable;
-    u8 *currentAnimAddr;
-    struct Animation *targetAnim;
     u8 padding[4];
 };
 
@@ -327,7 +339,7 @@ struct MarioState
     /*0x94*/ struct PlayerCameraState *statusForCamera;
     /*0x98*/ struct MarioBodyState *marioBodyState;
     /*0x9C*/ struct Controller *controller;
-    /*0xA0*/ struct MarioAnimation *animation;
+    /*0xA0*/ struct DmaHandlerList *animList;
     /*0xA4*/ u32 collidedObjInteractTypes;
     /*0xA8*/ s16 numCoins;
     /*0xAA*/ s16 numStars;
@@ -344,6 +356,9 @@ struct MarioState
     /*0xBC*/ f32 peakHeight;
     /*0xC0*/ f32 quicksandDepth;
     /*0xC4*/ f32 unkC4;
+    #ifdef PORT_MOP_OBJS
+	/*0xd4*/ u8 SelFallDmg; //For certain objects I don't want fall damage ever
+    #endif
 };
 
 #endif // _SM64_TYPES_H_

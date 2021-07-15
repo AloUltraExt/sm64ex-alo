@@ -20,7 +20,9 @@
 
 const LevelScript level_main_menu_entry_1[] = {
     INIT_LEVEL(),
+#ifdef GODDARD_MFACE
     FIXED_LOAD(/*loadAddr*/ _goddardSegmentStart, /*romStart*/ _goddardSegmentRomStart, /*romEnd*/ _goddardSegmentRomEnd),
+#endif    
     LOAD_MIO0(/*seg*/ 0x07, _menu_segment_7SegmentRomStart, _menu_segment_7SegmentRomEnd),
     LOAD_RAW(/*seg*/ 0x13, _behaviorSegmentRomStart, _behaviorSegmentRomEnd),
     ALLOC_LEVEL_POOL(),
@@ -43,7 +45,7 @@ const LevelScript level_main_menu_entry_1[] = {
 
     FREE_LEVEL_POOL(),
     LOAD_AREA(/*area*/ 1),
-    SET_MENU_MUSIC(/*seq*/ 0x0021),
+    SET_MENU_MUSIC(/*seq*/ SEQ_MENU_FILE_SELECT),
     TRANSITION(/*transType*/ WARP_TRANSITION_FADE_FROM_COLOR, /*time*/ 16, /*color*/ 0xFF, 0xFF, 0xFF),
     CALL(/*arg*/ 0, /*func*/ lvl_init_menu_values_and_cursor_pos),
     CALL_LOOP(/*arg*/ 0, /*func*/ lvl_update_obj_and_load_file_selected),
@@ -57,11 +59,19 @@ const LevelScript level_main_menu_entry_1[] = {
     EXIT_AND_EXECUTE(/*seg*/ 0x15, _scriptsSegmentRomStart, _scriptsSegmentRomEnd, level_main_scripts_entry),
 };
 
+#ifdef GODDARD_MFACE
+#define JUMP_VAL 42
+#else
+#define JUMP_VAL 38 // reduced value due to FIXED_LOAD diff
+#endif
+
 const LevelScript level_main_menu_entry_2[] = {
     /*0*/ CALL(/*arg*/ 0, /*func*/ lvl_set_current_level),
-    /*2*/ JUMP_IF(/*op*/ OP_EQ, /*arg*/ 0, level_main_menu_entry_2 + 42),
+    /*2*/ JUMP_IF(/*op*/ OP_EQ, /*arg*/ 0, level_main_menu_entry_2 + JUMP_VAL),
     /*5*/ INIT_LEVEL(),
+#ifdef GODDARD_MFACE
     /*6*/ FIXED_LOAD(/*loadAddr*/ _goddardSegmentStart, /*romStart*/ _goddardSegmentRomStart, /*romEnd*/ _goddardSegmentRomEnd),
+#endif
     /*10*/ LOAD_MIO0(/*seg*/ 0x07, _menu_segment_7SegmentRomStart, _menu_segment_7SegmentRomEnd),
     /*13*/ ALLOC_LEVEL_POOL(),
 
@@ -100,3 +110,5 @@ const LevelScript level_main_menu_entry_2[] = {
     // L1:
     /*42*/ EXIT(),
 };
+
+#undef JUMP_VAL

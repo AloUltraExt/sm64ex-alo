@@ -10,7 +10,11 @@
 
 #include "platform.h"
 #include "configfile.h"
+
+#ifdef COMMAND_LINE_OPTIONS
 #include "cliopts.h"
+#endif
+
 #include "gfx/gfx_screen_config.h"
 #include "gfx/gfx_window_manager_api.h"
 #include "controller/controller_api.h"
@@ -41,7 +45,7 @@ struct ConfigOption {
 
 // Video/audio stuff
 ConfigWindow configWindow       = {
-#ifdef TARGET_WII_U
+#ifdef TARGET_PORT_CONSOLE
     .reset = false,
     .settings_changed = false,
 #else
@@ -62,16 +66,13 @@ unsigned int configMusicVolume = MAX_VOLUME;
 unsigned int configSfxVolume = MAX_VOLUME;
 unsigned int configEnvVolume = MAX_VOLUME;
 
-#ifdef TARGET_WII_U
-bool configN64FaceButtons = 0;
-#else
 // Keyboard mappings (VK_ values, by default keyboard/gamepad/mouse)
-unsigned int configKeyA[MAX_BINDS]          = { 0x002D,   0x1000,     0x1103     };
-unsigned int configKeyB[MAX_BINDS]          = { 0x002E,   0x1002,     0x1101     };
-unsigned int configKeyStart[MAX_BINDS]      = { 0x001C,   0x1006,     VK_INVALID };
-unsigned int configKeyL[MAX_BINDS]          = { 0x0010,   0x1009,     0x1104     };
-unsigned int configKeyR[MAX_BINDS]          = { 0x0012,   0x100A,     0x101B     };
-unsigned int configKeyZ[MAX_BINDS]          = { 0x002C,   0x1007,     0x101A     };
+unsigned int configKeyA[MAX_BINDS]          = { 0x002D,   0x1000,     0x1101     };
+unsigned int configKeyB[MAX_BINDS]          = { 0x002E,   0x1002,     0x1103     };
+unsigned int configKeyStart[MAX_BINDS]      = { 0x001C,   0x1006,     0x1102     };
+unsigned int configKeyL[MAX_BINDS]          = { 0x0010,   0x1009,     VK_INVALID };
+unsigned int configKeyR[MAX_BINDS]          = { 0x0012,   0x100A,     VK_INVALID };
+unsigned int configKeyZ[MAX_BINDS]          = { 0x002C,   0x1007,     VK_INVALID };
 unsigned int configKeyCUp[MAX_BINDS]        = { 0x0011,   VK_INVALID, VK_INVALID };
 unsigned int configKeyCDown[MAX_BINDS]      = { 0x001F,   VK_INVALID, VK_INVALID };
 unsigned int configKeyCLeft[MAX_BINDS]      = { 0x001E,   VK_INVALID, VK_INVALID };
@@ -84,48 +85,50 @@ unsigned int configKeyStickUp[MAX_BINDS]    = { 0x0148,   VK_INVALID, VK_INVALID
 unsigned int configKeyStickDown[MAX_BINDS]  = { 0x0150,   VK_INVALID, VK_INVALID };
 unsigned int configKeyStickLeft[MAX_BINDS]  = { 0x014B,   VK_INVALID, VK_INVALID };
 unsigned int configKeyStickRight[MAX_BINDS] = { 0x014D,   VK_INVALID, VK_INVALID };
-#endif
 unsigned int configStickDeadzone = 16; // 16*DEADZONE_STEP=4960 (the original default deadzone)
 unsigned int configRumbleStrength = 50;
+
 #ifdef EXTERNAL_DATA
 bool configPrecacheRes = true;
 #endif
 #ifdef BETTERCAMERA
-// BetterCamera settings
-unsigned int configCameraXSens   = 25;
-unsigned int configCameraYSens   = 25;
-unsigned int configCameraAggr    = 0;
-unsigned int configCameraPan     = 0;
-unsigned int configCameraDegrade = 10; // 0 - 100%
+// PuppyCam 2 settings
+bool         configEnableCamera  = true;
+#ifdef MOUSE_ACTIONS
+bool         configCameraMouse   = true;
+#endif
 bool         configCameraInvertX = true;
-bool         configCameraInvertY = false;
-bool         configEnableCamera  = false;
+bool         configCameraInvertY = true;
+unsigned int configCameraXSens   = 100;
+unsigned int configCameraYSens   = 100;
+unsigned int configCameraAggr    = 50;
 bool         configCameraAnalog  = false;
-bool         configCameraMouse   = false;
+unsigned int configCameraScheme  = 0;
 #endif
 bool         configSkipIntro     = 0;
 bool         configHUD           = true;
+#ifdef MOUSE_ACTIONS
+bool         configMouse         = true;
+#endif
 #ifdef DISCORDRPC
 bool         configDiscordRPC    = true;
 #endif
 
 static const struct ConfigOption options[] = {
-#ifdef TARGET_WII_U
-    {.name = "n64_face_buttons",     .type = CONFIG_TYPE_BOOL, .boolValue = &configN64FaceButtons},
-#else
+#ifndef TARGET_PORT_CONSOLE
     {.name = "fullscreen",           .type = CONFIG_TYPE_BOOL, .boolValue = &configWindow.fullscreen},
     {.name = "window_x",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.x},
     {.name = "window_y",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.y},
     {.name = "window_w",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.w},
     {.name = "window_h",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.h},
     {.name = "vsync",                .type = CONFIG_TYPE_BOOL, .boolValue = &configWindow.vsync},
-#endif 
+#endif
     {.name = "texture_filtering",    .type = CONFIG_TYPE_UINT, .uintValue = &configFiltering},
     {.name = "master_volume",        .type = CONFIG_TYPE_UINT, .uintValue = &configMasterVolume},
     {.name = "music_volume",         .type = CONFIG_TYPE_UINT, .uintValue = &configMusicVolume},
     {.name = "sfx_volume",           .type = CONFIG_TYPE_UINT, .uintValue = &configSfxVolume},
     {.name = "env_volume",           .type = CONFIG_TYPE_UINT, .uintValue = &configEnvVolume},
-#ifndef TARGET_WII_U
+#ifndef TARGET_PORT_CONSOLE
     {.name = "key_a",                .type = CONFIG_TYPE_BIND, .uintValue = configKeyA},
     {.name = "key_b",                .type = CONFIG_TYPE_BIND, .uintValue = configKeyB},
     {.name = "key_start",            .type = CONFIG_TYPE_BIND, .uintValue = configKeyStart},
@@ -150,18 +153,22 @@ static const struct ConfigOption options[] = {
     #ifdef EXTERNAL_DATA
     {.name = "precache",             .type = CONFIG_TYPE_BOOL, .boolValue = &configPrecacheRes},
     #endif
-    #ifdef BETTERCAMERA
-    {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configEnableCamera},
-    {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraAnalog},
+    #ifdef MOUSE_ACTIONS
+    {.name = "mouse_enable",         .type = CONFIG_TYPE_BOOL, .boolValue = &configMouse},
+    #endif
+#ifdef BETTERCAMERA
+    {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configEnableCamera},     
+    #ifdef MOUSE_ACTIONS
     {.name = "bettercam_mouse_look", .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraMouse},
+    #endif
     {.name = "bettercam_invertx",    .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraInvertX},
     {.name = "bettercam_inverty",    .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraInvertY},
     {.name = "bettercam_xsens",      .type = CONFIG_TYPE_UINT, .uintValue = &configCameraXSens},
     {.name = "bettercam_ysens",      .type = CONFIG_TYPE_UINT, .uintValue = &configCameraYSens},
     {.name = "bettercam_aggression", .type = CONFIG_TYPE_UINT, .uintValue = &configCameraAggr},
-    {.name = "bettercam_pan_level",  .type = CONFIG_TYPE_UINT, .uintValue = &configCameraPan},
-    {.name = "bettercam_degrade",    .type = CONFIG_TYPE_UINT, .uintValue = &configCameraDegrade},
-    #endif
+    {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraAnalog},
+    {.name = "bettercam_scheme",     .type = CONFIG_TYPE_UINT, .uintValue = &configCameraScheme},
+#endif
     {.name = "skip_intro",           .type = CONFIG_TYPE_BOOL, .boolValue = &configSkipIntro},
     #ifdef DISCORDRPC
     {.name = "discordrpc_enable",    .type = CONFIG_TYPE_BOOL, .boolValue = &configDiscordRPC},
@@ -245,7 +252,11 @@ static unsigned int tokenize_string(char *str, int maxTokens, char **tokens) {
 
 // Gets the config file path and caches it
 const char *configfile_name(void) {
+#ifdef COMMAND_LINE_OPTIONS
     return (gCLIOpts.ConfigFile[0]) ? gCLIOpts.ConfigFile : CONFIGFILE_DEFAULT;
+#else
+    return CONFIGFILE_DEFAULT;
+#endif
 }
 
 // Loads the config file specified by 'filename'

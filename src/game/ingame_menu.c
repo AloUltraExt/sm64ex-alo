@@ -23,14 +23,12 @@
 #include "text_strings.h"
 #include "types.h"
 #include "macros.h"
+
 #ifdef CHEATS_ACTIONS
-#include "cheats.h"
-#endif
-#ifdef BETTERCAMERA
-#include "bettercamera.h"
+#include "extras/cheats.h"
 #endif
 #ifdef EXT_OPTIONS_MENU
-#include "options_menu.h"
+#include "extras/options_menu.h"
 #endif
 
 u16 gDialogColorFadeTimer;
@@ -109,7 +107,7 @@ f32 gDialogBoxOpenTimer = DEFAULT_DIALOG_BOX_ANGLE;
 f32 gDialogBoxScale = DEFAULT_DIALOG_BOX_SCALE;
 s16 gDialogScrollOffsetY = 0;
 s8 gDialogBoxType = DIALOG_TYPE_ROTATE;
-s16 gDialogID = -1;
+s16 gDialogID = DIALOG_NONE;
 s16 gLastDialogPageStrPos = 0;
 s16 gDialogTextPos = 0;
 #ifdef VERSION_EU
@@ -119,7 +117,7 @@ s8 gDialogLineNum = 1;
 s8 gLastDialogResponse = 0;
 u8 gMenuHoldKeyIndex = 0;
 u8 gMenuHoldKeyTimer = 0;
-s32 gDialogResponse = 0;
+s32 gDialogResponse = DIALOG_RESPONSE_NONE;
 
 #if !defined(EXTERNAL_DATA) && (defined(VERSION_JP) || defined(VERSION_SH) || defined(VERSION_EU))
 #ifdef VERSION_EU
@@ -132,6 +130,44 @@ s32 gDialogResponse = 0;
 static struct CachedChar { u8 used; u8 data[CHCACHE_BUFLEN]; } charCache[256];
 #endif // VERSION
 
+#ifdef HIGH_FPS_PC
+static Gfx *sInterpolatedDialogOffsetPos;
+static f32 sInterpolatedDialogOffset;
+static Gfx *sInterpolatedDialogRotationPos;
+static f32 sInterpolatedDialogScale;
+static f32 sInterpolatedDialogRotation;
+static Gfx *sInterpolatedDialogZoomPos;
+
+void patch_interpolated_dialog(void) {
+    Mtx *matrix;
+
+    if (sInterpolatedDialogOffsetPos != NULL) {
+        matrix = (Mtx *) alloc_display_list(sizeof(Mtx));
+        guTranslate(matrix, 0, sInterpolatedDialogOffset, 0);
+        gSPMatrix(sInterpolatedDialogOffsetPos, VIRTUAL_TO_PHYSICAL(matrix), G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_NOPUSH);
+        sInterpolatedDialogOffsetPos = NULL;
+    }
+    if (sInterpolatedDialogRotationPos != NULL) {
+        matrix = (Mtx *) alloc_display_list(sizeof(Mtx));
+        guScale(matrix, 1.0 / sInterpolatedDialogScale, 1.0 / sInterpolatedDialogScale, 1.0f);
+        gSPMatrix(sInterpolatedDialogRotationPos++, VIRTUAL_TO_PHYSICAL(matrix), G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_NOPUSH);
+        matrix = (Mtx *) alloc_display_list(sizeof(Mtx));
+        guRotate(matrix, sInterpolatedDialogRotation * 4.0f, 0, 0, 1.0f);
+        gSPMatrix(sInterpolatedDialogRotationPos, VIRTUAL_TO_PHYSICAL(matrix), G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_NOPUSH);
+        sInterpolatedDialogRotationPos = NULL;
+    }
+    if (sInterpolatedDialogZoomPos != NULL) {
+        matrix = (Mtx *) alloc_display_list(sizeof(Mtx));
+        guTranslate(matrix, 65.0 - (65.0 / sInterpolatedDialogScale), (40.0 / sInterpolatedDialogScale) - 40, 0);
+        gSPMatrix(sInterpolatedDialogZoomPos++, VIRTUAL_TO_PHYSICAL(matrix), G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_NOPUSH);
+        matrix = (Mtx *) alloc_display_list(sizeof(Mtx));
+        guScale(matrix, 1.0 / sInterpolatedDialogScale, 1.0 / sInterpolatedDialogScale, 1.0f);
+        gSPMatrix(sInterpolatedDialogZoomPos, VIRTUAL_TO_PHYSICAL(matrix), G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_NOPUSH);
+        sInterpolatedDialogZoomPos = NULL;
+    }
+}
+#endif
+
 void create_dl_identity_matrix(void) {
     Mtx *matrix = (Mtx *) alloc_display_list(sizeof(Mtx));
 
@@ -139,6 +175,9 @@ void create_dl_identity_matrix(void) {
         return;
     }
 
+    // ex-alo change
+    // Originally for GBI_FLOATS but it works on N64 and
+    // its smaller that the original long matrix code
     guMtxIdent(matrix);
 
     gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(matrix), G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
@@ -747,6 +786,14 @@ void handle_menu_scrolling(s8 scrollDirection, s8 *currentIndex, s8 minIndex, s8
     }
 
     if (((index ^ gMenuHoldKeyIndex) & index) == 2) {
+        #if QOL_FIX_MENU_SCROLLING
+        // if <=, this could cause an OOB array access and crash. Use < instead here to fix this.
+        // >= is incorrect and will cause the menu to not function correctly
+        if (currentIndex[0] < maxIndex) {
+            play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
+            currentIndex[0]++;
+        }
+        #else
         if (currentIndex[0] == maxIndex) {
             //! Probably originally a >=, but later replaced with an == and an else statement.
             currentIndex[0] = maxIndex;
@@ -754,15 +801,24 @@ void handle_menu_scrolling(s8 scrollDirection, s8 *currentIndex, s8 minIndex, s8
             play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
             currentIndex[0]++;
         }
+        #endif
     }
 
     if (((index ^ gMenuHoldKeyIndex) & index) == 1) {
+        #if QOL_FIX_MENU_SCROLLING
+        // if >=, this could cause an OOB array access and crash. Use > instead here to fix this.
+        if (currentIndex[0] > minIndex) {
+            play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
+            currentIndex[0]--;
+        }
+        #else
         if (currentIndex[0] == minIndex) {
             // Same applies to here as above
         } else {
             play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
             currentIndex[0]--;
         }
+        #endif
     }
 
     if (gMenuHoldKeyTimer == 10) {
@@ -901,14 +957,14 @@ s16 get_dialog_id(void) {
 }
 
 void create_dialog_box(s16 dialog) {
-    if (gDialogID == -1) {
+    if (gDialogID == DIALOG_NONE) {
         gDialogID = dialog;
         gDialogBoxType = DIALOG_TYPE_ROTATE;
     }
 }
 
 void create_dialog_box_with_var(s16 dialog, s32 dialogVar) {
-    if (gDialogID == -1) {
+    if (gDialogID == DIALOG_NONE) {
         gDialogID = dialog;
         gDialogVariable = dialogVar;
         gDialogBoxType = DIALOG_TYPE_ROTATE;
@@ -916,14 +972,14 @@ void create_dialog_box_with_var(s16 dialog, s32 dialogVar) {
 }
 
 void create_dialog_inverted_box(s16 dialog) {
-    if (gDialogID == -1) {
+    if (gDialogID == DIALOG_NONE) {
         gDialogID = dialog;
         gDialogBoxType = DIALOG_TYPE_ZOOM;
     }
 }
 
 void create_dialog_box_with_response(s16 dialog) {
-    if (gDialogID == -1) {
+    if (gDialogID == DIALOG_NONE) {
         gDialogID = dialog;
         gDialogBoxType = DIALOG_TYPE_ROTATE;
         gLastDialogResponse = 1;
@@ -940,11 +996,11 @@ void reset_dialog_render_state(void) {
     gDialogBoxScale = 19.0f;
     gDialogBoxOpenTimer = 90.0f;
     gDialogBoxState = DIALOG_STATE_OPENING;
-    gDialogID = -1;
+    gDialogID = DIALOG_NONE;
     gDialogTextPos = 0;
     gLastDialogResponse = 0;
     gLastDialogPageStrPos = 0;
-    gDialogResponse = 0;
+    gDialogResponse = DIALOG_RESPONSE_NONE;
 }
 
 #if defined(VERSION_JP) || defined(VERSION_SH)
@@ -965,6 +1021,16 @@ void render_dialog_box_type(struct DialogEntry *dialog, s8 linesPerBox) {
     switch (gDialogBoxType) {
         case DIALOG_TYPE_ROTATE: // Renders a dialog black box with zoom and rotation
             if (gDialogBoxState == DIALOG_STATE_OPENING || gDialogBoxState == DIALOG_STATE_CLOSING) {
+#ifdef HIGH_FPS_PC
+                sInterpolatedDialogRotationPos = gDisplayListHead;
+                if (gDialogBoxState == DIALOG_STATE_OPENING) {
+                    sInterpolatedDialogScale = gDialogBoxScale - 2 / 2;
+                    sInterpolatedDialogRotation = gDialogBoxOpenTimer - 7.5f / 2;
+                } else {
+                    sInterpolatedDialogScale = gDialogBoxScale + 2 / 2;
+                    sInterpolatedDialogRotation = gDialogBoxOpenTimer + 7.5f / 2;
+                }
+#endif
                 create_dl_scale_matrix(MENU_MTX_NOPUSH, 1.0 / gDialogBoxScale, 1.0 / gDialogBoxScale, 1.0f);
                 // convert the speed into angle
                 create_dl_rotation_matrix(MENU_MTX_NOPUSH, gDialogBoxOpenTimer * 4.0f, 0, 0, 1.0f);
@@ -973,6 +1039,14 @@ void render_dialog_box_type(struct DialogEntry *dialog, s8 linesPerBox) {
             break;
         case DIALOG_TYPE_ZOOM: // Renders a dialog white box with zoom
             if (gDialogBoxState == DIALOG_STATE_OPENING || gDialogBoxState == DIALOG_STATE_CLOSING) {
+#ifdef HIGH_FPS_PC
+                sInterpolatedDialogZoomPos = gDisplayListHead;
+                if (gDialogBoxState == DIALOG_STATE_OPENING) {
+                    sInterpolatedDialogScale = gDialogBoxScale - 2 / 2;
+                } else {
+                    sInterpolatedDialogScale = gDialogBoxScale + 2 / 2;
+                }
+#endif
                 create_dl_translation_matrix(MENU_MTX_NOPUSH, 65.0 - (65.0 / gDialogBoxScale),
                                               (40.0 / gDialogBoxScale) - 40, 0);
                 create_dl_scale_matrix(MENU_MTX_NOPUSH, 1.0 / gDialogBoxScale, 1.0 / gDialogBoxScale, 1.0f);
@@ -1255,6 +1329,10 @@ void handle_dialog_text_and_pages(s8 colorMode, struct DialogEntry *dialog, s8 l
 #ifdef VERSION_EU
         gDialogY -= gDialogScrollOffsetY;
 #else
+#ifdef HIGH_FPS_PC
+        sInterpolatedDialogOffset = gDialogScrollOffsetY + dialog->linesPerBox;
+        sInterpolatedDialogOffsetPos = gDisplayListHead;
+#endif
         create_dl_translation_matrix(MENU_MTX_NOPUSH, 0, (f32) gDialogScrollOffsetY, 0);
 #endif
     }
@@ -1550,18 +1628,18 @@ void render_dialog_string_color(s8 linesPerBox) {
 
 void handle_special_dialog_text(s16 dialogID) { // dialog ID tables, in order
     // King Bob-omb (Start), Whomp (Start), King Bob-omb (throw him out), Eyerock (Start), Wiggler (Start)
-    s16 dialogBossStart[] = { 17, 114, 128, 117, 150 };
+    s16 dialogBossStart[] = { DIALOG_017, DIALOG_114, DIALOG_128, DIALOG_117, DIALOG_150 };
     // Koopa the Quick (BOB), Koopa the Quick (THI), Penguin Race, Fat Penguin Race (120 stars)
-    s16 dialogRaceSound[] = { 5, 9, 55, 164 };
+    s16 dialogRaceSound[] = { DIALOG_005, DIALOG_009, DIALOG_055, DIALOG_164 };
     // Red Switch, Green Switch, Blue Switch, 100 coins star, Bowser Red Coin Star
-    s16 dialogStarSound[] = { 10, 11, 12, 13, 14 };
+    s16 dialogStarSound[] = { DIALOG_010, DIALOG_011, DIALOG_012, DIALOG_013, DIALOG_014 };
     // King Bob-omb (Start), Whomp (Defeated), King Bob-omb (Defeated, missing in JP), Eyerock (Defeated), Wiggler (Defeated)
 #if BUGFIX_KING_BOB_OMB_FADE_MUSIC
-    s16 dialogBossStop[] = { 17, 115, 116, 118, 152 };
+    s16 dialogBossStop[] = { DIALOG_017, DIALOG_115, DIALOG_116, DIALOG_118, DIALOG_152 };
 #else
-    //! @bug JP misses King Bob-omb defeated dialog "116", meaning that the boss music will still
+    //! @bug JP misses King Bob-omb defeated DIALOG_116, meaning that the boss music will still
     //! play after King Bob-omb is defeated until BOB loads it's music after the star cutscene
-    s16 dialogBossStop[] = { 17, 115, 118, 152 };
+    s16 dialogBossStop[] = { DIALOG_017, DIALOG_115, DIALOG_118, DIALOG_152 };
 #endif
     s16 i;
 
@@ -1595,7 +1673,7 @@ void handle_special_dialog_text(s16 dialogID) { // dialog ID tables, in order
     }
 }
 
-s16 gMenuMode = -1;
+s16 gMenuMode = MENU_MODE_NONE;
 
 u8 gEndCutsceneStrEn0[] = { TEXT_FILE_MARIO_EXCLAMATION };
 u8 gEndCutsceneStrEn1[] = { TEXT_POWER_STARS_RESTORED };
@@ -1724,7 +1802,7 @@ void render_dialog_entries(void) {
 
     // if the dialog entry is invalid, set the ID to -1.
     if (segmented_to_virtual(NULL) == dialog) {
-        gDialogID = -1;
+        gDialogID = DIALOG_NONE;
         return;
     }
 
@@ -1802,11 +1880,11 @@ void render_dialog_entries(void) {
 
             if (gDialogBoxOpenTimer == DEFAULT_DIALOG_BOX_ANGLE) {
                 gDialogBoxState = DIALOG_STATE_OPENING;
-                gDialogID = -1;
+                gDialogID = DIALOG_NONE;
                 gDialogTextPos = 0;
                 gLastDialogResponse = 0;
                 gLastDialogPageStrPos = 0;
-                gDialogResponse = 0;
+                gDialogResponse = DIALOG_RESPONSE_NONE;
             }
 #if !defined(VERSION_JP)
             lowerBound = 1;
@@ -1863,7 +1941,7 @@ void render_dialog_entries(void) {
 
 // Calls a gMenuMode value defined by render_menus_and_dialogs cases
 void set_menu_mode(s16 mode) {
-    if (gMenuMode == -1) {
+    if (gMenuMode == MENU_MODE_NONE) {
         gMenuMode = mode;
     }
 }
@@ -2084,7 +2162,7 @@ void print_peach_letter_message(void) {
     if (gCutsceneMsgTimer > (PEACH_MESSAGE_TIMER + 20)) {
         gCutsceneMsgIndex = -1;
         gCutsceneMsgFade = 0; //! uselessly reset since the next execution will just set it to 0 again.
-        gDialogID = -1;
+        gDialogID = DIALOG_NONE;
         gCutsceneMsgTimer = 0;
         return; // return to avoid incrementing the timer
     }
@@ -2358,17 +2436,17 @@ void render_pause_camera_options(s16 x, s16 y, s8 *index, s16 xIndex) {
     print_generic_string(x + TXT2_X, y - 13, textNormalFixed);
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
-    create_dl_translation_matrix(MENU_MTX_PUSH, ((index[0] - 1) * xIndex) + x, y + Y_VAL7, 0);
+    create_dl_translation_matrix(MENU_MTX_PUSH, ((*index - 1) * xIndex) + x, y + Y_VAL7, 0);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, gDialogTextAlpha);
     gSPDisplayList(gDisplayListHead++, dl_draw_triangle);
     gSPPopMatrix(gDisplayListHead++, G_MTX_MODELVIEW);
 
-    switch (index[0]) {
-        case 1:
-            cam_select_alt_mode(1);
+    switch (*index) {
+        case CAM_SELECTION_MARIO:
+            cam_select_alt_mode(CAM_SELECTION_MARIO);
             break;
-        case 2:
-            cam_select_alt_mode(2);
+        case CAM_SELECTION_FIXED:
+            cam_select_alt_mode(CAM_SELECTION_FIXED);
             break;
     }
 }
@@ -2416,16 +2494,16 @@ void render_pause_course_options(s16 x, s16 y, s8 *index, s16 yIndex) {
     print_generic_string(x + 10, y - 2, textContinue);
     print_generic_string(x + 10, y - 17, textExitCourse);
 
-    if (index[0] != 3) {
+    if (*index != MENU_OPT_CAMERA_ANGLE_R) {
         print_generic_string(x + 10, y - 33, textCameraAngleR);
         gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 
-        create_dl_translation_matrix(MENU_MTX_PUSH, x - X_VAL8, (y - ((index[0] - 1) * yIndex)) - Y_VAL8, 0);
+        create_dl_translation_matrix(MENU_MTX_PUSH, x - X_VAL8, (y - ((*index - 1) * yIndex)) - Y_VAL8, 0);
 
         gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, gDialogTextAlpha);
         gSPDisplayList(gDisplayListHead++, dl_draw_triangle);
         gSPPopMatrix(gDisplayListHead++, G_MTX_MODELVIEW);
-    } else {
+    } else { // MENU_OPT_CAMERA_ANGLE_R
         render_pause_camera_options(x - 42, y - 42, &gDialogCameraAngleIndex, 110);
     }
 }
@@ -2618,7 +2696,7 @@ s32 gCourseCompleteCoins = 0;
 s8 gHudFlash = 0;
 
 s16 render_pause_courses_and_castle(void) {
-    s16 num;
+    s16 index;
 
 #ifdef VERSION_EU
     gInGameLanguage = eu_get_language();
@@ -2628,7 +2706,7 @@ s16 render_pause_courses_and_castle(void) {
 #endif
     switch (gDialogBoxState) {
         case DIALOG_STATE_OPENING:
-            gDialogLineNum = 1;
+            gDialogLineNum = MENU_OPT_DEFAULT;
             gDialogTextAlpha = 0;
             level_set_transition(-1, NULL);
 #ifdef VERSION_JP
@@ -2669,15 +2747,15 @@ s16 render_pause_courses_and_castle(void) {
                 level_set_transition(0, NULL);
                 play_sound(SOUND_MENU_PAUSE_2, gGlobalSoundSource);
                 gDialogBoxState = DIALOG_STATE_OPENING;
-                gMenuMode = -1;
+                gMenuMode = MENU_MODE_NONE;
 
-                if (gDialogLineNum == 2) {
-                    num = gDialogLineNum;
-                } else {
-                    num = 1;
+                if (gDialogLineNum == MENU_OPT_EXIT_COURSE) {
+                    index = gDialogLineNum;
+                } else { // MENU_OPT_CONTINUE or MENU_OPT_CAMERA_ANGLE_R
+                    index = MENU_OPT_DEFAULT;
                 }
 
-                return num;
+                return index;
             }
             break;
         case DIALOG_STATE_HORIZONTAL:
@@ -2695,10 +2773,10 @@ s16 render_pause_courses_and_castle(void) {
             {
                 level_set_transition(0, NULL);
                 play_sound(SOUND_MENU_PAUSE_2, gGlobalSoundSource);
-                gMenuMode = -1;
+                gMenuMode = MENU_MODE_NONE;
                 gDialogBoxState = DIALOG_STATE_OPENING;
 
-                return 1;
+                return MENU_OPT_DEFAULT;
             }
             break;
     }
@@ -2715,7 +2793,7 @@ s16 render_pause_courses_and_castle(void) {
     optmenu_draw_prompt();
 #endif
 
-    return 0;
+    return MENU_OPT_NONE;
 }
 
 #if defined(VERSION_JP)
@@ -2811,7 +2889,7 @@ void print_hud_course_complete_coins(s16 x, s16 y) {
 #endif
             {
                 play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource);
-                gMarioState[0].numLives++;
+                gMarioState->numLives++;
             }
         }
 
@@ -3056,7 +3134,7 @@ void render_save_confirmation(s16 x, s16 y, s8 *index, s16 sp6e)
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 
-    create_dl_translation_matrix(MENU_MTX_PUSH, X_VAL9, y - ((index[0] - 1) * sp6e), 0);
+    create_dl_translation_matrix(MENU_MTX_PUSH, X_VAL9, y - ((*index - 1) * sp6e), 0);
 
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, gDialogTextAlpha);
     gSPDisplayList(gDisplayListHead++, dl_draw_triangle);
@@ -3066,7 +3144,7 @@ void render_save_confirmation(s16 x, s16 y, s8 *index, s16 sp6e)
 #undef SAVE_CONFIRM_INDEX
 
 s16 render_course_complete_screen(void) {
-    s16 num;
+    s16 index;
 #ifdef VERSION_EU
     gInGameLanguage = eu_get_language();
 #endif
@@ -3078,7 +3156,7 @@ s16 render_course_complete_screen(void) {
                 gDialogBoxState = DIALOG_STATE_VERTICAL;
                 level_set_transition(-1, NULL);
                 gDialogTextAlpha = 0;
-                gDialogLineNum = 1;
+                gDialogLineNum = MENU_OPT_DEFAULT;
             }
             break;
         case DIALOG_STATE_VERTICAL:
@@ -3100,14 +3178,14 @@ s16 render_course_complete_screen(void) {
                 level_set_transition(0, NULL);
                 play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
                 gDialogBoxState = DIALOG_STATE_OPENING;
-                gMenuMode = -1;
-                num = gDialogLineNum;
+                gMenuMode = MENU_MODE_NONE;
+                index = gDialogLineNum;
                 gCourseDoneMenuTimer = 0;
                 gCourseCompleteCoins = 0;
                 gCourseCompleteCoinsEqual = 0;
                 gHudFlash = 0;
 
-                return num;
+                return index;
             }
             break;
     }
@@ -3118,41 +3196,40 @@ s16 render_course_complete_screen(void) {
 
     gCourseDoneMenuTimer++;
 
-    return 0;
+    return MENU_OPT_NONE;
 }
 
-// Only case 1 and 2 are used
 s16 render_menus_and_dialogs(void) {
-    s16 mode = 0;
+    s16 index = MENU_OPT_NONE;
 
     create_dl_ortho_matrix();
 
-    if (gMenuMode != -1) {
+    if (gMenuMode != MENU_MODE_NONE) {
         switch (gMenuMode) {
-            case 0:
-                mode = render_pause_courses_and_castle();
+            case MENU_MODE_UNUSED_0:
+                index = render_pause_courses_and_castle();
                 break;
-            case 1:
-                mode = render_pause_courses_and_castle();
+            case MENU_MODE_RENDER_PAUSE_SCREEN:
+                index = render_pause_courses_and_castle();
                 break;
-            case 2:
-                mode = render_course_complete_screen();
+            case MENU_MODE_RENDER_COURSE_COMPLETE_SCREEN:
+                index = render_course_complete_screen();
                 break;
-            case 3:
-                mode = render_course_complete_screen();
+            case MENU_MODE_UNUSED_3:
+                index = render_course_complete_screen();
                 break;
         }
 
         gDialogColorFadeTimer = (s16) gDialogColorFadeTimer + 0x1000;
-    } else if (gDialogID != -1) {
+    } else if (gDialogID != DIALOG_NONE) {
         // The Peach "Dear Mario" message needs to be repositioned separately
-        if (gDialogID == 20) {
+        if (gDialogID == DIALOG_020) {
             print_peach_letter_message();
-            return mode;
+            return index;
         }
 
         render_dialog_entries();
         gDialogColorFadeTimer = (s16) gDialogColorFadeTimer + 0x1000;
     }
-    return mode;
+    return index;
 }

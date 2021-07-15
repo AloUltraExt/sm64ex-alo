@@ -13,7 +13,7 @@
  * Geo function that generates a displaylist for environment effects such as
  * snow or jet stream bubbles.
  */
-Gfx *geo_envfx_main(s32 callContext, struct GraphNode *node, Mat4 mtxf) {
+Gfx *geo_envfx_main(s32 callContext, struct GraphNode *node, UNUSED Mat4 mtxf) {
     Vec3s marioPos;
     Vec3s camFrom;
     Vec3s camTo;
@@ -34,12 +34,9 @@ Gfx *geo_envfx_main(s32 callContext, struct GraphNode *node, Mat4 mtxf) {
             vec3f_to_vec3s(marioPos, gPlayerCameraState->pos);
             particleList = envfx_update_particles(snowMode, marioPos, camTo, camFrom);
             if (particleList != NULL) {
-                Mtx *mtx = alloc_display_list(sizeof(*mtx));
-
-                gfx = alloc_display_list(2 * sizeof(*gfx));
-                mtxf_to_mtx(mtx, mtxf);
-                gSPMatrix(&gfx[0], VIRTUAL_TO_PHYSICAL(mtx), G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
-                gSPBranchList(&gfx[1], VIRTUAL_TO_PHYSICAL(particleList));
+                // ex-alo change
+                // Gfx calls particle list directly instead of doing branch dls
+                gfx = particleList;
                 execNode->fnNode.node.flags = (execNode->fnNode.node.flags & 0xFF) | 0x400;
             }
             SET_HIGH_U16_OF_32(*params, gAreaUpdateCounter);

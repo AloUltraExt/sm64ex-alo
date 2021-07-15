@@ -350,12 +350,12 @@ static void write_cake_c() {
         if (storeNamesOnly) {
             fprintf(
                 cFile,
-                "ALIGNED8 static const u8 cake_end_texture_%s%d[] = "
+                "ALIGNED8 static const Texture cake_end_texture_%s%d[] = "
                 "\"textures/skybox_tiles/cake%s.%d.rgba16\";\n\n",
                 euSuffx, i, *euSuffx ? "_eu" : "", tiles[i].pos
             );
         } else {
-            fprintf(cFile, "ALIGNED8 static const u8 cake_end_texture_%s%d[] = {\n", euSuffx, i);
+            fprintf(cFile, "ALIGNED8 static const Texture cake_end_texture_%s%d[] = {\n", euSuffx, i);
             print_raw_data(cFile, &tiles[i]);
             fputs("};\n\n", cFile);
         }

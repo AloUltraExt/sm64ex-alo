@@ -1,16 +1,19 @@
 #include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
 #include "lib/src/libultra_internal.h"
 #include "macros.h"
 #include "platform.h"
 #include "fs/fs.h"
+
+#include "game/save_file.h"
 
 #ifdef TARGET_WEB
 #include <emscripten.h>
 #endif
 
 extern OSMgrArgs piMgrArgs;
-
+s32 gNumVblanks;
 u64 osClockRate = 62500000;
 
 s32 osPiStartDma(UNUSED OSIoMesg *mb, UNUSED s32 priority, UNUSED s32 direction,
@@ -34,7 +37,7 @@ s32 osJamMesg(UNUSED OSMesgQueue *mq, UNUSED OSMesg msg, UNUSED s32 flag) {
     return 0;
 }
 s32 osSendMesg(UNUSED OSMesgQueue *mq, UNUSED OSMesg msg, UNUSED s32 flag) {
-#ifdef VERSION_EU
+#if defined(VERSION_EU) || defined(VERSION_SH)
     s32 index;
     if (mq->validCount >= mq->msgCount) {
         return -1;
@@ -46,7 +49,7 @@ s32 osSendMesg(UNUSED OSMesgQueue *mq, UNUSED OSMesg msg, UNUSED s32 flag) {
     return 0;
 }
 s32 osRecvMesg(UNUSED OSMesgQueue *mq, UNUSED OSMesg *msg, UNUSED s32 flag) {
-#ifdef VERSION_EU
+#if defined(VERSION_EU) || defined(VERSION_SH)
     if (mq->validCount == 0) {
         return -1;
     }
@@ -77,7 +80,9 @@ void osViSwapBuffer(UNUSED void *vaddr) {
 }
 
 OSTime osGetTime(void) {
-    return 0;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (unsigned long)tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
 void osWritebackDCacheAll(void) {
@@ -124,7 +129,7 @@ s32 osEepromProbe(UNUSED OSMesgQueue *mq) {
 }
 
 s32 osEepromLongRead(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes) {
-    u8 content[512];
+    u8 content[EEPROM_SIZE];
     s32 ret = -1;
 
 #ifdef TARGET_WEB
@@ -133,8 +138,8 @@ s32 osEepromLongRead(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes)
         if (s && s.length === 684) {
             try {
                 var binary = atob(s);
-                if (binary.length === 512) {
-                    for (var i = 0; i < 512; i++) {
+                if (binary.length === EEPROM_SIZE) {
+                    for (var i = 0; i < EEPROM_SIZE; i++) {
                         HEAPU8[$0 + i] = binary.charCodeAt(i);
                     }
                     return 1;
@@ -152,7 +157,7 @@ s32 osEepromLongRead(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes)
     if (fp == NULL) {
         return -1;
     }
-    if (fs_read(fp, content, 512) == 512) {
+    if (fs_read(fp, content, EEPROM_SIZE) == EEPROM_SIZE) {
         memcpy(buffer, content + address * 8, nbytes);
         ret = 0;
     }
@@ -162,16 +167,16 @@ s32 osEepromLongRead(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes)
 }
 
 s32 osEepromLongWrite(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes) {
-    u8 content[512] = {0};
-    if (address != 0 || nbytes != 512) {
-        osEepromLongRead(mq, 0, content, 512);
+    u8 content[EEPROM_SIZE] = {0};
+    if (address != 0 || nbytes != EEPROM_SIZE) {
+        osEepromLongRead(mq, 0, content, EEPROM_SIZE);
     }
     memcpy(content + address * 8, buffer, nbytes);
 
 #ifdef TARGET_WEB
     EM_ASM({
         var str = "";
-        for (var i = 0; i < 512; i++) {
+        for (var i = 0; i < EEPROM_SIZE; i++) {
             str += String.fromCharCode(HEAPU8[$0 + i]);
         }
         localStorage.sm64_save_file = btoa(str);
@@ -182,8 +187,23 @@ s32 osEepromLongWrite(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes
     if (fp == NULL) {
         return -1;
     }
-    s32 ret = fwrite(content, 1, 512, fp) == 512 ? 0 : -1;
+    s32 ret = fwrite(content, 1, EEPROM_SIZE, fp) == EEPROM_SIZE ? 0 : -1;
     fclose(fp);
 #endif
     return ret;
+}
+
+OSPiHandle *osCartRomInit(void) {
+    static OSPiHandle handle;
+    return &handle;
+}
+
+OSPiHandle *osDriveRomInit(void) {
+    static OSPiHandle handle;
+    return &handle;
+}
+
+s32 osEPiStartDma(UNUSED OSPiHandle *pihandle, OSIoMesg *mb, UNUSED s32 direction) {
+    memcpy(mb->dramAddr, (const void *) mb->devAddr, mb->size);
+    osSendMesg(mb->hdr.retQueue, mb, OS_MESG_NOBLOCK);
 }

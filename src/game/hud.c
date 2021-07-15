@@ -24,6 +24,10 @@ int configHUD = TRUE;
 #endif
 #endif
 
+#ifdef BETTERCAMERA
+#include "extras/bettercamera.h"
+#endif
+
 /* @file hud.c
  * This file implements HUD rendering and power meter animations.
  * That includes stars, lives, coins, camera status, power meter, timer
@@ -63,9 +67,25 @@ static struct PowerMeterHUD sPowerMeterHUD = {
 // when the power meter is hidden.
 s32 sPowerMeterVisibleTimer = 0;
 
-static struct UnusedHUDStruct sUnusedHUDValues = { 0x00, 0x0A, 0x00 };
+UNUSED static struct UnusedHUDStruct sUnusedHUDValues = { 0x00, 0x0A, 0x00 };
 
 static struct CameraHUD sCameraHUD = { CAM_STATUS_NONE };
+
+#ifdef HIGH_FPS_PC
+static u32 sPowerMeterLastRenderTimestamp;
+static s16 sPowerMeterLastY;
+static Gfx *sPowerMeterDisplayListPos;
+
+void patch_interpolated_hud(void) {
+    if (sPowerMeterDisplayListPos != NULL) {
+        Mtx *mtx = alloc_display_list(sizeof(Mtx));
+        guTranslate(mtx, (f32) sPowerMeterHUD.x, (f32) sPowerMeterHUD.y, 0);
+        gSPMatrix(sPowerMeterDisplayListPos, VIRTUAL_TO_PHYSICAL(mtx),
+              G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_PUSH);
+        sPowerMeterDisplayListPos = NULL;
+    }
+}
+#endif
 
 /**
  * Renders a rgba16 16x16 glyph texture from a table list.
@@ -119,6 +139,9 @@ void render_power_meter_health_segment(s16 numHealthWedges) {
  */
 void render_dl_power_meter(s16 numHealthWedges) {
     Mtx *mtx;
+#ifdef HIGH_FPS_PC
+    f32 interpolatedY;
+#endif
 
     mtx = alloc_display_list(sizeof(Mtx));
 
@@ -126,7 +149,19 @@ void render_dl_power_meter(s16 numHealthWedges) {
         return;
     }
 
+#ifdef HIGH_FPS_PC
+    if (gGlobalTimer == sPowerMeterLastRenderTimestamp + 1) {
+        interpolatedY = (sPowerMeterLastY + sPowerMeterHUD.y) / 2.0f;
+    } else {
+        interpolatedY = sPowerMeterHUD.y;
+    }
+    guTranslate(mtx, (f32) sPowerMeterHUD.x, interpolatedY, 0);
+    sPowerMeterLastY = sPowerMeterHUD.y;
+    sPowerMeterLastRenderTimestamp = gGlobalTimer;
+    sPowerMeterDisplayListPos = gDisplayListHead;
+#else
     guTranslate(mtx, (f32) sPowerMeterHUD.x, (f32) sPowerMeterHUD.y, 0);
+#endif
 
     gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(mtx++),
               G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_PUSH);
@@ -397,6 +432,13 @@ void render_hud_camera_status(void) {
         return;
     }
 
+#ifdef BETTERCAMERA
+    if (gPuppyCam.enabled && !gCurrDemoInput) {
+        puppycam_hud();
+        return;
+    }
+#endif
+
     gSPDisplayList(gDisplayListHead++, dl_hud_img_begin);
     render_hud_tex_lut(x, y, (*cameraLUT)[GLYPH_CAM_CAMERA]);
 
@@ -461,52 +503,35 @@ void render_hud(void) {
             render_hud_cannon_reticle();
         }
 
-        if (hudDisplayFlags & HUD_DISPLAY_FLAG_LIVES
 #ifdef EXT_OPTIONS_MENU
-        && configHUD
+        if (!configHUD) {
+            return;
+        }
 #endif
-        ) {
+
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_LIVES) {
             render_hud_mario_lives();
         }
 
-        if (hudDisplayFlags & HUD_DISPLAY_FLAG_COIN_COUNT
-#ifdef EXT_OPTIONS_MENU
-        && configHUD
-#endif
-        ) {
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_COIN_COUNT) {
             render_hud_coins();
         }
 
-        if (hudDisplayFlags & HUD_DISPLAY_FLAG_STAR_COUNT
-#ifdef EXT_OPTIONS_MENU
-        && configHUD
-#endif
-        ) {
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_STAR_COUNT) {
             render_hud_stars();
         }
 
-        if (hudDisplayFlags & HUD_DISPLAY_FLAG_KEYS
-#ifdef EXT_OPTIONS_MENU
-        && configHUD
-#endif
-        ) {
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_KEYS) {
             render_hud_keys();
         }
 
-        if (hudDisplayFlags & HUD_DISPLAY_FLAG_CAMERA_AND_POWER
-#ifdef EXT_OPTIONS_MENU
-        && configHUD
-#endif
-        ) {
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_CAMERA_AND_POWER) {
             render_hud_power_meter();
+
             render_hud_camera_status();
         }
 
-        if (hudDisplayFlags & HUD_DISPLAY_FLAG_TIMER
-#ifdef EXT_OPTIONS_MENU
-        && configHUD
-#endif
-        ) {
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_TIMER) {
             render_hud_timer();
         }
     }

@@ -33,11 +33,17 @@
 #include "save_file.h"
 #include "sound_init.h"
 #include "pc/configfile.h"
-#ifdef CHEATS_ACTIONS
-#include "cheats.h"
-#endif
+
 #ifdef BETTERCAMERA
-#include "bettercamera.h"
+#include "extras/bettercamera.h"
+#endif
+
+#ifdef CHEATS_ACTIONS
+#include "extras/cheats.h"
+#endif
+
+#ifdef DEBUG
+#include "extras/debug_menu.h"
 #endif
 
 u32 unused80339F10;
@@ -70,9 +76,9 @@ s32 is_anim_past_end(struct MarioState *m) {
  */
 s16 set_mario_animation(struct MarioState *m, s32 targetAnimID) {
     struct Object *o = m->marioObj;
-    struct Animation *targetAnim = m->animation->targetAnim;
+    struct Animation *targetAnim = m->animList->bufTarget;
 
-    if (load_patchable_table(m->animation, targetAnimID)) {
+    if (load_patchable_table(m->animList, targetAnimID)) {
         targetAnim->values = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->values);
         targetAnim->index = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->index);
     }
@@ -103,9 +109,9 @@ s16 set_mario_animation(struct MarioState *m, s32 targetAnimID) {
  */
 s16 set_mario_anim_with_accel(struct MarioState *m, s32 targetAnimID, s32 accel) {
     struct Object *o = m->marioObj;
-    struct Animation *targetAnim = m->animation->targetAnim;
+    struct Animation *targetAnim = m->animList->bufTarget;
 
-    if (load_patchable_table(m->animation, targetAnimID)) {
+    if (load_patchable_table(m->animList, targetAnimID)) {
         targetAnim->values = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->values);
         targetAnim->index = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->index);
     }
@@ -393,6 +399,9 @@ void mario_set_forward_vel(struct MarioState *m, f32 forwardVel) {
  */
 s32 mario_get_floor_class(struct MarioState *m) {
     s32 floorClass;
+#ifdef CHEATS_ACTIONS
+    if (Cheats.EnableCheats && Cheats.WalkOn.Slope) return SURFACE_CLASS_NOT_SLIPPERY;
+#endif
 
     // The slide terrain type defaults to slide slipperiness.
     // This doesn't matter too much since normally the slide terrain
@@ -578,6 +587,10 @@ s32 mario_facing_downhill(struct MarioState *m, s32 turnYaw) {
  * Determines if a surface is slippery based on the surface class.
  */
 u32 mario_floor_is_slippery(struct MarioState *m) {
+#ifdef CHEATS_ACTIONS
+    if (Cheats.EnableCheats && Cheats.WalkOn.Slope) return FALSE;
+#endif
+
     f32 normY;
 
     if ((m->area->terrainType & TERRAIN_MASK) == TERRAIN_SLIDE
@@ -1215,22 +1228,9 @@ void squish_mario_model(struct MarioState *m) {
         // Also handles the Tiny Mario and Huge Mario cheats.
         if (m->squishTimer == 0) {
 #ifdef CHEATS_ACTIONS
-            if (Cheats.EnableCheats) {
-                if (Cheats.HugeMario) {
-                    vec3f_set(m->marioObj->header.gfx.scale, 2.5f, 2.5f, 2.5f);
-                }
-                else if (Cheats.TinyMario) {
-                    vec3f_set(m->marioObj->header.gfx.scale, 0.2f, 0.2f, 0.2f);
-                }
-                else {
-                    vec3f_set(m->marioObj->header.gfx.scale, 1.0f, 1.0f, 1.0f);
-                }
-            }
-            else {
-#endif
-                vec3f_set(m->marioObj->header.gfx.scale, 1.0f, 1.0f, 1.0f);
-#ifdef CHEATS_ACTIONS
-            }
+            cheats_mario_size(m);
+#else
+            vec3f_set(m->marioObj->header.gfx.scale, 1.0f, 1.0f, 1.0f);
 #endif      
         }
         // If timer is less than 16, rubber-band Mario's size scale up and down.
@@ -1326,14 +1326,7 @@ void update_mario_joystick_inputs(struct MarioState *m) {
     }
 
     if (m->intendedMag > 0.0f) {
-#ifndef BETTERCAMERA
         m->intendedYaw = atan2s(-controller->stickY, controller->stickX) + m->area->camera->yaw;
-#else
-        if (gLakituState.mode != CAMERA_MODE_NEWCAM)
-            m->intendedYaw = atan2s(-controller->stickY, controller->stickX) + m->area->camera->yaw;
-        else
-            m->intendedYaw = atan2s(-controller->stickY, controller->stickX)-newcam_yaw+0x4000;
-#endif
         m->input |= INPUT_NONZERO_ANALOG;
     } else {
         m->intendedYaw = m->faceAngle[1];
@@ -1413,19 +1406,21 @@ void update_mario_inputs(struct MarioState *m) {
     update_mario_geometry_inputs(m);
 
     debug_print_speed_action_normal(m);
-    
-#ifdef CHEATS_ACTIONS
-    /* Moonjump cheat */
-    if (Cheats.MoonJump == true && Cheats.EnableCheats == true) {        
-        if (m->controller->buttonPressed & L_TRIG) {
-            set_mario_action(m, ACT_JUMP, 0);
-        }
 
-        if (m->controller->buttonDown & L_TRIG) {
-            m->vel[1] = 25;
+#ifdef CHEATS_ACTIONS
+    cheats_mario_inputs(m);
+#endif
+
+#ifdef BETTERCAMERA
+    if (gPuppyCam.enabled && (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ENTER_FIRST_PERSON) 
+        && (gPuppyCam.options.inputType == PUPPYCAM_INPUT_TYPE_CLASSIC)) {
+        m->input |= INPUT_FIRST_PERSON;
+    } else if (!gPuppyCam.enabled || gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC) {
+        if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_IN) {
+            gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ZOOMED_MED;
+            gPuppyCam.mode3Flags &= ~(PUPPYCAM_MODE3_ZOOMED_IN | PUPPYCAM_MODE3_ENTER_FIRST_PERSON);
         }
     }
-    /*End of moonjump cheat */
 #endif
 
     if (gCameraMovementFlags & CAM_MOVE_C_UP_MODE) {
@@ -1439,10 +1434,11 @@ void update_mario_inputs(struct MarioState *m) {
     if (!(m->input & (INPUT_NONZERO_ANALOG | INPUT_A_PRESSED))) {
         m->input |= INPUT_UNKNOWN_5;
     }
-
+    
+    // These 3 flags are defined by Bowser stomping attacks
     if (m->marioObj->oInteractStatus
-        & (INT_STATUS_HOOT_GRABBED_BY_MARIO | INT_STATUS_MARIO_UNK1 | INT_STATUS_HIT_BY_SHOCKWAVE)) {
-        m->input |= INPUT_UNKNOWN_10;
+        & (INT_STATUS_MARIO_STUNNED | INT_STATUS_MARIO_KNOCKBACK_DMG | INT_STATUS_MARIO_SHOCKWAVE)) {
+        m->input |= INPUT_STOMPED;
     }
 
     // This function is located near other unused trampoline functions,
@@ -1547,7 +1543,7 @@ void update_mario_health(struct MarioState *m) {
         ) {
             play_sound(SOUND_MOVING_ALMOST_DROWNING, gGlobalSoundSource);
 #ifdef RUMBLE_FEEDBACK
-            if (!gRumblePakTimer) {
+            if (gRumblePakTimer == 0) {
                 gRumblePakTimer = 36;
                 if (is_rumble_finished_and_queue_empty()) {
                     queue_rumble_data(3, 30);
@@ -1661,11 +1657,7 @@ void mario_update_hitbox_and_cap_model(struct MarioState *m) {
     struct MarioBodyState *bodyState = m->marioBodyState;
     s32 flags = update_and_return_cap_flags(m);
 
-    if (flags & MARIO_VANISH_CAP
-#ifdef BETTERCAMERA
-    || newcam_xlu < 255
-#endif
-    ) {
+    if (flags & MARIO_VANISH_CAP) {
         bodyState->modelState = MODEL_STATE_NOISE_ALPHA;
     }
 
@@ -1717,7 +1709,7 @@ void mario_update_hitbox_and_cap_model(struct MarioState *m) {
  * An unused and possibly a debug function. Z + another button input
  * sets Mario with a different cap.
  */
-static void debug_update_mario_cap(u16 button, s32 flags, u16 capTimer, u16 capMusic) {
+void debug_update_mario_cap(u16 button, s32 flags, u16 capTimer, u16 capMusic) {
     // This checks for Z_TRIG instead of Z_DOWN flag
     // (which is also what other debug functions do),
     // so likely debug behavior rather than unused behavior.
@@ -1753,26 +1745,15 @@ void queue_rumble_particles(void) {
  */
 s32 execute_mario_action(UNUSED struct Object *o) {
     s32 inLoop = TRUE;
-    /**
-    * Cheat stuff
-    */
 
 #ifdef CHEATS_ACTIONS
-    if (Cheats.EnableCheats)
-    {
-        if (Cheats.GodMode)
-            gMarioState->health = 0x880;
+    cheats_mario_action(gMarioState);
+#endif
 
-        if (Cheats.InfiniteLives && gMarioState->numLives < 99)
-            gMarioState->numLives += 1;
+#ifdef DEBUG
+    set_debug_mario_action(gMarioState);
+#endif
 
-        if (Cheats.SuperSpeed && gMarioState->forwardVel > 0)
-            gMarioState->forwardVel += 100;
-    }
-    /**
-    * End of cheat stuff
-    */
-#endif    
     if (gMarioState->action) {
         gMarioState->marioObj->header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
         mario_reset_bodystate(gMarioState);
@@ -1836,7 +1817,11 @@ s32 execute_mario_action(UNUSED struct Object *o) {
 #endif
         }
 
-        if (gMarioState->floor->type == SURFACE_VERTICAL_WIND) {
+        if (gMarioState->floor->type == SURFACE_VERTICAL_WIND
+#if QOL_FIX_SURFACE_WIND_DETECTION
+        && (gMarioState->action == ACT_VERTICAL_WIND)
+#endif
+        ) {
             spawn_wind_particles(1, 0);
 #ifndef VERSION_JP
             play_sound(SOUND_ENV_WIND2, gMarioState->marioObj->header.gfx.cameraToObject);
@@ -1953,7 +1938,7 @@ void init_mario_from_save_file(void) {
     gMarioState->statusForCamera = &gPlayerCameraState[0];
     gMarioState->marioBodyState = &gBodyStates[0];
     gMarioState->controller = &gControllers[0];
-    gMarioState->animation = &D_80339D10;
+    gMarioState->animList = &gMarioAnimsBuf;
 
     gMarioState->numCoins = 0;
     gMarioState->numStars =

@@ -12,9 +12,10 @@
 #include "engine/math_util.h"
 #include "envfx_snow.h"
 #include "game_init.h"
-#include "goddard/renderer.h"
 #include "interaction.h"
 #include "level_update.h"
+#include "mario.h"
+#include "mario_actions_cutscene.h"
 #include "mario_misc.h"
 #include "memory.h"
 #include "object_helpers.h"
@@ -23,8 +24,12 @@
 #include "save_file.h"
 #include "skybox.h"
 #include "sound_init.h"
+#ifdef GODDARD_MFACE
+#include "goddard/renderer.h"
+#endif
+
 #ifdef BETTERCAMERA
-#include "bettercamera.h"
+#include "extras/bettercamera.h"
 #endif
 
 #define TOAD_STAR_1_REQUIREMENT 12
@@ -81,6 +86,7 @@ struct GraphNodeObject gMirrorMario;  // copy of Mario's geo node for drawing mi
 // (message NPC related things, the Mario head geo, and Mario geo
 // functions)
 
+#ifdef GODDARD_MFACE
 /**
  * Geo node script that draws Mario's head on the title screen.
  */
@@ -101,6 +107,7 @@ Gfx *geo_draw_mario_head_goddard(s32 callContext, struct GraphNode *node, Mat4 *
     }
     return gfx;
 }
+#endif
 
 static void toad_message_faded(void) {
     if (gCurrentObject->oDistanceToMario > 700.0f) {
@@ -125,8 +132,8 @@ static void toad_message_opaque(void) {
 }
 
 static void toad_message_talking(void) {
-    if (cur_obj_update_dialog_with_cutscene(3, 1, CUTSCENE_DIALOG, gCurrentObject->oToadMessageDialogId)
-        != 0) {
+    if (cur_obj_update_dialog_with_cutscene(MARIO_DIALOG_LOOK_DOWN, 
+        DIALOG_FLAG_TURN_TO_MARIO, CUTSCENE_DIALOG, gCurrentObject->oToadMessageDialogId)) {
         gCurrentObject->oToadMessageRecentlyTalked = TRUE;
         gCurrentObject->oToadMessageState = TOAD_MESSAGE_FADING;
         switch (gCurrentObject->oToadMessageDialogId) {
@@ -303,10 +310,6 @@ void bhv_unlock_door_star_loop(void) {
 static Gfx *make_gfx_mario_alpha(struct GraphNodeGenerated *node, s16 alpha) {
     Gfx *gfx;
     Gfx *gfxHead = NULL;
-#ifdef BETTERCAMERA
-    u8 alphaBias;
-    s32 flags = update_and_return_cap_flags(gMarioState);
-#endif
 
     if (alpha == 255) {
         node->fnNode.node.flags = (node->fnNode.node.flags & 0xFF) | (LAYER_OPAQUE << 8);
@@ -317,7 +320,7 @@ static Gfx *make_gfx_mario_alpha(struct GraphNodeGenerated *node, s16 alpha) {
         gfxHead = alloc_display_list(3 * sizeof(*gfxHead));
         gfx = gfxHead;
 #ifdef BETTERCAMERA
-        if (flags & MARIO_VANISH_CAP || gMarioState->flags & MARIO_TELEPORTING) {
+        if (gMarioState->flags & MARIO_VANISH_CAP || gMarioState->flags & MARIO_TELEPORTING) {
             gDPSetAlphaCompare(gfx++, G_AC_DITHER);
         } else {
             gDPSetAlphaCompare(gfx++, G_AC_NONE);
@@ -326,12 +329,7 @@ static Gfx *make_gfx_mario_alpha(struct GraphNodeGenerated *node, s16 alpha) {
         gDPSetAlphaCompare(gfx++, G_AC_DITHER);
 #endif
     }
-#ifdef BETTERCAMERA
-    alphaBias = min(alpha, newcam_xlu);
-    gDPSetEnvColor(gfx++, 255, 255, 255, alphaBias);
-#else
     gDPSetEnvColor(gfx++, 255, 255, 255, alpha);
-#endif
     gSPEndDisplayList(gfx);
     return gfxHead;
 }
@@ -349,6 +347,14 @@ Gfx *geo_mirror_mario_set_alpha(s32 callContext, struct GraphNode *node, UNUSED 
 
     if (callContext == GEO_CONTEXT_RENDER) {
         alpha = (bodyState->modelState & 0x100) ? (bodyState->modelState & 0xFF) : 255;
+#ifdef BETTERCAMERA
+        if (gPuppyCam.enabled && alpha > gPuppyCam.opacity && !gCamera->cutscene) {
+            alpha = gPuppyCam.opacity;
+            bodyState->modelState |= MODEL_STATE_NOISE_ALPHA;
+        } else {
+            gPuppyCam.opacity = 255;
+        }    
+#endif
         gfx = make_gfx_mario_alpha(asGenerated, alpha);
     }
     return gfx;
@@ -427,7 +433,12 @@ Gfx *geo_mario_head_rotation(s32 callContext, struct GraphNode *node, UNUSED Mat
         struct GraphNodeRotation *rotNode = (struct GraphNodeRotation *) node->next;
         struct Camera *camera = gCurGraphNodeCamera->config.camera;
 
-        if (camera->mode == CAMERA_MODE_C_UP) {
+        if (camera->mode == CAMERA_MODE_C_UP
+#ifdef BETTERCAMERA
+        || gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ENTER_FIRST_PERSON
+#endif
+        ) {
+            
             rotNode->rotation[0] = gPlayerCameraState->headRotation[1];
             rotNode->rotation[2] = gPlayerCameraState->headRotation[0];
         } else if (action & ACT_FLAG_WATER_OR_TEXT) {

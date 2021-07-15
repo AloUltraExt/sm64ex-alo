@@ -10,7 +10,10 @@
 #include <whb/log.h>
 #endif
 
+#ifdef COMMAND_LINE_OPTIONS
 #include "cliopts.h"
+#endif
+
 #include "fs/fs.h"
 #include "configfile.h"
 
