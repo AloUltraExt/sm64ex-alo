@@ -5,6 +5,7 @@
 
 #include <PR/ultratypes.h>
 #include <PR/gbi.h>
+
 #include "sm64.h"
 #include "types.h"
 #include "game/level_update.h"

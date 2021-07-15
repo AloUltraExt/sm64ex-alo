@@ -57,7 +57,7 @@ s32 detect_object_hitbox_overlap(struct Object *a, struct Object *b) {
     }
 
     //! no return value
-#if QOL_FIX_HITBOX_HURTBOX_OVERLAP_RETURN
+#ifdef AVOID_UB
     return 0;
 #endif
 }
@@ -92,7 +92,7 @@ s32 detect_object_hurtbox_overlap(struct Object *a, struct Object *b) {
     }
 
     //! no return value
-#if QOL_FIX_HITBOX_HURTBOX_OVERLAP_RETURN
+#ifdef AVOID_UB
     return 0;
 #endif
 }

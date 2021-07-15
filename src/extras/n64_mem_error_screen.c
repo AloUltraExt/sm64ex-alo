@@ -90,10 +90,10 @@ void thread5_mem_error_message_loop(UNUSED void *arg) {
 
     addr = segmented_to_virtual(level_script_entry_error_screen);
 
-    rendering_init();
+    render_init();
 
     while (1) {
-        config_gfx_pool();
+        select_gfx_pool();
         addr = level_script_execute(addr);
         display_and_vsync();
     }

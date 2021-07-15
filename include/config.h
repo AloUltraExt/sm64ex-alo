@@ -26,6 +26,14 @@
 #define BUGFIX_PIRANHA_PLANT_SLEEP_DAMAGE (0 || VERSION_US || VERSION_SH || QOL_FIXES)
 /// Fixes bug where it shows a star when you grab a key in bowser battle stages
 #define BUGFIX_STAR_BOWSER_KEY (0 || VERSION_US || VERSION_EU || VERSION_SH || QOL_FIXES)
+/// Fixes bug that enables Mario in time stop even if is not ready to speak
+#define BUGFIX_DIALOG_TIME_STOP (0 || VERSION_US || VERSION_EU || VERSION_SH || QOL_FIXES)
+/// Fixes bug that causes Mario to still collide with Bowser in BITS after his defeat
+#define BUGFIX_BOWSER_COLLIDE_BITS_DEAD (0 || VERSION_US || VERSION_EU || VERSION_SH || QOL_FIXES)
+/// Fixes bug where Bowser wouldn't reset his speed when fallen off (and adds missing checks)
+#define BUGFIX_BOWSER_FALLEN_OFF_STAGE (0 || VERSION_US || VERSION_EU || VERSION_SH || QOL_FIXES)
+/// Fixes bug where Bowser would look weird while fading out
+#define BUGFIX_BOWSER_FADING_OUT (0 || VERSION_US || VERSION_EU || VERSION_SH || QOL_FIXES)
 /// Fixes bug in KTQ win dialog which makes it sounds like a penguin instead of a Koopa
 #define BUGFIX_DIALOG_SOUND_KTQ_WIN (0 || VERSION_US || VERSION_EU || VERSION_SH || QOL_FIXES)
 /// Fixes bug that causes Wiggle to read a garbage health value when it gets loaded
@@ -52,7 +60,6 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
-// What's the point of having a border if we're not an N64?
-#define BORDER_HEIGHT 0 // Never use a border as not-N64
+#define BORDER_HEIGHT 0
 
 #endif // CONFIG_H

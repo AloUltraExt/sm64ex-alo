@@ -87,6 +87,10 @@
  *
  */
 
+#ifdef F3DZEX_GBI_2
+#  define F3DEX_GBI_2
+#endif
+
 #ifdef F3DEX_GBI_2E
 # ifndef F3DEX_GBI_2
 #  define F3DEX_GBI_2
@@ -368,6 +372,11 @@
 #define G_TEXTURE_GEN		0x00040000
 #define G_TEXTURE_GEN_LINEAR	0x00080000
 #define G_LOD			0x00100000	/* NOT IMPLEMENTED */
+#if defined(F3DZEX_GBI_2)
+# define G_POINT_LIGHTING 0x00400000
+#else
+# define G_POINT_LIGHTING 0x00000000
+#endif
 #if	(defined(F3DEX_GBI)||defined(F3DLP_GBI))
 # define G_CLIPPING		0x00800000
 #else

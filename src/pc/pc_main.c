@@ -54,11 +54,11 @@
 #include "pc/discord/discordrpc.h"
 #endif
 
-OSMesg D_80339BEC;
+OSMesg gMainReceivedMesg;
 OSMesgQueue gSIEventMesgQueue;
 
 s8 gResetTimer;
-s8 D_8032C648;
+s8 gNmiResetBarsTimer;
 s8 gDebugLevelSelect;
 s8 gShowProfiler;
 s8 gShowDebugText;
@@ -81,7 +81,7 @@ void set_vblank_handler(UNUSED s32 index, UNUSED struct VblankHandler *handler, 
 static bool inited = false;
 
 #include "game/game_init.h" // for gGlobalTimer
-void send_display_list(struct SPTask *spTask) {
+void exec_display_list(struct SPTask *spTask) {
     if (!inited) return;
     gfx_run((Gfx *)spTask->task.t.data_ptr);
 }

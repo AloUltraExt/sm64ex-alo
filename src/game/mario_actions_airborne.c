@@ -68,7 +68,11 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
     fallHeight = m->peakHeight - m->pos[1];
 
 #pragma GCC diagnostic push
+#if defined(__clang__)
+#pragma GCC diagnostic ignored "-Wtautological-constant-out-of-range-compare"
+#elif defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wtype-limits"
+#endif
 
     //! Never true
     if (m->actionState == ACT_GROUND_POUND) {

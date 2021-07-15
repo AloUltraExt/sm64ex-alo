@@ -76,9 +76,9 @@ s32 is_anim_past_end(struct MarioState *m) {
  */
 s16 set_mario_animation(struct MarioState *m, s32 targetAnimID) {
     struct Object *o = m->marioObj;
-    struct Animation *targetAnim = m->animation->targetAnim;
+    struct Animation *targetAnim = m->animList->bufTarget;
 
-    if (load_patchable_table(m->animation, targetAnimID)) {
+    if (load_patchable_table(m->animList, targetAnimID)) {
         targetAnim->values = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->values);
         targetAnim->index = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->index);
     }
@@ -109,9 +109,9 @@ s16 set_mario_animation(struct MarioState *m, s32 targetAnimID) {
  */
 s16 set_mario_anim_with_accel(struct MarioState *m, s32 targetAnimID, s32 accel) {
     struct Object *o = m->marioObj;
-    struct Animation *targetAnim = m->animation->targetAnim;
+    struct Animation *targetAnim = m->animList->bufTarget;
 
-    if (load_patchable_table(m->animation, targetAnimID)) {
+    if (load_patchable_table(m->animList, targetAnimID)) {
         targetAnim->values = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->values);
         targetAnim->index = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->index);
     }
@@ -1434,10 +1434,11 @@ void update_mario_inputs(struct MarioState *m) {
     if (!(m->input & (INPUT_NONZERO_ANALOG | INPUT_A_PRESSED))) {
         m->input |= INPUT_UNKNOWN_5;
     }
-
+    
+    // These 3 flags are defined by Bowser stomping attacks
     if (m->marioObj->oInteractStatus
-        & (INT_STATUS_HOOT_GRABBED_BY_MARIO | INT_STATUS_MARIO_UNK1 | INT_STATUS_HIT_BY_SHOCKWAVE)) {
-        m->input |= INPUT_UNKNOWN_10;
+        & (INT_STATUS_MARIO_STUNNED | INT_STATUS_MARIO_KNOCKBACK_DMG | INT_STATUS_MARIO_SHOCKWAVE)) {
+        m->input |= INPUT_STOMPED;
     }
 
     // This function is located near other unused trampoline functions,
@@ -1542,7 +1543,7 @@ void update_mario_health(struct MarioState *m) {
         ) {
             play_sound(SOUND_MOVING_ALMOST_DROWNING, gGlobalSoundSource);
 #ifdef RUMBLE_FEEDBACK
-            if (!gRumblePakTimer) {
+            if (gRumblePakTimer == 0) {
                 gRumblePakTimer = 36;
                 if (is_rumble_finished_and_queue_empty()) {
                     queue_rumble_data(3, 30);
@@ -1937,7 +1938,7 @@ void init_mario_from_save_file(void) {
     gMarioState->statusForCamera = &gPlayerCameraState[0];
     gMarioState->marioBodyState = &gBodyStates[0];
     gMarioState->controller = &gControllers[0];
-    gMarioState->animation = &D_80339D10;
+    gMarioState->animList = &gMarioAnimsBuf;
 
     gMarioState->numCoins = 0;
     gMarioState->numStars =

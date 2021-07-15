@@ -6,7 +6,7 @@
 
 #include <ultra64.h>
 #include "macros.h"
-#include "sm64.h"
+#include "config.h"
 
 // Certain functions are marked as having return values, but do not
 // actually return a value. This causes undefined behavior, which we'd rather
@@ -294,27 +294,6 @@ struct MarioBodyState
     u8 padding[4];
 };
 
-struct OffsetSizePair
-{
-    u32 offset;
-    u32 size;
-};
-
-struct MarioAnimDmaRelatedThing
-{
-    u32 count;
-    u8 *srcAddr;
-    struct OffsetSizePair anim[1]; // dynamic size
-};
-
-struct MarioAnimation
-{
-    struct MarioAnimDmaRelatedThing *animDmaTable;
-    u8 *currentAnimAddr;
-    struct Animation *targetAnim;
-    u8 padding[4];
-};
-
 struct MarioState
 {
     /*0x00*/ u16 unk00;
@@ -360,7 +339,7 @@ struct MarioState
     /*0x94*/ struct PlayerCameraState *statusForCamera;
     /*0x98*/ struct MarioBodyState *marioBodyState;
     /*0x9C*/ struct Controller *controller;
-    /*0xA0*/ struct MarioAnimation *animation;
+    /*0xA0*/ struct DmaHandlerList *animList;
     /*0xA4*/ u32 collidedObjInteractTypes;
     /*0xA8*/ s16 numCoins;
     /*0xAA*/ s16 numStars;

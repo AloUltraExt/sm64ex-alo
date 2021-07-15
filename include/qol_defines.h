@@ -57,10 +57,6 @@
 #define QOL_FIX_TUXIE_HELD_STATE (0 || QOL_FIXES)
 /// Fixes Bully minion knockback timer by reseting it, more info in the fix itself
 #define QOL_FIX_BULLY_KNOCKBACK_TIMER (0 || QOL_FIXES)
-/// Fixes Shadow water height level return code
-#define QOL_FIX_SHADOW_WATER_LEVEL (0 || QOL_FIXES)
-/// Fixes last missing return in hitbox/hurtbox overlap detection code
-#define QOL_FIX_HITBOX_HURTBOX_OVERLAP_RETURN (0 || QOL_FIXES)
 /// Fixes camera height in water while being Metal
 #define QOL_FIX_CAMERA_WATER_HEIGHT (0 || QOL_FIXES)
 /// Fixes camera height in BOB and adds missing breaks in code

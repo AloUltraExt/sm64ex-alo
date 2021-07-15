@@ -1,6 +1,7 @@
 #include <ultra64.h>
 
 #include "buffers.h"
+#include "config.h"
 
 ALIGNED8 u8 gDecompressionHeap[0xD000];
 

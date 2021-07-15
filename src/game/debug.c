@@ -305,7 +305,7 @@ void reset_debug_objectinfo(void) {
  * C Right) and then toggles the debug flags from FF to 2; 2 is unused,
  * despite so this has no effect, being called. (unused)
  */
-static void check_debug_button_seq(void) {
+UNUSED static void check_debug_button_seq(void) {
     s16 *buttonArr;
     s16 cButtonMask;
 
@@ -494,11 +494,7 @@ void try_do_mario_debug_object_spawn(void) {
 }
 
 // TODO: figure out what this is
-#ifdef VERSION_SH
-static
-#endif
-void debug_print_obj_move_flags(void) {
-#ifndef VERSION_EU // TODO: Is there a better way to diff this? static EU doesn't seem to work.
+UNUSED static void debug_print_obj_move_flags(void) {
     if (gCurrentObject->oMoveFlags & OBJ_MOVE_LANDED) {
         print_debug_top_down_objectinfo("BOUND   %x", gCurrentObject->oMoveFlags);
     }
@@ -526,11 +522,10 @@ void debug_print_obj_move_flags(void) {
     if (gCurrentObject->oMoveFlags & OBJ_MOVE_OUT_SCOPE) {
         print_debug_top_down_objectinfo("OUT SCOPE %x", gCurrentObject->oMoveFlags);
     }
-#endif
 }
 
 // unused, what is this?
-void debug_enemy_unknown(s16 *enemyArr) {
+UNUSED static void debug_enemy_unknown(s16 *enemyArr) {
     // copy b1-b4 over to an unknown s16 array
     enemyArr[4] = gDebugInfo[DEBUG_PAGE_ENEMYINFO][1];
     enemyArr[5] = gDebugInfo[DEBUG_PAGE_ENEMYINFO][2];

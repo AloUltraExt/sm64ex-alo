@@ -137,7 +137,7 @@ void set_debug_cap_changer(void) {
 }
 
 #ifdef TARGET_N64
-#include "lib/src/os.h"
+#include "include/PR/os.h"
 
 #define FRAMETIME_COUNT 30
 

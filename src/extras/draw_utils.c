@@ -6,7 +6,9 @@
 #include "game/game_init.h"
 #include "game/segment2.h"
 
+#if !defined(VERSION_JP) && !defined(VERSION_SH)
 extern u8 gDialogCharWidths[];
+#endif
 
 const Gfx dl_ex_texrect_block_start[] = {
     gsDPPipeSync(),
@@ -70,6 +72,7 @@ void print_generic_str_ascii(s16 x, s16 y, const char *str) {
     print_generic_string(x, y, buf);
 }
 
+#if !defined(VERSION_JP) && !defined(VERSION_SH)
 s16 get_string_width_ascii(char *str) {
     s16 i;
     u8  buf[50];
@@ -87,6 +90,7 @@ s16 get_string_width_ascii(char *str) {
 
     return width;
 }
+#endif
 
 static s8 ext_f3d_res_to_mask(s16 res) {
     if(res >= 2)    return 1;

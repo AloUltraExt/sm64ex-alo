@@ -5,6 +5,7 @@
 
 #include "game/save_file.h"
 #include "game/game_init.h"
+#include "config.h"
 
 extern u8 gDecompressionHeap[];
 
