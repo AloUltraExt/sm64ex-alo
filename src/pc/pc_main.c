@@ -145,7 +145,7 @@ void produce_one_frame(void) {
 #ifdef HIGH_FPS_PC
     gfx_start_frame();
     patch_interpolations();
-    send_display_list(gGfxSPTask);
+    exec_display_list(gGfxSPTask);
     gfx_end_frame();
 #endif
 
