@@ -502,6 +502,9 @@ static void gfx_whb_draw_triangles(float buf_vbo[], size_t buf_vbo_len, size_t b
     GX2DrawEx(GX2_PRIMITIVE_MODE_TRIANGLES, 3 * buf_vbo_num_tris, 0, 1);
 }
 
+static void gfx_whb_get_framebuffer(uint16_t *buffer) {
+}
+
 static void gfx_whb_init(void) {
 }
 
@@ -572,6 +575,7 @@ struct GfxRenderingAPI gfx_whb_api = {
     gfx_whb_set_scissor,
     gfx_whb_set_use_alpha,
     gfx_whb_draw_triangles,
+    gfx_whb_get_framebuffer,
     gfx_whb_init,
     gfx_whb_on_resize,
     gfx_whb_start_frame,

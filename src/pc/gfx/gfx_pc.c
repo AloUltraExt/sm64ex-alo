@@ -52,7 +52,6 @@
 #define RATIO_X (gfx_current_dimensions.width / (2.0f * HALF_SCREEN_WIDTH))
 #define RATIO_Y (gfx_current_dimensions.height / (2.0f * HALF_SCREEN_HEIGHT))
 
-#define MAX_BUFFERED 256
 #define MAX_LIGHTS 2
 #define MAX_VERTICES 64
 
@@ -93,6 +92,8 @@ struct TextureHashmapNode {
     uint32_t texture_id;
     uint8_t cms, cmt;
     bool linear_filter;
+
+    uint32_t checksum;
 };
 static struct {
     struct TextureHashmapNode *hashmap[HASHMAP_LEN];
@@ -182,17 +183,15 @@ struct GfxDimensions gfx_current_dimensions;
 
 static bool dropped_frame;
 
-#ifdef TARGET_WII_U
-static float buf_vbo[MAX_BUFFERED * (28 * 3)]; // 3 vertices in a triangle and 28 floats per vtx
-#else
-static float buf_vbo[MAX_BUFFERED * (26 * 3)]; // 3 vertices in a triangle and 26 floats per vtx
-#endif
-
+static float buf_vbo[VERTEX_BUFFER_SIZE];
 static size_t buf_vbo_len;
 static size_t buf_vbo_num_tris;
 
 static struct GfxWindowManagerAPI *gfx_wapi;
 static struct GfxRenderingAPI *gfx_rapi;
+
+static uint16_t *framebuffer_data;
+static bool requested_framebuffer;
 
 // 4x4 pink-black checkerboard texture to indicate missing textures
 #define MISSING_W 4
@@ -330,7 +329,8 @@ static struct ColorCombiner *gfx_lookup_or_create_color_combiner(uint32_t cc_id)
     return prev_combiner = comb;
 }
 
-static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, const uint8_t *orig_addr, uint32_t fmt, uint32_t siz, const uint8_t *palette) {
+static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, const uint8_t *orig_addr, uint32_t fmt, uint32_t siz, const uint8_t *palette, uint32_t checksum) {
+
     #ifdef EXTERNAL_DATA // hash and compare the data (i.e. the texture name) itself
     size_t hash = string_hash(orig_addr);
     #define CMPADDR(x, y) (x && !sys_strcasecmp((const char *)x, (const char *)y))
@@ -343,7 +343,7 @@ static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, co
 
     struct TextureHashmapNode **node = &gfx_texture_cache.hashmap[hash];
     while (*node != NULL && *node - gfx_texture_cache.pool < gfx_texture_cache.pool_pos) {
-        if (CMPADDR((*node)->texture_addr, orig_addr) && (*node)->fmt == fmt && (*node)->siz == siz && (*node)->palette == palette) {
+        if (CMPADDR((*node)->texture_addr, orig_addr) && (*node)->fmt == fmt && (*node)->siz == siz && (*node)->palette == palette && (*node)->checksum == checksum) {
             gfx_rapi->select_texture(tile, (*node)->texture_id);
             *n = *node;
             return true;
@@ -370,6 +370,7 @@ static bool gfx_texture_cache_lookup(int tile, struct TextureHashmapNode **n, co
     (*node)->fmt = fmt;
     (*node)->siz = siz;
     (*node)->palette = palette;
+    (*node)->checksum = checksum;
     *n = *node;
     return false;
     #undef CMPADDR
@@ -662,13 +663,62 @@ static bool preload_texture(void *user, const char *path) {
     assert(actualname);
 
     struct TextureHashmapNode *n;
-    if (!gfx_texture_cache_lookup(0, &n, actualname, fmt, siz, 0))
+    if (!gfx_texture_cache_lookup(0, &n, actualname, fmt, siz, 0, 0))
         load_texture(path); // new texture, load it
 
     return true;
 }
 
 #endif // EXTERNAL_DATA
+
+#define ADLER_BASE 65521U
+#define ADLER_NMAX 5552
+
+#define ADLER_DO1(buf,i) {adler += (buf)[i]; sum2 += adler;}
+#define ADLER_DO2(buf,i) ADLER_DO1(buf,i); ADLER_DO1(buf,i+1);
+#define ADLER_DO4(buf,i) ADLER_DO2(buf,i); ADLER_DO2(buf,i+2);
+#define ADLER_DO8(buf,i) ADLER_DO4(buf,i); ADLER_DO4(buf,i+4);
+#define ADLER_DO16(buf)  ADLER_DO8(buf,0); ADLER_DO8(buf,8);
+
+uint32_t calculate_checksum(const uint8_t *buf, size_t len) {
+    uint32_t adler = 1;
+    uint32_t sum2;
+    unsigned n;
+
+    /* split Adler-32 into component sums */
+    sum2 = (adler >> 16) & 0xffff;
+    adler &= 0xffff;
+
+    /* do length ADLER_NMAX blocks -- requires just one modulo operation */
+    while (len >= ADLER_NMAX) {
+        len -= ADLER_NMAX;
+        n = ADLER_NMAX / 16; /* ADLER_NMAX is divisible by 16 */
+        do {
+            ADLER_DO16(buf); /* 16 sums unrolled */
+            buf += 16;
+        } while (--n);
+        adler %= ADLER_BASE;
+        sum2 %= ADLER_BASE;
+    }
+
+    /* do remaining bytes (less than ADLER_NMAX, still just one modulo) */
+    if (len) { /* avoid modulos if none remaining */
+        while (len >= 16) {
+            len -= 16;
+            ADLER_DO16(buf);
+            buf += 16;
+        }
+        while (len--) {
+            adler += *buf++;
+            sum2 += adler;
+        }
+        adler %= ADLER_BASE;
+        sum2 %= ADLER_BASE;
+    }
+
+    /* return recombined sums */
+    return adler | (sum2 << 16);
+}
 
 static void import_texture(int tile) {
     uint8_t fmt = rdp.texture_tile.fmt;
@@ -680,7 +730,9 @@ static void import_texture(int tile) {
         return;
     }
 
-    if (gfx_texture_cache_lookup(tile, &rendering_state.textures[tile], rdp.loaded_texture[tile].addr, fmt, siz, rdp.palette)) {
+    uint32_t checksum = calculate_checksum(rdp.loaded_texture[tile].addr, rdp.loaded_texture[tile].size_bytes);
+
+    if (gfx_texture_cache_lookup(tile, &rendering_state.textures[tile], rdp.loaded_texture[tile].addr, fmt, siz, rdp.palette, checksum)) {
         return;
     }
 
@@ -1172,7 +1224,7 @@ static void gfx_sp_tri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx) {
         buf_vbo[buf_vbo_len++] = color->b / 255.0f;
         buf_vbo[buf_vbo_len++] = color->a / 255.0f;*/
     }
-    if (++buf_vbo_num_tris == MAX_BUFFERED) {
+    if (++buf_vbo_num_tris == MAX_BUFFERED_TRIANGLES) {
         gfx_flush();
     }
 }
@@ -1865,25 +1917,28 @@ static void gfx_sp_reset() {
     rsp.lights_changed = true;
 }
 
-void gfx_get_dimensions(uint32_t *width, uint32_t *height) {
-    gfx_wapi->get_dimensions(width, height);
-}
-
-void gfx_init(struct GfxWindowManagerAPI *wapi, struct GfxRenderingAPI *rapi, const char *window_title) {
-    gfx_wapi = wapi;
-    gfx_rapi = rapi;
-    gfx_wapi->init(window_title);
-    gfx_rapi->init();
-
-#ifdef TARGET_N3DS
-    // dimensions won't change on 3DS, so just do this once
+void gfx_update_dimensions() {
     gfx_wapi->get_dimensions(&gfx_current_dimensions.width, &gfx_current_dimensions.height);
+
     if (gfx_current_dimensions.height == 0) {
         // Avoid division by zero
         gfx_current_dimensions.height = 1;
     }
-    gfx_current_dimensions.aspect_ratio = (float)gfx_current_dimensions.width / (float)gfx_current_dimensions.height;
-#endif
+
+    gfx_current_dimensions.aspect_ratio = (float) gfx_current_dimensions.width / (float) gfx_current_dimensions.height;
+}
+
+void gfx_init(struct GfxWindowManagerAPI *wapi, struct GfxRenderingAPI *rapi, const char *window_title) {
+    gfx_wapi = wapi;
+    gfx_wapi->init(window_title);
+
+    gfx_update_dimensions();
+
+    gfx_rapi = rapi;
+    gfx_rapi->init();
+
+    framebuffer_data = NULL;
+    requested_framebuffer = false;
 
     // Used in the 120 star TAS
     static uint32_t precomp_shaders[] = {
@@ -1932,15 +1987,23 @@ struct GfxRenderingAPI *gfx_get_current_rendering_api(void) {
     return gfx_rapi;
 }
 
+uint16_t *get_framebuffer() {
+    if (!requested_framebuffer) {
+        if (framebuffer_data == NULL) {
+            framebuffer_data = (uint16_t *) malloc(FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * sizeof(uint16_t));
+        }
+
+        gfx_get_current_rendering_api()->get_framebuffer(framebuffer_data);
+        requested_framebuffer = true;
+    }
+
+    return framebuffer_data;
+}
+
 void gfx_start_frame(void) {
     gfx_wapi->handle_events();
 #ifndef TARGET_N3DS
-    gfx_wapi->get_dimensions(&gfx_current_dimensions.width, &gfx_current_dimensions.height);
-    if (gfx_current_dimensions.height == 0) {
-        // Avoid division by zero
-        gfx_current_dimensions.height = 1;
-    }
-    gfx_current_dimensions.aspect_ratio = (float)gfx_current_dimensions.width / (float)gfx_current_dimensions.height;
+    gfx_update_dimensions();
 #endif
 }
 
@@ -1964,6 +2027,7 @@ void gfx_end_frame(void) {
     if (!dropped_frame) {
         gfx_rapi->finish_render();
         gfx_wapi->swap_buffers_end();
+        requested_framebuffer = false;
     }
 }
 
@@ -1975,5 +2039,9 @@ void gfx_shutdown(void) {
     if (gfx_wapi) {
         if (gfx_wapi->shutdown) gfx_wapi->shutdown();
         gfx_wapi = NULL;
+    }
+    if (framebuffer_data) {
+        free(framebuffer_data);
+        framebuffer_data = NULL;
     }
 }

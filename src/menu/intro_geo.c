@@ -12,6 +12,9 @@
 #include "game/game_init.h"
 #include "audio/external.h"
 #include "prevent_bss_reordering.h"
+#ifndef TARGET_N64
+#include "pc/gfx/gfx_pc.h"
+#endif
 
 // frame counts for the zoom in, hold, and zoom out of title model
 #define INTRO_STEPS_ZOOM_IN 20
@@ -29,9 +32,9 @@ struct GraphNodeMore {
 };
 
 // intro geo bss
-#ifdef VERSION_SH
+//#ifdef VERSION_SH
 static u16 *sFrameBuffers[3];
-#endif
+//#endif
 static s32 sGameOverFrameCounter;
 static s32 sGameOverTableIndex;
 static s16 sIntroFrameCounter;
@@ -160,6 +163,23 @@ Gfx *geo_intro_tm_copyright(s32 state, struct GraphNode *node, UNUSED void *cont
     return dl;
 }
 
+static s8 introBackgroundIndexTable[] = {
+    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
+    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
+    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
+    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
+};
+
+// only one table of indexes listed
+static s8 *introBackgroundTables[] = { introBackgroundIndexTable };
+
+static s8 gameOverBackgroundTable[] = {
+    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
+    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
+    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
+    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
+};
+
 #ifndef WIDESCREEN
 /**
  * Generates a display list for a single background tile
@@ -208,16 +228,6 @@ static Gfx *intro_backdrop_one_image(s32 index, s8 *backgroundTable) {
     return displayList;
 }
 
-static s8 introBackgroundIndexTable[] = {
-    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
-    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
-    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
-    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
-};
-
-// only one table of indexes listed
-static s8 *introBackgroundTables[] = { introBackgroundIndexTable };
-
 /**
  * Geo callback to render the intro background tiles
  */
@@ -243,13 +253,6 @@ Gfx *geo_intro_regular_backdrop(s32 state, struct GraphNode *node, UNUSED void *
     }
     return dl;
 }
-
-static s8 gameOverBackgroundTable[] = {
-    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
-    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
-    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
-    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
-};
 
 /**
  * Geo callback to render the Game Over background tiles
@@ -446,7 +449,7 @@ Gfx *geo_intro_gameover_backdrop(s32 state, struct GraphNode *node, UNUSED void 
 
 #endif
 
-#ifdef VERSION_SH
+//#ifdef VERSION_SH
 extern Gfx title_screen_bg_dl_0A0065E8[];
 extern Gfx title_screen_bg_dl_0A006618[];
 extern Gfx title_screen_bg_dl_0A007548[];
@@ -526,7 +529,12 @@ u16 *intro_sample_frame_buffer(s32 imageW, s32 imageH, s32 sampleW, s32 sampleH)
     s32 xOffset = 120;
     s32 yOffset = 80;
 
+#ifdef TARGET_N64
     fb = sFrameBuffers[sRenderingFrameBuffer];
+#else
+    fb = get_framebuffer();
+#endif
+
     image = alloc_display_list(imageW * imageH * sizeof(u16));
 
     if (image == NULL) {
@@ -560,9 +568,16 @@ u16 *intro_sample_frame_buffer(s32 imageW, s32 imageH, s32 sampleW, s32 sampleH)
             }
 
             size = sampleW * sampleH;
-            image[imageH * iy + ix] = ((((u16) (r / size + 0.5) << 0xB) & 0xF800) & 0xffff) +
-                                      ((((u16) (g / size + 0.5) << 0x6) &  0x7C0) & 0xffff) +
-                                      ((((u16) (b / size + 0.5) << 0x1) &   0x3E) & 0xffff) + 1;
+            u16 color = ((((u16) (r / size + 0.5) << 0xB) & 0xF800) & 0xffff) +
+                        ((((u16) (g / size + 0.5) << 0x6) &  0x7C0) & 0xffff) +
+                        ((((u16) (b / size + 0.5) << 0x1) &   0x3E) & 0xffff) + 1;
+
+#ifdef TARGET_N64
+            image[imageH * iy + ix] = color;
+#else
+            // Endian swap
+            image[imageH * iy + ix] = (color << 8) | (color >> 8);
+#endif
         }
     }
 
@@ -660,4 +675,4 @@ Gfx *geo_intro_rumble_pak_graphic(s32 state, struct GraphNode *node, UNUSED void
     return dl;
 }
 
-#endif
+//#endif

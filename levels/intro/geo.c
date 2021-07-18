@@ -75,9 +75,9 @@ const GeoLayout intro_geo_mario_head_regular[] = {
          GEO_NODE_ORTHO(100),
          GEO_OPEN_NODE(),
             GEO_ASM(0, geo_intro_regular_backdrop),
-#ifdef VERSION_SH
+//#ifdef VERSION_SH
             GEO_ASM(0, geo_intro_face_easter_egg),
-#endif
+//#endif
          GEO_CLOSE_NODE(),
       GEO_CLOSE_NODE(),
       GEO_ZBUFFER(1),
@@ -89,12 +89,12 @@ const GeoLayout intro_geo_mario_head_regular[] = {
          GEO_CLOSE_NODE(),
 #endif
       GEO_CLOSE_NODE(),
-#ifdef VERSION_SH
+//#ifdef VERSION_SH
    GEO_ZBUFFER(0),
    GEO_OPEN_NODE(),
       GEO_ASM(0, geo_intro_rumble_pak_graphic),
    GEO_CLOSE_NODE(),
-#endif
+//#endif
    GEO_CLOSE_NODE(),
    GEO_END(),
 };
@@ -108,9 +108,9 @@ const GeoLayout intro_geo_mario_head_dizzy[] = {
          GEO_NODE_ORTHO(100),
          GEO_OPEN_NODE(),
             GEO_ASM(0, geo_intro_gameover_backdrop),
-#ifdef VERSION_SH
+//#ifdef VERSION_SH
             GEO_ASM(0, geo_intro_face_easter_egg),
-#endif
+//#endif
          GEO_CLOSE_NODE(),
       GEO_CLOSE_NODE(),
       GEO_ZBUFFER(1),
@@ -122,12 +122,12 @@ const GeoLayout intro_geo_mario_head_dizzy[] = {
 #endif
          GEO_CLOSE_NODE(),
       GEO_CLOSE_NODE(),
-#ifdef VERSION_SH
+//#ifdef VERSION_SH
       GEO_ZBUFFER(0),
       GEO_OPEN_NODE(),
          GEO_ASM(1, geo_intro_rumble_pak_graphic),
       GEO_CLOSE_NODE(),
-#endif
+//#endif
    GEO_CLOSE_NODE(),
    GEO_END(),
 };

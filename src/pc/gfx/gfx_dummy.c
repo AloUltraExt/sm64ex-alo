@@ -135,6 +135,9 @@ static void gfx_dummy_renderer_set_use_alpha(bool use_alpha) {
 static void gfx_dummy_renderer_draw_triangles(float buf_vbo[], size_t buf_vbo_len, size_t buf_vbo_num_tris) {
 }
 
+static void gfx_dummy_renderer_get_framebuffer(uint16_t *buffer) {
+}
+
 static void gfx_dummy_renderer_init(void) {
 }
 
@@ -186,6 +189,7 @@ struct GfxRenderingAPI gfx_dummy_renderer_api = {
     gfx_dummy_renderer_set_scissor,
     gfx_dummy_renderer_set_use_alpha,
     gfx_dummy_renderer_draw_triangles,
+    gfx_dummy_renderer_get_framebuffer,
     gfx_dummy_renderer_init,
     gfx_dummy_renderer_on_resize,
     gfx_dummy_renderer_start_frame,
