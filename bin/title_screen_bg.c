@@ -142,9 +142,11 @@ const Gfx title_screen_bg_dl_0A006618[] = {
     gsSPEndDisplayList(),
 };
 
-ALIGNED8 static const u8 title_texture_rumble_pak[] = {
-#include "textures/title_screen_bg/title_screen_bg.06648.rgba16.inc.c"
-};
+#ifdef VERSION_SH
+    ALIGNED8 static const u8 title_texture_rumble_pak[] = {
+        #include "textures/title_screen_bg/title_screen_bg.06648.rgba16.inc.c"
+    };
+#endif
 
 const Gfx title_screen_bg_dl_0A007548[] = {
     gsDPPipeSync(),
@@ -153,8 +155,10 @@ const Gfx title_screen_bg_dl_0A007548[] = {
     gsDPSetTextureFilter(G_TF_POINT),
     gsDPSetRenderMode(G_RM_NOOP, G_RM_NOOP2),
     gsDPSetScissor(G_SC_NON_INTERLACE, 0, 0, 319, 239),
-    gsDPLoadTextureTile(title_texture_rumble_pak, G_IM_FMT_RGBA, G_IM_SIZ_16b, 80, 0, 0, 0, 79, 23, 0, G_TX_NOMIRROR | G_TX_CLAMP, G_TX_NOMIRROR | G_TX_CLAMP, 7, 5, G_TX_NOLOD, G_TX_NOLOD),
-    gsSPTextureRectangle(220 << 2, 200 << 2, 299 << 2, 223 << 2, G_TX_RENDERTILE, 0, 0, 4 << 10, 1 << 10),
+    #ifdef VERSION_SH
+        gsDPLoadTextureTile(title_texture_rumble_pak, G_IM_FMT_RGBA, G_IM_SIZ_16b, 80, 0, 0, 0, 79, 23, 0, G_TX_NOMIRROR | G_TX_CLAMP, G_TX_NOMIRROR | G_TX_CLAMP, 7, 5, G_TX_NOLOD, G_TX_NOLOD),
+        gsSPTextureRectangle(220 << 2, 200 << 2, 299 << 2, 223 << 2, G_TX_RENDERTILE, 0, 0, 4 << 10, 1 << 10),
+    #endif
     gsDPPipeSync(),
     gsDPSetCycleType(G_CYC_1CYCLE),
     gsDPSetTexturePersp(G_TP_PERSP),
