@@ -123,7 +123,7 @@ const Texture *const game_over_texture_table[] = {
 
 UNUSED static const u64 title_screen_bg_unused_0 = 0;
 
-//#ifdef VERSION_SH
+#if QOL_FEATURE_MARIO_HEAD_EASTER_EGG
 const Gfx title_screen_bg_dl_0A0065E8[] = {
     gsDPPipeSync(),
     gsDPSetCycleType(G_CYC_COPY),
@@ -141,18 +141,29 @@ const Gfx title_screen_bg_dl_0A006618[] = {
     gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
     gsSPEndDisplayList(),
 };
+#endif
 
+#ifdef RUMBLE_FEEDBACK
+
+#if defined(VERSION_JP) || defined(VERSION_SH)
 ALIGNED8 static const u8 title_texture_rumble_pak[] = {
-#include "textures/title_screen_bg/title_screen_bg.06648.rgba16.inc.c"
+#include "textures/title_screen_bg/title_screen_bg.06648_custom.rgba16.inc.c"
 };
+#else
+// Texture from Ultra 64 Mario Bros. Project
+ALIGNED8 static const u8 title_texture_rumble_pak[] = {
+#include "textures/title_screen_bg/title_screen_bg.06648_en_custom.rgba16.inc.c"
+};
+#endif
 
-const Gfx title_screen_bg_dl_0A007548[] = {
+#ifndef WIDESCREEN
+Gfx title_screen_bg_dl_0A007548[] = {
     gsDPPipeSync(),
     gsDPSetCycleType(G_CYC_COPY),
     gsDPSetTexturePersp(G_TP_NONE),
     gsDPSetTextureFilter(G_TF_POINT),
     gsDPSetRenderMode(G_RM_NOOP, G_RM_NOOP2),
-    gsDPSetScissor(G_SC_NON_INTERLACE, 0, 0, 319, 239),
+    gsDPSetScissor(G_SC_NON_INTERLACE, 0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1),
     gsDPLoadTextureTile(title_texture_rumble_pak, G_IM_FMT_RGBA, G_IM_SIZ_16b, 80, 0, 0, 0, 79, 23, 0, G_TX_NOMIRROR | G_TX_CLAMP, G_TX_NOMIRROR | G_TX_CLAMP, 7, 5, G_TX_NOLOD, G_TX_NOLOD),
     gsSPTextureRectangle(220 << 2, 200 << 2, 299 << 2, 223 << 2, G_TX_RENDERTILE, 0, 0, 4 << 10, 1 << 10),
     gsDPPipeSync(),
@@ -162,4 +173,27 @@ const Gfx title_screen_bg_dl_0A007548[] = {
     gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
     gsSPEndDisplayList(),
 };
-//#endif
+#else
+Gfx title_screen_bg_dl_0A007548_start[] = {
+    gsDPPipeSync(),
+    gsDPSetCycleType(G_CYC_COPY),
+    gsDPSetTexturePersp(G_TP_NONE),
+    gsDPSetTextureFilter(G_TF_POINT),
+    gsDPSetRenderMode(G_RM_NOOP, G_RM_NOOP2),
+    gsDPLoadTextureTile(title_texture_rumble_pak, G_IM_FMT_RGBA, G_IM_SIZ_16b, 80, 0, 0, 0, 79, 23, 0, G_TX_NOMIRROR | G_TX_CLAMP, G_TX_NOMIRROR | G_TX_CLAMP, 7, 5, G_TX_NOLOD, G_TX_NOLOD),
+    gsSPEndDisplayList(),
+};
+
+Gfx title_screen_bg_dl_0A007548_end[] = {
+    gsDPPipeSync(),
+    gsDPSetCycleType(G_CYC_1CYCLE),
+    gsDPSetTexturePersp(G_TP_PERSP),
+    gsDPSetTextureFilter(G_TF_BILERP),
+    gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
+    gsSPEndDisplayList(),
+};
+
+#endif
+
+#endif
+

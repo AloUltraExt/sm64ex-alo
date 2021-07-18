@@ -16,8 +16,8 @@
 #include "levels/intro/header.h"
 
 #ifdef TARGET_N64
-#if N64_USE_EXTENDED_RAM
 const GeoLayout intro_geo_error_screen[] = {
+#if N64_USE_EXTENDED_RAM
     GEO_NODE_SCREEN_AREA(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2),
     GEO_OPEN_NODE(),
         GEO_ZBUFFER(0),
@@ -33,8 +33,8 @@ const GeoLayout intro_geo_error_screen[] = {
         GEO_CLOSE_NODE(),
     GEO_CLOSE_NODE(),
     GEO_END(),
-};
 #endif
+};
 #endif
 
 // 0x0E0002D0
@@ -89,12 +89,12 @@ const GeoLayout intro_geo_mario_head_regular[] = {
          GEO_CLOSE_NODE(),
 #endif
       GEO_CLOSE_NODE(),
-//#ifdef VERSION_SH
+#ifdef RUMBLE_FEEDBACK
    GEO_ZBUFFER(0),
    GEO_OPEN_NODE(),
       GEO_ASM(0, geo_intro_rumble_pak_graphic),
    GEO_CLOSE_NODE(),
-//#endif
+#endif
    GEO_CLOSE_NODE(),
    GEO_END(),
 };
@@ -122,12 +122,12 @@ const GeoLayout intro_geo_mario_head_dizzy[] = {
 #endif
          GEO_CLOSE_NODE(),
       GEO_CLOSE_NODE(),
-//#ifdef VERSION_SH
+#ifdef RUMBLE_FEEDBACK
       GEO_ZBUFFER(0),
       GEO_OPEN_NODE(),
          GEO_ASM(1, geo_intro_rumble_pak_graphic),
       GEO_CLOSE_NODE(),
-//#endif
+#endif
    GEO_CLOSE_NODE(),
    GEO_END(),
 };

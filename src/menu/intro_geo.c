@@ -12,9 +12,6 @@
 #include "game/game_init.h"
 #include "audio/external.h"
 #include "prevent_bss_reordering.h"
-#ifndef TARGET_N64
-#include "pc/gfx/gfx_pc.h"
-#endif
 
 // frame counts for the zoom in, hold, and zoom out of title model
 #define INTRO_STEPS_ZOOM_IN 20
@@ -32,9 +29,9 @@ struct GraphNodeMore {
 };
 
 // intro geo bss
-//#ifdef VERSION_SH
+#if QOL_FEATURE_MARIO_HEAD_EASTER_EGG
 static u16 *sFrameBuffers[3];
-//#endif
+#endif
 static s32 sGameOverFrameCounter;
 static s32 sGameOverTableIndex;
 static s16 sIntroFrameCounter;
@@ -163,23 +160,6 @@ Gfx *geo_intro_tm_copyright(s32 state, struct GraphNode *node, UNUSED void *cont
     return dl;
 }
 
-static s8 introBackgroundIndexTable[] = {
-    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
-    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
-    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
-    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
-};
-
-// only one table of indexes listed
-static s8 *introBackgroundTables[] = { introBackgroundIndexTable };
-
-static s8 gameOverBackgroundTable[] = {
-    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
-    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
-    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
-    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
-};
-
 #ifndef WIDESCREEN
 /**
  * Generates a display list for a single background tile
@@ -228,6 +208,16 @@ static Gfx *intro_backdrop_one_image(s32 index, s8 *backgroundTable) {
     return displayList;
 }
 
+static s8 introBackgroundIndexTable[] = {
+    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
+    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
+    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
+    INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO, INTRO_BACKGROUND_SUPER_MARIO,
+};
+
+// only one table of indexes listed
+static s8 *introBackgroundTables[] = { introBackgroundIndexTable };
+
 /**
  * Geo callback to render the intro background tiles
  */
@@ -253,6 +243,13 @@ Gfx *geo_intro_regular_backdrop(s32 state, struct GraphNode *node, UNUSED void *
     }
     return dl;
 }
+
+static s8 gameOverBackgroundTable[] = {
+    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
+    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
+    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
+    INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER, INTRO_BACKGROUND_GAME_OVER,
+};
 
 /**
  * Geo callback to render the Game Over background tiles
@@ -449,10 +446,9 @@ Gfx *geo_intro_gameover_backdrop(s32 state, struct GraphNode *node, UNUSED void 
 
 #endif
 
-//#ifdef VERSION_SH
+#if QOL_FEATURE_MARIO_HEAD_EASTER_EGG
 extern Gfx title_screen_bg_dl_0A0065E8[];
 extern Gfx title_screen_bg_dl_0A006618[];
-extern Gfx title_screen_bg_dl_0A007548[];
 
 //Data
 s8 sFaceVisible[] = {
@@ -625,7 +621,12 @@ Gfx *geo_intro_face_easter_egg(s32 state, struct GraphNode *node, UNUSED void *c
 
     return dl;
 }
+#endif
 
+#ifdef RUMBLE_FEEDBACK
+
+#ifndef WIDESCREEN
+extern Gfx title_screen_bg_dl_0A007548[];
 
 Gfx *geo_intro_rumble_pak_graphic(s32 state, struct GraphNode *node, UNUSED void *context) {
     struct GraphNodeGenerated *genNode = (struct GraphNodeGenerated *)node;
@@ -643,24 +644,11 @@ Gfx *geo_intro_rumble_pak_graphic(s32 state, struct GraphNode *node, UNUSED void
     } else if (state == 1) {
         genNode->fnNode.node.flags = (genNode->fnNode.node.flags & 0xFF) | (LAYER_OPAQUE << 8);
         introContext = genNode->parameter & 0xFF;
-#ifdef TARGET_N64   
-        introContext = genNode->parameter & 0xFF;
         if (introContext == 0) {
             backgroundTileSix = introBackgroundIndexTable[6];
         } else if (introContext == 1) {
             backgroundTileSix = gameOverBackgroundTable[6];
         }
-#else   
-        if (introContext == 0) {
-            backgroundTileSix = INTRO_BACKGROUND_SUPER_MARIO;
-        } else if (introContext == 1) {
-            if (sGameOverTableIndex <= 0) {
-                backgroundTileSix = INTRO_BACKGROUND_GAME_OVER;
-            } else {
-                backgroundTileSix = INTRO_BACKGROUND_SUPER_MARIO;
-            }
-        }
-#endif
         if (backgroundTileSix == INTRO_BACKGROUND_SUPER_MARIO) {
             dl = alloc_display_list(3 * sizeof(*dl));
             if (dl != NULL) {
@@ -674,5 +662,54 @@ Gfx *geo_intro_rumble_pak_graphic(s32 state, struct GraphNode *node, UNUSED void
     }
     return dl;
 }
+#else
 
-//#endif
+extern Gfx title_screen_bg_dl_0A007548_start[];
+extern Gfx title_screen_bg_dl_0A007548_end[];
+
+Gfx *geo_intro_rumble_pak_graphic(s32 state, struct GraphNode *node, UNUSED void *context) {
+    struct GraphNodeGenerated *genNode = (struct GraphNodeGenerated *)node;
+    Gfx *dlIter;
+    Gfx *dl;
+    s32 introContext;
+    s8 backgroundTileSix;
+    u16 left;
+#ifdef AVOID_UB
+    dl = NULL;
+    backgroundTileSix = 0;
+#endif
+    
+    left = GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(100);
+
+    if (state != 1) {
+        dl = NULL;
+    } else if (state == 1) {
+        genNode->fnNode.node.flags = (genNode->fnNode.node.flags & 0xFF) | (LAYER_OPAQUE << 8);
+        introContext = genNode->parameter & 0xFF;
+        if (introContext == 0) {
+            backgroundTileSix = INTRO_BACKGROUND_SUPER_MARIO;
+        } else if (introContext == 1) {
+            if (sGameOverTableIndex <= 0) {
+                backgroundTileSix = INTRO_BACKGROUND_GAME_OVER;
+            } else {
+                backgroundTileSix = INTRO_BACKGROUND_SUPER_MARIO;
+            }
+        }
+        if (backgroundTileSix == INTRO_BACKGROUND_SUPER_MARIO) {
+            dl = alloc_display_list(6 * sizeof(*dl));
+            if (dl != NULL) {
+                dlIter = dl;
+                gSPDisplayList(dlIter++, &title_screen_bg_dl_0A007548_start);
+                gSPTextureRectangle(dlIter++, left << 2, 200 << 2, (left + 79) << 2, (200 + 23) << 2, 7, 0, 0, 4 << 10, 1 << 10);
+                gSPDisplayList(dlIter++, &title_screen_bg_dl_0A007548_end);
+                gSPEndDisplayList(dlIter);
+            }
+        } else {
+            dl = NULL;
+        }
+    }
+    return dl;
+}
+#endif
+
+#endif

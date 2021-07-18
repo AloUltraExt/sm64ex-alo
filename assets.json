@@ -1834,7 +1834,6 @@
 "textures/title_screen_bg/title_screen_bg.04040.rgba16.png": [80,20,3200,{"jp":[2550336,16448],"us":[2558144,16448],"eu":[2426672,16448],"sh":[2403488,16448]}],
 "textures/title_screen_bg/title_screen_bg.04CC0.rgba16.png": [80,20,3200,{"jp":[2550336,19648],"us":[2558144,19648],"eu":[2426672,19648],"sh":[2403488,19648]}],
 "textures/title_screen_bg/title_screen_bg.05940.rgba16.png": [80,20,3200,{"jp":[2550336,22848],"us":[2558144,22848],"eu":[2426672,22848],"sh":[2403488,22848]}],
-"textures/title_screen_bg/title_screen_bg.06648.rgba16.png": [80,24,3840,{"sh":[2403488,26184]}],
 "textures/water/jrb_textures.00000.rgba16.png": [32,32,2048,{"jp":[3354832,0],"us":[3361584,0],"eu":[3235184,0],"sh":[3209552,0]}],
 "textures/water/jrb_textures.00800.rgba16.png": [64,32,4096,{"jp":[3354832,2048],"us":[3361584,2048],"eu":[3235184,2048],"sh":[3209552,2048]}],
 "textures/water/jrb_textures.01800.rgba16.png": [64,32,4096,{"jp":[3354832,6144],"us":[3361584,6144],"eu":[3235184,6144],"sh":[3209552,6144]}],
