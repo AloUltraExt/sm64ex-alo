@@ -124,9 +124,11 @@ void produce_one_frame(void) {
     set_sequence_player_volume(SEQ_PLAYER_ENV, (f32)configEnvVolume / 127.0f * master_mod);
 
     game_loop_one_iteration();
+#ifdef RUMBLE_FEEDBACK
     thread6_rumble_loop(NULL);
 #ifdef TARGET_SWITCH
     controller_nx_rumble_loop();
+#endif
 #endif
 
 #ifndef TARGET_N3DS

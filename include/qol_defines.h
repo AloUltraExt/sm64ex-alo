@@ -4,11 +4,20 @@
 // Quality of life defines
 // Mostly a compilation of code provided by various people
 
+// Framebuffer Detection
+#ifdef TARGET_N64
+#define HAS_FRAMEBUFFER 1
+#elif (defined(RAPI_GL) && !defined(TARGET_RPI)) || defined(RAPI_D3D11)
+#define HAS_FRAMEBUFFER 1
+#else
+#define HAS_FRAMEBUFFER 0
+#endif
+
 // --| Quality of life features
 /// Adds an extra Z button trig for some menu files (Originally defined in EU)
 #define QOL_FEATURE_Z_BUTTON_EXTRA_OPTION (0 || VERSION_EU || QOL_FEATURES)
 /// Adds Mario's Face Easter Egg (Originally defined in SH)
-#define QOL_FEATURE_MARIO_HEAD_EASTER_EGG (0 || VERSION_SH || QOL_FEATURES)
+#define QOL_FEATURE_MARIO_HEAD_EASTER_EGG (0 || VERSION_SH || (QOL_FEATURES && GODDARD_MFACE && HAS_FRAMEBUFFER))
 /// Changes how Mario grabs a star/key by calling his interactObj define
 /// This also makes it so a blue star is shown when grabbing it
 #define QOL_FEATURE_PROPER_SHOW_COLLECTABLE (0 || QOL_FEATURES)

@@ -676,8 +676,11 @@ ifeq ($(EXT_OPTIONS_MENU),1)
 endif
 
 # Check for Rumble option
+
+ifeq ($(TARGET_N3DS)$(TARGET_WII_U),00)
 ifeq ($(RUMBLE_FEEDBACK),1)
   CUSTOM_C_DEFINES += -DRUMBLE_FEEDBACK
+endif
 endif
 
 # Check for no drawing distance option
