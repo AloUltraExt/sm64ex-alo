@@ -267,7 +267,7 @@ else ifeq ($(GRUCODE),f3dzex) # Fast3DZEX (2.0J / Animal Forest - Dōbutsu no Mo
 endif
 
 ifeq ($(TARGET_RPI),1) # Define RPi to change SDL2 title & GLES2 hints
-  DEFINES += USE_GLES=1
+  DEFINES += TARGET_RPI=1 USE_GLES=1
 else ifeq ($(OSX_BUILD),1) # Modify GFX & SDL2 for OSX GL
   DEFINES += OSX_BUILD=1
 else ifeq ($(TARGET_WEB),1)
@@ -392,7 +392,7 @@ ASM_DIRS := lib
 ifeq ($(TARGET_N64),1)
   ASM_DIRS := asm $(ASM_DIRS)
 else
-  SRC_DIRS := $(SRC_DIRS)  src/pc src/pc/gfx src/pc/audio src/pc/controller src/pc/fs src/pc/fs/packtypes
+  SRC_DIRS += src/pc src/pc/gfx src/pc/audio src/pc/controller src/pc/fs src/pc/fs/packtypes
   ASM_DIRS :=
   ifeq ($(WINDOWS_BUILD),1)
     RES_DIRS := res_win
@@ -401,8 +401,12 @@ endif
 
 ifeq ($(TARGET_WII_U),1)
   SRC_DIRS += src/pc/gfx/shaders_wiiu
-else ifeq ($(DISCORDRPC),1)
-  SRC_DIRS += src/pc/discord
+endif
+
+ifeq ($(TARGET_PORT_CONSOLE),0)
+  ifeq ($(DISCORDRPC),1)
+    SRC_DIRS += src/pc/discord
+  endif
 endif
 
 BIN_DIRS := bin bin/$(VERSION)
@@ -510,7 +514,7 @@ LEVEL_C_FILES := $(wildcard levels/*/leveldata.c) $(wildcard levels/*/script.c) 
 C_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c)) $(LEVEL_C_FILES)
 
 ifeq ($(TARGET_N64),1)
-ULTRA_C_FILES := $(foreach dir,$(ULTRA_SRC_DIRS),$(wildcard $(dir)/*.c))
+  ULTRA_C_FILES := $(foreach dir,$(ULTRA_SRC_DIRS),$(wildcard $(dir)/*.c))
 endif
 
 CXX_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
@@ -928,8 +932,9 @@ ifeq ($(WINDOW_API),DXGI)
 else ifeq ($(findstring SDL,$(WINDOW_API)),SDL)
   ifeq ($(WINDOWS_BUILD),1)
     BACKEND_LDFLAGS += -lglew32 -lglu32 -lopengl32
- # else ifeq ($(TARGET_RPI),1)
-  else ifneq ($(TARGET_RPI)$(TARGET_SWITCH),00)
+  else ifeq ($(TARGET_RPI),1)
+    BACKEND_LDFLAGS += -lGLESv2
+  else ifeq ($(TARGET_SWITCH),1)
     BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(OSX_BUILD),1)
     BACKEND_LDFLAGS += -framework OpenGL `pkg-config --libs glew`
