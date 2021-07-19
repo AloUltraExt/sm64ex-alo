@@ -841,6 +841,11 @@ void func_sh_802f3d78(uintptr_t devAddr, void *vAddr, size_t nbytes, s32 arg3) {
     func_sh_802f3ed4(func_sh_802f3ec4(arg3, &sp1C), sp1C, vAddr, nbytes);
 }
 
+// from PR/os.h, includes needs cleanup
+extern OSPiHandle *osCartRomInit(void);
+extern OSPiHandle *osDriveRomInit(void);
+extern s32 osEPiStartDma(OSPiHandle *, OSIoMesg *, s32);
+
 s32 func_sh_802f3dd0(OSIoMesg *m, s32 pri, s32 direction, uintptr_t devAddr, void *dramAddr, s32 size, OSMesgQueue *retQueue, s32 medium, UNUSED const char *reason) {
     OSPiHandle *handle;
     if (gAudioLoadLockSH >= 0x11U) {
@@ -911,7 +916,10 @@ void *func_802f3f08(s32 poolIdx, s32 idx, s32 numChunks, s32 arg3, OSMesgQueue *
     vAddr = get_bank_or_seq_wrapper(poolIdx, idx);
     if (vAddr != NULL) {
         loadStatus = 2;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
         osSendMesg(retQueue, (OSMesg) (arg3 << 0x18), 0);
+#pragma GCC diagnostic pop
     } else {
         f = get_audio_file_header(poolIdx);
         size = f->seqArray[idx].len;
@@ -1004,10 +1012,12 @@ u8 gShindouSequencesHeader[] = {
 
 // (void) must be omitted from parameters
 void audio_init() {
-    UNUSED s8 pad[0x34];
-    s32 i, j, k;
+    UNUSED s8 pad[16]; // SH - 52
+    s32 i, j, UNUSED k; // unused on PC
+#ifdef TARGET_N64
     s32 lim;
     u64 *ptr64;
+#endif
     void *data;
     UNUSED u8 pad2[4];
     s32 seqCount;
@@ -1283,6 +1293,12 @@ void func_sh_802f4dcc(s32 audioResetStatus) {
     }
 }
 
+#pragma GCC diagnostic push
+#if defined(__clang__)
+#pragma GCC diagnostic ignored "-Wself-assign"
+#endif
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+
 void func_sh_802f4e50(struct PendingDmaAudioBank *audioBank, s32 audioResetStatus) {
     ALSeqFile *alSeqFile;
     u32 *encodedInfo;
@@ -1313,12 +1329,7 @@ void func_sh_802f4e50(struct PendingDmaAudioBank *audioBank, s32 audioResetStatu
     encodedInfo = &audioBank->encodedInfo;
     if (audioBank->remaining == 0) {
         mesg = (OSMesg) audioBank->encodedInfo;
-#pragma GCC diagnostic push
-#if defined(__clang__)
-#pragma GCC diagnostic ignored "-Wself-assign"
-#endif
         mesg = mesg;    //! needs an extra read from mesg here to match...
-#pragma GCC diagnostic pop
         temp = *encodedInfo;
         bankId = (temp >> 8) & 0xFF;
         switch ((u8) (temp >> 0x10)) {
@@ -1377,6 +1388,7 @@ void func_sh_802f4e50(struct PendingDmaAudioBank *audioBank, s32 audioResetStatu
         audioBank->vAddr = ((u8 *) audioBank->vAddr) + audioBank->transferSize;
     }
 }
+#pragma GCC diagnostic pop
 
 extern char shindouDebugPrint110[]; // "BGCOPY"
 void func_sh_802f50ec(struct PendingDmaAudioBank *arg0, size_t len) {
