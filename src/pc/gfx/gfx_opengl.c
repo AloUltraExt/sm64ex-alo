@@ -36,7 +36,7 @@
 #endif
 
 #ifdef WAPI_SDL2
-#  if defined(USE_GLES) && !defined(TARGET_RPI)
+#  if defined(USE_GLES) && !defined(EXTERNAL_DATA) && !defined(TARGET_RPI)
 #    define USE_FRAMEBUFFER 1
 #  else
 #    if FOR_WINDOWS || defined(OSX_BUILD)

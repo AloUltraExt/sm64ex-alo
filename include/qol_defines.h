@@ -7,7 +7,7 @@
 // Framebuffer Detection
 #ifdef TARGET_N64
 #define HAS_FRAMEBUFFER 1
-#elif (defined(RAPI_GL) && !defined(TARGET_RPI)) || defined(RAPI_D3D11)
+#elif (defined(RAPI_GL) && !defined(EXTERNAL_DATA) && !defined(TARGET_RPI)) || defined(RAPI_D3D11)
 #define HAS_FRAMEBUFFER 1
 #else
 #define HAS_FRAMEBUFFER 0
