@@ -54,8 +54,6 @@
 #include "gfx_screen_config.h"
 #include "gfx_pc.h"
 
-#define TEX_CACHE_STEP 512
-
 struct ShaderProgram {
     uint32_t shader_id;
     GLuint opengl_program_id;
@@ -63,16 +61,16 @@ struct ShaderProgram {
     bool used_textures[2];
     uint8_t num_floats;
     GLint attrib_locations[7];
-    GLint uniform_locations[5];
     uint8_t attrib_sizes[7];
     uint8_t num_attribs;
     bool used_noise;
-};
-
-struct GLTexture {
-    GLuint gltex;
-    GLfloat size[2];
-    bool filter;
+    GLint frame_count_location;
+    GLint window_height_location;
+    GLint noise_frame_location;
+    GLint noise_scale_location;
+    GLint texture_width_location;
+    GLint texture_height_location;
+    GLint texture_linear_filtering_location;
 };
 
 struct RenderTarget {
@@ -98,19 +96,12 @@ static struct RenderTarget main_rt;
 static struct RenderTarget framebuffer_rt;
 
 static struct ShaderProgram shader_program_pool[64];
+static struct ShaderProgram *current_shader_program;
 static uint8_t shader_program_pool_size;
 
 static struct ShaderProgram rt_shader_program;
 
 static GLuint opengl_vbo;
-
-static int tex_cache_size = 0;
-static int num_textures = 0;
-static struct GLTexture *tex_cache = NULL;
-
-static struct ShaderProgram *opengl_prg = NULL;
-static struct GLTexture *opengl_tex[2];
-static int opengl_curtex = 0;
 
 // Current values
 
@@ -123,7 +114,18 @@ static int8_t current_zmode_decal;
 static int32_t current_viewport_x, current_viewport_y, current_viewport_width, current_viewport_height;
 static int32_t current_scissor_x, current_scissor_y, current_scissor_width, current_scissor_height;
 
-static uint32_t frame_count;
+static uint32_t noise_frame;
+static float noise_scale[2];
+#ifdef THREE_POINT_FILTERING
+struct TextureInfo {
+    uint16_t width;
+    uint16_t height;
+    bool linear_filtering;
+
+} textures[1024];
+static GLuint current_texture_ids[2];
+static uint8_t current_tile;
+#endif
 
 static const char *rt_vertex_shader =
 #ifdef USE_GLES
@@ -287,35 +289,39 @@ static void gfx_opengl_vertex_array_set_attribs(struct ShaderProgram *prg) {
     }
 }
 
-static inline void gfx_opengl_set_shader_uniforms(struct ShaderProgram *prg) {
-    if (prg->used_noise)
-        glUniform1f(prg->uniform_locations[4], (float)frame_count);
-}
-
-static inline void gfx_opengl_set_texture_uniforms(struct ShaderProgram *prg, const int tile) {
-    if (prg->used_textures[tile] && opengl_tex[tile]) {
-        glUniform2f(prg->uniform_locations[tile*2 + 0], opengl_tex[tile]->size[0], opengl_tex[tile]->size[1]);
-        glUniform1i(prg->uniform_locations[tile*2 + 1], opengl_tex[tile]->filter);
+static void gfx_opengl_set_per_program_uniforms() {
+    if (current_shader_program->used_noise) {
+        glUniform1i(current_shader_program->noise_frame_location, noise_frame);
+        glUniform2f(current_shader_program->noise_scale_location, noise_scale[0], noise_scale[1]);
     }
 }
 
+static void gfx_opengl_set_per_draw_uniforms() {
+#ifdef THREE_POINT_FILTERING
+    if (current_shader_program->used_textures[0] || current_shader_program->used_textures[1]) {
+        GLint filtering[2] = { textures[current_texture_ids[0]].linear_filtering, textures[current_texture_ids[1]].linear_filtering };
+        glUniform1iv(current_shader_program->texture_linear_filtering_location, 2, filtering);
+
+        GLint width[2] = { textures[current_texture_ids[0]].width, textures[current_texture_ids[1]].width };
+        glUniform1iv(current_shader_program->texture_width_location, 2, width);
+
+        GLint height[2] = { textures[current_texture_ids[0]].height, textures[current_texture_ids[1]].height };
+        glUniform1iv(current_shader_program->texture_height_location, 2, height);
+    }
+#endif
+}
 static void gfx_opengl_load_shader(struct ShaderProgram *new_prg) {
-    opengl_prg = new_prg;
+    current_shader_program = new_prg;
     glUseProgram(new_prg->opengl_program_id);
     gfx_opengl_vertex_array_set_attribs(new_prg);
-    gfx_opengl_set_shader_uniforms(new_prg);
-    gfx_opengl_set_texture_uniforms(new_prg, 0);
-    gfx_opengl_set_texture_uniforms(new_prg, 1);
+    gfx_opengl_set_per_program_uniforms();
 }
 
 static void gfx_opengl_unload_shader(struct ShaderProgram *old_prg) {
     if (old_prg != NULL) {
-        for (int i = 0; i < old_prg->num_attribs; i++)
+        for (int i = 0; i < old_prg->num_attribs; i++) {
             glDisableVertexAttribArray(old_prg->attrib_locations[i]);
-        if (old_prg == opengl_prg)
-            opengl_prg = NULL;
-    } else {
-        opengl_prg = NULL;
+        }
     }
 }
 
@@ -463,7 +469,7 @@ static const char *shader_item_to_str(uint32_t item, bool with_alpha, bool only_
                 return with_alpha ? "texVal0" : "texVal0.rgb";
             case SHADER_TEXEL0A:
                 return hint_single_element ? "texVal0.a" :
-                    (with_alpha ? "vec4(texelVal0.a, texelVal0.a, texelVal0.a, texelVal0.a)" : "vec3(texelVal0.a, texelVal0.a, texelVal0.a)");
+                    (with_alpha ? "vec4(texVal0.a, texVal0.a, texVal0.a, texVal0.a)" : "vec3(texVal0.a, texVal0.a, texVal0.a)");
             case SHADER_TEXEL1:
                 return with_alpha ? "texVal1" : "texVal1.rgb";
         }
@@ -517,47 +523,18 @@ static void append_formula(char *buf, size_t *len, uint8_t c[2][4], bool do_sing
 }
 
 static struct ShaderProgram *gfx_opengl_create_and_load_new_shader(uint32_t shader_id) {
-    uint8_t c[2][4];
-    for (int i = 0; i < 4; i++) {
-        c[0][i] = (shader_id >> (i * 3)) & 7;
-        c[1][i] = (shader_id >> (12 + i * 3)) & 7;
-    }
-    bool opt_alpha = (shader_id & SHADER_OPT_ALPHA) != 0;
-    bool opt_fog = (shader_id & SHADER_OPT_FOG) != 0;
-    bool opt_texture_edge = (shader_id & SHADER_OPT_TEXTURE_EDGE) != 0;
-#ifdef USE_GLES
-    bool opt_noise = false;
-#else
-    bool opt_noise = (shader_id & SHADER_OPT_NOISE) != 0;
-#endif
-
-    bool used_textures[2] = { 0, 0 };
-    int num_inputs = 0;
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 4; j++) {
-            if (c[i][j] >= SHADER_INPUT_1 && c[i][j] <= SHADER_INPUT_4) {
-                if (c[i][j] > num_inputs) {
-                    num_inputs = c[i][j];
-                }
-            }
-            if (c[i][j] == SHADER_TEXEL0 || c[i][j] == SHADER_TEXEL0A) {
-                used_textures[0] = true;
-            }
-            if (c[i][j] == SHADER_TEXEL1) {
-                used_textures[1] = true;
-            }
-        }
-    }
-    bool do_single[2] = { c[0][2] == 0, c[1][2] == 0 };
-    bool do_multiply[2] = { c[0][1] == 0 && c[0][3] == 0, c[1][1] == 0 && c[1][3] == 0 };
-    bool do_mix[2] = { c[0][1] == c[0][3], c[1][1] == c[1][3] };
-    bool color_alpha_same = (shader_id & 0xfff) == ((shader_id >> 12) & 0xfff);
+    struct CCFeatures cc_features;
+    gfx_cc_get_features(shader_id, &cc_features);
 
     char vs_buf[1024];
     char fs_buf[2048];
     size_t vs_len = 0;
     size_t fs_len = 0;
     size_t num_floats = 4;
+
+#ifdef USE_GLES
+    cc_features.opt_noise = false;
+#endif
 
     // Vertex shader
 #ifdef USE_GLES
@@ -566,30 +543,36 @@ static struct ShaderProgram *gfx_opengl_create_and_load_new_shader(uint32_t shad
     append_line(vs_buf, &vs_len, "#version 120");
 #endif
     append_line(vs_buf, &vs_len, "attribute vec4 aVtxPos;");
-    if (used_textures[0] || used_textures[1]) {
+    if (cc_features.used_textures[0] || cc_features.used_textures[1]) {
         append_line(vs_buf, &vs_len, "attribute vec2 aTexCoord;");
         append_line(vs_buf, &vs_len, "varying vec2 vTexCoord;");
         num_floats += 2;
     }
-    if (opt_fog) {
+    if (cc_features.opt_fog) {
         append_line(vs_buf, &vs_len, "attribute vec4 aFog;");
         append_line(vs_buf, &vs_len, "varying vec4 vFog;");
         num_floats += 4;
     }
-    for (int i = 0; i < num_inputs; i++) {
-        vs_len += sprintf(vs_buf + vs_len, "attribute vec%d aInput%d;\n", opt_alpha ? 4 : 3, i + 1);
-        vs_len += sprintf(vs_buf + vs_len, "varying vec%d vInput%d;\n", opt_alpha ? 4 : 3, i + 1);
-        num_floats += opt_alpha ? 4 : 3;
+    for (int i = 0; i < cc_features.num_inputs; i++) {
+        vs_len += sprintf(vs_buf + vs_len, "attribute vec%d aInput%d;\n", cc_features.opt_alpha ? 4 : 3, i + 1);
+        vs_len += sprintf(vs_buf + vs_len, "varying vec%d vInput%d;\n", cc_features.opt_alpha ? 4 : 3, i + 1);
+        num_floats += cc_features.opt_alpha ? 4 : 3;
+    }
+    if (cc_features.opt_alpha && cc_features.opt_noise) {
+        append_line(vs_buf, &vs_len, "varying vec4 screenPos;");
     }
     append_line(vs_buf, &vs_len, "void main() {");
-    if (used_textures[0] || used_textures[1]) {
+    if (cc_features.used_textures[0] || cc_features.used_textures[1]) {
         append_line(vs_buf, &vs_len, "vTexCoord = aTexCoord;");
     }
-    if (opt_fog) {
+    if (cc_features.opt_fog) {
         append_line(vs_buf, &vs_len, "vFog = aFog;");
     }
-    for (int i = 0; i < num_inputs; i++) {
+    for (int i = 0; i < cc_features.num_inputs; i++) {
         vs_len += sprintf(vs_buf + vs_len, "vInput%d = aInput%d;\n", i + 1, i + 1);
+    }
+    if (cc_features.opt_alpha && cc_features.opt_noise) {
+        append_line(vs_buf, &vs_len, "screenPos = aVtxPos;");
     }
     append_line(vs_buf, &vs_len, "gl_Position = aVtxPos;");
     append_line(vs_buf, &vs_len, "}");
@@ -602,100 +585,111 @@ static struct ShaderProgram *gfx_opengl_create_and_load_new_shader(uint32_t shad
     append_line(fs_buf, &fs_len, "#version 120");
 #endif
 
-    if (used_textures[0] || used_textures[1]) {
+    if (cc_features.used_textures[0] || cc_features.used_textures[1]) {
         append_line(fs_buf, &fs_len, "varying vec2 vTexCoord;");
     }
-    if (opt_fog) {
+    if (cc_features.opt_fog) {
         append_line(fs_buf, &fs_len, "varying vec4 vFog;");
     }
-    for (int i = 0; i < num_inputs; i++) {
-        fs_len += sprintf(fs_buf + fs_len, "varying vec%d vInput%d;\n", opt_alpha ? 4 : 3, i + 1);
+    for (int i = 0; i < cc_features.num_inputs; i++) {
+        fs_len += sprintf(fs_buf + fs_len, "varying vec%d vInput%d;\n", cc_features.opt_alpha ? 4 : 3, i + 1);
     }
-    if (used_textures[0]) {
+    if (cc_features.opt_alpha && cc_features.opt_noise) {
+        append_line(fs_buf, &fs_len, "varying vec4 screenPos;");
+    }
+    if (cc_features.used_textures[0]) {
         append_line(fs_buf, &fs_len, "uniform sampler2D uTex0;");
-        append_line(fs_buf, &fs_len, "uniform vec2 uTex0Size;");
-        append_line(fs_buf, &fs_len, "uniform bool uTex0Filter;");
     }
-    if (used_textures[1]) {
+    if (cc_features.used_textures[1]) {
         append_line(fs_buf, &fs_len, "uniform sampler2D uTex1;");
-        append_line(fs_buf, &fs_len, "uniform vec2 uTex1Size;");
-        append_line(fs_buf, &fs_len, "uniform bool uTex1Filter;");
     }
 
-    // 3 point texture filtering
-    // Original author: ArthurCarvalho
-    // Slightly modified GLSL implementation by twinaphex, mupen64plus-libretro project.
-
-    if (used_textures[0] || used_textures[1]) {
-        if (configFiltering == 2) {
-            append_line(fs_buf, &fs_len, "#define TEX_OFFSET(off) texture2D(tex, texCoord - (off)/texSize)");
-            append_line(fs_buf, &fs_len, "vec4 filter3point(in sampler2D tex, in vec2 texCoord, in vec2 texSize) {");
-            append_line(fs_buf, &fs_len, "  vec2 offset = fract(texCoord*texSize - vec2(0.5));");
-            append_line(fs_buf, &fs_len, "  offset -= step(1.0, offset.x + offset.y);");
-            append_line(fs_buf, &fs_len, "  vec4 c0 = TEX_OFFSET(offset);");
-            append_line(fs_buf, &fs_len, "  vec4 c1 = TEX_OFFSET(vec2(offset.x - sign(offset.x), offset.y));");
-            append_line(fs_buf, &fs_len, "  vec4 c2 = TEX_OFFSET(vec2(offset.x, offset.y - sign(offset.y)));");
-            append_line(fs_buf, &fs_len, "  return c0 + abs(offset.x)*(c1-c0) + abs(offset.y)*(c2-c0);");
-            append_line(fs_buf, &fs_len, "}");
-            append_line(fs_buf, &fs_len, "vec4 sampleTex(in sampler2D tex, in vec2 uv, in vec2 texSize, in bool dofilter) {");
-            append_line(fs_buf, &fs_len, "if (dofilter)");
-            append_line(fs_buf, &fs_len, "return filter3point(tex, uv, texSize);");
-            append_line(fs_buf, &fs_len, "else");
-            append_line(fs_buf, &fs_len, "return texture2D(tex, uv);");
-            append_line(fs_buf, &fs_len, "}");
-        } else {
-            append_line(fs_buf, &fs_len, "vec4 sampleTex(in sampler2D tex, in vec2 uv, in vec2 texSize, in bool dofilter) {");
-            append_line(fs_buf, &fs_len, "return texture2D(tex, uv);");
-            append_line(fs_buf, &fs_len, "}");
-        }
-    }
-
-    if (opt_alpha && opt_noise) {
-        append_line(fs_buf, &fs_len, "uniform float frame_count;");
+    if (cc_features.opt_alpha && cc_features.opt_noise) {
+        append_line(fs_buf, &fs_len, "uniform int noise_frame;");
+        append_line(fs_buf, &fs_len, "uniform vec2 noise_scale;");
 
         append_line(fs_buf, &fs_len, "float random(in vec3 value) {");
-        append_line(fs_buf, &fs_len, "    float random = dot(sin(value), vec3(12.9898, 78.233, 37.719));");
+        append_line(fs_buf, &fs_len, "    float random = dot(value, vec3(12.9898, 78.233, 37.719));");
         append_line(fs_buf, &fs_len, "    return fract(sin(random) * 143758.5453);");
         append_line(fs_buf, &fs_len, "}");
     }
 
+#ifdef THREE_POINT_FILTERING
+    // 3 point texture filtering
+    // Original author: ArthurCarvalho
+    // Based on GLSL implementation by twinaphex, mupen64plus-libretro project.
+
+    if (cc_features.used_textures[0] || cc_features.used_textures[1]) {
+        append_line(fs_buf, &fs_len, "uniform int texture_width[2];");
+        append_line(fs_buf, &fs_len, "uniform int texture_height[2];");
+        append_line(fs_buf, &fs_len, "uniform bool texture_linear_filtering[2];");
+        append_line(fs_buf, &fs_len, "#define TEX_OFFSET(tex, texCoord, off, texSize) texture2D(tex, texCoord - off / texSize)");
+        append_line(fs_buf, &fs_len, "vec4 tex2D3PointFilter(in sampler2D tex, in vec2 texCoord, in vec2 texSize) {");
+        append_line(fs_buf, &fs_len, "    vec2 offset = fract(texCoord * texSize - vec2(0.5, 0.5));");
+        append_line(fs_buf, &fs_len, "    offset -= step(1.0, offset.x + offset.y);");
+        append_line(fs_buf, &fs_len, "    vec4 c0 = TEX_OFFSET(tex, texCoord, offset, texSize);");
+        append_line(fs_buf, &fs_len, "    vec4 c1 = TEX_OFFSET(tex, texCoord, vec2(offset.x - sign(offset.x), offset.y), texSize);");
+        append_line(fs_buf, &fs_len, "    vec4 c2 = TEX_OFFSET(tex, texCoord, vec2(offset.x, offset.y - sign(offset.y)), texSize);");
+        append_line(fs_buf, &fs_len, "    return c0 + abs(offset.x)*(c1-c0) + abs(offset.y)*(c2-c0);");
+        append_line(fs_buf, &fs_len, "}");
+    }
+#endif
+
     append_line(fs_buf, &fs_len, "void main() {");
 
-    if (used_textures[0]) {
-        append_line(fs_buf, &fs_len, "vec4 texVal0 = sampleTex(uTex0, vTexCoord, uTex0Size, uTex0Filter);");
+    if (cc_features.used_textures[0]) {
+#ifdef THREE_POINT_FILTERING
+        append_line(fs_buf, &fs_len, "    vec4 texVal0;");
+        append_line(fs_buf, &fs_len, "    if (texture_linear_filtering[0])");
+        append_line(fs_buf, &fs_len, "        texVal0 = tex2D3PointFilter(uTex0, vTexCoord, vec2(texture_width[0], texture_height[0]));");
+        append_line(fs_buf, &fs_len, "    else");
+        append_line(fs_buf, &fs_len, "        texVal0 = texture2D(uTex0, vTexCoord);");
+#else
+        append_line(fs_buf, &fs_len, "vec4 texVal0 = texture2D(uTex0, vTexCoord);");
+#endif
     }
-    if (used_textures[1]) {
-        append_line(fs_buf, &fs_len, "vec4 texVal1 = sampleTex(uTex1, vTexCoord, uTex1Size, uTex1Filter);");
+    if (cc_features.used_textures[1]) {
+#ifdef THREE_POINT_FILTERING
+        append_line(fs_buf, &fs_len, "    vec4 texVal1;");
+        append_line(fs_buf, &fs_len, "    if (texture_linear_filtering[1])");
+        append_line(fs_buf, &fs_len, "        texVal1 = tex2D3PointFilter(uTex1, vTexCoord, vec2(texture_width[1], texture_height[1]));");
+        append_line(fs_buf, &fs_len, "    else");
+        append_line(fs_buf, &fs_len, "        texVal1 = texture2D(uTex1, vTexCoord);");
+#else
+        append_line(fs_buf, &fs_len, "vec4 texVal1 = texture2D(uTex1, vTexCoord);");
+#endif
     }
 
-    append_str(fs_buf, &fs_len, opt_alpha ? "vec4 texel = " : "vec3 texel = ");
-    if (!color_alpha_same && opt_alpha) {
+    append_str(fs_buf, &fs_len, cc_features.opt_alpha ? "vec4 texel = " : "vec3 texel = ");
+    if (!cc_features.color_alpha_same && cc_features.opt_alpha) {
         append_str(fs_buf, &fs_len, "vec4(");
-        append_formula(fs_buf, &fs_len, c, do_single[0], do_multiply[0], do_mix[0], false, false, true);
+        append_formula(fs_buf, &fs_len, cc_features.c, cc_features.do_single[0], cc_features.do_multiply[0], cc_features.do_mix[0], false, false, true);
         append_str(fs_buf, &fs_len, ", ");
-        append_formula(fs_buf, &fs_len, c, do_single[1], do_multiply[1], do_mix[1], true, true, true);
+        append_formula(fs_buf, &fs_len, cc_features.c, cc_features.do_single[1], cc_features.do_multiply[1], cc_features.do_mix[1], true, true, true);
         append_str(fs_buf, &fs_len, ")");
     } else {
-        append_formula(fs_buf, &fs_len, c, do_single[0], do_multiply[0], do_mix[0], opt_alpha, false, opt_alpha);
+        append_formula(fs_buf, &fs_len, cc_features.c, cc_features.do_single[0], cc_features.do_multiply[0], cc_features.do_mix[0], cc_features.opt_alpha, false, cc_features.opt_alpha);
     }
     append_line(fs_buf, &fs_len, ";");
 
-    if (opt_texture_edge && opt_alpha) {
+    if (cc_features.opt_texture_edge && cc_features.opt_alpha) {
         append_line(fs_buf, &fs_len, "if (texel.a > 0.3) texel.a = 1.0; else discard;");
     }
     // TODO discard if alpha is 0?
-    if (opt_fog) {
-        if (opt_alpha) {
+    if (cc_features.opt_fog) {
+        if (cc_features.opt_alpha) {
             append_line(fs_buf, &fs_len, "texel = vec4(mix(texel.rgb, vFog.rgb, vFog.a), texel.a);");
         } else {
             append_line(fs_buf, &fs_len, "texel = mix(texel, vFog.rgb, vFog.a);");
         }
     }
 
-    if (opt_alpha && opt_noise) 
-        append_line(fs_buf, &fs_len, "texel.a *= floor(clamp(random(floor(vec3(gl_FragCoord.xy, frame_count))) + texel.a, 0.0, 1.0));");
+    if (cc_features.opt_alpha && cc_features.opt_noise) {
+        append_line(fs_buf, &fs_len, "vec2 coords = (screenPos.xy / screenPos.w) * noise_scale;");
+        append_line(fs_buf, &fs_len, "texel.a *= floor(clamp(random(vec3(floor(coords), float(noise_frame))) + texel.a, 0.0, 1.0));");
+    }
 
-    if (opt_alpha) {
+    if (cc_features.opt_alpha) {
         append_line(fs_buf, &fs_len, "gl_FragColor = texel;");
     } else {
         append_line(fs_buf, &fs_len, "gl_FragColor = vec4(texel, 1.0);");
@@ -722,55 +716,60 @@ static struct ShaderProgram *gfx_opengl_create_and_load_new_shader(uint32_t shad
     prg->attrib_sizes[cnt] = 4;
     ++cnt;
 
-    if (used_textures[0] || used_textures[1]) {
+    if (cc_features.used_textures[0] || cc_features.used_textures[1]) {
         prg->attrib_locations[cnt] = glGetAttribLocation(shader_program, "aTexCoord");
         prg->attrib_sizes[cnt] = 2;
         ++cnt;
     }
 
-    if (opt_fog) {
+    if (cc_features.opt_fog) {
         prg->attrib_locations[cnt] = glGetAttribLocation(shader_program, "aFog");
         prg->attrib_sizes[cnt] = 4;
         ++cnt;
     }
 
-    for (int i = 0; i < num_inputs; i++) {
+    for (int i = 0; i < cc_features.num_inputs; i++) {
         char name[16];
         sprintf(name, "aInput%d", i + 1);
         prg->attrib_locations[cnt] = glGetAttribLocation(shader_program, name);
-        prg->attrib_sizes[cnt] = opt_alpha ? 4 : 3;
+        prg->attrib_sizes[cnt] = cc_features.opt_alpha ? 4 : 3;
         ++cnt;
     }
 
     prg->shader_id = shader_id;
     prg->opengl_program_id = shader_program;
-    prg->num_inputs = num_inputs;
-    prg->used_textures[0] = used_textures[0];
-    prg->used_textures[1] = used_textures[1];
+    prg->num_inputs = cc_features.num_inputs;
+    prg->used_textures[0] = cc_features.used_textures[0];
+    prg->used_textures[1] = cc_features.used_textures[1];
     prg->num_floats = num_floats;
     prg->num_attribs = cnt;
 
     gfx_opengl_load_shader(prg);
 
-    if (used_textures[0]) {
+    if (cc_features.used_textures[0]) {
         GLint sampler_location = glGetUniformLocation(shader_program, "uTex0");
-        prg->uniform_locations[0] = glGetUniformLocation(shader_program, "uTex0Size");
-        prg->uniform_locations[1] = glGetUniformLocation(shader_program, "uTex0Filter");
         glUniform1i(sampler_location, 0);
     }
-    if (used_textures[1]) {
+    if (cc_features.used_textures[1]) {
         GLint sampler_location = glGetUniformLocation(shader_program, "uTex1");
-        prg->uniform_locations[2] = glGetUniformLocation(shader_program, "uTex1Size");
-        prg->uniform_locations[3] = glGetUniformLocation(shader_program, "uTex1Filter");
         glUniform1i(sampler_location, 1);
     }
 
-    if (opt_alpha && opt_noise) {
-        prg->uniform_locations[4] = glGetUniformLocation(shader_program, "frame_count");
+    if (cc_features.opt_alpha && cc_features.opt_noise) {
+        prg->noise_frame_location = glGetUniformLocation(shader_program, "noise_frame");
+        prg->noise_scale_location = glGetUniformLocation(shader_program, "noise_scale");
         prg->used_noise = true;
     } else {
         prg->used_noise = false;
     }
+
+#ifdef THREE_POINT_FILTERING
+    if (cc_features.used_textures[0] || cc_features.used_textures[1]) {
+        prg->texture_width_location = glGetUniformLocation(shader_program, "texture_width");
+        prg->texture_height_location = glGetUniformLocation(shader_program, "texture_height");
+        prg->texture_linear_filtering_location = glGetUniformLocation(shader_program, "texture_linear_filtering");
+    }
+#endif
 
     return prg;
 }
@@ -791,30 +790,26 @@ static void gfx_opengl_shader_get_info(struct ShaderProgram *prg, uint8_t *num_i
 }
 
 static GLuint gfx_opengl_new_texture(void) {
-    if (num_textures >= tex_cache_size) {
-        tex_cache_size += TEX_CACHE_STEP;
-        tex_cache = realloc(tex_cache, sizeof(struct GLTexture) * tex_cache_size);
-        if (!tex_cache) sys_fatal("out of memory allocating texture cache");
-        // invalidate these because they might be pointing to garbage now
-        opengl_tex[0] = NULL;
-        opengl_tex[1] = NULL;
-    }
-    glGenTextures(1, &tex_cache[num_textures].gltex);
-    return num_textures++;
+    GLuint ret;
+    glGenTextures(1, &ret);
+    return ret;
 }
 
 static void gfx_opengl_select_texture(int tile, GLuint texture_id) {
-     opengl_tex[tile] = tex_cache + texture_id;
-     opengl_curtex = tile;
-     set_active_texture(tile);
-     glBindTexture(GL_TEXTURE_2D, opengl_tex[tile]->gltex);
-     gfx_opengl_set_texture_uniforms(opengl_prg, tile);
+    set_active_texture(tile);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+#ifdef THREE_POINT_FILTERING
+    current_texture_ids[tile] = texture_id;
+    current_tile = tile;
+#endif
 }
 
 static void gfx_opengl_upload_texture(const uint8_t *rgba32_buf, int width, int height) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba32_buf);
-    opengl_tex[opengl_curtex]->size[0] = width;
-    opengl_tex[opengl_curtex]->size[1] = height;
+#ifdef THREE_POINT_FILTERING
+    textures[current_texture_ids[current_tile]].width = width;
+    textures[current_texture_ids[current_tile]].height = height;
+#endif
 }
 
 static uint32_t gfx_cm_to_opengl(uint32_t val) {
@@ -825,17 +820,19 @@ static uint32_t gfx_cm_to_opengl(uint32_t val) {
 }
 
 static void gfx_opengl_set_sampler_parameters(int tile, bool linear_filter, uint32_t cms, uint32_t cmt) {
-    const GLenum filter = linear_filter ? GL_LINEAR : GL_NEAREST;
     set_active_texture(tile);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+    
+#ifdef THREE_POINT_FILTERING
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    textures[current_texture_ids[tile]].linear_filtering = linear_filter;
+#else
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, linear_filter ? GL_LINEAR : GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, linear_filter ? GL_LINEAR : GL_NEAREST);
+#endif
+    
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, gfx_cm_to_opengl(cms));
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, gfx_cm_to_opengl(cmt));
-    opengl_curtex = tile;
-    if (opengl_tex[tile]) {
-        opengl_tex[tile]->filter = linear_filter;
-        gfx_opengl_set_texture_uniforms(opengl_prg, tile);
-    }
 }
 
 static void gfx_opengl_set_depth_test(bool depth_test) {
@@ -855,6 +852,10 @@ static void gfx_opengl_set_viewport(int x, int y, int width, int height) {
     current_viewport_y = y;
     current_viewport_width = width;
     current_viewport_height = height;
+    
+    float aspect_ratio = (float) width / (float) height;
+    noise_scale[0] = 120 * aspect_ratio; // 120 = N64 height resolution (240) / 2
+    noise_scale[1] = 120;
 }
 
 static void gfx_opengl_set_scissor(int x, int y, int width, int height) {
@@ -884,8 +885,12 @@ static void gfx_opengl_draw_triangles(float buf_vbo[], size_t buf_vbo_len, size_
     set_viewport(current_viewport_x, current_viewport_y, current_viewport_width, current_viewport_height);
     set_scissor(current_scissor_x, current_scissor_y, current_scissor_width, current_scissor_height);
 
-    // Draw vertex buffer
+    // Set Uniforms
 
+    gfx_opengl_set_per_draw_uniforms();
+
+    // Draw vertex buffer
+    
     set_vertex_buffer(buf_vbo, buf_vbo_len * sizeof(float));
 
     glDrawArrays(GL_TRIANGLES, 0, 3 * buf_vbo_num_tris);
@@ -940,10 +945,6 @@ static void gfx_opengl_init(void) {
     if ((err = glewInit()) != GLEW_OK)
         sys_fatal("could not init GLEW:\n%s", glewGetErrorString(err));
 #endif
-
-    tex_cache_size = TEX_CACHE_STEP;
-    tex_cache = calloc(tex_cache_size, sizeof(struct GLTexture));
-    if (!tex_cache) sys_fatal("out of memory allocating texture cache");
 
     // check GL version
     int vmajor, vminor;
@@ -1004,7 +1005,11 @@ static void gfx_opengl_on_resize(void) {
 }
 
 static void gfx_opengl_start_frame(void) {
-    frame_count++;
+    noise_frame++;
+    if (noise_frame > 150) {
+        // No high values, as noise starts to look ugly
+        noise_frame = 0;
+    }
 
     if (USE_FRAMEBUFFER) {
         if (current_width != gfx_current_dimensions.width || current_height != gfx_current_dimensions.height) {
@@ -1038,7 +1043,7 @@ static void gfx_opengl_end_frame(void) {
         // Not doing so can lead to rendering issues on the first drawcalls
         // of the next frame, if they use the same shader as the ones before.
 
-        gfx_opengl_load_shader(opengl_prg);
+        gfx_opengl_load_shader(current_shader_program);
     }
 }
 

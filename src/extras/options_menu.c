@@ -86,7 +86,6 @@ static const u8 optsVideoStr[][32] = {
     { TEXT_OPT_RESETWND },
     { TEXT_OPT_VSYNC },
     { TEXT_OPT_AUTO },
-    { TEXT_OPT_THREEPT },
     { TEXT_OPT_APPLY },
 };
 #endif
@@ -134,7 +133,6 @@ static const u8 optBindStr[][32] = {
 static const u8 *filterChoices[] = {
     optsVideoStr[2],
     optsVideoStr[3],
-    optsVideoStr[7],
 };
 
 static const u8 *vsyncChoices[] = {
@@ -203,7 +201,7 @@ static struct Option optsVideo[] = {
 #ifndef TARGET_PORT_CONSOLE
     DEF_OPT_BUTTON( optsVideoStr[4], optvideo_reset_window ),
 #endif
-    DEF_OPT_BUTTON( optsVideoStr[8], optvideo_apply ),
+    DEF_OPT_BUTTON( optsVideoStr[7], optvideo_apply ),
 };
 #endif
 

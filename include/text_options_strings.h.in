@@ -60,7 +60,6 @@
 #define TEXT_OPT_ENVVOLUME _("ENV VOLUME")
 #define TEXT_OPT_VSYNC     _("VERTICAL SYNC")
 #define TEXT_OPT_AUTO      _("AUTO")
-#define TEXT_OPT_THREEPT   _("THREE POINT")
 #define TEXT_OPT_APPLY     _("APPLY")
 #define TEXT_OPT_RESETWND  _("RESET WINDOW")
 
@@ -126,7 +125,6 @@
 #define TEXT_OPT_ENVVOLUME _("Env Volume")
 #define TEXT_OPT_VSYNC     _("Vertical Sync")
 #define TEXT_OPT_AUTO      _("Auto")
-#define TEXT_OPT_THREEPT   _("Three-point")
 #define TEXT_OPT_APPLY     _("Apply")
 #define TEXT_OPT_RESETWND  _("Reset Window")
 

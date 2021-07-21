@@ -28,7 +28,6 @@
 #include "gfx_screen_config.h"
 #include "gfx_pc.h"
 
-#define THREE_POINT_FILTERING 0
 #define DEBUG_D3D 0
 
 using namespace Microsoft::WRL; // For ComPtr
@@ -362,7 +361,7 @@ static void set_shader_resources(uint8_t slot, const TextureData *texture) {
 
     d3d.context->PSSetShaderResources(slot, 1, texture->resource_view.GetAddressOf());
 
-#if THREE_POINT_FILTERING
+#ifdef THREE_POINT_FILTERING
     d3d.per_draw_cb_data.textures[slot].width = texture->width;
     d3d.per_draw_cb_data.textures[slot].height = texture->height;
     d3d.per_draw_cb_data.textures[slot].linear_filtering = texture->linear_filtering;
@@ -746,7 +745,13 @@ static struct ShaderProgram *gfx_d3d11_create_and_load_new_shader(uint32_t shade
     char buf[4096];
     size_t len, num_floats;
 
-    gfx_direct3d_common_build_shader(buf, len, num_floats, cc_features, false, THREE_POINT_FILTERING);
+#ifdef THREE_POINT_FILTERING
+    bool three_point_filtering = true;
+#else
+    bool three_point_filtering = false;
+#endif
+
+    gfx_direct3d_common_build_shader(buf, len, num_floats, cc_features, false, three_point_filtering);
 
     struct ShaderProgramD3D11 *prg = &d3d.shader_program_pool[d3d.shader_program_pool_size++];
     ComPtr<ID3DBlob> vs = compile_shader(buf, len, buf, len, prg);
@@ -887,7 +892,7 @@ static void gfx_d3d11_set_sampler_parameters(int tile, bool linear_filter, uint3
     D3D11_SAMPLER_DESC sampler_desc;
     ZeroMemory(&sampler_desc, sizeof(D3D11_SAMPLER_DESC));
 
-#if THREE_POINT_FILTERING
+#ifdef THREE_POINT_FILTERING
     sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
 #else
     sampler_desc.Filter = linear_filter ? D3D11_FILTER_MIN_MAG_MIP_LINEAR : D3D11_FILTER_MIN_MAG_MIP_POINT;
@@ -959,7 +964,7 @@ static void gfx_d3d11_draw_triangles(float buf_vbo[], size_t buf_vbo_len, size_t
 
     // Set per-draw constant buffer
 
-#if THREE_POINT_FILTERING
+#ifdef THREE_POINT_FILTERING
     D3D11_MAPPED_SUBRESOURCE ms;
     ZeroMemory(&ms, sizeof(D3D11_MAPPED_SUBRESOURCE));
     d3d.context->Map(d3d.per_draw_cb.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
@@ -1009,8 +1014,9 @@ static void gfx_d3d11_start_frame(void) {
         d3d.per_frame_cb_data.noise_frame = 0;
     }
 
-    d3d.per_frame_cb_data.noise_scale_x = (float) d3d.current_width;
-    d3d.per_frame_cb_data.noise_scale_y = (float) d3d.current_height;
+    float aspect_ratio = (float) d3d.current_width / (float) d3d.current_height;
+    d3d.per_frame_cb_data.noise_scale_x = 120 * aspect_ratio; // 120 = N64 height resolution (240) / 2
+    d3d.per_frame_cb_data.noise_scale_y = 120;
 
     D3D11_MAPPED_SUBRESOURCE ms;
     ZeroMemory(&ms, sizeof(D3D11_MAPPED_SUBRESOURCE));
