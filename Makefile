@@ -728,6 +728,27 @@ ifeq ($(TARGET_N64),1)
   INCLUDE_DIRS += include/libc
 endif
 
+ifeq ($(TARGET_SWITCH),1)
+  ifeq ($(strip $(DEVKITPRO)),)
+    $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
+  endif
+  export PATH := $(DEVKITPRO)/devkitA64/bin:$(PATH)
+  PORTLIBS ?= $(DEVKITPRO)/portlibs/switch
+  LIBNX ?= $(DEVKITPRO)/libnx
+  CROSS ?= aarch64-none-elf-
+  SDLCROSS :=
+  CC := $(CROSS)gcc
+  CXX := $(CROSS)g++
+  STRIP := $(CROSS)strip
+  NXARCH := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ftls-model=local-exec
+  APP_TITLE := Super Mario 64
+  APP_AUTHOR := Nintendo, n64decomp team, sm64pc team
+  APP_VERSION := 1_master_$(VERSION)
+  APP_ICON := $(CURDIR)/switch/logo.jpg
+  INCLUDE_DIRS += system$(LIBNX)/include $(PORTLIBS)/include
+  OPT_FLAGS := -O2
+endif
+
 C_DEFINES := $(foreach d,$(DEFINES),-D$(d))
 DEF_INC_CFLAGS := $(foreach i,$(INCLUDE_DIRS),-I $(i)) $(C_DEFINES)
 
@@ -839,27 +860,6 @@ else ifeq ($(TARGET_N3DS),1)
 
 else
 
-ifeq ($(TARGET_SWITCH),1)
-  ifeq ($(strip $(DEVKITPRO)),)
-    $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
-  endif
-  export PATH := $(DEVKITPRO)/devkitA64/bin:$(PATH)
-  PORTLIBS ?= $(DEVKITPRO)/portlibs/switch
-  LIBNX ?= $(DEVKITPRO)/libnx
-  CROSS ?= aarch64-none-elf-
-  SDLCROSS :=
-  CC := $(CROSS)gcc
-  CXX := $(CROSS)g++
-  STRIP := $(CROSS)strip
-  NXARCH := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ftls-model=local-exec
-  APP_TITLE := Super Mario 64
-  APP_AUTHOR := Nintendo, n64decomp team, sm64pc team
-  APP_VERSION := 1_master_$(VERSION)
-  APP_ICON := $(CURDIR)/switch/logo.jpg
-  INCLUDE_DIRS += system$(LIBNX)/include $(PORTLIBS)/include
-  OPT_FLAGS := -O2
-endif
-
 # for some reason sdl-config in dka64 is not prefixed, while pkg-config is
 SDLCROSS ?= $(CROSS)
 
@@ -935,7 +935,7 @@ else ifeq ($(findstring SDL,$(WINDOW_API)),SDL)
   else ifeq ($(TARGET_RPI),1)
     BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(TARGET_SWITCH),1)
-    BACKEND_LDFLAGS += -lGLESv2
+    BACKEND_LDFLAGS += -lSDL2 -lEGL -lGLESv2 -lglapi -ldrm_nouveau
   else ifeq ($(OSX_BUILD),1)
     BACKEND_LDFLAGS += -framework OpenGL `pkg-config --libs glew`
   else
@@ -1042,7 +1042,7 @@ else ifeq ($(TARGET_N3DS),1)
 LDFLAGS := $(LIBPATHS) -lcitro3d -lctru -lm -specs=3dsx.specs -g -marm -mthumb-interwork -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft # -Wl,-Map,$(notdir $*.map)
 
 else ifeq ($(TARGET_SWITCH),1)
-  LDFLAGS := -specs=$(LIBNX)/switch.specs $(NXARCH) $(OPT_FLAGS) -L$(LIBNX)/lib $(BACKEND_LDFLAGS) -lstdc++ -lnx -lm
+  LDFLAGS := -specs=$(LIBNX)/switch.specs $(NXARCH) $(OPT_FLAGS) -L$(LIBNX)/lib -L$(PORTLIBS)/lib $(BACKEND_LDFLAGS) -lstdc++ -lnx -lm
 
 else ifeq ($(WINDOWS_BUILD),1)
   LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -Llib -lpthread $(BACKEND_LDFLAGS) -static
