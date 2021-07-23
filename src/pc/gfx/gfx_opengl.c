@@ -41,7 +41,9 @@
 #  else
 #    if FOR_WINDOWS || defined(OSX_BUILD)
 #      define USE_FRAMEBUFFER GLEW_ARB_framebuffer_object
-#    endif
+#    else
+#      define USE_FRAMEBUFFER 0
+#   endif
 #  endif
 #else
 #  define USE_FRAMEBUFFER 0
