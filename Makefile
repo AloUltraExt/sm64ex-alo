@@ -745,7 +745,7 @@ ifeq ($(TARGET_SWITCH),1)
   APP_AUTHOR := Nintendo, n64decomp team, sm64pc team
   APP_VERSION := 1_master_$(VERSION)
   APP_ICON := $(CURDIR)/switch/logo.jpg
-  INCLUDE_DIRS += system$(LIBNX)/include $(PORTLIBS)/include
+  INCLUDE_DIRS += $(LIBNX)/include $(PORTLIBS)/include
   OPT_FLAGS := -O2
 endif
 
