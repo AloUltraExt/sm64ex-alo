@@ -937,7 +937,7 @@ else ifeq ($(findstring SDL,$(WINDOW_API)),SDL)
   else ifeq ($(TARGET_RPI),1)
     BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(TARGET_SWITCH),1)
-    BACKEND_LDFLAGS += -lSDL2 -lEGL -lGLESv2 -lglapi -ldrm_nouveau
+    BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(OSX_BUILD),1)
     BACKEND_LDFLAGS += -framework OpenGL `pkg-config --libs glew`
   else
@@ -1016,8 +1016,6 @@ ifeq ($(TARGET_N3DS),1)
 endif
 
 ifeq ($(TARGET_SWITCH),1)
-  LIBDIRS := $(PORTLIBS) $(LIBNX)
-  export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
   CC_CHECK := $(CC) $(NXARCH) -fsyntax-only -fsigned-char $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -Wall -Wextra -Wno-format-security -D__SWITCH__=1
   CFLAGS := $(NXARCH) $(OPT_FLAGS) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -ftls-model=local-exec -fPIC -fwrapv -D__SWITCH__=1
 endif
@@ -1046,7 +1044,7 @@ else ifeq ($(TARGET_N3DS),1)
 LDFLAGS := $(LIBPATHS) -lcitro3d -lctru -lm -specs=3dsx.specs -g -marm -mthumb-interwork -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft # -Wl,-Map,$(notdir $*.map)
 
 else ifeq ($(TARGET_SWITCH),1)
-  LDFLAGS := -specs=$(LIBNX)/switch.specs $(NXARCH) $(OPT_FLAGS) $(LIBPATHS) $(BACKEND_LDFLAGS) -lstdc++ -lnx -lm
+  LDFLAGS := -specs=$(LIBNX)/switch.specs $(NXARCH) $(OPT_FLAGS) $(BACKEND_LDFLAGS) -lstdc++ -lm
 
 else ifeq ($(WINDOWS_BUILD),1)
   LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -Llib -lpthread $(BACKEND_LDFLAGS) -static
