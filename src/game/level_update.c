@@ -1115,18 +1115,15 @@ void level_set_transition(s16 length, void (*updateFunction)(s16 *)) {
  */
 s32 play_mode_change_area(void) {
     // ex-alo change
-    // change weird sTransitionUpdate value to proper sTransitionTimer value
-    if (sTransitionTimer == -1) {
-        update_camera(gCurrentArea->camera);
-    } else if (sTransitionUpdate != NULL) {
+    // Change function to have similar change_level defines
+    if (sTransitionUpdate != NULL) {
         sTransitionUpdate(&sTransitionTimer);
     }
 
-    if (sTransitionTimer > 0) {
-        sTransitionTimer -= 1;
-    }
+    if (--sTransitionTimer == -1) {
+        update_camera(gCurrentArea->camera);
 
-    if (sTransitionTimer == 0) {
+        sTransitionTimer = 0;
         sTransitionUpdate = NULL;
         set_play_mode(PLAY_MODE_NORMAL);
     }
