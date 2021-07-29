@@ -255,7 +255,7 @@ static struct Option optsMain[] = {
     DEF_OPT_SUBMENU( optDebugMenuStr[0], &menuDebug ),
 #endif
 
-#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
+#if !defined(TARGET_N64) && (defined(TARGET_SWITCH) || !defined(TARGET_PORT_CONSOLE))
     DEF_OPT_BUTTON ( optMainStr[5], optmenu_act_exit ),
 #endif
 

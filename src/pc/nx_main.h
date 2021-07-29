@@ -3,6 +3,7 @@
 
 void initNX();
 void exitNX();
-float getBatteryPercentage();
+void enableBoostMode();
+void disableBoostMode();
 
 #endif 

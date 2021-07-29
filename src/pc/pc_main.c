@@ -126,9 +126,6 @@ void produce_one_frame(void) {
     game_loop_one_iteration();
 #ifdef RUMBLE_FEEDBACK
     thread6_rumble_loop(NULL);
-#ifdef TARGET_SWITCH
-    controller_nx_rumble_loop();
-#endif
 #endif
 
 #ifndef TARGET_N3DS
@@ -170,7 +167,7 @@ void game_deinit(void) {
     discord_shutdown();
 #endif
     configfile_save(configfile_name());
-#ifndef TARGET_PORT_CONSOLE
+#if defined(TARGET_SWITCH) || !defined(TARGET_PORT_CONSOLE)
     controller_shutdown();
     audio_shutdown();
     gfx_shutdown();
@@ -179,7 +176,7 @@ void game_deinit(void) {
 }
 
 void game_exit(void) {
-#ifndef TARGET_PORT_CONSOLE
+#if defined(TARGET_SWITCH) || !defined(TARGET_PORT_CONSOLE)
     game_deinit();
 #ifndef TARGET_WEB
     exit(0);
@@ -362,6 +359,7 @@ void main_func(void) {
     #if defined(TARGET_WII_U)
     while (whb_window_is_running()) {
     #elif defined(TARGET_SWITCH)
+    disableBoostMode();
     while (appletMainLoop()) {
     #else
     while (true) {
@@ -377,6 +375,7 @@ void main_func(void) {
 #ifdef TARGET_PORT_CONSOLE
 int main(UNUSED int argc, UNUSED char *argv[]) {
 #ifdef TARGET_SWITCH
+    enableBoostMode();
     initNX();
 #endif
     main_func();

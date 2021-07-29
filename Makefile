@@ -728,6 +728,29 @@ ifeq ($(TARGET_N64),1)
   INCLUDE_DIRS += include/libc
 endif
 
+ifeq ($(TARGET_SWITCH),1)
+  ifeq ($(strip $(DEVKITPRO)),)
+    $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
+  endif
+  export PATH := $(DEVKITPRO)/devkitA64/bin:$(PATH)
+  include $(DEVKITPRO)/devkitA64/base_tools
+  NXPATH := $(DEVKITPRO)/portlibs/switch/bin
+  PORTLIBS ?= $(DEVKITPRO)/portlibs/switch
+  LIBNX ?= $(DEVKITPRO)/libnx
+  CROSS ?= aarch64-none-elf-
+  SDLCROSS := $(NXPATH)/
+  CC := $(CROSS)gcc
+  CXX := $(CROSS)g++
+  STRIP := $(CROSS)strip
+  NXARCH := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
+  APP_TITLE := Super Mario 64
+  APP_AUTHOR := Nintendo, n64decomp team, sm64pc team
+  APP_VERSION := 1_master_$(VERSION)
+  APP_ICON := $(CURDIR)/switch/logo.jpg
+  INCLUDE_DIRS += $(LIBNX)/include $(PORTLIBS)/include
+  OPT_FLAGS := -O2
+endif
+
 C_DEFINES := $(foreach d,$(DEFINES),-D$(d))
 DEF_INC_CFLAGS := $(foreach i,$(INCLUDE_DIRS),-I $(i)) $(C_DEFINES)
 
@@ -838,27 +861,6 @@ else ifeq ($(TARGET_N3DS),1)
   SDLCONFIG :=
 
 else
-
-ifeq ($(TARGET_SWITCH),1)
-  ifeq ($(strip $(DEVKITPRO)),)
-    $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
-  endif
-  export PATH := $(DEVKITPRO)/devkitA64/bin:$(PATH)
-  PORTLIBS ?= $(DEVKITPRO)/portlibs/switch
-  LIBNX ?= $(DEVKITPRO)/libnx
-  CROSS ?= aarch64-none-elf-
-  SDLCROSS :=
-  CC := $(CROSS)gcc
-  CXX := $(CROSS)g++
-  STRIP := $(CROSS)strip
-  NXARCH := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -ftls-model=local-exec
-  APP_TITLE := Super Mario 64
-  APP_AUTHOR := Nintendo, n64decomp team, sm64pc team
-  APP_VERSION := 1_master_$(VERSION)
-  APP_ICON := $(CURDIR)/switch/logo.jpg
-  INCLUDE_DIRS += system$(LIBNX)/include $(PORTLIBS)/include
-  OPT_FLAGS := -O2
-endif
 
 # for some reason sdl-config in dka64 is not prefixed, while pkg-config is
 SDLCROSS ?= $(CROSS)
@@ -1015,7 +1017,7 @@ endif
 
 ifeq ($(TARGET_SWITCH),1)
   CC_CHECK := $(CC) $(NXARCH) -fsyntax-only -fsigned-char $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -Wall -Wextra -Wno-format-security -D__SWITCH__=1
-  CFLAGS := $(NXARCH) $(OPT_FLAGS) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -ftls-model=local-exec -fPIE -fwrapv -D__SWITCH__=1
+  CFLAGS := $(NXARCH) $(OPT_FLAGS) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -ftls-model=local-exec -fPIC -fwrapv -D__SWITCH__=1
 endif
 
 CC_CHECK += $(CUSTOM_C_DEFINES)
@@ -1042,7 +1044,7 @@ else ifeq ($(TARGET_N3DS),1)
 LDFLAGS := $(LIBPATHS) -lcitro3d -lctru -lm -specs=3dsx.specs -g -marm -mthumb-interwork -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft # -Wl,-Map,$(notdir $*.map)
 
 else ifeq ($(TARGET_SWITCH),1)
-  LDFLAGS := -specs=$(LIBNX)/switch.specs $(NXARCH) $(OPT_FLAGS) -L$(LIBNX)/lib $(BACKEND_LDFLAGS) -lstdc++ -lnx -lm
+  LDFLAGS := -specs=$(LIBNX)/switch.specs $(NXARCH) $(OPT_FLAGS) $(BACKEND_LDFLAGS) -lstdc++ -lm
 
 else ifeq ($(WINDOWS_BUILD),1)
   LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -Llib -lpthread $(BACKEND_LDFLAGS) -static
@@ -1155,8 +1157,7 @@ res: $(BASEPACK_PATH)
 # prepares the basepack.lst
 $(BASEPACK_LST): $(EXE)
 	@mkdir -p $(BUILD_DIR)/$(BASEDIR)
-	@echo -n > $(BASEPACK_LST)
-	@echo "$(BUILD_DIR)/sound/bank_sets sound/bank_sets" >> $(BASEPACK_LST)
+	@echo "$(BUILD_DIR)/sound/bank_sets sound/bank_sets" > $(BASEPACK_LST)
 	@echo "$(BUILD_DIR)/sound/sequences.bin sound/sequences.bin" >> $(BASEPACK_LST)
 	@echo "$(BUILD_DIR)/sound/sound_data.ctl sound/sound_data.ctl" >> $(BASEPACK_LST)
 	@echo "$(BUILD_DIR)/sound/sound_data.tbl sound/sound_data.tbl" >> $(BASEPACK_LST)

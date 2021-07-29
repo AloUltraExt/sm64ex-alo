@@ -508,6 +508,9 @@ static void puppycam_input_hold(void)
     else
     {
         puppycam_input_hold_preset1(ivX);
+        puppycam_input_pitch();
+        puppycam_input_zoom();
+        puppycam_input_centre();
     }
 
     
@@ -1070,6 +1073,25 @@ static void puppycam_analogue_stick(void)
     //I make the X axis negative, so that the movement reflects the Cbuttons.
     gPuppyCam.stick2[0] = -gPlayer2Controller->rawStickX;
     gPuppyCam.stick2[1] = gPlayer2Controller->rawStickY;
+
+    if (ABS(gPuppyCam.stick2[0]) < DEADZONE)
+    {
+        gPuppyCam.stick2[0] = 0;
+        gPuppyCam.stickN[0] = 0;
+    }
+    if (ABS(gPuppyCam.stick2[1]) < DEADZONE)
+    {
+        gPuppyCam.stick2[1] = 0;
+        gPuppyCam.stickN[1] = 0;
+    }
+    #endif
+    #ifdef TARGET_SWITCH
+    if (!gPuppyCam.options.analogue)
+        return;
+
+    //I make the X axis negative, so that the movement reflects the Cbuttons.
+    gPuppyCam.stick2[0] = -gPlayer1Controller->extStickX;
+    gPuppyCam.stick2[1] = gPlayer1Controller->extStickY;
 
     if (ABS(gPuppyCam.stick2[0]) < DEADZONE)
     {

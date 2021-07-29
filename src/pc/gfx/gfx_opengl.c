@@ -43,7 +43,7 @@
 #      define USE_FRAMEBUFFER GLEW_ARB_framebuffer_object
 #    else
 #      define USE_FRAMEBUFFER 0
-#   endif
+#    endif
 #  endif
 #else
 #  define USE_FRAMEBUFFER 0

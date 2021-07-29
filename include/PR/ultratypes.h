@@ -57,9 +57,7 @@ typedef ptrdiff_t ssize_t;
 
 #else // TARGET_SWITCH
 
-#include <stddef.h>
-#include <stdint.h>
-#include <switch.h>
+#include <switch/types.h>
 typedef ptrdiff_t ssize_t;
 #endif
 
