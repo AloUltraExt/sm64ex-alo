@@ -395,7 +395,9 @@ f32 find_floor_height_and_data(f32 xPos, f32 yPos, f32 zPos, struct FloorGeometr
     return floorHeight;
 }
 
+#ifdef HIGH_FPS_PC
 u8 gInterpolatingSurfaces;
+#endif
 
 /**
  * Iterate through the list of floors and find the first floor under a given point.

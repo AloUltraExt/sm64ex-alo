@@ -155,11 +155,9 @@ struct GraphNodeObject
     Mat4 prevThrowMatrix;
     u32 prevThrowMatrixTimestamp;
     Mat4 *throwMatrixInterpolated;
-#endif
-    /*0x54*/ Vec3f cameraToObject;
-#ifdef HIGH_FPS_PC
     u32 skipInterpolationTimestamp;
 #endif
+    /*0x54*/ Vec3f cameraToObject;
 };
 
 struct ObjectNode

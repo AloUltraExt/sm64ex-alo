@@ -319,9 +319,9 @@ static void geo_process_perspective(struct GraphNodePerspective *node) {
     }
     if (node->fnNode.node.children != NULL) {
         u16 perspNorm;
-        Mtx *mtxInterpolated = alloc_display_list(sizeof(*mtxInterpolated));
         Mtx *mtx = alloc_display_list(sizeof(*mtx));
 #ifdef HIGH_FPS_PC
+        Mtx *mtxInterpolated = alloc_display_list(sizeof(*mtxInterpolated));
         f32 fovInterpolated;
 #endif
 
@@ -352,7 +352,6 @@ static void geo_process_perspective(struct GraphNodePerspective *node) {
         node->prevTimestamp = gGlobalTimer;
 #else
         gSPPerspNormalize(gDisplayListHead++, perspNorm);
- 
         gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(mtx), G_MTX_PROJECTION | G_MTX_LOAD | G_MTX_NOPUSH);
 #endif
 
