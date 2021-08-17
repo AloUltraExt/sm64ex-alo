@@ -190,13 +190,12 @@ static void puppycam_process_cutscene(void)
 //Just a function that sets a bunch of camera values to 0. It's a function because it's got shared functionality.
 void puppycam_reset_values(void)
 {
-    gPuppyCam.posHeight[0] = 0;
-    gPuppyCam.posHeight[1] = 0;
     gPuppyCam.swimPitch = 0;
     gPuppyCam.edgePitch = 0;
     gPuppyCam.moveZoom = 0;
     gPuppyCam.floorY[0] = 0;
     gPuppyCam.floorY[1] = 0;
+    gPuppyCam.terrainPitch = 0;
 }
 
 //Set up values. Runs on level load.
@@ -245,8 +244,6 @@ void puppycam_init(void)
 
 void puppycam_input_pitch(void)
 {
-    //f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
-
     if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_PITCH_ROTATION)
     {
         //Handles vertical inputs.
@@ -256,7 +253,7 @@ void puppycam_input_pitch(void)
         if (gPlayer1Controller->buttonDown & D_CBUTTONS || gPuppyCam.stick2[1] != 0)
             gPuppyCam.pitchAcceleration += 50*(gPuppyCam.options.sensitivityY/100.f);
         else
-            gPuppyCam.pitchAcceleration = approach_f32_asymptotic(gPuppyCam.pitchAcceleration, 0, DECELERATION);
+            gPuppyCam.pitchAcceleration = 0;
 
         gPuppyCam.pitchAcceleration = CLAMP(gPuppyCam.pitchAcceleration, -100, 100);
 
@@ -318,17 +315,17 @@ static void puppycam_input_hold_preset1(f32 ivX)
 
     if ((gPlayer1Controller->buttonDown & L_CBUTTONS && !gPuppyCam.options.analogue) || gPuppyCam.stick2[0] != 0)
     {
-        gPuppyCam.yawAcceleration -= 50*(gPuppyCam.options.sensitivityX/100.f);
+        gPuppyCam.yawAcceleration -= 75*(gPuppyCam.options.sensitivityX/100.f);
         gPuppyCam.framesSinceC[0] = 0;
     }
     else
     if ((gPlayer1Controller->buttonDown & R_CBUTTONS && !gPuppyCam.options.analogue) || gPuppyCam.stick2[0] != 0)
     {
-        gPuppyCam.yawAcceleration += 50*(gPuppyCam.options.sensitivityX/100.f);
+        gPuppyCam.yawAcceleration += 75*(gPuppyCam.options.sensitivityX/100.f);
         gPuppyCam.framesSinceC[1] = 0;
     }
     else
-        gPuppyCam.yawAcceleration = approach_f32_asymptotic(gPuppyCam.yawAcceleration, 0, DECELERATION);
+        gPuppyCam.yawAcceleration = 0;
 }
 
 //An alternative control scheme, hold the button down to turn the camera, or press it once to turn it quickly.
@@ -363,15 +360,15 @@ static void puppycam_input_hold_preset2(f32 ivX)
     //Handles continuous movement as normal, as long as the button's held.
     if (gPlayer1Controller->buttonDown & L_CBUTTONS)
     {
-        gPuppyCam.yawAcceleration -= 10*(gPuppyCam.options.sensitivityX/100.f);
+        gPuppyCam.yawAcceleration -= 75*(gPuppyCam.options.sensitivityX/100.f);
     }
     else
     if (gPlayer1Controller->buttonDown & R_CBUTTONS)
     {
-        gPuppyCam.yawAcceleration += 10*(gPuppyCam.options.sensitivityX/100.f);
+        gPuppyCam.yawAcceleration += 75*(gPuppyCam.options.sensitivityX/100.f);
     }
     else
-        gPuppyCam.yawAcceleration = approach_f32_asymptotic(gPuppyCam.yawAcceleration, 0, DECELERATION);
+        gPuppyCam.yawAcceleration = 0;
 }
 
 //Another alternative control scheme. This one aims to mimic the parallel camera scheme down to the last bit from the original game.
@@ -387,7 +384,6 @@ static void puppycam_input_hold_preset3(f32 ivX)
 
     if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_IN)
     {
-        //f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
         gPuppyCam.flags &= ~PUPPYCAM_BEHAVIOUR_COLLISION;
 
         //Handles continuous movement as normal, as long as the button's held.
@@ -396,7 +392,7 @@ static void puppycam_input_hold_preset3(f32 ivX)
             gPuppyCam.yawAcceleration -= (gPuppyCam.options.sensitivityX/100.f)*stickMag[0];
         }
         else
-            gPuppyCam.yawAcceleration = approach_f32_asymptotic(gPuppyCam.yawAcceleration, 0, DECELERATION);
+            gPuppyCam.yawAcceleration = 0;
 
         if (ABS(gPlayer1Controller->rawStickY) > DEADZONE)
         {
@@ -508,9 +504,9 @@ static void puppycam_input_hold(void)
     else
     {
         puppycam_input_hold_preset1(ivX);
-        puppycam_input_pitch();
-        puppycam_input_zoom();
-        puppycam_input_centre();
+        //puppycam_input_pitch();
+        //puppycam_input_zoom();
+        //puppycam_input_centre();
     }
 
     
@@ -592,6 +588,8 @@ static void puppycam_view_panning(void)
     f32 slideSpeed = 1;
 
     panMulti = CLAMP(gPuppyCam.zoom/(f32)gPuppyCam.zoomPoints[2], 0.f, 1.f);
+    if (gPuppyCam.options.inputType == PUPPYCAM_INPUT_TYPE_CLASSIC)
+        panMulti /= 2;
 
     if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_PANSHIFT && gMarioState->action != ACT_HOLDING_BOWSER && gMarioState->action != ACT_SLEEPING && gMarioState->action != ACT_START_SLEEPING)
     {
@@ -607,15 +605,15 @@ static void puppycam_view_panning(void)
         {
             panFloor = CLAMP(find_floor_height((s16)(gPuppyCam.targetObj->oPosX+expectedPanX),(s16)(gPuppyCam.targetObj->oPosY + 200),
             (s16)(gPuppyCam.targetObj->oPosZ+expectedPanZ)),gPuppyCam.targetObj->oPosY-50,gPuppyCam.targetObj->oPosY+50);
-            //If the floor is lower than 50 units below Mario, then ignore the Y value and tilt the camera instead.
-            if (panFloor <= gPuppyCam.targetObj->oPosY-50)
+            //If the floor is lower than 150 units below Mario, then ignore the Y value and tilt the camera instead.
+            if (panFloor <= gPuppyCam.targetObj->oPosY-150)
             {
                 panFloor = gPuppyCam.targetObj->oPosY;
-                gPuppyCam.edgePitch = approach_s32(gPuppyCam.edgePitch, -0x500, 0x80, 0x80);
+                gPuppyCam.edgePitch = approach_s32(gPuppyCam.edgePitch, -0x2000, 0x80, 0x80);
             }
             else
             {
-                gPuppyCam.edgePitch = approach_s32(gPuppyCam.edgePitch, 0, 0x80, 0x80);
+                gPuppyCam.edgePitch = approach_s32(gPuppyCam.edgePitch, 0, 0x100, 0x100);
             }
 
             gPuppyCam.pan[1] = approach_f32_asymptotic(gPuppyCam.pan[1], panFloor-height, 0.25f);
@@ -631,37 +629,52 @@ static void puppycam_view_panning(void)
     }
 }
 
-//Sets the
-static void puppycam_view_height_offset(void)
+void puppycam_terrain_angle(void)
 {
-    s16 floorTemp;
-    s16 tempDist = sqrtf((gPuppyCam.pos[0] - gPuppyCam.focus[0]) * (gPuppyCam.pos[0] - gPuppyCam.focus[0]) + (gPuppyCam.pos[1] - gPuppyCam.focus[1]) *
-                         (gPuppyCam.pos[1] - gPuppyCam.focus[1]) + (gPuppyCam.pos[2] - gPuppyCam.focus[2]) * (gPuppyCam.pos[2] - gPuppyCam.focus[2]));
+    f32 adjustSpeed;
+    s32 floor2 = find_floor_height(gPuppyCam.pos[0], gPuppyCam.pos[1]+100, gPuppyCam.pos[2]);
+    s32 ceil = 20000;//find_ceil(gPuppyCam.pos[0], gPuppyCam.pos[1]+100, gPuppyCam.pos[2]);
+    s32 farFromSurface;
+    s16 floorPitch;
+    s32 gotTheOkay = FALSE;
 
-    floorTemp = find_floor_height(gPuppyCam.targetObj->oPosX, gPuppyCam.targetObj->oPosY+50, gPuppyCam.targetObj->oPosZ);
-    if (floorTemp > gPuppyCam.targetObj->oPosY - 50 && !(gMarioState->action & ACT_FLAG_SWIMMING_OR_FLYING))
+    if (gMarioState->action & ACT_FLAG_SWIMMING || !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_HEIGHT_HELPER))
     {
-        gPuppyCam.posHeight[0] = approach_f32_asymptotic(gPuppyCam.posHeight[0],floorTemp-gPuppyCam.targetFloorHeight,0.05f);
-        //if (gPuppyCam.posHeight[0]-gPuppyCam.shake[1] - gPuppyCam.floorY[1] < floorTemp)
-        //    gPuppyCam.posHeight[0] = floorTemp-gPuppyCam.shake[1]+gPuppyCam.povHeight - gPuppyCam.floorY[1];
+        gPuppyCam.intendedTerrainPitch = 0;
+        adjustSpeed = 0.25f;
+        farFromSurface = TRUE;
     }
     else
     {
-            gPuppyCam.posHeight[0] = approach_f32_asymptotic(gPuppyCam.posHeight[0],0,0.1f);
+        f32 x, z, floorHeight;
+        adjustSpeed = CLAMP(MAX(gMarioState->forwardVel/480.0f, gPuppyCam.yawAcceleration/100.0f), 0.05f, 1.0f);
+
+        x = gPuppyCam.targetObj->oPosX - (10 * sins(gPuppyCam.yaw));
+        z = gPuppyCam.targetObj->oPosZ - (10 * coss(gPuppyCam.yaw));
+
+        floorHeight = find_floor_height(x, gPuppyCam.targetObj->oPosY+100, z);
+
+        if (ABS(gMarioState->floorHeight - floorHeight) > 350)
+        {
+            gPuppyCam.intendedTerrainPitch = 0;
+        }
+        else
+        {
+            floorPitch = -atan2s(10.0f, gMarioState->floorHeight - floorHeight);
+            gPuppyCam.intendedTerrainPitch = approach_f32_asymptotic(gPuppyCam.intendedTerrainPitch, floorPitch, adjustSpeed);
+            gotTheOkay = TRUE;
+        }
+
+        //Ensures that the camera is below and above floors and ceilings. It ignores this rule for each if the camera's headed upwards anyway.
+        farFromSurface = ((gPuppyCam.pos[1] > floor2 + 50 || gPuppyCam.intendedTerrainPitch < gPuppyCam.terrainPitch) && (gPuppyCam.pos[1] < ceil - 50 || gPuppyCam.intendedTerrainPitch > gPuppyCam.terrainPitch));
+
+        //If the camera is too close to a vertical obstruction, it'll make the intended pitch much further away, making it swivel faster.
+        if (!farFromSurface && gotTheOkay)
+            gPuppyCam.intendedTerrainPitch = approach_f32_asymptotic(gPuppyCam.intendedTerrainPitch, floorPitch, adjustSpeed*3);
     }
 
-
-    floorTemp = find_floor_height(gPuppyCam.targetObj->oPosX + LENSIN(tempDist,gPuppyCam.yaw), gPuppyCam.targetObj->oPosY+50, gPuppyCam.targetObj->oPosZ + LENCOS(tempDist,gPuppyCam.yaw));
-    if (floorTemp > gPuppyCam.targetObj->oPosY - 50 && !(gMarioState->action & ACT_FLAG_SWIMMING_OR_FLYING) && gPuppyCam.collisionDistance != gPuppyCam.zoomTarget)
-    {
-        gPuppyCam.posHeight[1] = approach_f32_asymptotic(gPuppyCam.posHeight[1],floorTemp-gPuppyCam.targetFloorHeight,0.05f);
-        //if (gPuppyCam.posHeight[1]-gPuppyCam.shake[1] - gPuppyCam.floorY[0] < floorTemp)
-        //    gPuppyCam.posHeight[1] = floorTemp-gPuppyCam.shake[1]+gPuppyCam.povHeight - gPuppyCam.floorY[0];
-    }
-    else
-    {
-            gPuppyCam.posHeight[1] = approach_f32_asymptotic(gPuppyCam.posHeight[1],0,0.1f);
-    }
+    if (farFromSurface)
+        gPuppyCam.terrainPitch = approach_f32_asymptotic(gPuppyCam.terrainPitch, gPuppyCam.intendedTerrainPitch, adjustSpeed);
 }
 
 //Raycasting
@@ -766,36 +779,39 @@ void find_surface_on_ray_list(struct SurfaceNode *list, Vec3f orig, Vec3f dir, f
 }
 
 
-void find_surface_on_ray_cell(s16 cellX, s16 cellZ, Vec3f orig, Vec3f normalized_dir, f32 dir_length, struct Surface **hit_surface, Vec3f hit_pos, f32 *max_length)
+void find_surface_on_ray_cell(s16 cellX, s16 cellZ, Vec3f orig, Vec3f normalized_dir, f32 dir_length, struct Surface **hit_surface, Vec3f hit_pos, f32 *max_length, s32 flags)
 {
 	// Skip if OOB
 	if (cellX >= 0 && cellX <= NUM_CELLS_INDEX && cellZ >= 0 && cellZ <= NUM_CELLS_INDEX)
 	{
 		// Iterate through each surface in this partition
-		if (normalized_dir[1] > -0.99999f)
+		if (normalized_dir[1] > -0.99999f && flags & RAYCAST_FIND_CEIL)
 		{
 			find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
 			find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
 		}
-		if (normalized_dir[1] < 0.99999f)
+		if (normalized_dir[1] < 0.99999f && flags & RAYCAST_FIND_FLOOR)
 		{
 			find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
 			find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
 		}
-		find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
-		find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+		if (flags & RAYCAST_FIND_WALL)
+        {
+            find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+            find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+        }
 	}
 }
 
-void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Vec3f hit_pos)
+void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Vec3f hit_pos, s32 flags)
 {
     f32 max_length;
-    s16 cellZ, cellX, cellPrevX, cellPrevZ;
+    s32 cellZ, cellX, cellPrevX, cellPrevZ;
     f32 fCellZ, fCellX;
     f32 dir_length;
     Vec3f normalized_dir;
     f32 step, dx, dz;
-    u32 i;
+    s32 i;
 
     // Set that no surface has been hit
     *hit_surface = NULL;
@@ -810,13 +826,15 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
     // Get our cell coordinate
     fCellX = (orig[0] + LEVEL_BOUNDARY_MAX) / CELL_SIZE;
     fCellZ = (orig[2] + LEVEL_BOUNDARY_MAX) / CELL_SIZE;
-    cellX = (s16)fCellX;
-    cellZ = (s16)fCellZ;
+    cellX = fCellX;
+    cellZ = fCellZ;
+    cellPrevX = cellX;
+    cellPrevZ = cellZ;
 
     // Don't do DDA if straight down
     if (normalized_dir[1] >= 0.99999f || normalized_dir[1] <= -0.99999f)
     {
-		find_surface_on_ray_cell(cellX, cellZ, orig, normalized_dir, dir_length, hit_surface, hit_pos, &max_length);
+		find_surface_on_ray_cell(cellX, cellZ, orig, normalized_dir, dir_length, hit_surface, hit_pos, &max_length, flags);
 		return;
 	}
 
@@ -831,20 +849,20 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
 
     for (i = 0; i < step && *hit_surface == NULL; i++)
     {
-		find_surface_on_ray_cell(cellX, cellZ, orig, normalized_dir, dir_length, hit_surface, hit_pos, &max_length);
+		find_surface_on_ray_cell(cellX, cellZ, orig, normalized_dir, dir_length, hit_surface, hit_pos, &max_length, flags);
 
         // Move cell coordinate
         fCellX += dx;
         fCellZ += dz;
         cellPrevX = cellX;
         cellPrevZ = cellZ;
-        cellX = (s16)fCellX;
-        cellZ = (s16)fCellZ;
+        cellX = fCellX;
+        cellZ = fCellZ;
 
         if ((cellPrevX != cellX) && (cellPrevZ != cellZ))
         {
-            find_surface_on_ray_cell(cellX, cellPrevZ, orig, normalized_dir, dir_length, hit_surface, hit_pos, &max_length);
-            find_surface_on_ray_cell(cellPrevX, cellZ, orig, normalized_dir, dir_length, hit_surface, hit_pos, &max_length);
+            find_surface_on_ray_cell(cellX, cellPrevZ, orig, normalized_dir, dir_length, hit_surface, hit_pos, &max_length, flags);
+            find_surface_on_ray_cell(cellPrevX, cellZ, orig, normalized_dir, dir_length, hit_surface, hit_pos, &max_length, flags);
         }
     }
 }
@@ -967,12 +985,6 @@ void puppycam_projection_behaviours(void)
 
         if (gPuppyCam.pitchTarget < 0x2000)
             gPuppyCam.pitchTarget = approach_f32_asymptotic(gPuppyCam.pitchTarget, 0x2000, 0.2f);
-
-        /*//Will tilt the camera just a wip thing though, doesn't work too well but will hopefully replace view_height_offset eventually.
-        if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_HEIGHT_HELPER && gMarioState->floor && gMarioState->action & ACT_FLAG_MOVING)
-            gPuppyCam.terrainPitch = approach_f32_asymptotic(gPuppyCam.terrainPitch, find_floor_slope(gMarioState, 0), (gMarioState->intendedMag/32)*0.2);
-        else
-            gPuppyCam.terrainPitch = approach_f32_asymptotic(gPuppyCam.terrainPitch, 0, 0.2);*/
         }
 
         //Applies a light outward zoom to the camera when moving. Sets it back to 0 when not moving.
@@ -1015,15 +1027,7 @@ void puppycam_projection_behaviours(void)
         puppycam_view_panning();
 
         //This sets a pseudo tilt offset based on the floor heights in front and behind mario.
-        if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_HEIGHT_HELPER)
-        {
-            puppycam_view_height_offset();
-        }
-        else
-        {
-            gPuppyCam.posHeight[0] = 0;
-            gPuppyCam.posHeight[1] = 0;
-        }
+        puppycam_terrain_angle();
     }
     else
     {
@@ -1111,15 +1115,8 @@ static void puppycam_analogue_stick(void)
 //The centrepiece behind the input side of PuppyCam. The C buttons branch off.
 static void puppycam_input_core(void)
 {
-    UNUSED s32 stickMag = 0;
-
     puppycam_analogue_stick();
     gPuppyCam.moveFlagAdd = 0;
-
-    if (gPuppyCam.options.analogue)
-        stickMag = gPuppyCam.stick2[1]*1.25f;
-    else
-        stickMag = 100;
 
     //Decide which input for left and right C buttons to use based on behaviour type.
     if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_NORMAL)
@@ -1148,7 +1145,7 @@ static void puppycam_projection(void)
     gPuppyCam.yaw = gPuppyCam.yawTarget - approach_f32_asymptotic((s16)(gPuppyCam.yawTarget - gPuppyCam.yaw), 0, 0.3335f);
     gPuppyCam.pitch = gPuppyCam.pitchTarget - approach_f32_asymptotic((s16)(gPuppyCam.pitchTarget - gPuppyCam.pitch), 0, 0.3335f);
     //This adds the pitch effect when underwater, which is capped so it doesn't get out of control. If you're not swimming, swimpitch is 0, so it's normal.
-    pitchTotal = CLAMP(gPuppyCam.pitch+(gPuppyCam.swimPitch*10)+gPuppyCam.edgePitch, 800, 0x7800);
+    pitchTotal = CLAMP(gPuppyCam.pitch+(gPuppyCam.swimPitch*10)+gPuppyCam.edgePitch + gPuppyCam.terrainPitch, 800, 0x7800);
 
     if (gPuppyCam.targetObj)
     {
@@ -1161,7 +1158,7 @@ static void puppycam_projection(void)
             targetPos3[1] = (s16)approach_f32_asymptotic(targetPos[1], targetPos2[1], 0.5f);
             targetPos3[2] = (s16)approach_f32_asymptotic(targetPos[2], targetPos2[2], 0.5f);
             gPuppyCam.targetDist[0] = approach_f32_asymptotic(gPuppyCam.targetDist[0],(ABS(LENCOS(sqrtf(((targetPos[0]-targetPos2[0])*(targetPos[0]-targetPos2[0]))+((targetPos[2]-targetPos2[2])*(targetPos[2]-targetPos2[2]))),
-                            (s16)ABS(((gPuppyCam.yaw + 0x8000) % 0xFFFF - 0x8000) - (atan2s(targetPos[2]-targetPos2[2], targetPos[0]-targetPos2[0])) % 0xFFFF - 0x8000)+0x4000))), 0.03f);
+                            (s16)ABS(((gPuppyCam.yaw + 0x8000) % 0xFFFF - 0x8000) - (atan2s(targetPos[2]-targetPos2[2], targetPos[0]-targetPos2[0])) % 0xFFFF - 0x8000)+0x4000))), 0.2f);
         }
         else
         {
@@ -1173,14 +1170,14 @@ static void puppycam_projection(void)
         if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_X_MOVEMENT)
             gPuppyCam.focus[0] = targetPos3[0] + gPuppyCam.shake[0] + (gPuppyCam.pan[0]*gPuppyCam.targetDist[1]/gPuppyCam.zoomPoints[2])*panD;
         if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_Y_MOVEMENT)
-            gPuppyCam.focus[1] = targetPos3[1] + gPuppyCam.shake[1] + (gPuppyCam.pan[1]*gPuppyCam.targetDist[1]/gPuppyCam.zoomPoints[2]) + gPuppyCam.povHeight - gPuppyCam.floorY[0] + gPuppyCam.posHeight[0] + (gPuppyCam.swimPitch/10);
+            gPuppyCam.focus[1] = targetPos3[1] + gPuppyCam.shake[1] + (gPuppyCam.pan[1]*gPuppyCam.targetDist[1]/gPuppyCam.zoomPoints[2]) + gPuppyCam.povHeight - gPuppyCam.floorY[0] + (gPuppyCam.swimPitch/10);
         if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_Z_MOVEMENT)
             gPuppyCam.focus[2] = targetPos3[2] + gPuppyCam.shake[2] + (gPuppyCam.pan[2]*gPuppyCam.targetDist[1]/gPuppyCam.zoomPoints[2])*panD;
 
         if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_X_MOVEMENT)
             gPuppyCam.pos[0] = gPuppyCam.targetObj->oPosX + LENSIN(LENSIN(gPuppyCam.targetDist[1],pitchTotal),gPuppyCam.yaw) + gPuppyCam.shake[0];
         if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_Y_MOVEMENT)
-            gPuppyCam.pos[1] = gPuppyCam.targetObj->oPosY + gPuppyCam.povHeight + LENCOS(gPuppyCam.targetDist[1],pitchTotal) + gPuppyCam.shake[1] - gPuppyCam.floorY[1] + gPuppyCam.posHeight[1];
+            gPuppyCam.pos[1] = gPuppyCam.targetObj->oPosY + gPuppyCam.povHeight + LENCOS(gPuppyCam.targetDist[1],pitchTotal) + gPuppyCam.shake[1] - gPuppyCam.floorY[1];
         if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_Z_MOVEMENT)
             gPuppyCam.pos[2] = gPuppyCam.targetObj->oPosZ + LENCOS(LENSIN(gPuppyCam.targetDist[1],pitchTotal),gPuppyCam.yaw) + gPuppyCam.shake[2];
     }
@@ -1285,7 +1282,7 @@ static void puppycam_collision(void)
     Vec3f camdir[2];
     Vec3f hitpos[2];
     Vec3f target[2];
-    s16 pitchTotal = CLAMP(gPuppyCam.pitch+(gPuppyCam.swimPitch*10), 800, 0x7800);
+    s16 pitchTotal = CLAMP(gPuppyCam.pitch+(gPuppyCam.swimPitch*10) + gPuppyCam.edgePitch + gPuppyCam.terrainPitch, 800, 0x7800);
     s32 dist[2];
 
     if (gPuppyCam.targetObj == NULL)
@@ -1301,17 +1298,17 @@ static void puppycam_collision(void)
     target[1][2] = gPuppyCam.targetObj->oPosZ;
 
     camdir[0][0] = LENSIN(LENSIN(gPuppyCam.zoomTarget,pitchTotal),gPuppyCam.yaw) + gPuppyCam.shake[0];
-    camdir[0][1] = LENCOS(gPuppyCam.zoomTarget,pitchTotal) + gPuppyCam.shake[1];// + gPuppyCam.posHeight[1];
+    camdir[0][1] = LENCOS(gPuppyCam.zoomTarget,pitchTotal) + gPuppyCam.shake[1];
     camdir[0][2] = LENCOS(LENSIN(gPuppyCam.zoomTarget,pitchTotal),gPuppyCam.yaw) + gPuppyCam.shake[2];
 
     camdir[1][0] = camdir[0][0];
     camdir[1][1] = camdir[0][1];
     camdir[1][2] = camdir[0][2];
 
-    find_surface_on_ray(target[0], camdir[0], &surf[0], hitpos[0]);
-    find_surface_on_ray(target[1], camdir[1], &surf[1], hitpos[1]);
-    resolve_and_return_wall_collisions(hitpos[0], 0.0f, 50.0f);
-    resolve_and_return_wall_collisions(hitpos[1], 0.0f, 50.0f);
+    find_surface_on_ray(target[0], camdir[0], &surf[0], hitpos[0], RAYCAST_FIND_FLOOR | RAYCAST_FIND_CEIL | RAYCAST_FIND_WALL);
+    find_surface_on_ray(target[1], camdir[1], &surf[1], hitpos[1], RAYCAST_FIND_FLOOR | RAYCAST_FIND_CEIL | RAYCAST_FIND_WALL);
+    resolve_and_return_wall_collisions(hitpos[0], 0.0f, 25.0f);
+    resolve_and_return_wall_collisions(hitpos[1], 0.0f, 25.0f);
     dist[0] = ((target[0][0] - hitpos[0][0]) * (target[0][0] - hitpos[0][0]) + (target[0][1] - hitpos[0][1]) * (target[0][1] - hitpos[0][1]) + (target[0][2] - hitpos[0][2]) * (target[0][2] - hitpos[0][2]));
     dist[1] = ((target[1][0] - hitpos[1][0]) * (target[1][0] - hitpos[1][0]) + (target[1][1] - hitpos[1][1]) * (target[1][1] - hitpos[1][1]) + (target[1][2] - hitpos[1][2]) * (target[1][2] - hitpos[1][2]));
 
