@@ -171,8 +171,6 @@ s32 intro_regular(void) {
 #if SET_KEY_COMBO_LEVEL_SELECT
     if (gPlayer1Controller->buttonDown == QUIT_LEVEL_SELECT_COMBO) {
         gDebugLevelSelect = 1;
-    } else {
-        gDebugLevelSelect = 0;
     }
 #endif
 

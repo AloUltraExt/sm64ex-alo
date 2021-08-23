@@ -1171,18 +1171,13 @@ UNUSED static s32 play_mode_unused(void) {
     return 0;
 }
 
-#if SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
-s16 gSkipIntroKeyCombo = FALSE;
-#endif
+s16 gSkipGameIntro = FALSE;
 
 // ex-alo change
 // Checks for peach intro skip
 u8 should_intro_be_skipped(void) {
-    return save_file_exists(gCurrSaveFileNum - 1) || gSkipIntroKeyCombo == TRUE
+    return save_file_exists(gCurrSaveFileNum - 1) || gSkipGameIntro == TRUE
 #ifndef TARGET_N64
-#ifdef COMMAND_LINE_OPTIONS
-    || gCLIOpts.SkipIntro == TRUE
-#endif
     || configSkipIntro == TRUE
 #endif
     ;

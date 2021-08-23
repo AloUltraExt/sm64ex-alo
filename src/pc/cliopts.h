@@ -8,6 +8,9 @@
 struct PCCLIOptions  {
     unsigned int SkipIntro;
     unsigned int FullScreen;
+    unsigned int LevelSelect;
+    unsigned int Profiler;
+    unsigned int Debug;
     unsigned int PoolSize;
     unsigned int SyncFrames;
     char ConfigFile[SYS_MAX_PATH];
@@ -18,6 +21,7 @@ struct PCCLIOptions  {
 extern struct PCCLIOptions gCLIOpts;
 
 void parse_cli_opts(int argc, char* argv[]);
+void set_cli_opts(void);
 
 #endif
 

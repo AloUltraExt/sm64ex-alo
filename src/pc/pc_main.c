@@ -226,7 +226,7 @@ void main_func(void) {
     const char *gamedir = FS_BASEDIR;
     const char *userpath = sys_user_path();
 #endif
-    
+
     fs_init(sys_ropaths, gamedir, userpath);
 
     #ifndef TARGET_N3DS
@@ -386,7 +386,10 @@ int main(UNUSED int argc, UNUSED char *argv[]) {
 }
 #else
 int main(int argc, char *argv[]) {
+#ifdef COMMAND_LINE_OPTIONS
     parse_cli_opts(argc, argv);
+    set_cli_opts();
+#endif
     main_func();
     return 0;
 }
