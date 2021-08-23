@@ -63,7 +63,7 @@ OSMesg gGfxMesgBuf[1];
 struct VblankHandler gGameVblankHandler;
 
 // Buffers
-uintptr_t gPhysicalFrameBuffers[3];
+uintptr_t gPhysicalFramebuffers[3];
 uintptr_t gPhysicalZBuffer;
 
 // Mario Anims and Demo allocation
@@ -81,7 +81,7 @@ u32 gGlobalTimer = 0;
 
 // Framebuffer rendering values (max 3)
 u16 sRenderedFramebuffer = 0;
-u16 sRenderingFrameBuffer = 0;
+u16 sRenderingFramebuffer = 0;
 
 // Goddard Vblank Function Caller
 #ifdef GODDARD_MFACE
@@ -174,7 +174,7 @@ void select_frame_buffer(void) {
 
     gDPSetCycleType(gDisplayListHead++, G_CYC_1CYCLE);
     gDPSetColorImage(gDisplayListHead++, G_IM_FMT_RGBA, G_IM_SIZ_16b, SCREEN_WIDTH,
-                     gPhysicalFrameBuffers[sRenderingFrameBuffer]);
+                     gPhysicalFramebuffers[sRenderingFramebuffer]);
     gDPSetScissor(gDisplayListHead++, G_SC_NON_INTERLACE, 0, BORDER_HEIGHT, SCREEN_WIDTH,
                   SCREEN_HEIGHT - BORDER_HEIGHT);
 }
@@ -331,7 +331,7 @@ void draw_reset_bars(void) {
             fbNum = sRenderedFramebuffer - 1;
         }
 
-        fbPtr = (u64 *) PHYSICAL_TO_VIRTUAL(gPhysicalFrameBuffers[fbNum]);
+        fbPtr = (u64 *) PHYSICAL_TO_VIRTUAL(gPhysicalFramebuffers[fbNum]);
         fbPtr += gNmiResetBarsTimer++ * (SCREEN_WIDTH / 4);
 
         for (width = 0; width < ((SCREEN_HEIGHT / 16) + 1); width++) {
@@ -361,7 +361,7 @@ void render_init(void) {
     end_master_display_list();
     exec_display_list(&gGfxPool->spTask);
 
-    sRenderingFrameBuffer++;
+    sRenderingFramebuffer++;
     gGlobalTimer++;
 }
 #endif
@@ -413,14 +413,14 @@ void display_and_vsync(void) {
     exec_display_list(&gGfxPool->spTask);
     profiler_log_thread5_time(AFTER_DISPLAY_LISTS);
     osRecvMesg(&gGameVblankQueue, &gMainReceivedMesg, OS_MESG_BLOCK);
-    osViSwapBuffer((void *) PHYSICAL_TO_VIRTUAL(gPhysicalFrameBuffers[sRenderedFramebuffer]));
+    osViSwapBuffer((void *) PHYSICAL_TO_VIRTUAL(gPhysicalFramebuffers[sRenderedFramebuffer]));
     profiler_log_thread5_time(THREAD5_END);
     osRecvMesg(&gGameVblankQueue, &gMainReceivedMesg, OS_MESG_BLOCK);
     if (++sRenderedFramebuffer == 3) {
         sRenderedFramebuffer = 0;
     }
-    if (++sRenderingFrameBuffer == 3) {
-        sRenderingFrameBuffer = 0;
+    if (++sRenderingFramebuffer == 3) {
+        sRenderingFramebuffer = 0;
     }
     gGlobalTimer++;
 }
@@ -685,9 +685,9 @@ void setup_game_memory(void) {
     osCreateMesgQueue(&gGameVblankQueue, gGameMesgBuf, ARRAY_COUNT(gGameMesgBuf));
     // Setup z buffer and framebuffer
     gPhysicalZBuffer = VIRTUAL_TO_PHYSICAL(gZBuffer);
-    gPhysicalFrameBuffers[0] = VIRTUAL_TO_PHYSICAL(gFrameBuffer0);
-    gPhysicalFrameBuffers[1] = VIRTUAL_TO_PHYSICAL(gFrameBuffer1);
-    gPhysicalFrameBuffers[2] = VIRTUAL_TO_PHYSICAL(gFrameBuffer2);
+    gPhysicalFramebuffers[0] = VIRTUAL_TO_PHYSICAL(gFramebuffer0);
+    gPhysicalFramebuffers[1] = VIRTUAL_TO_PHYSICAL(gFramebuffer1);
+    gPhysicalFramebuffers[2] = VIRTUAL_TO_PHYSICAL(gFramebuffer2);
     // Setup Mario Animations
     gMarioAnimsMemAlloc = main_pool_alloc(0x4000, MEMORY_POOL_LEFT);
     set_segment_base_addr(17, (void *) gMarioAnimsMemAlloc);

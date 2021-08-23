@@ -30,7 +30,7 @@ struct GraphNodeMore {
 
 // intro geo bss
 #if QOL_FEATURE_MARIO_HEAD_EASTER_EGG
-static u16 *sFrameBuffers[3];
+static u16 *sFramebuffers[3];
 #endif
 static s32 sGameOverFrameCounter;
 static s32 sGameOverTableIndex;
@@ -526,7 +526,7 @@ u16 *intro_sample_frame_buffer(s32 imageW, s32 imageH, s32 sampleW, s32 sampleH)
     s32 yOffset = 80;
 
 #ifdef TARGET_N64
-    fb = sFrameBuffers[sRenderingFrameBuffer];
+    fb = sFramebuffers[sRenderingFramebuffer];
 #else
     fb = get_framebuffer();
 #endif
@@ -587,9 +587,9 @@ Gfx *geo_intro_face_easter_egg(s32 state, struct GraphNode *node, UNUSED void *c
     s32 i;
 
     if (state != 1) {
-        sFrameBuffers[0] = gFrameBuffer0;
-        sFrameBuffers[1] = gFrameBuffer1;
-        sFrameBuffers[2] = gFrameBuffer2;
+        sFramebuffers[0] = gFramebuffer0;
+        sFramebuffers[1] = gFramebuffer1;
+        sFramebuffers[2] = gFramebuffer2;
 
         for (i = 0; i < 48; i++) {
             sFaceVisible[i] = 0;

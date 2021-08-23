@@ -30,7 +30,7 @@ extern OSMesgQueue gGfxVblankQueue;
 extern OSMesg gGameMesgBuf[1];
 extern OSMesg gGfxMesgBuf[1];
 extern struct VblankHandler gGameVblankHandler;
-extern uintptr_t gPhysicalFrameBuffers[3];
+extern uintptr_t gPhysicalFramebuffers[3];
 extern uintptr_t gPhysicalZBuffer;
 extern void *gMarioAnimsMemAlloc;
 extern void *gDemoInputsMemAlloc;
@@ -65,7 +65,7 @@ extern struct DmaHandlerList gDemoInputsBuf;
 extern u8 gMarioAnims[];
 extern u8 gDemoInputs[];
 
-extern u16 sRenderingFrameBuffer;
+extern u16 sRenderingFramebuffer;
 extern u32 gGlobalTimer;
 
 void setup_game_memory(void);
