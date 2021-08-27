@@ -15,7 +15,7 @@
  * to cast the addresses to pointers in this file, since that would be invalid
  * linker script syntax.
 */
-#if N64_USE_EXTENDED_RAM
+#ifdef N64_USE_EXTENDED_RAM
 #define RAM_END          0x80800000
 #define RAM_END_4MB      0x80400000
 #else
@@ -32,7 +32,7 @@
 #define SEG_GODDARD      SEG_POOL_START + 0x113000
 #endif
 
-#if N64_USE_EXTENDED_RAM
+#ifdef N64_USE_EXTENDED_RAM
 #define POOL_SIZE_4MB    RAM_END_4MB - SEG_POOL_START
 #endif
 

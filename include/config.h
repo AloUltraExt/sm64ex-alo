@@ -46,15 +46,23 @@
 /// Fixes bug where the angle speed isn't preserved while in a pole
 #define BUGFIX_PRESERVE_VEL_POLE (0 || VERSION_SH || QOL_FIXES)
 
-// Define Settings
-// Enables extended ram on N64
-#define N64_USE_EXTENDED_RAM TRUE
-// Enables crash screen on N64
-#define N64_CRASH_SCREEN TRUE
-// Sets a key combo to skip Peach cutscene
-#define SET_KEY_COMBO_SKIP_PEACH_CUTSCENE TRUE
-// Sets a key combo to get to the debug level select on Mario Head
-#define SET_KEY_COMBO_LEVEL_SELECT TRUE
+// N64 Only Settings
+/// Enables extended ram on N64
+#define N64_USE_EXTENDED_RAM
+/// Enables crash screen on N64
+#define N64_CRASH_SCREEN
+
+// Misc Settings
+/// Sets a key combo to skip Peach cutscene during file select
+#define SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
+/// Sets a key combo to get to the debug level select on Mario Head
+#define SET_KEY_COMBO_LEVEL_SELECT
+
+// Audio Settings
+/// Removes bank size limit, saves a step when adding extra sound ID's
+#define AUDIO_NO_LIMIT_BANK_SIZE_TABLE
+/// Removes vibrato restriction set in JP and US, EU and SH already has it removed
+#define AUDIO_NO_VIBRATO_LIMIT
 
 // Screen Size Defines
 #define SCREEN_WIDTH 320

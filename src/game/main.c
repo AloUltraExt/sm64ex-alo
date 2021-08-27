@@ -11,7 +11,7 @@
 #include "segments.h"
 #include "main.h"
 #include "rumble_init.h"
-#if N64_USE_EXTENDED_RAM
+#ifdef N64_USE_EXTENDED_RAM
 #include "extras/n64_mem_error_screen.h"
 #endif
 
@@ -137,7 +137,7 @@ void alloc_pool(void) {
     void *start = (void *) SEG_POOL_START;
     void *end = (void *) (SEG_POOL_START + POOL_SIZE);
 
-#if N64_USE_EXTENDED_RAM
+#ifdef N64_USE_EXTENDED_RAM
     // Detect memory size
     if (does_pool_end_lie_out_of_bounds(end))
         end = (void *) (SEG_POOL_START + POOL_SIZE_4MB);
@@ -347,7 +347,7 @@ void thread3_main(UNUSED void *arg) {
     create_thread(&gSoundThread, 4, thread4_sound, NULL, gThread4Stack + 0x2000, 20);
     osStartThread(&gSoundThread);
 
-#if N64_USE_EXTENDED_RAM
+#ifdef N64_USE_EXTENDED_RAM
     if (!gNotEnoughMemory)
         create_thread(&gGameLoopThread, 5, thread5_game_loop, NULL, gThread5Stack + 0x2000, 10);
     else
@@ -458,7 +458,7 @@ void thread1_idle(UNUSED void *arg) {
     osViSetSpecialFeatures(OS_VI_DITHER_FILTER_ON);
     osViSetSpecialFeatures(OS_VI_GAMMA_OFF);
     osCreatePiManager(OS_PRIORITY_PIMGR, &gPIMesgQueue, gPIMesgBuf, ARRAY_COUNT(gPIMesgBuf));
-#if N64_CRASH_SCREEN
+#ifdef N64_CRASH_SCREEN
     extern void crash_screen_init(void);
     crash_screen_init();
 #endif

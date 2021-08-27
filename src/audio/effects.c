@@ -293,7 +293,7 @@ void note_vibrato_init(struct Note *note) {
 
     vib = &note->vibratoState;
 
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_JP) || defined(VERSION_US) || !defined(AUDIO_NO_VIBRATO_LIMIT)
     if (note->parentLayer->seqChannel->vibratoExtentStart == 0
         && note->parentLayer->seqChannel->vibratoExtentTarget == 0
         && note->parentLayer->portamento.mode == 0) {

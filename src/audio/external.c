@@ -325,6 +325,7 @@ u8 sSoundBankFreeListFront[SOUND_BANK_COUNT] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 u8 sNumSoundsInBank[SOUND_BANK_COUNT] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; // only used for debugging
 u8 sMaxChannelsForSoundBank[SOUND_BANK_COUNT] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
+#ifndef AUDIO_NO_LIMIT_BANK_SIZE_TABLE
 // Banks 2 and 7 both grew from 0x30 sounds to 0x40 in size in US.
 #ifdef VERSION_JP
 #define BANK27_SIZE 0x30
@@ -335,6 +336,7 @@ u8 sNumSoundsPerBank[SOUND_BANK_COUNT] = {
     0x70, 0x30, BANK27_SIZE, 0x80, 0x20, 0x80, 0x20, BANK27_SIZE, 0x80, 0x80,
 };
 #undef BANK27_SIZE
+#endif
 
 // sBackgroundMusicMaxTargetVolume and sBackgroundMusicTargetVolume use the 0x80
 // bit to indicate that they are set, and the rest of the bits for the actual value
@@ -832,19 +834,31 @@ void play_sound(s32 soundBits, f32 *pos) {
  * Called from threads: thread4_sound, thread5_game_loop (EU only)
  */
 static void process_sound_request(u32 bits, f32 *pos) {
+#ifndef AUDIO_NO_LIMIT_BANK_SIZE_TABLE
     u8 bank;
     u8 soundIndex;
     u8 counter = 0;
     u8 soundId;
+#else
+    s32 bank;
+    s32 soundIndex;
+    s32 counter = 0;
+#endif
     f32 dist;
     const f32 one = 1.0f;
 
     bank = (bits & SOUNDARGS_MASK_BANK) >> SOUNDARGS_SHIFT_BANK;
+#ifndef AUDIO_NO_LIMIT_BANK_SIZE_TABLE
     soundId = (bits & SOUNDARGS_MASK_SOUNDID) >> SOUNDARGS_SHIFT_SOUNDID;
 
     if (soundId >= sNumSoundsPerBank[bank] || sSoundBankDisabled[bank]) {
         return;
     }
+#else
+    if (sSoundBankDisabled[bank]) {
+        return;
+    }
+#endif
 
     soundIndex = sSoundBanks[bank][0].next;
     while (soundIndex != 0xff && soundIndex != 0) {

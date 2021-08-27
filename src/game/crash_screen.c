@@ -8,7 +8,7 @@
 
 #include "lib/src/printf.h"
 
-#if N64_CRASH_SCREEN
+#ifdef N64_CRASH_SCREEN
 
 u8 gCrashScreenCharToGlyph[128] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
