@@ -65,15 +65,15 @@ struct GeoAnimState {
 // of separate global variables. It won't match EU otherwise.
 struct GeoAnimState gGeoTempState;
 
-u8 gCurAnimType;
-u8 gCurAnimEnabled;
+u8 gCurrAnimType;
+u8 gCurrAnimEnabled;
 s16 gCurrAnimFrame;
 #ifdef HIGH_FPS_PC
 s16 gPrevAnimFrame;
 #endif
-f32 gCurAnimTranslationMultiplier;
+f32 gCurrAnimTranslationMultiplier;
 u16 *gCurrAnimAttribute;
-s16 *gCurAnimData;
+s16 *gCurrAnimData;
 
 struct AllocOnlyPool *gDisplayListHeap;
 
@@ -278,7 +278,7 @@ static void geo_append_display_list(void *displayList, s16 layer) {
  */
 static void geo_process_master_list(struct GraphNodeMasterList *node) {
     s32 i;
-    UNUSED s32 sp1C;
+    UNUSED u8 filler[4];
 
     if (gCurGraphNodeMasterList == NULL && node->node.children != NULL) {
         gCurGraphNodeMasterList = node;
@@ -827,29 +827,29 @@ static void geo_process_background(struct GraphNodeBackground *node) {
 
 static void anim_process(Vec3f translation, Vec3s rotation, u8 *animType, s16 animFrame, u16 **animAttribute) {
     if (*animType == ANIM_TYPE_TRANSLATION) {
-        translation[0] += gCurAnimData[retrieve_animation_index(animFrame, animAttribute)]
-                          * gCurAnimTranslationMultiplier;
-        translation[1] += gCurAnimData[retrieve_animation_index(animFrame, animAttribute)]
-                          * gCurAnimTranslationMultiplier;
-        translation[2] += gCurAnimData[retrieve_animation_index(animFrame, animAttribute)]
-                          * gCurAnimTranslationMultiplier;
+        translation[0] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)]
+                          * gCurrAnimTranslationMultiplier;
+        translation[1] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)]
+                          * gCurrAnimTranslationMultiplier;
+        translation[2] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)]
+                          * gCurrAnimTranslationMultiplier;
         *animType = ANIM_TYPE_ROTATION;
     } else {
         if (*animType == ANIM_TYPE_LATERAL_TRANSLATION) {
             translation[0] +=
-                gCurAnimData[retrieve_animation_index(animFrame, animAttribute)]
-                * gCurAnimTranslationMultiplier;
+                gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)]
+                * gCurrAnimTranslationMultiplier;
             *animAttribute += 2;
             translation[2] +=
-                gCurAnimData[retrieve_animation_index(animFrame, animAttribute)]
-                * gCurAnimTranslationMultiplier;
+                gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)]
+                * gCurrAnimTranslationMultiplier;
             *animType = ANIM_TYPE_ROTATION;
         } else {
             if (*animType == ANIM_TYPE_VERTICAL_TRANSLATION) {
                 *animAttribute += 2;
                 translation[1] +=
-                    gCurAnimData[retrieve_animation_index(animFrame, animAttribute)]
-                    * gCurAnimTranslationMultiplier;
+                    gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)]
+                    * gCurrAnimTranslationMultiplier;
                 *animAttribute += 2;
                 *animType = ANIM_TYPE_ROTATION;
             } else if (*animType == ANIM_TYPE_NO_TRANSLATION) {
@@ -860,9 +860,9 @@ static void anim_process(Vec3f translation, Vec3s rotation, u8 *animType, s16 an
     }
 
     if (*animType == ANIM_TYPE_ROTATION) {
-        rotation[0] = gCurAnimData[retrieve_animation_index(animFrame, animAttribute)];
-        rotation[1] = gCurAnimData[retrieve_animation_index(animFrame, animAttribute)];
-        rotation[2] = gCurAnimData[retrieve_animation_index(animFrame, animAttribute)];
+        rotation[0] = gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)];
+        rotation[1] = gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)];
+        rotation[2] = gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)];
     }
 }
 
@@ -882,7 +882,7 @@ static void geo_process_animated_part(struct GraphNodeAnimatedPart *node) {
 #ifdef HIGH_FPS_PC
     Mtx *mtxInterpolated = alloc_display_list(sizeof(*mtxInterpolated));
     u16 *animAttribute = gCurrAnimAttribute;
-    u8 animType = gCurAnimType;
+    u8 animType = gCurrAnimType;
 #endif
 
     vec3s_copy(rotation, gVec3sZero);
@@ -895,7 +895,7 @@ static void geo_process_animated_part(struct GraphNodeAnimatedPart *node) {
 #ifdef HIGH_FPS_PC
     anim_process(translationInterpolated, rotationInterpolated, &animType, gPrevAnimFrame, &animAttribute);
 #endif
-    anim_process(translation, rotation, &gCurAnimType, gCurrAnimFrame, &gCurrAnimAttribute);
+    anim_process(translation, rotation, &gCurrAnimType, gCurrAnimFrame, &gCurrAnimAttribute);
 #ifdef HIGH_FPS_PC
     interpolate_vectors(translationInterpolated, translationInterpolated, translation);
     interpolate_angles(rotationInterpolated, rotationInterpolated, rotation);
@@ -935,13 +935,13 @@ void geo_set_animation_globals(struct AnimInfo *node, s32 hasAnimation) {
     }
     node->animTimer = gAreaUpdateCounter;
     if (anim->flags & ANIM_FLAG_HOR_TRANS) {
-        gCurAnimType = ANIM_TYPE_VERTICAL_TRANSLATION;
+        gCurrAnimType = ANIM_TYPE_VERTICAL_TRANSLATION;
     } else if (anim->flags & ANIM_FLAG_VERT_TRANS) {
-        gCurAnimType = ANIM_TYPE_LATERAL_TRANSLATION;
+        gCurrAnimType = ANIM_TYPE_LATERAL_TRANSLATION;
     } else if (anim->flags & ANIM_FLAG_6) {
-        gCurAnimType = ANIM_TYPE_NO_TRANSLATION;
+        gCurrAnimType = ANIM_TYPE_NO_TRANSLATION;
     } else {
-        gCurAnimType = ANIM_TYPE_TRANSLATION;
+        gCurrAnimType = ANIM_TYPE_TRANSLATION;
     }
 
     gCurrAnimFrame = node->animFrame;
@@ -958,14 +958,14 @@ void geo_set_animation_globals(struct AnimInfo *node, s32 hasAnimation) {
     node->prevAnimFrameTimestamp = gGlobalTimer;
 #endif
 
-    gCurAnimEnabled = (anim->flags & ANIM_FLAG_5) == 0;
+    gCurrAnimEnabled = (anim->flags & ANIM_FLAG_5) == 0;
     gCurrAnimAttribute = segmented_to_virtual((void *) anim->index);
-    gCurAnimData = segmented_to_virtual((void *) anim->values);
+    gCurrAnimData = segmented_to_virtual((void *) anim->values);
 
     if (anim->animYTransDivisor == 0) {
-        gCurAnimTranslationMultiplier = 1.0f;
+        gCurrAnimTranslationMultiplier = 1.0f;
     } else {
-        gCurAnimTranslationMultiplier = (f32) node->animYTrans / (f32) anim->animYTransDivisor;
+        gCurrAnimTranslationMultiplier = (f32) node->animYTrans / (f32) anim->animYTransDivisor;
     }
 }
 
@@ -1006,21 +1006,21 @@ static void geo_process_shadow(struct GraphNodeShadow *node) {
         }
 
         objScale = 1.0f;
-        if (gCurAnimEnabled) {
-            if (gCurAnimType == ANIM_TYPE_TRANSLATION
-                || gCurAnimType == ANIM_TYPE_LATERAL_TRANSLATION) {
+        if (gCurrAnimEnabled) {
+            if (gCurrAnimType == ANIM_TYPE_TRANSLATION
+                || gCurrAnimType == ANIM_TYPE_LATERAL_TRANSLATION) {
                 geo = node->node.children;
                 if (geo != NULL && geo->type == GRAPH_NODE_TYPE_SCALE) {
                     objScale = ((struct GraphNodeScale *) geo)->scale;
                 }
                 animOffset[0] =
-                    gCurAnimData[retrieve_animation_index(gCurrAnimFrame, &gCurrAnimAttribute)]
-                    * gCurAnimTranslationMultiplier * objScale;
+                    gCurrAnimData[retrieve_animation_index(gCurrAnimFrame, &gCurrAnimAttribute)]
+                    * gCurrAnimTranslationMultiplier * objScale;
                 animOffset[1] = 0.0f;
                 gCurrAnimAttribute += 2;
                 animOffset[2] =
-                    gCurAnimData[retrieve_animation_index(gCurrAnimFrame, &gCurrAnimAttribute)]
-                    * gCurAnimTranslationMultiplier * objScale;
+                    gCurrAnimData[retrieve_animation_index(gCurrAnimFrame, &gCurrAnimAttribute)]
+                    * gCurrAnimTranslationMultiplier * objScale;
                 gCurrAnimAttribute -= 6;
 
                 // simple matrix rotation so the shadow offset rotates along with the object
@@ -1360,7 +1360,7 @@ static void geo_process_object(struct Object *node) {
 #endif
 
         gMatStackIndex--;
-        gCurAnimType = ANIM_TYPE_NONE;
+        gCurrAnimType = ANIM_TYPE_NONE;
         node->header.gfx.throwMatrix = NULL;
 #ifdef HIGH_FPS_PC
         node->header.gfx.throwMatrixInterpolated = NULL;
@@ -1448,16 +1448,16 @@ void geo_process_held_object(struct GraphNodeHeldObject *node) {
         mtxf_to_mtx(mtxInterpolated, gMatStackInterpolated[gMatStackIndex]);
         gMatStackInterpolatedFixed[gMatStackIndex] = mtxInterpolated;
 #endif
-        gGeoTempState.type = gCurAnimType;
-        gGeoTempState.enabled = gCurAnimEnabled;
+        gGeoTempState.type = gCurrAnimType;
+        gGeoTempState.enabled = gCurrAnimEnabled;
         gGeoTempState.frame = gCurrAnimFrame;
-        gGeoTempState.translationMultiplier = gCurAnimTranslationMultiplier;
+        gGeoTempState.translationMultiplier = gCurrAnimTranslationMultiplier;
         gGeoTempState.attribute = gCurrAnimAttribute;
-        gGeoTempState.data = gCurAnimData;
+        gGeoTempState.data = gCurrAnimData;
 #ifdef HIGH_FPS_PC
         gGeoTempState.prevFrame = gPrevAnimFrame;
 #endif
-        gCurAnimType = 0;
+        gCurrAnimType = 0;
         gCurGraphNodeHeldObject = (void *) node;
         if (node->objNode->header.gfx.animInfo.curAnim != NULL) {
             geo_set_animation_globals(&node->objNode->header.gfx.animInfo, hasAnimation);
@@ -1465,12 +1465,12 @@ void geo_process_held_object(struct GraphNodeHeldObject *node) {
 
         geo_process_node_and_siblings(node->objNode->header.gfx.sharedChild);
         gCurGraphNodeHeldObject = NULL;
-        gCurAnimType = gGeoTempState.type;
-        gCurAnimEnabled = gGeoTempState.enabled;
+        gCurrAnimType = gGeoTempState.type;
+        gCurrAnimEnabled = gGeoTempState.enabled;
         gCurrAnimFrame = gGeoTempState.frame;
-        gCurAnimTranslationMultiplier = gGeoTempState.translationMultiplier;
+        gCurrAnimTranslationMultiplier = gGeoTempState.translationMultiplier;
         gCurrAnimAttribute = gGeoTempState.attribute;
-        gCurAnimData = gGeoTempState.data;
+        gCurrAnimData = gGeoTempState.data;
 #ifdef HIGH_FPS_PC
         gPrevAnimFrame = gGeoTempState.prevFrame;
 #endif
@@ -1590,7 +1590,7 @@ void geo_process_node_and_siblings(struct GraphNode *firstNode) {
  * to set up the projection and draw display lists.
  */
 void geo_process_root(struct GraphNodeRoot *node, Vp *b, Vp *c, s32 clearColor) {
-    UNUSED s32 unused;
+    UNUSED u8 filler[4];
 
     if (node->node.flags & GRAPH_RENDER_ACTIVE) {
         Mtx *initialMatrix;
@@ -1607,7 +1607,7 @@ void geo_process_root(struct GraphNodeRoot *node, Vp *b, Vp *c, s32 clearColor) 
 #endif
         initialMatrix = alloc_display_list(sizeof(*initialMatrix));
         gMatStackIndex = 0;
-        gCurAnimType = 0;
+        gCurrAnimType = 0;
         vec3s_set(viewport->vp.vtrans, node->x * 4, node->y * 4, 511);
         vec3s_set(viewport->vp.vscale, node->width * 4, node->height * 4, 511);
         if (b != NULL) {

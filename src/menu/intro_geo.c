@@ -11,7 +11,6 @@
 #include "buffers/framebuffers.h"
 #include "game/game_init.h"
 #include "audio/external.h"
-#include "prevent_bss_reordering.h"
 
 // frame counts for the zoom in, hold, and zoom out of title model
 #define INTRO_STEPS_ZOOM_IN 20
@@ -450,7 +449,7 @@ Gfx *geo_intro_gameover_backdrop(s32 state, struct GraphNode *node, UNUSED void 
 extern Gfx title_screen_bg_dl_0A0065E8[];
 extern Gfx title_screen_bg_dl_0A006618[];
 
-//Data
+// Data
 s8 sFaceVisible[] = {
     1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1,
@@ -470,8 +469,7 @@ s8 sFaceToggleOrder[] = {
 
 s8 sFaceCounter = 0;
 
-void intro_gen_face_texrect(Gfx **dlIter)
-{
+void intro_gen_face_texrect(Gfx **dlIter) {
     s32 x;
     s32 y;
 
@@ -485,8 +483,7 @@ void intro_gen_face_texrect(Gfx **dlIter)
     }
 }
 
-Gfx *intro_draw_face(u16 *image, s32 imageW, s32 imageH)
-{
+Gfx *intro_draw_face(u16 *image, s32 imageW, s32 imageH) {
     Gfx *dl;
     Gfx *dlIter;
     

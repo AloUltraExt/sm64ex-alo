@@ -19,8 +19,7 @@
 #endif
 
 
-struct Controller
-{
+struct Controller {
   /*0x00*/ s16 rawStickX;       //
   /*0x02*/ s16 rawStickY;       //
   /*0x04*/ float stickX;        // [-64, 64] positive is right
@@ -66,16 +65,14 @@ enum SpTaskState {
     SPTASK_STATE_FINISHED_DP
 };
 
-struct SPTask
-{
+struct SPTask {
     /*0x00*/ OSTask task;
     /*0x40*/ OSMesgQueue *msgqueue;
     /*0x44*/ OSMesg msg;
     /*0x48*/ enum SpTaskState state;
 }; // size = 0x4C, align = 0x8
 
-struct VblankHandler
-{
+struct VblankHandler {
     OSMesgQueue *queue;
     OSMesg msg;
 };
@@ -103,8 +100,7 @@ struct Animation {
 
 #define ANIMINDEX_NUMPARTS(animindex) (sizeof(animindex) / sizeof(u16) / 6 - 1)
 
-struct GraphNode
-{
+struct GraphNode {
     /*0x00*/ s16 type; // structure type
     /*0x02*/ s16 flags; // hi = drawing layer, lo = rendering modes
     /*0x04*/ struct GraphNode *prev;
@@ -113,8 +109,7 @@ struct GraphNode
     /*0x10*/ struct GraphNode *children;
 };
 
-struct AnimInfo
-{
+struct AnimInfo {
     /*0x00 0x38*/ s16 animID;
     /*0x02 0x3A*/ s16 animYTrans;
     /*0x04 0x3C*/ struct Animation *curAnim;
@@ -130,8 +125,7 @@ struct AnimInfo
 #endif
 };
 
-struct GraphNodeObject
-{
+struct GraphNodeObject {
     /*0x00*/ struct GraphNode node;
     /*0x14*/ struct GraphNode *sharedChild;
     /*0x18*/ s8 areaIndex;
@@ -160,8 +154,7 @@ struct GraphNodeObject
     /*0x54*/ Vec3f cameraToObject;
 };
 
-struct ObjectNode
-{
+struct ObjectNode {
     struct GraphNodeObject gfx;
     struct ObjectNode *next;
     struct ObjectNode *prev;
@@ -170,8 +163,7 @@ struct ObjectNode
 // NOTE: Since ObjectNode is the first member of Object, it is difficult to determine
 // whether some of these pointers point to ObjectNode or Object.
 
-struct Object
-{
+struct Object {
     /*0x000*/ struct ObjectNode header;
     /*0x068*/ struct Object *parentObj;
     /*0x06C*/ struct Object *prevObj;
@@ -180,8 +172,7 @@ struct Object
     /*0x076*/ s16 numCollidedObjs;
     /*0x078*/ struct Object *collidedObjs[4];
     /*0x088*/
-    union
-    {
+    union {
         // Object fields. See object_fields.h.
         u32 asU32[0x50];
         s32 asS32[0x50];
@@ -231,8 +222,7 @@ struct Object
     /*0x25C*/ void *respawnInfo;
 };
 
-struct ObjectHitbox
-{
+struct ObjectHitbox {
     /*0x00*/ u32 interactType;
     /*0x04*/ u8 downOffset;
     /*0x05*/ s8 damageOrCoinValue;
@@ -244,14 +234,12 @@ struct ObjectHitbox
     /*0x0E*/ s16 hurtboxHeight;
 };
 
-struct Waypoint
-{
+struct Waypoint {
     s16 flags;
     Vec3s pos;
 };
 
-struct Surface
-{
+struct Surface {
     /*0x00*/ s16 type;
     /*0x02*/ s16 force;
     /*0x04*/ s8 flags;
@@ -276,8 +264,7 @@ struct Surface
 #endif
 };
 
-struct MarioBodyState
-{
+struct MarioBodyState {
     /*0x00*/ u32 action;
     /*0x04*/ s8 capState; /// see MarioCapGSCId
     /*0x05*/ s8 eyeState;
@@ -289,11 +276,10 @@ struct MarioBodyState
     /*0x0C*/ Vec3s torsoAngle;
     /*0x12*/ Vec3s headAngle;
     /*0x18*/ Vec3f heldObjLastPosition; /// also known as HOLP
-    u8 padding[4];
+    u8 filler[4];
 };
 
-struct MarioState
-{
+struct MarioState {
     /*0x00*/ u16 unk00;
     /*0x02*/ u16 input;
     /*0x04*/ u32 flags;

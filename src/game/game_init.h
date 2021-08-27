@@ -14,8 +14,7 @@ struct GfxPool {
     struct SPTask spTask;
 };
 
-struct DemoInput
-{
+struct DemoInput {
     u8 timer; // time until next input. if this value is 0, it means the demo is over
     s8 rawStickX;
     s8 rawStickY;

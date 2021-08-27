@@ -1,12 +1,16 @@
-// lll_floating_wood_piece.c.inc
+// lll_floating_wood_piece.inc.c
 
 void bhv_lll_wood_piece_loop(void) {
-    if (o->oTimer == 0)
+    if (o->oTimer == 0) {
         o->oPosY -= 100.0f;
+    }
+
     o->oPosY += sins(o->oLllWoodPieceOscillationTimer) * 3.0f;
     o->oLllWoodPieceOscillationTimer += 0x400;
-    if (o->parentObj->oAction == 2)
+
+    if (o->parentObj->oAction == 2) {
         obj_mark_for_deletion(o);
+    }
 }
 
 void bhv_lll_floating_wood_bridge_loop(void) {
@@ -18,21 +22,24 @@ void bhv_lll_floating_wood_bridge_loop(void) {
             if (o->oDistanceToMario < 2500.0f) {
 #endif
                 for (i = 1; i < 4; i++) {
-                    sp3C = spawn_object_relative(0, (i - 2) * 300, 0, 0, o, MODEL_LLL_WOOD_BRIDGE,
-                                                 bhvLllWoodPiece);
-                    sp3C->oLllWoodPieceOscillationTimer = i * 4096;
+                    sp3C = spawn_object_relative(0, (i - 2) * 300, 0, 0, o,
+                                                 MODEL_LLL_WOOD_BRIDGE, bhvLllWoodPiece);
+                    sp3C->oLllWoodPieceOscillationTimer = i * 0x1000;
                 }
                 o->oAction = 1;
 #ifndef NODRAWINGDISTANCE
             }
 #endif
             break;
+
         case 1:
 #ifndef NODRAWINGDISTANCE
-            if (o->oDistanceToMario > 2600.0f)
+            if (o->oDistanceToMario > 2600.0f) {
                 o->oAction = 2;
+            }
 #endif
             break;
+
         case 2:
             o->oAction = 0;
             break;

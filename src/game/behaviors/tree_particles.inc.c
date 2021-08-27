@@ -1,30 +1,42 @@
-// tree_particles.c.inc
+// tree_particles.inc.c
 
 void bhv_tree_snow_or_leaf_loop(void) {
     cur_obj_update_floor_height();
+
     if (o->oTimer == 0) {
         o->oAngleVelPitch = (random_float() - 0.5) * 0x1000;
         o->oAngleVelRoll = (random_float() - 0.5) * 0x1000;
         o->oTreeSnowOrLeafUnkF8 = 4;
         o->oTreeSnowOrLeafUnkFC = random_float() * 0x400 + 0x600;
     }
-    if (o->oPosY < o->oFloorHeight)
+
+    if (o->oPosY < o->oFloorHeight) {
         obj_mark_for_deletion(o);
-    if (o->oFloorHeight < FLOOR_LOWER_LIMIT)
+    }
+    if (o->oFloorHeight < FLOOR_LOWER_LIMIT) {
         obj_mark_for_deletion(o);
-    if (o->oTimer > 100)
+    }
+    if (o->oTimer > 100) {
         obj_mark_for_deletion(o);
-    if (gPrevFrameObjectCount > (OBJECT_POOL_CAPACITY - 28))
+    }
+    if (gPrevFrameObjectCount > (OBJECT_POOL_CAPACITY - 28)) {
         obj_mark_for_deletion(o);
+    }
+
     o->oFaceAnglePitch += o->oAngleVelPitch;
     o->oFaceAngleRoll += o->oAngleVelRoll;
     o->oVelY += -3.0f;
-    if (o->oVelY < -8.0f)
+
+    if (o->oVelY < -8.0f) {
         o->oVelY = -8.0f;
-    if (o->oForwardVel > 0)
+    }
+
+    if (o->oForwardVel > 0) {
         o->oForwardVel -= 0.3;
-    else
+    } else {
         o->oForwardVel = 0;
+    }
+
     o->oPosX += sins(o->oMoveAngleYaw) * sins(o->oTreeSnowOrLeafUnkF4) * o->oTreeSnowOrLeafUnkF8;
     o->oPosZ += coss(o->oMoveAngleYaw) * sins(o->oTreeSnowOrLeafUnkF4) * o->oTreeSnowOrLeafUnkF8;
     o->oTreeSnowOrLeafUnkF4 += o->oTreeSnowOrLeafUnkFC;
@@ -36,21 +48,25 @@ void bhv_snow_leaf_particle_spawn_init(void) {
 #ifdef QOL_FIX_HARDCODED_TREE_PARTICLES
     struct Object *nearestTree = NULL;
 #endif
-    UNUSED s32 unused;
+    UNUSED u8 filler1[4];
     s32 isSnow;
     f32 scale;
-    UNUSED s32 unused2;
-    gMarioObject->oActiveParticleFlags &= ~0x2000;
+    UNUSED u8 filler2[4];
+
+    gMarioObject->oActiveParticleFlags &= ~ACTIVE_PARTICLE_LEAF;
+
 #if QOL_FIX_HARDCODED_TREE_PARTICLES
     nearestTree = cur_obj_nearest_object_with_behavior(bhvTree);
     isSnow = (obj_has_model(nearestTree, MODEL_CCM_SNOW_TREE) || obj_has_model(nearestTree, MODEL_SL_SNOW_TREE)
             || (gMarioState->area->terrainType & TERRAIN_MASK) == TERRAIN_SNOW);
 #else
-    if (gCurrLevelNum == LEVEL_CCM || gCurrLevelNum == LEVEL_SL)
-        isSnow = 1;
-    else
-        isSnow = 0;
+    if (gCurrLevelNum == LEVEL_CCM || gCurrLevelNum == LEVEL_SL) {
+        isSnow = TRUE;
+    } else {
+        isSnow = FALSE;
+    }
 #endif
+
     if (isSnow) {
         if (random_float() < 0.5) {
             obj = spawn_object(o, MODEL_WHITE_PARTICLE_DL, bhvTreeSnow);

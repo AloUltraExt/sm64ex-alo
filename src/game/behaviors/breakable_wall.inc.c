@@ -1,4 +1,4 @@
-// breakable_wall.c.inc
+// breakable_wall.inc.c
 
 void bhv_wf_breakable_wall_loop(void) {
     if (gMarioStates[0].action == ACT_SHOT_FROM_CANNON) {
@@ -18,7 +18,7 @@ void bhv_wf_breakable_wall_loop(void) {
 #endif
 
             create_sound_spawner(SOUND_GENERAL_WALL_EXPLOSION);
-            o->oInteractType = 8;
+            o->oInteractType = INTERACT_DAMAGE;
 #if QOL_FEATURE_BETTER_WF_BREAKEABLE_WALL
             set_mario_action(gMarioState, ACT_SPAWN_SPIN_AIRBORNE, 0);
 #else
@@ -26,6 +26,7 @@ void bhv_wf_breakable_wall_loop(void) {
 #endif
             obj_explode_and_spawn_coins(80.0f, 0);
         }
-    } else
+    } else {
         cur_obj_become_intangible();
+    }
 }

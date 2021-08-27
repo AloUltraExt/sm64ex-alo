@@ -1,3 +1,4 @@
+
 /**
  * Behavior for bhvUnusedPoundablePlatform.
  *
@@ -27,5 +28,6 @@ void bhv_unused_poundable_platform(void) {
     } else if (o->oTimer > 7) {
         obj_mark_for_deletion(o);
     }
+
     load_object_collision_model();
 }

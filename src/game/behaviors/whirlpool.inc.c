@@ -1,4 +1,4 @@
-// whirlpool.c.inc
+// whirlpool.inc.c
 
 static struct ObjectHitbox sWhirlpoolHitbox = {
     /* interactType:      */ INTERACT_WHIRLPOOL,
@@ -53,7 +53,7 @@ void bhv_whirlpool_loop(void) {
 
         whirpool_orient_graph();
 
-        o->oFaceAngleYaw += 0x1F40;
+        o->oFaceAngleYaw += 8000;
 #ifndef NODRAWINGDISTANCE
     } else {
         o->header.gfx.node.flags |= GRAPH_RENDER_INVISIBLE;
@@ -72,8 +72,9 @@ void bhv_jet_stream_loop(void) {
         gEnvFxBubbleConfig[ENVFX_STATE_SRC_X] = o->oPosX;
         gEnvFxBubbleConfig[ENVFX_STATE_SRC_Y] = o->oPosY;
         gEnvFxBubbleConfig[ENVFX_STATE_SRC_Z] = o->oPosZ;
-    } else
+    } else {
         gEnvFxBubbleConfig[ENVFX_STATE_PARTICLECOUNT] = 0;
+    }
 
     cur_obj_play_sound_1(SOUND_ENV_WATER);
 }

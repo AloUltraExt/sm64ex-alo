@@ -184,12 +184,10 @@ void draw_crash_screen(OSThread *thread) {
     __OSThreadContext *tc = &thread->context;
 
     cause = (tc->cause >> 2) & 0x1f;
-    if (cause == 23) // EXC_WATCH
-    {
+    if (cause == 23) { // EXC_WATCH
         cause = 16;
     }
-    if (cause == 31) // EXC_VCED
-    {
+    if (cause == 31) { // EXC_VCED
         cause = 17;
     }
 
@@ -303,12 +301,13 @@ void crash_screen_init(void) {
     gCrashScreen.height = 0x10;
 #endif
     osCreateMesgQueue(&gCrashScreen.mesgQueue, &gCrashScreen.mesg, 1);
-    osCreateThread(&gCrashScreen.thread, 2, thread2_crash_screen, NULL,
-                   (u8 *) gCrashScreen.stack + sizeof(gCrashScreen.stack),
+    osCreateThread(
+        &gCrashScreen.thread, 2, thread2_crash_screen, NULL,
+        (u8 *) gCrashScreen.stack + sizeof(gCrashScreen.stack),
 #if 0
-                   OS_PRIORITY_APPMAX
+        OS_PRIORITY_APPMAX
 #else
-                   OS_PRIORITY_RMON
+        OS_PRIORITY_RMON
 #endif
                   );
     osStartThread(&gCrashScreen.thread);

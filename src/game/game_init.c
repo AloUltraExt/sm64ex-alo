@@ -20,7 +20,6 @@
 #include "segment2.h"
 #include "segment_symbols.h"
 #include "rumble_init.h"
-#include <prevent_bss_reordering.h>
 
 #ifdef BETTERCAMERA
 #include "extras/bettercamera.h"
@@ -466,7 +465,7 @@ UNUSED static void record_demo(void) {
  * Take the updated controller struct and calculate the new x, y, and distance floats.
  */
 void adjust_analog_stick(struct Controller *controller) {
-    UNUSED u8 pad[8];
+    UNUSED u8 filler[8];
 
     // Reset the controller's x and y floats.
     controller->stickX = 0;
@@ -591,8 +590,7 @@ void read_controller_inputs(void) {
             // 0.5x A presses are a good meme
             controller->buttonDown = controller->controllerData->button;
             adjust_analog_stick(controller);
-        } else // otherwise, if the controllerData is NULL, 0 out all of the inputs.
-        {
+        } else { // otherwise, if the controllerData is NULL, 0 out all of the inputs.
             controller->rawStickX = 0;
             controller->rawStickY = 0;
 #ifndef TARGET_N64
@@ -676,7 +674,7 @@ void init_controllers(void) {
  * Setup main segments and framebuffers.
  */
 void setup_game_memory(void) {
-    UNUSED u64 padding;
+    UNUSED u8 filler[8];
 
     // Setup general Segment 0
     set_segment_base_addr(0, (void *) 0x80000000);
@@ -746,7 +744,7 @@ void thread5_game_loop(UNUSED void *arg) {
 void game_loop_one_iteration(void) {
 #endif
         // If the reset timer is active, run the process to reset the game.
-        if (gResetTimer) {
+        if (gResetTimer != 0) {
             draw_reset_bars();
 #ifdef TARGET_N64
             continue;
