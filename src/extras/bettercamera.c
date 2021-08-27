@@ -1,6 +1,6 @@
 #ifdef BETTERCAMERA
 
-///Puppycam 2.1 by Fazana
+///Puppycam 2.2 by Fazana
 ///Extra features and fixes by AloXado320
 
 #include <PR/ultratypes.h>
@@ -169,6 +169,81 @@ void puppycam_activate_cutscene(s32 (*scene)(), s32 lockinput)
     gPuppyCam.sceneInput = lockinput;
 }
 
+//If you've read camera.c this will look familiar.
+//It takes the next 4 spline points and extrapolates a curvature based positioning of the camera vector that's passed through.
+//It's a standard B spline
+static void puppycam_evaluate_spline(f32 progress, Vec3s cameraPos, Vec3f spline1, Vec3f spline2, Vec3f spline3, Vec3f spline4)
+{
+    f32 tempP[4];
+
+    if (progress > 1.0f) {
+        progress = 1.0f;
+    }
+
+    tempP[0] = (1.0f - progress) * (1.0f - progress) * (1.0f - progress) / 6.0f;
+    tempP[1] = progress * progress * progress / 2.0f - progress * progress + 0.6666667f;
+    tempP[2] = -progress * progress * progress / 2.0f + progress * progress / 2.0f + progress / 2.0f + 0.16666667f;
+    tempP[3] = progress * progress * progress / 6.0f;
+
+    cameraPos[0] = tempP[0] * spline1[0] + tempP[1] * spline2[0] + tempP[2] * spline3[0] + tempP[3] * spline4[0];
+    cameraPos[1] = tempP[0] * spline1[1] + tempP[1] * spline2[1] + tempP[2] * spline3[1] + tempP[3] * spline4[1];
+    cameraPos[2] = tempP[0] * spline1[2] + tempP[1] * spline2[2] + tempP[2] * spline3[2] + tempP[3] * spline4[2];
+}
+
+s32 puppycam_move_spline(struct sPuppySpline splinePos[], struct sPuppySpline splineFocus[], s32 mode, s32 index)
+{
+    Vec3f tempPoints[4];
+    f32 tempProgress[2] = {0.0f, 0.0f};
+    f32 progChange = 0.0f;
+    s32 i;
+    Vec3f prevPos;
+
+    if (gPuppyCam.splineIndex == 65000)
+        gPuppyCam.splineIndex = index;
+
+    if (splinePos[gPuppyCam.splineIndex].index == -1 || splinePos[gPuppyCam.splineIndex + 1].index == -1 || splinePos[gPuppyCam.splineIndex + 2].index == -1)
+        return 1;
+    if (mode == PUPPYSPLINE_FOLLOW)
+        if (splineFocus[gPuppyCam.splineIndex].index == -1 || splineFocus[gPuppyCam.splineIndex + 1].index == -1 || splineFocus[gPuppyCam.splineIndex + 2].index == -1)
+            return 1;
+
+    vec3f_set(prevPos, gPuppyCam.pos[0], gPuppyCam.pos[1], gPuppyCam.pos[2]);
+
+    for (i = 0; i < 4; i++)
+        vec3f_set(tempPoints[i], splinePos[gPuppyCam.splineIndex + i].pos[0], splinePos[gPuppyCam.splineIndex + i].pos[1], splinePos[gPuppyCam.splineIndex + i].pos[2]);
+    puppycam_evaluate_spline(gPuppyCam.splineProgress, gPuppyCam.pos, tempPoints[0], tempPoints[1], tempPoints[2], tempPoints[3]);
+    if (mode == PUPPYSPLINE_FOLLOW)
+    {
+        for (i = 0; i < 4; i++)
+            vec3f_set(tempPoints[i], splineFocus[gPuppyCam.splineIndex + i].pos[0], splineFocus[gPuppyCam.splineIndex + i].pos[1], splineFocus[gPuppyCam.splineIndex + i].pos[2]);
+        puppycam_evaluate_spline(gPuppyCam.splineProgress, gPuppyCam.focus, tempPoints[0], tempPoints[1], tempPoints[2], tempPoints[3]);
+    }
+
+    if (splinePos[gPuppyCam.splineIndex+1].speed != 0) {
+        tempProgress[0] = 1.0f / splinePos[gPuppyCam.splineIndex+1].speed;
+    }
+    if (splinePos[gPuppyCam.splineIndex+2].speed != 0) {
+        tempProgress[1] = 1.0f / splinePos[gPuppyCam.splineIndex+2].speed;
+    }
+    progChange = (tempProgress[1] - tempProgress[0]) * gPuppyCam.splineProgress + tempProgress[0];
+
+    gPuppyCam.splineProgress += progChange;
+
+    if (gPuppyCam.splineProgress >= 1.0f)
+    {
+        gPuppyCam.splineIndex++;
+        if (splinePos[gPuppyCam.splineIndex+3].index == -1)
+        {
+            gPuppyCam.splineIndex = 0;
+            gPuppyCam.splineProgress = 0;
+            return 1;
+        }
+        gPuppyCam.splineProgress -=1;
+    }
+
+    return 0;
+}
+
 static void puppycam_process_cutscene(void)
 {
     if (gPuppyCam.cutscene)
@@ -196,6 +271,8 @@ void puppycam_reset_values(void)
     gPuppyCam.floorY[0] = 0;
     gPuppyCam.floorY[1] = 0;
     gPuppyCam.terrainPitch = 0;
+    gPuppyCam.splineIndex = 0;
+    gPuppyCam.splineProgress = 0;
 }
 
 //Set up values. Runs on level load.
@@ -919,6 +996,35 @@ static s32 puppycam_check_volume_bounds(struct sPuppyVolume *volume, s32 index)
     return FALSE;
 }
 
+//Handles wall adjustment when wall kicking.
+void puppycam_wall_angle(void)
+{
+    struct Surface *wall;
+    struct WallCollisionData cData;
+    s16 wallYaw;
+
+    if (!(gMarioState->action & ACT_WALL_KICK_AIR) || ((gMarioState->action & ACT_FLAG_AIR) && ABS(gMarioState->forwardVel) < 16.0f) || !(gMarioState->action & ACT_FLAG_AIR))
+        return;
+
+    cData.x = gPuppyCam.targetObj->oPosX;
+    cData.y = gPuppyCam.targetObj->oPosY;
+    cData.z = gPuppyCam.targetObj->oPosZ;
+    cData.radius = 150.0f;
+    cData.offsetY = 0;
+
+    if (find_wall_collisions(&cData))
+        wall = cData.walls[cData.numWalls - 1];
+    else
+        return;
+    wallYaw = atan2s(wall->normal.z, wall->normal.x) + 0x4000;
+
+    wallYaw -= gPuppyCam.yawTarget;
+    if (wallYaw % 0x4000)
+        wallYaw += 0x4000 - wallYaw % 0x4000;
+
+    gPuppyCam.yawTarget = approach_s32(gPuppyCam.yawTarget, wallYaw, 0x200, 0x200);
+}
+
 void puppycam_projection_behaviours(void)
 {
     f32 turnRate = 1;
@@ -1005,8 +1111,8 @@ void puppycam_projection_behaviours(void)
 
         if (!(gMarioState->action & ACT_FLAG_SWIMMING))
         {
-            gPuppyCam.floorY[0] = CLAMP(gPuppyCam.targetObj->oPosY - gPuppyCam.lastTargetFloorHeight, 0, 300);
-            gPuppyCam.floorY[1] = CLAMP(gPuppyCam.targetObj->oPosY - gPuppyCam.lastTargetFloorHeight, 0, 350);
+            gPuppyCam.floorY[0] = CLAMP(gPuppyCam.targetObj->oPosY - gPuppyCam.lastTargetFloorHeight, -300, 300);
+            gPuppyCam.floorY[1] = CLAMP(gPuppyCam.targetObj->oPosY - gPuppyCam.lastTargetFloorHeight, -300, 350);
             gPuppyCam.swimPitch = approach_f32_asymptotic(gPuppyCam.swimPitch,0,0.2f);
         }
         else
@@ -1028,6 +1134,9 @@ void puppycam_projection_behaviours(void)
 
         //This sets a pseudo tilt offset based on the floor heights in front and behind mario.
         puppycam_terrain_angle();
+
+        //This will shift the intended yaw when wall kicking, to align with the wall being kicked.
+        //puppycam_wall_angle();
     }
     else
     {
@@ -1070,32 +1179,17 @@ static void puppycam_vanilla_actions(void)
 
 static void puppycam_analogue_stick(void)
 {
-    #ifdef TARGET_N64
     if (!gPuppyCam.options.analogue)
         return;
 
     //I make the X axis negative, so that the movement reflects the Cbuttons.
+    #ifdef TARGET_N64
     gPuppyCam.stick2[0] = -gPlayer2Controller->rawStickX;
     gPuppyCam.stick2[1] = gPlayer2Controller->rawStickY;
-
-    if (ABS(gPuppyCam.stick2[0]) < DEADZONE)
-    {
-        gPuppyCam.stick2[0] = 0;
-        gPuppyCam.stickN[0] = 0;
-    }
-    if (ABS(gPuppyCam.stick2[1]) < DEADZONE)
-    {
-        gPuppyCam.stick2[1] = 0;
-        gPuppyCam.stickN[1] = 0;
-    }
-    #endif
-    #ifdef TARGET_SWITCH
-    if (!gPuppyCam.options.analogue)
-        return;
-
-    //I make the X axis negative, so that the movement reflects the Cbuttons.
+    #else
     gPuppyCam.stick2[0] = -gPlayer1Controller->extStickX;
     gPuppyCam.stick2[1] = gPlayer1Controller->extStickY;
+    #endif
 
     if (ABS(gPuppyCam.stick2[0]) < DEADZONE)
     {
@@ -1107,7 +1201,6 @@ static void puppycam_analogue_stick(void)
         gPuppyCam.stick2[1] = 0;
         gPuppyCam.stickN[1] = 0;
     }
-    #endif
 }
 
 ///This is the highest level of the basic steps that go into the code. Anything above is called from these following functions.
