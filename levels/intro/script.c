@@ -18,8 +18,7 @@
 #include "make_const_nonconst.h"
 #include "levels/intro/header.h"
 
-#ifdef TARGET_N64 
-#if N64_USE_EXTENDED_RAM
+#if defined(TARGET_N64) && defined(N64_USE_EXTENDED_RAM)
 const LevelScript level_intro_entry_error_screen[] = {
     INIT_LEVEL(),
 #ifdef GODDARD_MFACE
@@ -36,7 +35,6 @@ const LevelScript level_intro_entry_error_screen[] = {
     SLEEP(/*frames*/ 32767),
     EXIT_AND_EXECUTE(/*seg*/ 0x14, _introSegmentRomStart, _introSegmentRomEnd, level_intro_entry_error_screen),
 };
-#endif
 #endif
 
 const LevelScript level_intro_splash_screen[] = {

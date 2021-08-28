@@ -16,8 +16,7 @@ const LevelScript level_script_entry[] = {
     JUMP(/*target*/ level_script_entry),
 };
 
-#ifdef TARGET_N64 
-#if N64_USE_EXTENDED_RAM
+#if defined(TARGET_N64) && defined(N64_USE_EXTENDED_RAM)
 const LevelScript level_script_entry_error_screen[] = {
     INIT_LEVEL(),
     SLEEP(/*frames*/ 2),
@@ -26,5 +25,4 @@ const LevelScript level_script_entry_error_screen[] = {
     EXECUTE(/*seg*/ 0x14, /*script*/ _introSegmentRomStart, /*scriptEnd*/ _introSegmentRomEnd, /*entry*/ level_intro_entry_error_screen),
     JUMP(/*target*/ level_script_entry_error_screen),
 };
-#endif
 #endif

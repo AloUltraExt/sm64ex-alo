@@ -823,8 +823,11 @@ OBJCOPYFLAGS := --pad-to=0x800000 --gap-fill=0xFF
 SYMBOL_LINKING_FLAGS := $(addprefix -R ,$(SEG_FILES))
 LDFLAGS := -T undefined_syms.txt -T $(BUILD_DIR)/$(LD_SCRIPT) -Map $(BUILD_DIR)/sm64.$(VERSION).map --no-check-sections $(SYMBOL_LINKING_FLAGS)
 
+# Includes extra compiler flags for workaround for n64 emus
+# -mdivide-breaks:  Uses IDO compiler like behavior for dividing by zero (Old emus such as Project64 1.6)
+# -fno-jump-tables: Disables jump function tables (Wii/Wii U virtual console)
 ifeq ($(COMPILER_N64),gcc)
-  CFLAGS := -march=vr4300 -mfix4300 -mabi=32 -mno-shared -G 0 $(COMMON_CFLAGS) -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I . -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra
+  CFLAGS := -march=vr4300 -mfix4300 -mabi=32 -mno-shared -G 0 $(COMMON_CFLAGS) -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I . -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -fno-jump-tables -ffreestanding -fwrapv -Wall -Wextra
 endif
 
 CC_CHECK += $(CUSTOM_C_DEFINES)

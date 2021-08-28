@@ -1,14 +1,12 @@
-#ifdef TARGET_N64
-
 #include <ultra64.h>
 #include <stdarg.h>
 #include <string.h>
 
 #include "sm64.h"
 
-#include "lib/src/printf.h"
+#if defined(TARGET_N64) && defined(N64_CRASH_SCREEN)
 
-#ifdef N64_CRASH_SCREEN
+#include "lib/src/printf.h"
 
 u8 gCrashScreenCharToGlyph[128] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -312,7 +310,5 @@ void crash_screen_init(void) {
                   );
     osStartThread(&gCrashScreen.thread);
 }
-
-#endif
 
 #endif
