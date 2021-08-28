@@ -28,9 +28,6 @@
  */
 
 #define SEG_POOL_START   _framebuffersSegmentNoloadEnd // 0x0165000 in size
-#ifdef GODDARD_MFACE
-#define SEG_GODDARD      SEG_POOL_START + 0x113000
-#endif
 
 #ifdef N64_USE_EXTENDED_RAM
 #define POOL_SIZE_4MB    RAM_END_4MB - SEG_POOL_START

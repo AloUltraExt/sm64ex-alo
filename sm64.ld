@@ -695,6 +695,9 @@ SECTIONS
       BUILD_DIR/lib/rsp.o(.rodata*);
    }
    END_SEG(main)
+   #ifndef PRELIMINARY
+      ASSERT((_mainSegmentRomEnd <= 0x101000), "Error: Please shrink your main segment to under 1MB.")
+   #endif
    BEGIN_NOLOAD(main)
    {
       BUILD_DIR/src/game/crash_screen.o(.bss*);
@@ -826,8 +829,6 @@ SECTIONS
    _mainSegmentNoloadSizeLo = SIZEOF (.main.noload) & 0xffff;
    _mainSegmentNoloadSizeHi = SIZEOF (.main.noload) >> 16;
 
-   /*ASSERT((. <= SEG_ENGINE), "Error: main segment extended into engine.")*/
-
    . = _mainSegmentNoloadEnd;
 
    BEGIN_SEG(engine, .)
@@ -891,8 +892,6 @@ SECTIONS
    }
    END_NOLOAD(engine)
 
-   /*ASSERT((. <= SEG_FRAMEBUFFERS), "Error: engine segment extended into framebuffers.")*/
-
    . = _engineSegmentNoloadEnd;
    BEGIN_NOLOAD(framebuffers)
    {
@@ -902,8 +901,11 @@ SECTIONS
    END_NOLOAD(framebuffers)
 
    __expansionRamStart = 0x80400000;
-   ASSERT((. <= __expansionRamStart), "Error: RDRAM expanded into Expansion RAM, despite Expansion RAM not being defined.")
-
+   #ifndef N64_USE_EXTENDED_RAM
+      #ifndef PRELIMINARY
+         ASSERT((. <= __expansionRamStart), "Error: RDRAM expanded into Expansion RAM, despite Expansion RAM not being defined.")
+      #endif
+   #endif
    BEGIN_SEG(entry, 0x10000000)
    {
       BUILD_DIR/levels/entry.o(.data);
@@ -953,7 +955,7 @@ SECTIONS
 
 #ifdef GODDARD_MFACE
    /* 0x8016F000 21D7D0-255EC0 [386F0] */
-   BEGIN_SEG(goddard, SEG_GODDARD)
+   BEGIN_SEG(goddard, RAM_END - GODDARD_SIZE)
    {
       BUILD_DIR/src/menu/title_screen.o(.text);
       BUILD_DIR/src/menu/intro_geo.o(.text);
@@ -1039,7 +1041,12 @@ SECTIONS
    END_NOLOAD(goddard)
 #endif
 
-   ASSERT((. <= (SEG_POOL_START + POOL_SIZE)), "Error: extended past pool end.")
+   #ifndef PRELIMINARY
+      ASSERT((. <= (SEG_POOL_START + POOL_SIZE)), "Error: extended past pool end.")
+   #endif
+   #ifdef PRELIMINARY
+      GODDARD_SIZE = SIZEOF(.goddard) + SIZEOF(.goddard.noload);
+   #endif
 
    __mainPoolStart = .;
    __mainPoolSize = RAM_END - .;

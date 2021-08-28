@@ -1107,6 +1107,7 @@ SHA1SUM = sha1sum
 PRINT = printf
 ZEROTERM = $(PYTHON) $(TOOLS_DIR)/zeroterm.py
 ENDIAN_BITWIDTH := $(BUILD_DIR)/endian-and-bitwidth
+GET_GODDARD_SIZE = $(PYTHON) $(TOOLS_DIR)/getGoddardSize.py
 
 # Common build print status function
 define print
@@ -1575,8 +1576,12 @@ $(BUILD_DIR)/%.o: %.rc
 
 ifeq ($(TARGET_N64),1)
 
+ifeq ($(GODDARD_MFACE),1)
+  GODDARD_TXT_INC := $(BUILD_DIR)/goddard.txt
+endif
+
 # Run linker script through the C preprocessor
-$(BUILD_DIR)/$(LD_SCRIPT): $(LD_SCRIPT)
+$(BUILD_DIR)/$(LD_SCRIPT): $(LD_SCRIPT) $(GODDARD_TXT_INC)
 	$(call print,Preprocessing linker script:,$<,$@)
 	$(V)$(CPP) $(CPPFLAGS) -DBUILD_DIR=$(BUILD_DIR) -MMD -MP -MT $@ -MF $@.d -o $@ $<
 
@@ -1594,12 +1599,29 @@ $(BUILD_DIR)/libgoddard.a: $(GODDARD_O_FILES)
     
 LIB_GD_FILE := $(BUILD_DIR)/libgoddard.a
 LIB_GD_FLAG := -lgoddard
+
+# SS2: Goddard rules to get size
+$(BUILD_DIR)/sm64_prelim.ld: $(LD_SCRIPT) $(O_FILES) $(MIO0_OBJ_FILES) $(SOUND_OBJ_FILES) $(SEG_FILES) undefined_syms.txt $(BUILD_DIR)/libultra.a $(LIB_GD_FILE)
+	$(call print,Preprocessing preliminary linker script:,$<,$@)
+	$(V)$(CPP) $(CPPFLAGS) -DPRELIMINARY=1 -DBUILD_DIR=$(BUILD_DIR) -MMD -MP -MT $@ -MF $@.d -o $@ $<
+
+$(BUILD_DIR)/sm64_prelim.elf: $(BUILD_DIR)/sm64_prelim.ld
+	@$(PRINT) "$(GREEN)Linking Preliminary ELF file:  $(BLUE)$@ $(NO_COL)\n"
+    # Slightly edited version of LDFLAGS
+	$(V)$(LD) -L $(BUILD_DIR) -T undefined_syms.txt -T $< -Map $(BUILD_DIR)/sm64_prelim.map --no-check-sections $(SYMBOL_LINKING_FLAGS) -o $@ $(O_FILES) $(LIBS) -lultra $(LIB_GD_FLAG)
+
+$(BUILD_DIR)/goddard.txt: $(BUILD_DIR)/sm64_prelim.elf
+	$(call print,Getting Goddard size...)
+	$(V)$(GET_GODDARD_SIZE) $(BUILD_DIR)/sm64_prelim.map $(VERSION)
+
+LIB_GD_PRE_ELF := $(BUILD_DIR)/sm64_prelim.elf
+
 endif
 
 # Link SM64 ELF file
-$(ELF): $(O_FILES) $(MIO0_OBJ_FILES) $(SOUND_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) undefined_syms.txt $(BUILD_DIR)/libultra.a $(LIB_GD_FILE)
+$(ELF): $(LIB_GD_PRE_ELF) $(O_FILES) $(MIO0_OBJ_FILES) $(SOUND_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) undefined_syms.txt $(BUILD_DIR)/libultra.a $(LIB_GD_FILE)
 	@$(PRINT) "$(GREEN)Linking ELF file:  $(BLUE)$@ $(NO_COL)\n"
-	$(V)$(LD) -L $(BUILD_DIR) $(LDFLAGS) -o $@ $(O_FILES) $(LIBS) -lultra $(LIB_GD_FLAG)
+	$(V)$(LD) -L $(BUILD_DIR) $(LDFLAGS) $(GODDARD_TXT_INC) -o $@ $(O_FILES) $(LIBS) -lultra $(LIB_GD_FLAG)
 
 # Build ROM
 $(ROM): $(ELF)
