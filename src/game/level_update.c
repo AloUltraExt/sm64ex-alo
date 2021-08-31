@@ -1154,7 +1154,10 @@ s32 play_mode_change_level(void) {
 /**
  * Unused play mode. Doesn't call transition update and doesn't reset transition at the end.
  */
-UNUSED static s32 play_mode_unused(void) {
+#if !QOL_FIX_UNUSED_PLAY_MODE
+UNUSED
+#endif
+static s32 play_mode_unused(void) {
     if (--sTransitionTimer == -1) {
         gHudDisplay.flags = HUD_DISPLAY_NONE;
 
@@ -1199,6 +1202,11 @@ s32 update_level(void) {
         case PLAY_MODE_FRAME_ADVANCE:
             changeLevel = play_mode_frame_advance();
             break;
+#if QOL_FIX_UNUSED_PLAY_MODE
+        default:
+            changeLevel = play_mode_unused();
+            break;
+#endif
     }
 
     if (changeLevel) {

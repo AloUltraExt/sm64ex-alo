@@ -90,9 +90,23 @@ void play_step_sound(struct MarioState *m, s16 frame1, s16 frame2) {
 }
 
 void align_with_floor(struct MarioState *m) {
+#if QOL_FEATURE_FAST_FLOOR_ALIGN
+    struct Surface *floor = m->floor;
+    Vec3f floorNormal;
+    if ((floor != NULL) && (m->pos[1] < (m->floorHeight + 80.0f))) {
+        if (floor->normal.y > 0.76040596f && mario_get_floor_class(m) == SURFACE_CLASS_NOT_SLIPPERY) {
+            mtxf_align_terrain_triangle(sFloorAlignMatrix[m->unk00], m->pos, m->faceAngle[1], 40.0f);
+        } else {
+            vec3f_set(floorNormal, floor->normal.x, floor->normal.y, floor->normal.z);
+            mtxf_align_terrain_normal(sFloorAlignMatrix[m->unk00], floorNormal, m->pos, m->faceAngle[1]);
+        }
+        m->marioObj->header.gfx.throwMatrix = &sFloorAlignMatrix[m->unk00];
+    }
+#else
     m->pos[1] = m->floorHeight;
     mtxf_align_terrain_triangle(sFloorAlignMatrix[m->unk00], m->pos, m->faceAngle[1], 40.0f);
     m->marioObj->header.gfx.throwMatrix = &sFloorAlignMatrix[m->unk00];
+#endif
 }
 
 s32 begin_walking_action(struct MarioState *m, f32 forwardVel, u32 action, u32 actionArg) {
@@ -438,6 +452,9 @@ s32 update_decelerating_speed(struct MarioState *m) {
 void update_walking_speed(struct MarioState *m) {
     f32 maxTargetSpeed;
     f32 targetSpeed;
+#if QOL_FIX_GROUND_TURN_RADIUS
+    s16 turnRange;
+#endif
 
     if (m->floor != NULL && m->floor->type == SURFACE_SLOW) {
         maxTargetSpeed = 24.0f;
@@ -463,11 +480,36 @@ void update_walking_speed(struct MarioState *m) {
         m->forwardVel = 48.0f;
     }
 
-/* Handles the "Super responsive controls" cheat. The content of the "else" is Mario's original code for turning around.*/
 #ifdef CHEATS_ACTIONS
-    cheats_responsive_controls(m);
-#else
+    if (Cheats.EnableCheats && Cheats.Responsive) {
+        m->faceAngle[1] = m->intendedYaw;
+    } else {
+#endif
+    #if QOL_FIX_GROUND_TURN_RADIUS
+    extern s32 analog_stick_held_back(struct MarioState *m);
+
+    if ((m->forwardVel < 0.0f) && (m->heldObj == NULL)) {
+        m->faceAngle[1] += 0x8000; // DEG(180)
+        m->forwardVel *= -1.0f;
+    }
+    if (analog_stick_held_back(m) && (m->heldObj == NULL)) {
+        set_mario_action(m, ACT_TURNING_AROUND, 0);
+        if (m->forwardVel < 16.0f) m->faceAngle[1] = m->intendedYaw;
+    } else {
+        turnRange = (0xFFF - (m->forwardVel * 0x20));
+        if (turnRange < 0x800) {
+            turnRange = 0x800;
+            set_mario_action(m, ACT_TURNING_AROUND, 0);
+        } else if (turnRange > 0xFFF) {
+            turnRange = 0xFFF;
+        }
+        m->faceAngle[1]  = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, turnRange, turnRange);
+    }
+    #else
     m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0x800, 0x800);
+    #endif
+#ifdef CHEATS_ACTIONS
+    }
 #endif
 
     apply_slope_accel(m);
@@ -809,20 +851,9 @@ s32 act_walking(struct MarioState *m) {
         return begin_braking_action(m);
     }
 
-#if QOL_FIX_TURN_AROUND_CIRCLE
-    if (analog_stick_held_back(m)) {
-        if (m->forwardVel >= 16.0f){
-            return set_mario_action(m, ACT_TURNING_AROUND, 0);
-        } else if ((m->forwardVel) < 10.0f && (m->forwardVel > 0.0f)){
-            m->faceAngle[1] = m->intendedYaw;
-            return set_mario_action(m, ACT_TURNING_AROUND, 0);
-        }
-    }
-#else
     if (analog_stick_held_back(m) && m->forwardVel >= 16.0f) {
         return set_mario_action(m, ACT_TURNING_AROUND, 0);
     }
-#endif
 
     if (m->input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_CROUCH_SLIDE, 0);
@@ -1147,7 +1178,9 @@ s32 act_decelerating(struct MarioState *m) {
         set_mario_anim_with_accel(m, MARIO_ANIM_WALKING, val0C);
         play_step_sound(m, 10, 49);
     }
-
+#if QOL_FEATURE_LEDGE_PROTECTION
+    check_ledge_climb_down(m);
+#endif
     return FALSE;
 }
 
@@ -1388,6 +1421,9 @@ void common_slide_action(struct MarioState *m, u32 endAction, u32 airAction, s32
 
     switch (perform_ground_step(m)) {
         case GROUND_STEP_LEFT_GROUND:
+#if QOL_FEATURE_LEDGE_PROTECTION
+            mario_set_forward_vel(m, m->forwardVel + 8.0f);
+#endif
             set_mario_action(m, airAction, 0);
             if (m->forwardVel < -50.0f || 50.0f < m->forwardVel) {
                 play_sound(SOUND_MARIO_HOOHOO, m->marioObj->header.gfx.cameraToObject);
@@ -1775,8 +1811,14 @@ u32 common_landing_action(struct MarioState *m, s16 animation, u32 airAction) {
 
 s32 common_landing_cancels(struct MarioState *m, struct LandingAction *landingAction,
                            s32 (*setAPressAction)(struct MarioState *, u32, u32)) {
+#if QOL_FIX_LANDING_CANCEL_OFF_FLOOR
+    if (m->input & INPUT_OFF_FLOOR) {
+        return set_mario_action(m, landingAction->offFloorAction, 0);
+    }
+#else
     //! Everything here, including floor steepness, is checked before checking
     // if Mario is actually on the floor. This leads to e.g. remote sliding.
+#endif
 
     if (m->floor->normal.y < 0.2923717f) {
         return mario_push_off_steep_floor(m, landingAction->verySteepAction, 0);
@@ -1800,9 +1842,11 @@ s32 common_landing_cancels(struct MarioState *m, struct LandingAction *landingAc
         return setAPressAction(m, landingAction->aPressedAction, 0);
     }
 
+#if !QOL_FIX_LANDING_CANCEL_OFF_FLOOR
     if (m->input & INPUT_OFF_FLOOR) {
         return set_mario_action(m, landingAction->offFloorAction, 0);
     }
+#endif
 
     return FALSE;
 }

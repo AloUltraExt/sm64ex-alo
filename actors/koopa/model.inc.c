@@ -2079,7 +2079,7 @@ const Gfx koopa_seg6_dl_0600C498[] = {
     gsSPVertex(koopa_seg6_vertex_0600B560, 9, 0),
     gsSP2Triangles( 0,  1,  2, 0x0,  3,  4,  5, 0x0),
     gsSP1Triangle( 6,  7,  8, 0x0),
-    #if QOL_FIX_KOOPA_SHORTS_COLORS
+    #if QOL_FIX_ASSET_KOOPA_SHORTS
     gsSPLight(&koopa_seg6_lights_06002630.l, 1),
     gsSPLight(&koopa_seg6_lights_06002630.a, 2),
     #else

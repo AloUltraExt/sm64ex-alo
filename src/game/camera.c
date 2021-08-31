@@ -768,7 +768,9 @@ void set_camera_height(struct Camera *c, f32 goalHeight) {
     f32 marioFloorHeight;
     f32 marioCeilHeight;
     f32 camFloorHeight;
-    UNUSED u8 filler[8];
+#if QOL_FIX_CAMERA_VERTICAL_MOVEMENT
+    f32 approachRate = 20.0f;
+#endif
     UNUSED s16 action = sMarioCamState->action;
     f32 baseOff = 125.f;
     f32 camCeilHeight = find_ceil(c->pos[0], gLakituState.goalPos[1] - 50.f, c->pos[2], &surface);
@@ -807,7 +809,12 @@ void set_camera_height(struct Camera *c, f32 goalHeight) {
                 c->pos[1] = goalHeight;
             }
         }
+#if QOL_FIX_CAMERA_VERTICAL_MOVEMENT
+        approachRate += (absf(c->pos[1] - goalHeight) / 20);
+        approach_camera_height(c, goalHeight, approachRate);
+#else
         approach_camera_height(c, goalHeight, 20.f);
+#endif
         if (camCeilHeight != CELL_HEIGHT_LIMIT) {
             camCeilHeight -= baseOff;
             if ((c->pos[1] > camCeilHeight && sMarioGeometry.currFloorHeight + baseOff < camCeilHeight)
@@ -7143,6 +7150,11 @@ static UNUSED void unused_cutscene_mario_dialog_looking_down(UNUSED struct Camer
  * Cause Mario to enter the normal dialog state.
  */
 static BAD_RETURN(s32) cutscene_mario_dialog(UNUSED struct Camera *c) {
+#if QOL_FEATURE_SSL_PYRAMID_CUTSCENE
+    if (gMarioState->action & ACT_FLAG_RIDING_SHELL) {
+        gCutsceneTimer = CUTSCENE_LOOP;
+    }
+#endif
     gCutsceneTimer = cutscene_common_set_dialog_state(MARIO_DIALOG_LOOK_FRONT);
 }
 
@@ -8989,9 +9001,7 @@ BAD_RETURN(s32) cutscene_pyramid_top_explode(struct Camera *c) {
  * End the pyramid top explosion cutscene.
  */
 BAD_RETURN(s32) cutscene_pyramid_top_explode_end(struct Camera *c) {
-#if !QOL_FEATURE_SSL_PYRAMID_CUTSCENE
     cutscene_stop_dialog(c);
-#endif
     stop_cutscene_and_retrieve_stored_info(c);
     // Move the camera back to Mario
     transition_next_state(c, 30);
@@ -10734,9 +10744,7 @@ struct Cutscene sCutsceneEnterPyramidTop[] = {
  * Unused cutscene for when the pyramid explodes.
  */
 struct Cutscene sCutscenePyramidTopExplode[] = {
-#if !QOL_FEATURE_SSL_PYRAMID_CUTSCENE
     { cutscene_mario_dialog, CUTSCENE_LOOP },
-#endif
     { cutscene_pyramid_top_explode, 150 },
     { cutscene_pyramid_top_explode_end, 0 }
 };
@@ -11320,6 +11328,15 @@ void play_cutscene(struct Camera *c) {
     oldCutscene = c->cutscene;
     sStatusFlags &= ~CAM_FLAG_SMOOTH_MOVEMENT;
     gCameraMovementFlags &= ~CAM_MOVING_INTO_MODE;
+
+#if QOL_FIX_OBJ_CUTSCENE_FOCUS_SOFTLOCK
+    if (gCutsceneFocus != NULL) {
+        if (gCutsceneFocus->activeFlags == ACTIVE_FLAG_DEACTIVATED) {
+            gObjCutsceneDone = TRUE;
+            gTimeStopState = 0;
+        }
+    }
+#endif
 
 #define CUTSCENE(id, cutscene)                                                                            \
     case id:                                                                                              \

@@ -471,7 +471,11 @@ struct Object *spawn_object_rel_with_rot(struct Object *parent, u32 model, const
     struct Object *newObj = spawn_object_at_origin(parent, 0, model, behavior);
     newObj->oFlags |= OBJ_FLAG_TRANSFORM_RELATIVE_TO_PARENT;
     obj_set_parent_relative_pos(newObj, xOff, yOff, zOff);
+#if QOL_FIX_SPAWN_OBJECT_ANGLE_ROLL
+    obj_set_angle(newObj, pitch, yaw, roll);
+#else
     obj_set_angle(newObj, pitch, yaw, zOff); // Nice typo you got there Nintendo.
+#endif
 
     return newObj;
 }
@@ -1213,9 +1217,6 @@ static s32 cur_obj_move_xz(f32 steepSlopeNormalY, s32 careAboutEdgesAndSteepSlop
     f32 intendedFloorHeight = find_floor(intendedX, o->oPosY, intendedZ, &intendedFloor);
     f32 deltaFloorHeight = intendedFloorHeight - o->oFloorHeight;
 
-    UNUSED u8 filler[4];
-    UNUSED f32 ny;
-
     o->oMoveFlags &= ~OBJ_MOVE_HIT_EDGE;
 
     if (o->oRoom != -1 && intendedFloor != NULL) {
@@ -1249,7 +1250,7 @@ static s32 cur_obj_move_xz(f32 steepSlopeNormalY, s32 careAboutEdgesAndSteepSlop
             o->oMoveFlags |= OBJ_MOVE_HIT_EDGE;
             return FALSE;
         }
-    } else if ((ny = intendedFloor->normal.y) > steepSlopeNormalY || o->oPosY > intendedFloorHeight) {
+    } else if (intendedFloor->normal.y > steepSlopeNormalY || o->oPosY > intendedFloorHeight) {
         // Allow movement upward, provided either:
         // - The target floor is flat enough (e.g. walking up stairs)
         // - We are above the target floor (most likely in the air)
@@ -1257,6 +1258,9 @@ static s32 cur_obj_move_xz(f32 steepSlopeNormalY, s32 careAboutEdgesAndSteepSlop
         o->oPosZ = intendedZ;
         //! Returning FALSE but moving anyway (not exploitable; return value is
         //  never used)
+        #ifdef AVOID_UB
+        return TRUE;
+        #endif
     }
 
     // We are likely trying to move onto a steep upward slope

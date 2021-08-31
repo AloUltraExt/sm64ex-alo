@@ -12,6 +12,15 @@ struct ObjectHitbox sKoopaShellHitbox = {
     /* hurtboxHeight:     */ 50,
 };
 
+#if QOL_FEATURE_KOOPA_SHELL_BOXES_RESPAWN
+void shell_despawn(void) {
+    extern s8 obj_flicker_and_disappear(struct Object *obj, s16 lifeSpan);
+    if (o->oTimer > 300) {
+        obj_flicker_and_disappear(o, 300);
+    }
+}
+#endif
+
 void koopa_shell_spawn_water_drop(void) {
     UNUSED u8 filler[4];
 
@@ -76,6 +85,9 @@ void bhv_koopa_shell_loop(void) {
             o->oFaceAngleYaw += 0x1000;
             cur_obj_move_standard(-20);
             koopa_shell_spawn_sparkles(10.0f);
+#if QOL_FEATURE_KOOPA_SHELL_BOXES_RESPAWN
+            shell_despawn();
+#endif
             break;
 
         case 1:

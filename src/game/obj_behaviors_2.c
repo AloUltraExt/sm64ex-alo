@@ -547,6 +547,11 @@ static void obj_update_blinking(s32 *blinkTimer, s16 baseCycleLength, s16 cycleL
     }
 }
 
+#if QOL_FEATURE_BETTER_OBJ_COLLISIONS
+// #define INTERACT_MASK_NO_OBJ_COLLISIONS (INTERACT_COIN | INTERACT_CAP | INTERACT_STRONG_WIND | INTERACT_STAR_OR_KEY | INTERACT_WARP | INTERACT_WATER_RING | INTERACT_FLAME)
+#define INTERACT_MASK_NO_OBJ_COLLISIONS 0x00053430
+#endif
+
 static s32 obj_resolve_object_collisions(s32 *targetYaw) {
     struct Object *otherObject;
     f32 dx;
@@ -555,6 +560,30 @@ static s32 obj_resolve_object_collisions(s32 *targetYaw) {
     f32 radius;
     f32 otherRadius;
     f32 relativeRadius;
+#if QOL_FEATURE_BETTER_OBJ_COLLISIONS
+    s32 i;
+    f32 distance;
+
+    if (o->numCollidedObjs != 0) {
+        for (i = 0; i < o->numCollidedObjs; i++) {
+            otherObject = o->collidedObjs[i];
+            if (otherObject == gMarioObject) continue;
+            if (otherObject->oInteractType & INTERACT_MASK_NO_OBJ_COLLISIONS) continue; // 0x00053430
+            dx             = (o->oPosX - otherObject->oPosX);
+            dz             = (o->oPosZ - otherObject->oPosZ);
+            distance       = sqrtf(sqr(dx) + sqr(dz));
+            radius         = ((          o->hurtboxRadius > 0) ?           o->hurtboxRadius :           o->hitboxRadius);
+            otherRadius    = ((otherObject->hurtboxRadius > 0) ? otherObject->hurtboxRadius : otherObject->hitboxRadius);
+            relativeRadius = radius + otherRadius;
+            if (distance > relativeRadius) continue;
+            angle    = atan2s(dz, dx);
+            o->oPosX = (otherObject->oPosX + (relativeRadius * sins(angle)));
+            o->oPosZ = (otherObject->oPosZ + (relativeRadius * coss(angle)));
+            if ((targetYaw != NULL) && abs_angle_diff(o->oMoveAngleYaw, angle) < 0x4000) *targetYaw = (s16)((angle - o->oMoveAngleYaw) + angle + 0x8000);
+            return TRUE;
+        }
+    }
+#else
     f32 newCenterX;
     f32 newCenterZ;
 
@@ -566,7 +595,7 @@ static s32 obj_resolve_object_collisions(s32 *targetYaw) {
 
             dx = otherObject->oPosX - o->oPosX;
             dz = otherObject->oPosZ - o->oPosZ;
-            angle = atan2s(dx, dz); //! This should be atan2s(dz, dx)
+            angle = atan2s(dx, dz); // This should be atan2s(dz, dx)
 
             radius = o->hitboxRadius;
             otherRadius = otherObject->hitboxRadius;
@@ -589,7 +618,7 @@ static s32 obj_resolve_object_collisions(s32 *targetYaw) {
             }
         }
     }
-
+#endif
     return FALSE;
 }
 

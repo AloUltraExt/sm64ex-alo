@@ -218,13 +218,10 @@ s8 init_shadow(struct Shadow *s, f32 xPos, f32 yPos, f32 zPos, s16 shadowScale, 
     if (gEnvironmentRegions != NULL) {
         waterLevel = get_water_level_below_shadow(s);
     }
-#if QOL_FIX_SHADOW_WATER_LEVEL
-    else {
-        waterLevel = 0;
-    }
-#endif
+
     if (gShadowAboveWaterOrLava) {
         //! @bug Use of potentially undefined variable `waterLevel`
+        //  UB Fixed in the function above
         s->floorHeight = waterLevel;
 
         // Assume that the water is flat.

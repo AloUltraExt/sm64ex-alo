@@ -349,8 +349,8 @@ s32 perform_hanging_step(struct MarioState *m, Vec3f nextPos) {
 s32 update_hang_moving(struct MarioState *m) {
     s32 stepResult;
     Vec3f nextPos;
-#if QOL_FEATURE_HANGING_ACTION
-    f32 maxSpeed = 8.0f;
+#if QOL_FEATURE_BETTER_HANGING
+    f32 maxSpeed = m->intendedMag / 2.0f;
 #else
     f32 maxSpeed = 4.0f;
 #endif
@@ -390,6 +390,9 @@ void update_hang_stationary(struct MarioState *m) {
     m->pos[1] = m->ceilHeight - 160.0f;
     vec3f_copy(m->vel, gVec3fZero);
     vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
+#if QOL_FEATURE_BETTER_HANGING
+    vec3s_set(m->marioObj->header.gfx.angle, 0x0, m->faceAngle[1], 0x0);
+#endif
 }
 
 s32 act_start_hanging(struct MarioState *m) {
@@ -399,15 +402,19 @@ s32 act_start_hanging(struct MarioState *m) {
     }
 #endif
 
+#if QOL_FEATURE_BETTER_HANGING
+    if ((m->input & INPUT_NONZERO_ANALOG && m->intendedMag > 16.0f) && m->actionTimer > 1) {
+        return set_mario_action(m, ACT_HANGING, 0);
+    }
+    
+    if (m->input & (INPUT_A_PRESSED | INPUT_B_PRESSED)) {
+        return set_mario_action(m, ACT_FREEFALL, 0);
+    }
+#else
     if ((m->input & INPUT_NONZERO_ANALOG) && m->actionTimer >= 31) {
         return set_mario_action(m, ACT_HANGING, 0);
     }
 
-#if QOL_FEATURE_HANGING_ACTION
-    if ((m->input & INPUT_A_PRESSED)) {
-        return set_mario_action(m, ACT_FREEFALL, 0);
-    }
-#else
     if (!(m->input & INPUT_A_DOWN)) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
@@ -438,8 +445,8 @@ s32 act_hanging(struct MarioState *m) {
         return set_mario_action(m, ACT_HANG_MOVING, m->actionArg);
     }
 
-#if QOL_FEATURE_HANGING_ACTION
-    if ((m->input & INPUT_A_PRESSED)) {
+#if QOL_FEATURE_BETTER_HANGING
+    if (m->input & (INPUT_A_PRESSED | INPUT_B_PRESSED)) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
 #else
@@ -468,8 +475,8 @@ s32 act_hanging(struct MarioState *m) {
 }
 
 s32 act_hang_moving(struct MarioState *m) {
-#if QOL_FEATURE_HANGING_ACTION
-    if ((m->input & INPUT_A_PRESSED)) {
+#if QOL_FEATURE_BETTER_HANGING
+    if (m->input & (INPUT_A_PRESSED | INPUT_B_PRESSED)) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
 #else
@@ -488,14 +495,14 @@ s32 act_hang_moving(struct MarioState *m) {
 
 
     if (m->actionArg & 1) {
-#if QOL_FEATURE_HANGING_ACTION
-        set_mario_anim_with_accel(m, MARIO_ANIM_MOVE_ON_WIRE_NET_RIGHT, (s32)(m->forwardVel / 8.0f * 0x10000));
+#if QOL_FEATURE_BETTER_HANGING
+        set_mario_anim_with_accel(m, MARIO_ANIM_MOVE_ON_WIRE_NET_RIGHT, (m->forwardVel+1)*0x2000);
 #else
         set_mario_animation(m, MARIO_ANIM_MOVE_ON_WIRE_NET_RIGHT);
 #endif
     } else {
-#if QOL_FEATURE_HANGING_ACTION
-        set_mario_anim_with_accel(m, MARIO_ANIM_MOVE_ON_WIRE_NET_LEFT, (s32)(m->forwardVel / 8.0f * 0x10000));
+#if QOL_FEATURE_BETTER_HANGING
+        set_mario_anim_with_accel(m, MARIO_ANIM_MOVE_ON_WIRE_NET_LEFT, (m->forwardVel+1)*0x2000);
 #else
         set_mario_animation(m, MARIO_ANIM_MOVE_ON_WIRE_NET_LEFT);
 #endif
@@ -516,7 +523,7 @@ s32 act_hang_moving(struct MarioState *m) {
         }
     }
 
-#if QOL_FEATURE_HANGING_ACTION
+#if QOL_FEATURE_BETTER_HANGING
     update_hang_moving(m);
 #else
     if (update_hang_moving(m) == HANG_LEFT_CEIL) {

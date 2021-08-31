@@ -23,8 +23,17 @@ void bhv_unagi_init(void) {
     } else {
         o->oPathedStartWaypoint = segmented_to_virtual(jrb_seg7_trajectory_unagi_2);
         o->oAction = 3;
+#if QOL_FEATURE_BEH_HELD_TRANSPARENT_STAR
+        // Needs doc, 1 is unagi with star, 2 is unagi with transparent star
+        u8 bp1 = o->oBehParams >> 24; // Star ID - Star 2 by default
+        if (save_file_get_star_flags(gCurrSaveFileNum - 1, gCurrCourseNum - 1) & (1 << bp1)) {
+            o->oAnimState = 2;
+        } else {
+            o->oAnimState = 1;
+        }
+#else
         o->oAnimState = 1;
-
+#endif
         o->oUnagiUnk1B0 = o->oMoveAngleYaw;
     }
 

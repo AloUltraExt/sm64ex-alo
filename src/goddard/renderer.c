@@ -506,7 +506,7 @@ ALIGNED8 static Texture gd_texture_sparkle_4[] = {
 #include "textures/intro_raw/sparkle_4.rgba16.inc.c"
 };
 
-#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
+#if !QOL_FIX_ASSET_DUP_STAR_GD
 //! No reference to this texture. Two DL's uses the same previous texture
 //  instead of using this texture.
 UNUSED
@@ -587,7 +587,7 @@ static Gfx gd_dl_red_sparkle_4[] = {
     gsSPBranchList(gd_dl_sparkle),
 };
 
-#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
+#if !QOL_FIX_ASSET_DUP_STAR_GD
 static Gfx gd_dl_red_sparkle_4_dup[] = {
     gsDPPipeSync(),
     gsSPDisplayList(gd_dl_sparkle_red_color),
@@ -638,7 +638,7 @@ static Gfx gd_dl_silver_sparkle_4[] = {
     gsSPBranchList(gd_dl_sparkle),
 };
 
-#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
+#if !QOL_FIX_ASSET_DUP_STAR_GD
 static Gfx gd_dl_silver_sparkle_4_dup[] = {
     gsDPPipeSync(),
     gsSPDisplayList(gd_dl_sparkle_white_color),
@@ -665,7 +665,7 @@ static Gfx *gd_red_sparkle_dl_array[] = {
     gd_dl_red_sparkle_1,
     gd_dl_red_sparkle_0,
     gd_dl_red_sparkle_0,
-#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
+#if !QOL_FIX_ASSET_DUP_STAR_GD
     gd_dl_red_sparkle_4_dup,
     gd_dl_red_sparkle_4_dup,
 #else
@@ -685,7 +685,7 @@ static Gfx *gd_silver_sparkle_dl_array[] = {
     gd_dl_silver_sparkle_1,
     gd_dl_silver_sparkle_0,
     gd_dl_silver_sparkle_0,
-#if !QOL_FIX_DUP_RED_YELLOW_GD_DLS
+#if !QOL_FIX_ASSET_DUP_STAR_GD
     gd_dl_silver_sparkle_4_dup,
     gd_dl_silver_sparkle_4_dup,
 #else

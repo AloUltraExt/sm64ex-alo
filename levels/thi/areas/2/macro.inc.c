@@ -38,7 +38,7 @@ const MacroObject thi_seg7_area_2_macro_objs[] = {
     MACRO_OBJECT(/*preset*/ macro_tiny_goomba,                 /*yaw*/   0, /*pos*/  1822,  -460, -1511),
     MACRO_OBJECT(/*preset*/ macro_tiny_goomba,                 /*yaw*/   0, /*pos*/  2148,  -460,  -918),
     MACRO_OBJECT(/*preset*/ macro_yellow_coin_2,               /*yaw*/   0, /*pos*/  -133,  -491, -1481),
-    #if QOL_FIX_IMPOSSIBLE_COINS
+    #if QOL_FIX_ASSET_IMPOSSIBLE_COINS
     MACRO_OBJECT(/*preset*/ macro_yellow_coin_2,               /*yaw*/   0, /*pos*/ -1466,    26,  -814),
     MACRO_OBJECT(/*preset*/ macro_yellow_coin_2,               /*yaw*/   0, /*pos*/ -1466,   -16,  -518),
     MACRO_OBJECT(/*preset*/ macro_yellow_coin_2,               /*yaw*/   0, /*pos*/ -1466,  -149,  -162),

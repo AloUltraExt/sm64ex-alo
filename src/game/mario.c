@@ -657,8 +657,11 @@ s32 mario_floor_is_slope(struct MarioState *m) {
  */
 s32 mario_floor_is_steep(struct MarioState *m) {
     f32 normY;
-    s32 result = FALSE;
-
+#if QOL_FIX_JUMP_KICK_NOT_SLIPPERY
+    if (m->floor->type == SURFACE_NOT_SLIPPERY) {
+        return FALSE;
+    }
+#endif
     // Interestingly, this function does not check for the
     // slide terrain type. This means that steep behavior persists for
     // non-slippery and slippery surfaces.
@@ -676,16 +679,17 @@ s32 mario_floor_is_steep(struct MarioState *m) {
             default:
                 normY = 0.8660254f; // ~cos(30 deg)
                 break;
-
+#if !QOL_FIX_JUMP_KICK_NOT_SLIPPERY
             case SURFACE_NOT_SLIPPERY:
                 normY = 0.8660254f; // ~cos(30 deg)
                 break;
+#endif
         }
 
-        result = m->floor->normal.y <= normY;
+        return (m->floor->normal.y <= normY);
     }
 
-    return result;
+    return FALSE;
 }
 
 /**
@@ -1538,7 +1542,7 @@ void update_mario_health(struct MarioState *m) {
 
         if (((m->action & ACT_GROUP_MASK) == ACT_GROUP_SUBMERGED) && (m->health < 0x300)
 #ifdef QOL_FIX_DROWING_SOUND_METAL
-        && !((m->flags & (MARIO_METAL_CAP)) > 0)
+        && !(m->flags & (MARIO_METAL_CAP))
 #endif
         ) {
             play_sound(SOUND_MOVING_ALMOST_DROWNING, gGlobalSoundSource);

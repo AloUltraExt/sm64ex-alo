@@ -623,7 +623,9 @@ void push_mario_out_of_object(struct MarioState *m, struct Object *o, f32 paddin
     f32 offsetX = m->pos[0] - o->oPosX;
     f32 offsetZ = m->pos[2] - o->oPosZ;
     f32 distance = sqrtf(offsetX * offsetX + offsetZ * offsetZ);
-
+#if QOL_FIX_PUSH_MARIO_OUT_OF_OBJECT_FLOOR
+    f32 floorHeight;
+#endif
     if (distance < minDistance) {
         struct Surface *floor;
         s16 pushAngle;
@@ -641,12 +643,19 @@ void push_mario_out_of_object(struct MarioState *m, struct Object *o, f32 paddin
 
         f32_find_wall_collision(&newMarioX, &m->pos[1], &newMarioZ, 60.0f, 50.0f);
 
+#if QOL_FIX_PUSH_MARIO_OUT_OF_OBJECT_FLOOR
+        floorHeight =
+#endif
         find_floor(newMarioX, m->pos[1], newMarioZ, &floor);
         if (floor != NULL) {
             //! Doesn't update Mario's referenced floor (allows oob death when
             // an object pushes you into a steep slope while in a ground action)
             m->pos[0] = newMarioX;
             m->pos[2] = newMarioZ;
+#if QOL_FIX_PUSH_MARIO_OUT_OF_OBJECT_FLOOR
+            m->floor       = floor;
+            m->floorHeight = floorHeight;
+#endif
         }
     }
 }
@@ -798,9 +807,17 @@ u32 interact_star_or_key(struct MarioState *m, UNUSED u32 interactType, struct O
             starGrabAction = ACT_STAR_DANCE_WATER;
         }
 
+#if QOL_FEATURE_STAR_GRAB_NO_FALL_HEIGHT
+        if ((m->action & ACT_FLAG_AIR) && (m->pos[1] < (m->floorHeight + 1024.0f))) {
+            starGrabAction = ACT_FALL_AFTER_STAR_GRAB;
+        } else {
+            starGrabAction = ACT_STAR_DANCE_WATER;
+        }
+#else
         if (m->action & ACT_FLAG_AIR) {
             starGrabAction = ACT_FALL_AFTER_STAR_GRAB;
         }
+#endif
 
 #if QOL_FEATURE_STAR_GRAB_NO_FALL_DEATH
         if (m->floor->type == SURFACE_DEATH_PLANE || m->floor->type == SURFACE_VERTICAL_WIND) {
@@ -1358,7 +1375,11 @@ u32 interact_hit_from_below(struct MarioState *m, UNUSED u32 interactType, struc
 #endif
                 return drop_and_set_mario_action(m, ACT_TWIRLING, 0);
             } else {
+                #if QOL_FEATURE_BOUNCE_BOOST
+                bounce_off_object(m, o, (m->input & INPUT_A_DOWN) ? 50.0f : 30.0f);
+                #else
                 bounce_off_object(m, o, 30.0f);
+                #endif
             }
         }
     } else if (take_damage_and_knock_back(m, o)) {
@@ -1396,7 +1417,11 @@ u32 interact_bounce_top(struct MarioState *m, UNUSED u32 interactType, struct Ob
 #endif
                 return drop_and_set_mario_action(m, ACT_TWIRLING, 0);
             } else {
+                #if QOL_FEATURE_BOUNCE_BOOST
+                bounce_off_object(m, o, (m->input & INPUT_A_DOWN) ? 50.0f : 30.0f);
+                #else
                 bounce_off_object(m, o, 30.0f);
+                #endif
             }
         }
     } else if (take_damage_and_knock_back(m, o)) {
@@ -1479,9 +1504,17 @@ u32 interact_koopa_shell(struct MarioState *m, UNUSED u32 interactType, struct O
             play_shell_music();
             mario_drop_held_object(m);
 
+#if QOL_FIX_MARIO_KOOPA_SHELL_ACTION
+            if (m->action & ACT_FLAG_AIR) {
+                return set_mario_action(m, ACT_RIDING_SHELL_FALL, 0);
+            } else {
+                return set_mario_action(m, ACT_RIDING_SHELL_GROUND, 0);
+            }
+#else            
             //! Puts Mario in ground action even when in air, making it easy to
             // escape air actions into crouch slide (shell cancel)
             return set_mario_action(m, ACT_RIDING_SHELL_GROUND, 0);
+#endif
         }
 
         push_mario_out_of_object(m, o, 2.0f);
@@ -1518,33 +1551,32 @@ u32 interact_pole(struct MarioState *m, UNUSED u32 interactType, struct Object *
     s32 actionId = m->action & ACT_ID_MASK;
     if (actionId >= 0x080 && actionId < 0x0A0) {
         if (!(m->prevAction & ACT_FLAG_ON_POLE) || m->usedObj != o) {
+#if QOL_FIX_POLE_BOTTOM_GRAB
+            f32 poleBottom;
+#endif
 #if BUGFIX_PRESERVE_VEL_POLE
             f32 velConv = m->forwardVel; // conserve the velocity.
             struct Object *marioObj = m->marioObj;
-            u32 lowSpeed;
+            u32 lowSpeed = (velConv <= 10.0f);
 #else
             u32 lowSpeed = (m->forwardVel <= 10.0f);
             struct Object *marioObj = m->marioObj;
 #endif
-            
-            
-            mario_stop_riding_and_holding(m);
 
-#if BUGFIX_PRESERVE_VEL_POLE
-            lowSpeed = (velConv <= 10.0f);
-#endif
+            mario_stop_riding_and_holding(m);
 
             m->interactObj = o;
             m->usedObj = o;
             m->vel[1] = 0.0f;
             m->forwardVel = 0.0f;
+#if QOL_FIX_POLE_BOTTOM_GRAB
+            poleBottom = -m->usedObj->hitboxDownOffset - 100.0f;
+#endif
 
             marioObj->oMarioPoleUnk108 = 0;
             marioObj->oMarioPoleYawVel = 0;
 #if QOL_FIX_POLE_BOTTOM_GRAB
-            marioObj->oMarioPolePos = (m->pos[1] - o->oPosY) < 0
-                ? -o->hitboxDownOffset
-                : (m->pos[1] - o->oPosY);
+            marioObj->oMarioPolePos = max(m->pos[1] - o->oPosY, poleBottom);
 #else
             marioObj->oMarioPolePos = m->pos[1] - o->oPosY;
 #endif
@@ -1846,11 +1878,19 @@ void check_lava_boost(struct MarioState *m) {
     if (Cheats.EnableCheats && Cheats.WalkOn.Lava) return;
 #endif
 
+#if QOL_FIX_LAVA_INTERACTION
+    if ((m->floor->type == SURFACE_BURNING) 
+    && !(m->action & (ACT_FLAG_SWIMMING | ACT_FLAG_RIDING_SHELL)) 
+    && (m->pos[1] < (m->floorHeight + 10.0f))) {
+        if (!(m->flags & MARIO_METAL_CAP)) {
+            m->hurtCounter = ((m->flags & MARIO_CAP_ON_HEAD) ? 12 : 18);
+        }
+#else
     if (!(m->action & ACT_FLAG_RIDING_SHELL) && m->pos[1] < m->floorHeight + 10.0f) {
         if (!(m->flags & MARIO_METAL_CAP)) {
             m->hurtCounter += (m->flags & MARIO_CAP_ON_HEAD) ? 12 : 18;
         }
-
+#endif
         update_mario_sound_and_camera(m);
         drop_and_set_mario_action(m, ACT_LAVA_BOOST, 0);
     }
@@ -1902,7 +1942,9 @@ void mario_handle_special_floors(struct MarioState *m) {
                 pss_end_slide(m);
                 break;
         }
-
+#if QOL_FIX_LAVA_INTERACTION
+        check_lava_boost(m);
+#else
         if (!(m->action & ACT_FLAG_AIR) && !(m->action & ACT_FLAG_SWIMMING)) {
             switch (floorType) {
                 case SURFACE_BURNING:
@@ -1910,5 +1952,6 @@ void mario_handle_special_floors(struct MarioState *m) {
                     break;
             }
         }
+#endif
     }
 }

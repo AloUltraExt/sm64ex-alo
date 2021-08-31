@@ -130,7 +130,12 @@ void bully_act_back_up(void) {
     //  conditions are activated. However because its angle is set to its facing angle,
     //  it will walk forward instead of backing up.
 
-    if (o->oTimer == 15) {
+#if QOL_FIX_BULLY_BACK_UP_TIMER
+    if (o->oTimer >= 15)
+#else
+    if (o->oTimer == 15)
+#endif
+    {
         o->oMoveAngleYaw = o->oFaceAngleYaw;
         o->oFlags |= OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW;
         o->oAction = BULLY_ACT_PATROL;

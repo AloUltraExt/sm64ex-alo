@@ -22,7 +22,9 @@ void bhv_beta_chest_bottom_init(void) {
     // cancelled by setting the yaw to 0, right before this beta
     // object was discarded?
     o->oMoveAngleYaw = random_u16();
+#if !QOL_FIXES_UNUSED_BETA_CHEST_YAW
     o->oMoveAngleYaw = 0;
+#endif
 
     // Spawn the chest lid 97 units in the +Y direction and 77 units in the -Z direction.
     spawn_object_relative(0, 0, 97, -77, o, MODEL_TREASURE_CHEST_LID, bhvBetaChestLid);

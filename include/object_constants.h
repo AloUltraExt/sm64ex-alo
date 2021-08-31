@@ -149,9 +149,10 @@
 
 /* Blue Coin Switch */
     /* oAction */
-    #define BLUE_COIN_SWITCH_ACT_IDLE     0
-    #define BLUE_COIN_SWITCH_ACT_RECEDING 1
-    #define BLUE_COIN_SWITCH_ACT_TICKING  2
+    #define BLUE_COIN_SWITCH_ACT_IDLE      0
+    #define BLUE_COIN_SWITCH_ACT_RECEDING  1
+    #define BLUE_COIN_SWITCH_ACT_TICKING   2
+    #define BLUE_COIN_SWITCH_ACT_EXTENDING 3 // Used in QOL_FEATURES
 
 /* Moving Blue Coin */
     /* oAction */
@@ -1014,10 +1015,10 @@
     #define KLEPTO_ACT_RETREAT                 7
 
     /* oAnimState */
-    #define KLEPTO_ANIM_STATE_HOLDING_NOTHING   0
-    #define KLEPTO_ANIM_STATE_HOLDING_CAP       1
-    #define KLEPTO_ANIM_STATE_HOLDING_STAR      2
-    #define KLEPTO_ANIM_STATE_HOLDING_BLUE_STAR 3
+    #define KLEPTO_ANIM_STATE_HOLDING_NOTHING          0
+    #define KLEPTO_ANIM_STATE_HOLDING_CAP              1
+    #define KLEPTO_ANIM_STATE_HOLDING_STAR             2
+    #define KLEPTO_ANIM_STATE_HOLDING_TRANSPARENT_STAR 3
 
 /* Bird */
     /* oAction */

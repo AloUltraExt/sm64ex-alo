@@ -39,7 +39,12 @@ const MacroObject ccm_seg7_area_2_macro_objs[] = {
     MACRO_OBJECT(/*preset*/ macro_yellow_coin_2,        /*yaw*/   0, /*pos*/ -1740,  2926, -3780),
     MACRO_OBJECT(/*preset*/ macro_yellow_coin_2,        /*yaw*/   0, /*pos*/ -2849,  2677, -4608),
     MACRO_OBJECT(/*preset*/ macro_yellow_coin_2,        /*yaw*/   0, /*pos*/ -4620,  2353, -4120),
+#if QOL_FIX_ASSET_CCM_SLIDE_1UPS
+    MACRO_OBJECT(/*preset*/ macro_1up_sliding,          /*yaw*/   0, /*pos*/ -4890,   900,  1760),
+    MACRO_OBJECT(/*preset*/ macro_1up,                  /*yaw*/   0, /*pos*/ -6460, -1538,  3727),
+#else
     MACRO_OBJECT(/*preset*/ macro_1up_sliding,          /*yaw*/   0, /*pos*/ -4890,  1452,   552),
     MACRO_OBJECT(/*preset*/ macro_1up_sliding,          /*yaw*/   0, /*pos*/ -6369, -1538,  3726),
+#endif
     MACRO_OBJECT_END(),
 };

@@ -52,9 +52,6 @@ void bhv_pyramid_top_spinning(void) {
     // with a random velocity and angle.
     if (o->oTimer < 90) {
         struct Object *pyramidFragment = spawn_object(o, MODEL_DIRT_ANIMATION, bhvPyramidTopFragment);
-#if QOL_FEATURE_SSL_PYRAMID_CUTSCENE
-        pyramidFragment->activeFlags |= ACTIVE_FLAG_INITIATED_TIME_STOP;
-#endif
         pyramidFragment->oForwardVel = random_float() * 10.0f + 20.0f;
         pyramidFragment->oMoveAngleYaw = random_u16();
         pyramidFragment->oPyramidTopFragmentsScale = 0.8f;
@@ -74,17 +71,11 @@ void bhv_pyramid_top_explode(void) {
     struct Object *pyramidFragment;
     s16 i;
 
-#if QOL_FEATURE_SSL_PYRAMID_CUTSCENE
-    if (o->oTimer == 0) {
-#endif
     spawn_mist_particles_variable(0, 0, 690);
 
     // Generate 30 pyramid fragments with random properties.
     for (i = 0; i < 30; i++) {
         pyramidFragment = spawn_object(o, MODEL_DIRT_ANIMATION, bhvPyramidTopFragment);
-#if QOL_FEATURE_SSL_PYRAMID_CUTSCENE
-        pyramidFragment->activeFlags |= ACTIVE_FLAG_INITIATED_TIME_STOP;
-#endif
         pyramidFragment->oForwardVel = random_float() * 50 + 80;
         pyramidFragment->oVelY = random_float() * 80 + 20;
         pyramidFragment->oMoveAngleYaw = random_u16();
@@ -93,18 +84,13 @@ void bhv_pyramid_top_explode(void) {
     }
 
 #if QOL_FEATURE_SSL_PYRAMID_CUTSCENE
-    cur_obj_disable();
-    }
-
-    if (o->oTimer == 30) {
+    if (gMarioState->action & ACT_FLAG_RIDING_SHELL) {
         disable_time_stop_including_mario();
+    }
 #endif
+
     // Deactivate the pyramid top.
     o->activeFlags = ACTIVE_FLAG_DEACTIVATED;
-    
-#if QOL_FEATURE_SSL_PYRAMID_CUTSCENE
-    }
-#endif
 }
 
 void bhv_pyramid_top_loop(void) {
@@ -114,7 +100,6 @@ void bhv_pyramid_top_loop(void) {
                 play_puzzle_jingle();
                 #if QOL_FEATURE_SSL_PYRAMID_CUTSCENE
                 cutscene_object(CUTSCENE_SSL_PYRAMID_EXPLODE, o);
-                enable_time_stop_including_mario();
                 #endif
                 o->oAction = PYRAMID_TOP_ACT_SPINNING;
             }
@@ -122,6 +107,12 @@ void bhv_pyramid_top_loop(void) {
 
         case PYRAMID_TOP_ACT_SPINNING:
             if (o->oTimer == 0) {
+                #if QOL_FEATURE_SSL_PYRAMID_CUTSCENE
+                if (gMarioState->action & ACT_FLAG_RIDING_SHELL) {
+                    gMarioState->forwardVel = 0.0f;
+                    enable_time_stop_including_mario();
+                }
+                #endif
                 cur_obj_play_sound_2(SOUND_GENERAL2_PYRAMID_TOP_SPIN);
             }
 

@@ -614,7 +614,7 @@ void general_star_dance_handler(struct MarioState *m, s32 isInWater) {
         switch (++m->actionTimer) {
             case 1:
                 #if QOL_FEATURE_PROPER_SHOW_COLLECTABLE
-                initObj = spawn_object(m->marioObj, MODEL_NONE, bhvCelebrationStar);
+                initObj = spawn_object(m->marioObj, MODEL_STAR, bhvCelebrationStar);
                 for (i = 0; i < (s16) ARRAY_COUNT(modelForDances); i++) {
                     if (gLoadedGraphNodes[modelForDances[i]] == m->interactObj->header.gfx.sharedChild) {
                         initObj->header.gfx.sharedChild = m->interactObj->header.gfx.sharedChild;
@@ -1544,6 +1544,9 @@ s32 act_squished(struct MarioState *m) {
     f32 spaceUnderCeil;
     s16 surfAngle;
     s32 underSteepSurf = FALSE; // seems to be responsible for setting velocity?
+#if QOL_FEATURE_SMOOTH_SQUISH
+    Vec3f nextScale;
+#endif
 
     if ((spaceUnderCeil = m->ceilHeight - m->floorHeight) < 0) {
         spaceUnderCeil = 0;
@@ -1561,8 +1564,12 @@ s32 act_squished(struct MarioState *m) {
             if (spaceUnderCeil >= 10.1f) {
                 // Mario becomes a pancake
                 squishAmount = spaceUnderCeil / 160.0f;
-                vec3f_set(m->marioObj->header.gfx.scale, 2.0f - squishAmount, squishAmount,
-                          2.0f - squishAmount);
+#if QOL_FEATURE_SMOOTH_SQUISH
+                vec3f_set(nextScale, (2.0f - squishAmount), squishAmount, (2.0f - squishAmount));
+                approach_vec3f_asymptotic(m->marioObj->header.gfx.scale, nextScale, 0.5f, 0.5f, 0.5f);
+#else
+                vec3f_set(m->marioObj->header.gfx.scale, 2.0f - squishAmount, squishAmount, 2.0f - squishAmount);
+#endif
             } else {
                 if (!(m->flags & MARIO_METAL_CAP) && m->invincTimer == 0) {
                     // cap on: 3 units; cap off: 4.5 units
@@ -2211,7 +2218,9 @@ static void end_peach_cutscene_descend_peach(struct MarioState *m) {
 
 // Mario runs to peach
 static void end_peach_cutscene_run_to_peach(struct MarioState *m) {
+#if !QOL_FIX_END_CUTSCENE_MARIO_FLOOR
     struct Surface *surf;
+#endif
 
     if (m->actionTimer == 22) {
         sEndPeachAnimation = 5;
@@ -2222,7 +2231,11 @@ static void end_peach_cutscene_run_to_peach(struct MarioState *m) {
         advance_cutscene_step(m);
     }
 
+#if QOL_FIX_END_CUTSCENE_MARIO_FLOOR
+    m->pos[1] = m->floorHeight;
+#else
     m->pos[1] = find_floor(m->pos[0], m->pos[1], m->pos[2], &surf);
+#endif
 
     set_mario_anim_with_accel(m, MARIO_ANIM_RUNNING, 0x00080000);
     play_step_sound(m, 9, 45);

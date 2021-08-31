@@ -252,6 +252,12 @@ void stop_and_set_height_to_floor(struct MarioState *m) {
 }
 
 s32 stationary_ground_step(struct MarioState *m) {
+#if QOL_FIX_STATIONARY_GROUND_STEPS
+    mario_set_forward_vel(m, 0.0f);
+    mario_update_moving_sand(m);
+    mario_update_windy_ground(m);
+    return perform_ground_step(m);
+#else
     u32 takeStep;
     struct Object *marioObj = m->marioObj;
     u32 stepResult = GROUND_STEP_NONE;
@@ -271,6 +277,7 @@ s32 stationary_ground_step(struct MarioState *m) {
     }
 
     return stepResult;
+#endif
 }
 
 static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
@@ -303,6 +310,16 @@ static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
     }
 
     if (nextPos[1] > floorHeight + 100.0f) {
+#if QOL_FEATURE_LEDGE_PROTECTION
+        extern s32 analog_stick_held_back(struct MarioState *m);
+        // Prevent some cases of slipping off ledges
+        if ((m->input & INPUT_NONZERO_ANALOG)
+         && (m->forwardVel < 32.0f)
+         && !(m->action & ACT_FLAG_SHORT_HITBOX)
+         && !(m->action & ACT_FLAG_BUTT_OR_STOMACH_SLIDE)
+         && (mario_get_floor_class(m) != SURFACE_CLASS_VERY_SLIPPERY)
+         && analog_stick_held_back(m)) return GROUND_STEP_NONE;
+#endif
         if (nextPos[1] + 160.0f >= ceilHeight) {
             return GROUND_STEP_HIT_WALL_STOP_QSTEPS;
         }

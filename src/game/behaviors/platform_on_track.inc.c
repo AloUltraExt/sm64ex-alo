@@ -133,6 +133,9 @@ static void platform_on_track_act_wait_for_mario(void) {
  */
 static void platform_on_track_act_move_along_track(void) {
     s16 initialAngle;
+#if QOL_FEATURE_CONTROLLABLE_PLATFORM_SPEED
+    f32 targetVel = 10.0f;
+#endif
 
     if (!o->oPlatformOnTrackIsNotSkiLift) {
         cur_obj_play_sound_1(SOUND_ENV_ELEVATOR3);
@@ -163,7 +166,17 @@ static void platform_on_track_act_move_along_track(void) {
             if (!o->oPlatformOnTrackIsNotSkiLift) {
                 obj_forward_vel_approach(10.0, 0.1f);
             } else {
+#if QOL_FEATURE_CONTROLLABLE_PLATFORM_SPEED
+                targetVel = ((gMarioObject->platform == o) ? ((o->oDistanceToMario * coss(o->oAngleToMario - o->oMoveAngleYaw)) - 10.0f) : 10.0f);
+                if (targetVel < 10.0f) {
+                    targetVel = 10.0f;
+                } else if (targetVel > 16.0f) {
+                    targetVel = 16.0f;
+                }
+                obj_forward_vel_approach(targetVel, 0.1f);
+#else
                 o->oForwardVel = 10.0f;
+#endif
             }
 
             // Spawn a new track ball if necessary
@@ -273,6 +286,9 @@ static void platform_on_track_rock_ski_lift(void) {
  * Update function for bhvPlatformOnTrack.
  */
 void bhv_platform_on_track_update(void) {
+#if QOL_FEATURE_CONTROLLABLE_PLATFORM_SPEED
+    s16 targetRoll; // visually pitch, since these platforms technically move sideways
+#endif
     switch (o->oAction) {
         case PLATFORM_ON_TRACK_ACT_INIT:
             platform_on_track_act_init();
@@ -294,6 +310,18 @@ void bhv_platform_on_track_update(void) {
     if (!o->oPlatformOnTrackIsNotSkiLift) {
         platform_on_track_rock_ski_lift();
     } else if (o->oPlatformOnTrackType == PLATFORM_ON_TRACK_TYPE_CARPET) {
+#if QOL_FEATURE_CONTROLLABLE_PLATFORM_SPEED
+        if (gMarioObject->platform == o) {
+            if (!o->oPlatformOnTrackWasStoodOn) {
+                o->oPlatformOnTrackOffsetY    = -8.0f;
+                o->oPlatformOnTrackWasStoodOn = TRUE;
+            }
+            targetRoll = (o->oDistanceToMario * coss(o->oAngleToMario - o->oMoveAngleYaw) * 0x4);
+        } else {
+            targetRoll = 0x0;
+        }
+        o->oFaceAngleRoll = approach_s32(o->oFaceAngleRoll, targetRoll, 0x100, 0x100);
+#else
         if (!o->oPlatformOnTrackWasStoodOn && gMarioObject->platform == o) {
             o->oPlatformOnTrackOffsetY = -8.0f;
             o->oPlatformOnTrackWasStoodOn = TRUE;
@@ -301,6 +329,7 @@ void bhv_platform_on_track_update(void) {
 
         approach_f32_ptr(&o->oPlatformOnTrackOffsetY, 0.0f, 0.5f);
         o->oPosY += o->oPlatformOnTrackOffsetY;
+#endif
     }
 }
 

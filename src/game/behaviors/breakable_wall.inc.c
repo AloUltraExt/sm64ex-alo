@@ -7,21 +7,13 @@ void bhv_wf_breakable_wall_loop(void) {
             if (cur_obj_has_behavior(bhvWfBreakableWallRight)) {
                 play_puzzle_jingle();
 #if QOL_FEATURE_BETTER_WF_BREAKEABLE_WALL
-                play_sound(SOUND_MARIO_HAHA, gMarioState->marioObj->header.gfx.cameraToObject);
+                set_mario_action(gMarioState, ACT_SPAWN_SPIN_AIRBORNE, 0);
 #endif
             }
-
-#if QOL_FEATURE_BETTER_WF_BREAKEABLE_WALL
-            if (cur_obj_has_behavior(bhvWfBreakableWallLeft)) {
-                play_sound(SOUND_MARIO_DOH, gMarioState->marioObj->header.gfx.cameraToObject);
-            }
-#endif
 
             create_sound_spawner(SOUND_GENERAL_WALL_EXPLOSION);
             o->oInteractType = INTERACT_DAMAGE;
-#if QOL_FEATURE_BETTER_WF_BREAKEABLE_WALL
-            set_mario_action(gMarioState, ACT_SPAWN_SPIN_AIRBORNE, 0);
-#else
+#if !QOL_FEATURE_BETTER_WF_BREAKEABLE_WALL
             o->oDamageOrCoinValue = 1;
 #endif
             obj_explode_and_spawn_coins(80.0f, 0);
