@@ -235,9 +235,15 @@ void whomp_on_ground_general(void) {
     }
 }
 
+#if QOL_FIX_MARIO_LOOK_HEAD_BOSSES
+#define MARIO_DIALOG_LOOK_BOSS MARIO_DIALOG_LOOK_DOWN
+#else
+#define MARIO_DIALOG_LOOK_BOSS MARIO_DIALOG_LOOK_UP
+#endif
+
 void whomp_die(void) {
     if (o->oBehParams2ndByte != 0) {
-        if (cur_obj_update_dialog_with_cutscene(MARIO_DIALOG_LOOK_UP, 
+        if (cur_obj_update_dialog_with_cutscene(MARIO_DIALOG_LOOK_BOSS, 
             DIALOG_FLAG_TEXT_DEFAULT, CUTSCENE_DIALOG, DIALOG_115)) {
             obj_set_angle(o, 0, 0, 0);
             cur_obj_hide();
@@ -258,6 +264,8 @@ void whomp_die(void) {
         obj_mark_for_deletion(o);
     }
 }
+
+#undef MARIO_DIALOG_LOOK_BOSS
 
 void king_whomp_stop_music(void) {
     if (o->oTimer == 60) {

@@ -198,9 +198,15 @@ void king_bobomb_act_6(void) {
     }
 }
 
+#if QOL_FIX_MARIO_LOOK_HEAD_BOSSES
+#define MARIO_DIALOG_LOOK_BOSS MARIO_DIALOG_LOOK_FRONT
+#else
+#define MARIO_DIALOG_LOOK_BOSS MARIO_DIALOG_LOOK_UP
+#endif
+
 void king_bobomb_act_7(void) {
     cur_obj_init_animation_with_sound(2);
-    if (cur_obj_update_dialog_with_cutscene(MARIO_DIALOG_LOOK_UP, 
+    if (cur_obj_update_dialog_with_cutscene(MARIO_DIALOG_LOOK_BOSS, 
         DIALOG_FLAG_TEXT_DEFAULT, CUTSCENE_DIALOG, DIALOG_116)) {
         create_sound_spawner(SOUND_OBJ_KING_WHOMP_DEATH);
         cur_obj_hide();
@@ -217,6 +223,8 @@ void king_bobomb_act_7(void) {
         o->oAction = 8;
     }
 }
+
+#undef MARIO_DIALOG_LOOK_BOSS
 
 void king_bobomb_act_8(void) {
     if (o->oTimer == 60) {

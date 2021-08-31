@@ -223,6 +223,9 @@
 /// Fixes possible softlock with object cutscene focus
 /// Credits: (MysterD)
 #define QOL_FIX_OBJ_CUTSCENE_FOCUS_SOFTLOCK (0 || QOL_FIXES)
+/// Fixes (or rather, adjusts) Mario's head look at bosses
+/// Credits: (coltongit)
+#define QOL_FIX_MARIO_LOOK_HEAD_BOSSES (0 || QOL_FIXES)
 /// Fixes Mario floor height in the peach ending cutscene
 /// Credits: (Arceveti)
 #define QOL_FIX_END_CUTSCENE_MARIO_FLOOR (0 || QOL_FIXES)
@@ -256,9 +259,15 @@
 /// Fixes Mario's collision with lava so it detects regardless of action
 /// Credits: (Arceveti)
 #define QOL_FIX_LAVA_INTERACTION (0 || QOL_FIXES)
-/// Fixes Mario's collision with lava so it detects regardless of action
+/// Fixes palm height hardcoded course check and height when climbing up/down
 /// Credits: (Arceveti)
-#define QOL_FIX_LAVA_INTERACTION (0 || QOL_FIXES)
+#define QOL_FIX_PALM_TREE_LEAF_HEIGHT (0 || QOL_FIXES)
+/// Fixes crash if there's no referenced ceiling
+/// Credits: (Arceveti)
+#define QOL_FIX_CEILING_NULL_CRASH (0 || QOL_FIXES)
+/// Fixes shell speed water level origin offset
+/// Credits: (Arceveti)
+#define QOL_FIX_SHELL_SPEED_NEGATIVE_OFFSET (0 || QOL_FIXES)
 // --| Unused Code Fixes (for convenience)
 /// Fixes code error in func_eu_802e27e4_unused
 /// Credits: (Easy Fix)

@@ -36,7 +36,12 @@ void add_tree_leaf_particles(struct MarioState *m) {
 
     if (m->usedObj->behavior == segmented_to_virtual(bhvTree)) {
         // make leaf effect spawn higher on the Shifting Sand Land palm tree
-        if (gCurrLevelNum == LEVEL_SSL) {
+#if QOL_FIX_PALM_TREE_LEAF_HEIGHT
+        if (m->usedObj->header.gfx.sharedChild == gLoadedGraphNodes[MODEL_SSL_PALM_TREE])
+#else
+        if (gCurrLevelNum == LEVEL_SSL)
+#endif
+        {
             leafHeight = 250.0f;
         } else {
             leafHeight = 100.0f;
@@ -166,7 +171,9 @@ s32 act_holding_pole(struct MarioState *m) {
 
         m->faceAngle[1] += marioObj->oMarioPoleYawVel;
         marioObj->oMarioPolePos -= marioObj->oMarioPoleYawVel / 0x100;
-
+#if QOL_FIX_PALM_TREE_LEAF_HEIGHT
+        add_tree_leaf_particles(m);
+#else
         if (m->usedObj->behavior == segmented_to_virtual(bhvTree)) {
             //! The Shifting Sand Land palm tree check is done climbing up in
             // add_tree_leaf_particles, but not here, when climbing down.
@@ -174,6 +181,7 @@ s32 act_holding_pole(struct MarioState *m) {
                 m->particleFlags |= PARTICLE_LEAF;
             }
         }
+#endif
         play_climbing_sounds(m, 2);
 #ifdef RUMBLE_FEEDBACK
         reset_rumble_timers_slip();
@@ -424,10 +432,16 @@ s32 act_start_hanging(struct MarioState *m) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
+#if QOL_FIX_CEILING_NULL_CRASH
+    if ((m->ceil == NULL) || (m->ceil->type != SURFACE_HANGABLE)) {
+        return set_mario_action(m, ACT_FREEFALL, 0);
+    }
+#else
     //! Crash if Mario's referenced ceiling is NULL (same for other hanging actions)
     if (m->ceil->type != SURFACE_HANGABLE) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
+#endif
 
     set_mario_animation(m, MARIO_ANIM_HANG_ON_CEILING);
     play_sound_if_no_flag(m, SOUND_ACTION_HANGING_STEP, MARIO_ACTION_SOUND_PLAYED);
@@ -459,9 +473,15 @@ s32 act_hanging(struct MarioState *m) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
+#if QOL_FIX_CEILING_NULL_CRASH
+    if ((m->ceil == NULL) || (m->ceil->type != SURFACE_HANGABLE)) {
+        return set_mario_action(m, ACT_FREEFALL, 0);
+    }
+#else
     if (m->ceil->type != SURFACE_HANGABLE) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
+#endif
 
     if (m->actionArg & 1) {
         set_mario_animation(m, MARIO_ANIM_HANDSTAND_LEFT);
@@ -489,10 +509,15 @@ s32 act_hang_moving(struct MarioState *m) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
+#if QOL_FIX_CEILING_NULL_CRASH
+    if ((m->ceil == NULL) || (m->ceil->type != SURFACE_HANGABLE)) {
+        return set_mario_action(m, ACT_FREEFALL, 0);
+    }
+#else
     if (m->ceil->type != SURFACE_HANGABLE) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
-
+#endif
 
     if (m->actionArg & 1) {
 #if QOL_FEATURE_BETTER_HANGING
