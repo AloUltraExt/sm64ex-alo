@@ -45,10 +45,15 @@
 #define TEXT_OPT_CAMC      _("CAMERA CENTRE SPEED")
 #define TEXT_OPT_ANALOGUE  _("ANALOGUE CAMERA")
 #define TEXT_OPT_CAMSCHEME _("CONTROL SCHEME")
+#define TEXT_OPT_OPA_TYPE  _("OPACITY TYPE")
 
 #define TEXT_OPT_CAM_SCH1  _("DOUBLE TAP")
 #define TEXT_OPT_CAM_SCH2  _("SINGLE PRESS")
 #define TEXT_OPT_CAM_SCH3  _("CLASSIC")
+
+#define TEXT_OPT_OPA_T1    _("NONE")
+#define TEXT_OPT_OPA_T2    _("FADE IN-OUT")
+#define TEXT_OPT_OPA_T3    _("POP IN-OUT")
 
 #define TEXT_OPT_TEXFILTER _("TEXTURE FILTERING")
 #define TEXT_OPT_FSCREEN   _("FULLSCREEN")
@@ -110,10 +115,15 @@
 #define TEXT_OPT_CAMC      _("Camera Centre Speed")
 #define TEXT_OPT_ANALOGUE  _("Analogue Camera")
 #define TEXT_OPT_CAMSCHEME _("Control Scheme")
+#define TEXT_OPT_OPA_TYPE  _("Opacity Type")
 
 #define TEXT_OPT_CAM_SCH1  _("Double Tap")
 #define TEXT_OPT_CAM_SCH2  _("Single Press")
 #define TEXT_OPT_CAM_SCH3  _("Classic")
+
+#define TEXT_OPT_OPA_T1    _("None")
+#define TEXT_OPT_OPA_T2    _("Fade In-Out")
+#define TEXT_OPT_OPA_T3    _("Pop In-Out")
 
 #define TEXT_OPT_TEXFILTER _("Texture Filtering")
 #define TEXT_OPT_FSCREEN   _("Fullscreen")

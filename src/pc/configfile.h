@@ -57,6 +57,7 @@ extern bool         configPrecacheRes;
 #endif
 #ifdef BETTERCAMERA
 extern bool         configEnableCamera;
+extern bool         configCameraAnalog;
 #ifdef MOUSE_ACTIONS
 extern bool         configCameraMouse;
 #endif
@@ -65,8 +66,8 @@ extern bool         configCameraInvertY;
 extern unsigned int configCameraXSens;
 extern unsigned int configCameraYSens;
 extern unsigned int configCameraAggr;
-extern bool         configCameraAnalog;
 extern unsigned int configCameraScheme;
+extern unsigned int configCameraOpacity;
 #endif
 extern bool         configHUD;
 #ifdef MOUSE_ACTIONS

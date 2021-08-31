@@ -38,9 +38,16 @@
 
 enum gPuppyCamInputType
 {
-    PUPPYCAM_INPUT_TYPE_SINGLE_TAB,
     PUPPYCAM_INPUT_TYPE_DOUBLE_TAB,
+    PUPPYCAM_INPUT_TYPE_SINGLE_TAB,
     PUPPYCAM_INPUT_TYPE_CLASSIC
+};
+
+enum gPuppyCamOpacityType
+{
+    PUPPYCAM_OPACITY_TYPE_OFF,
+    PUPPYCAM_OPACITY_TYPE_FADE,
+    PUPPYCAM_OPACITY_TYPE_POP
 };
 
 #include "include/command_macros_base.h"
@@ -68,6 +75,7 @@ struct gPuppyOptions
     s16 invertY;
     s16 turnAggression;
     s16 inputType;
+    s16 opacityType;
 };
 
 struct gPuppyStruct

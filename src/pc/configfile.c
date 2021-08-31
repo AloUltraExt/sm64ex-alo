@@ -91,27 +91,32 @@ unsigned int configRumbleStrength = 50;
 #ifdef EXTERNAL_DATA
 bool configPrecacheRes = true;
 #endif
+
+#ifdef MOUSE_ACTIONS
+bool configMouse = true;
+#endif
+
+#ifdef DISCORDRPC
+bool configDiscordRPC = true;
+#endif
+
+bool configSkipIntro = false;
+bool configHUD = true;
+
 #ifdef BETTERCAMERA
 // PuppyCam 2 settings
-bool         configEnableCamera  = true;
+bool configEnableCamera  = true;
+bool configCameraAnalog  = false;
 #ifdef MOUSE_ACTIONS
-bool         configCameraMouse   = true;
+bool configCameraMouse   = true;
 #endif
-bool         configCameraInvertX = true;
-bool         configCameraInvertY = true;
+bool configCameraInvertX = true;
+bool configCameraInvertY = true;
 unsigned int configCameraXSens   = 100;
 unsigned int configCameraYSens   = 100;
 unsigned int configCameraAggr    = 50;
-bool         configCameraAnalog  = false;
-unsigned int configCameraScheme  = 0;
-#endif
-bool         configSkipIntro     = 0;
-bool         configHUD           = true;
-#ifdef MOUSE_ACTIONS
-bool         configMouse         = true;
-#endif
-#ifdef DISCORDRPC
-bool         configDiscordRPC    = true;
+unsigned int configCameraScheme  = 0; // PUPPYCAM_INPUT_TYPE_DOUBLE_TAB
+unsigned int configCameraOpacity = 1; // PUPPYCAM_OPACITY_TYPE_FADE
 #endif
 
 static const struct ConfigOption options[] = {
@@ -156,8 +161,13 @@ static const struct ConfigOption options[] = {
     #ifdef MOUSE_ACTIONS
     {.name = "mouse_enable",         .type = CONFIG_TYPE_BOOL, .boolValue = &configMouse},
     #endif
+    #ifdef DISCORDRPC
+    {.name = "discordrpc_enable",    .type = CONFIG_TYPE_BOOL, .boolValue = &configDiscordRPC},
+    #endif
+    {.name = "skip_intro",           .type = CONFIG_TYPE_BOOL, .boolValue = &configSkipIntro},
 #ifdef BETTERCAMERA
-    {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configEnableCamera},     
+    {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configEnableCamera},  
+    {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraAnalog},
     #ifdef MOUSE_ACTIONS
     {.name = "bettercam_mouse_look", .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraMouse},
     #endif
@@ -166,13 +176,9 @@ static const struct ConfigOption options[] = {
     {.name = "bettercam_xsens",      .type = CONFIG_TYPE_UINT, .uintValue = &configCameraXSens},
     {.name = "bettercam_ysens",      .type = CONFIG_TYPE_UINT, .uintValue = &configCameraYSens},
     {.name = "bettercam_aggression", .type = CONFIG_TYPE_UINT, .uintValue = &configCameraAggr},
-    {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraAnalog},
     {.name = "bettercam_scheme",     .type = CONFIG_TYPE_UINT, .uintValue = &configCameraScheme},
+    {.name = "bettercam_opacity",    .type = CONFIG_TYPE_UINT, .uintValue = &configCameraOpacity},
 #endif
-    {.name = "skip_intro",           .type = CONFIG_TYPE_BOOL, .boolValue = &configSkipIntro},
-    #ifdef DISCORDRPC
-    {.name = "discordrpc_enable",    .type = CONFIG_TYPE_BOOL, .boolValue = &configDiscordRPC},
-    #endif 
 };
 
 // Reads an entire line from a file (excluding the newline character) and returns an allocated string
