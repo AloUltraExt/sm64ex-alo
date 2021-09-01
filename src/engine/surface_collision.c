@@ -397,9 +397,6 @@ f32 find_floor_height_and_data(f32 xPos, f32 yPos, f32 zPos, struct FloorGeometr
     return floorHeight;
 }
 
-#ifdef HIGH_FPS_PC
-u8 gInterpolatingSurfaces;
-#endif
 
 /**
  * Iterate through the list of floors and find the first floor under a given point.
@@ -411,37 +408,16 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
     f32 oo;
     f32 height;
     struct Surface *floor = NULL;
-#ifdef HIGH_FPS_PC
-    s32 interpolate;
-#endif
 
     // Iterate through the list of floors until there are no more floors.
     while (surfaceNode != NULL) {
         surf = surfaceNode->surface;
         surfaceNode = surfaceNode->next;
-#ifdef HIGH_FPS_PC
-        interpolate = gInterpolatingSurfaces && surf->modifiedTimestamp == gGlobalTimer;
-#endif
 
         x1 = surf->vertex1[0];
         z1 = surf->vertex1[2];
         x2 = surf->vertex2[0];
         z2 = surf->vertex2[2];
-#ifdef HIGH_FPS_PC
-        if (interpolate) {
-            f32 diff = (surf->prevVertex1[0] - x1) * (surf->prevVertex1[0] - x1);
-            diff += (surf->prevVertex1[1] - surf->vertex1[1]) * (surf->prevVertex1[1] - surf->vertex1[1]);
-            diff += (surf->prevVertex1[2] - z1) * (surf->prevVertex1[2] - z1);
-            if (diff > 10000) {
-                interpolate = FALSE;
-            } else {
-                x1 = (surf->prevVertex1[0] + x1) / 2;
-                z1 = (surf->prevVertex1[2] + z1) / 2;
-                x2 = (surf->prevVertex2[0] + x2) / 2;
-                z2 = (surf->prevVertex2[2] + z2) / 2;
-            }
-        }
-#endif
 
         // Check that the point is within the triangle bounds.
         if ((z1 - z) * (x2 - x1) - (x1 - x) * (z2 - z1) < 0) {
@@ -451,12 +427,6 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
         // To slightly save on computation time, set this later.
         x3 = surf->vertex3[0];
         z3 = surf->vertex3[2];
-#ifdef HIGH_FPS_PC
-        if (interpolate) {
-            x3 = (surf->prevVertex3[0] + x3) / 2;
-            z3 = (surf->prevVertex3[2] + z3) / 2;
-        }
-#endif
 
         if ((z2 - z) * (x3 - x2) - (x2 - x) * (z3 - z2) < 0) {
             continue;
@@ -476,37 +446,10 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
             continue;
         }
 
-#ifdef HIGH_FPS_PC
-        if (interpolate) {
-            f32 y1, y2, y3;
-            f32 mag;
-            y1 = (surf->prevVertex1[1] + surf->vertex1[1]) / 2;
-            y2 = (surf->prevVertex2[1] + surf->vertex2[1]) / 2;
-            y3 = (surf->prevVertex3[1] + surf->vertex3[1]) / 2;
-            nx = (y2 - y1) * (z3 - z2) - (z2 - z1) * (y3 - y2);
-            ny = (z2 - z1) * (x3 - x2) - (x2 - x1) * (z3 - z2);
-            nz = (x2 - x1) * (y3 - y2) - (y2 - y1) * (x3 - x2);
-            mag = sqrtf(nx * nx + ny * ny + nz * nz);
-            if (mag < 0.0001) {
-                continue;
-            }
-            mag = (f32)(1.0 / mag);
-            nx *= mag;
-            ny *= mag;
-            nz *= mag;
-            oo = -(nx * x1 + ny * y1 + nz * z1);
-        } else {
-            nx = surf->normal.x;
-            ny = surf->normal.y;
-            nz = surf->normal.z;
-            oo = surf->originOffset;
-        }
-#else
         nx = surf->normal.x;
         ny = surf->normal.y;
         nz = surf->normal.z;
         oo = surf->originOffset;
-#endif
 
         // If a wall, ignore it. Likely a remnant, should never occur.
         if (ny == 0.0f) {
@@ -525,17 +468,6 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
 #endif
 
         *pheight = height;
-#ifdef HIGH_FPS_PC
-        if (interpolate) {
-            static struct Surface s;
-            s.type = surf->type;
-            s.normal.x = nx;
-            s.normal.y = ny;
-            s.normal.z = nz;
-            s.originOffset = oo;
-            return &s;
-        }
-#endif
         floor = surf;
         break;
     }

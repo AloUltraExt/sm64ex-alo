@@ -1052,12 +1052,9 @@ static void geo_process_shadow(struct GraphNodeShadow *node) {
             gCurGraphNodeObject->prevShadowPosTimestamp = gGlobalTimer;
         }
 
-        extern u8 gInterpolatingSurfaces;
-        gInterpolatingSurfaces = TRUE;
         shadowListInterpolated = create_shadow_below_xyz(shadowPosInterpolated[0], shadowPosInterpolated[1],
                                                          shadowPosInterpolated[2], shadowScale,
                                                          node->shadowSolidity, node->shadowType);
-        gInterpolatingSurfaces = FALSE;
 #endif
 
         shadowList = create_shadow_below_xyz(shadowPos[0], shadowPos[1], shadowPos[2], shadowScale,

@@ -256,12 +256,6 @@ struct Surface {
     } normal;
     /*0x28*/ f32 originOffset;
     /*0x2C*/ struct Object *object;
-#ifdef HIGH_FPS_PC
-    Vec3s prevVertex1;
-    Vec3s prevVertex2;
-    Vec3s prevVertex3;
-    u32 modifiedTimestamp;
-#endif
 };
 
 struct MarioBodyState {
