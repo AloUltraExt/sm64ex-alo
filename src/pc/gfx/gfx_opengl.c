@@ -9,12 +9,10 @@
 #include <PR/gbi.h>
 
 #ifdef __MINGW32__
-# define FOR_WINDOWS 1
-#else
-# define FOR_WINDOWS 0
+# define USES_WINDOWS
 #endif
 
-#if FOR_WINDOWS || defined(OSX_BUILD)
+#if defined(USES_WINDOWS) || defined(OSX_BUILD)
 # define GLEW_STATIC
 # include <GL/glew.h>
 #endif
@@ -39,7 +37,7 @@
 #  if defined(USE_GLES)
 #    define USE_FRAMEBUFFER 1
 #  else
-#    if FOR_WINDOWS || defined(OSX_BUILD)
+#    if defined(USES_WINDOWS) || defined(OSX_BUILD)
 #      define USE_FRAMEBUFFER GLEW_ARB_framebuffer_object
 #    else
 #      define USE_FRAMEBUFFER 0
@@ -378,7 +376,7 @@ static void create_render_target(uint32_t width, uint32_t height, bool is_resizi
     render_target->height = height;
 }
 
-#if USE_FRAMEBUFFER
+// function only used when USE_FRAMEBUFFER is defined
 static void draw_render_target(const struct RenderTarget *dst_render_target, const struct RenderTarget *src_render_target, bool clear_before_drawing) {
     // Set render target
 
@@ -431,7 +429,6 @@ static void draw_render_target(const struct RenderTarget *dst_render_target, con
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
-#endif
 
 static void create_render_target_views(bool is_resize) {
     if (!is_resize) {
@@ -917,27 +914,27 @@ static inline bool gl_get_version(int *major, int *minor, bool *is_es) {
 }
 
 static void gfx_opengl_get_framebuffer(uint16_t *buffer) {
-#if USE_FRAMEBUFFER
-    bind_render_target(&framebuffer_rt);
+    if (USE_FRAMEBUFFER)  {
+        bind_render_target(&framebuffer_rt);
 
-    uint8_t pixels[FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * 4];
-    glReadPixels(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        uint8_t pixels[FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * 4];
+        glReadPixels(0, 0, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-    uint32_t bi = 0;
-    for (int32_t y = FRAMEBUFFER_HEIGHT - 1; y >= 0; y--) {
-        for (int32_t x = 0; x < FRAMEBUFFER_WIDTH; x++) {
-            uint32_t fb_pixel = (y * FRAMEBUFFER_WIDTH + x) * 4;
+        uint32_t bi = 0;
+        for (int32_t y = FRAMEBUFFER_HEIGHT - 1; y >= 0; y--) {
+            for (int32_t x = 0; x < FRAMEBUFFER_WIDTH; x++) {
+                uint32_t fb_pixel = (y * FRAMEBUFFER_WIDTH + x) * 4;
 
-            uint8_t r = pixels[fb_pixel + 0] >> 3;
-            uint8_t g = pixels[fb_pixel + 1] >> 3;
-            uint8_t b = pixels[fb_pixel + 2] >> 3;
-            uint8_t a = 1; //pixels[fb_pixel + 3] / 255;
+                uint8_t r = pixels[fb_pixel + 0] >> 3;
+                uint8_t g = pixels[fb_pixel + 1] >> 3;
+                uint8_t b = pixels[fb_pixel + 2] >> 3;
+                uint8_t a = 1; //pixels[fb_pixel + 3] / 255;
 
-            buffer[bi] = (r << 11) | (g << 6) | (b << 1) | a;
-            bi++;
+                buffer[bi] = (r << 11) | (g << 6) | (b << 1) | a;
+                bi++;
+            }
         }
     }
-#endif
 }
 
 // static void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam) {
@@ -945,7 +942,7 @@ static void gfx_opengl_get_framebuffer(uint16_t *buffer) {
 // }
 
 static void gfx_opengl_init(void) {
-#if FOR_WINDOWS || defined(OSX_BUILD)
+#if defined(USES_WINDOWS) || defined(OSX_BUILD)
     GLenum err;
     if ((err = glewInit()) != GLEW_OK)
         sys_fatal("could not init GLEW:\n%s", glewGetErrorString(err));
@@ -967,28 +964,28 @@ static void gfx_opengl_init(void) {
 
     // Initialize render targets
 
-#if USE_FRAMEBUFFER
-    create_render_target_views(false);
+    if (USE_FRAMEBUFFER) {
+        create_render_target_views(false);
 
-    // Create the render target shader, used to draw into fullscreen quads
+        // Create the render target shader, used to draw into fullscreen quads
 
-    rt_shader_program.opengl_program_id = compile_shader(rt_vertex_shader, rt_fragment_shader);
-    rt_shader_program.attrib_locations[0] = glGetAttribLocation(rt_shader_program.opengl_program_id, "a_position");
-    rt_shader_program.attrib_sizes[0] = 2;
-    rt_shader_program.attrib_locations[1] = glGetAttribLocation(rt_shader_program.opengl_program_id, "a_uv");
-    rt_shader_program.attrib_sizes[1] = 2;
-    rt_shader_program.num_attribs = 2;
-    rt_shader_program.num_floats = 4;
-    rt_shader_program.used_textures[0] = true;
-    rt_shader_program.used_textures[1] = false;
-    rt_shader_program.num_inputs = 0;     // Unused in this case
-    rt_shader_program.shader_id = 0;      // Unused in this case
-    rt_shader_program.used_noise = false; // Unused in this case
+        rt_shader_program.opengl_program_id = compile_shader(rt_vertex_shader, rt_fragment_shader);
+        rt_shader_program.attrib_locations[0] = glGetAttribLocation(rt_shader_program.opengl_program_id, "a_position");
+        rt_shader_program.attrib_sizes[0] = 2;
+        rt_shader_program.attrib_locations[1] = glGetAttribLocation(rt_shader_program.opengl_program_id, "a_uv");
+        rt_shader_program.attrib_sizes[1] = 2;
+        rt_shader_program.num_attribs = 2;
+        rt_shader_program.num_floats = 4;
+        rt_shader_program.used_textures[0] = true;
+        rt_shader_program.used_textures[1] = false;
+        rt_shader_program.num_inputs = 0;     // Unused in this case
+        rt_shader_program.shader_id = 0;      // Unused in this case
+        rt_shader_program.used_noise = false; // Unused in this case
 
-    glUseProgram(rt_shader_program.opengl_program_id);
-    GLint sampler_location = glGetUniformLocation(rt_shader_program.opengl_program_id, "u_texture");
-    glUniform1i(sampler_location, 0);
-#endif
+        glUseProgram(rt_shader_program.opengl_program_id);
+        GLint sampler_location = glGetUniformLocation(rt_shader_program.opengl_program_id, "u_texture");
+        glUniform1i(sampler_location, 0);
+    }
 
     // Initialize vertex buffer
 
@@ -1017,15 +1014,15 @@ static void gfx_opengl_start_frame(void) {
         noise_frame = 0;
     }
 
-    #if USE_FRAMEBUFFER
-    if (current_width != gfx_current_dimensions.width || current_height != gfx_current_dimensions.height) {
-        current_width = gfx_current_dimensions.width;
-        current_height = gfx_current_dimensions.height;
-        create_render_target_views(true);
+    if (USE_FRAMEBUFFER) {
+        if (current_width != gfx_current_dimensions.width || current_height != gfx_current_dimensions.height) {
+            current_width = gfx_current_dimensions.width;
+            current_height = gfx_current_dimensions.height;
+            create_render_target_views(true);
+        }
     }
 
     bind_render_target(&main_rt);
-    #endif
 
     glDisable(GL_SCISSOR_TEST);
     set_depth_mask(true); // Must be set to clear Z-buffer
@@ -1034,23 +1031,23 @@ static void gfx_opengl_start_frame(void) {
 }
 
 static void gfx_opengl_end_frame(void) {
-#if USE_FRAMEBUFFER
-    // Set the shader and vertex attribs for quad rendering
+    if (USE_FRAMEBUFFER) {
+        // Set the shader and vertex attribs for quad rendering
 
-    glUseProgram(rt_shader_program.opengl_program_id);
-    gfx_opengl_vertex_array_set_attribs(&rt_shader_program);
+        glUseProgram(rt_shader_program.opengl_program_id);
+        gfx_opengl_vertex_array_set_attribs(&rt_shader_program);
 
-    // Draw quad with main render target into the other render targets
+        // Draw quad with main render target into the other render targets
 
-    draw_render_target(NULL, &main_rt, false);
-    draw_render_target(&framebuffer_rt, &main_rt, true);
+        draw_render_target(NULL, &main_rt, false);
+        draw_render_target(&framebuffer_rt, &main_rt, true);
 
-    // Set again the last shader used before drawing render targets.
-    // Not doing so can lead to rendering issues on the first drawcalls
-    // of the next frame, if they use the same shader as the ones before.
+        // Set again the last shader used before drawing render targets.
+        // Not doing so can lead to rendering issues on the first drawcalls
+        // of the next frame, if they use the same shader as the ones before.
 
-    gfx_opengl_load_shader(current_shader_program);
-#endif
+        gfx_opengl_load_shader(current_shader_program);
+    }
 }
 
 static void gfx_opengl_finish_render(void) {
