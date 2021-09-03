@@ -730,11 +730,7 @@ static void import_texture(int tile) {
         return;
     }
 
-#ifndef EXTERNAL_DATA
     uint32_t checksum = calculate_checksum(rdp.loaded_texture[tile].addr, rdp.loaded_texture[tile].size_bytes);
-#else
-    uint32_t checksum = 0;
-#endif
 
     if (gfx_texture_cache_lookup(tile, &rendering_state.textures[tile], rdp.loaded_texture[tile].addr, fmt, siz, rdp.palette, checksum)) {
         return;
