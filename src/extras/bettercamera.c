@@ -129,10 +129,10 @@ static const u8 *cameraChoicesOpacity[] = {
 
 static struct Option optsCamera[] = {
     DEF_OPT_TOGGLE( optsCameraStr[1], &configEnableCamera ),
+    DEF_OPT_TOGGLE( optsCameraStr[2], &configCameraAnalog ),
 #ifdef MOUSE_ACTIONS
-    DEF_OPT_TOGGLE( optsCameraStr[2], &configCameraMouse ),
+    DEF_OPT_TOGGLE( optsCameraStr[3], &configCameraMouse ),
 #endif
-    DEF_OPT_TOGGLE( optsCameraStr[3], &configCameraAnalog ),
     DEF_OPT_TOGGLE( optsCameraStr[4], &configCameraInvertX ),
     DEF_OPT_TOGGLE( optsCameraStr[5], &configCameraInvertY ),
     DEF_OPT_SCROLL( optsCameraStr[6], &configCameraXSens, 1, 100, 1 ),

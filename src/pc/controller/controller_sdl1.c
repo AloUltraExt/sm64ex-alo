@@ -28,8 +28,6 @@
 #define MAX_JOYBUTTONS 32  // arbitrary; includes virtual keys for triggers
 #define AXIS_THRESHOLD (30 * 256)
 
-bool last_cursor_status = false;
-
 enum {
     JOY_AXIS_LEFTX,
     JOY_AXIS_LEFTY,
@@ -52,17 +50,20 @@ int gMouseHasCenterControl;
 static bool init_ok;
 static SDL_Joystick *sdl_joy;
 
-static u32 num_joy_binds = 0;
-static u32 num_mouse_binds = 0;
 static u32 joy_binds[MAX_JOYBINDS][2];
-static u32 mouse_binds[MAX_JOYBINDS][2];
-static int joy_axis_binds[MAX_AXES] = { 0, 1, 2, 3, 4, 5 };
-
+static u32 num_joy_binds = 0;
 static bool joy_buttons[MAX_JOYBUTTONS] = { false };
-static u32 mouse_buttons = 0;
-static u32 last_mouse = VK_INVALID;
 static u32 last_joybutton = VK_INVALID;
 
+#ifdef MOUSE_ACTIONS
+static u32 mouse_binds[MAX_JOYBINDS][2];
+static u32 num_mouse_binds = 0;
+static u32 mouse_buttons = 0;
+static u32 last_mouse = VK_INVALID;
+bool last_cursor_status = false;
+#endif
+
+static int joy_axis_binds[MAX_AXES] = { 0, 1, 2, 3, 4, 5 };
 static int num_joy_axes = 0;
 static int num_joy_buttons = 0;
 static int num_joy_hats = 0;
@@ -70,6 +71,7 @@ static int num_joy_hats = 0;
 static inline void controller_add_binds(const u32 mask, const u32 *btns) {
     for (u32 i = 0; i < MAX_BINDS; ++i) {
         if (btns[i] >= VK_BASE_SDL_GAMEPAD && btns[i] <= VK_BASE_SDL_GAMEPAD + VK_SIZE) {
+            #ifdef MOUSE_ACTIONS
             if (btns[i] >= VK_BASE_SDL_MOUSE && num_joy_binds < MAX_JOYBINDS && configMouse) {
                 mouse_binds[num_mouse_binds][0] = btns[i] - VK_BASE_SDL_MOUSE;
                 mouse_binds[num_mouse_binds][1] = mask;
@@ -79,15 +81,22 @@ static inline void controller_add_binds(const u32 mask, const u32 *btns) {
                 joy_binds[num_joy_binds][1] = mask;
                 ++num_joy_binds;
             }
+            #else
+                joy_binds[num_joy_binds][0] = btns[i] - VK_BASE_SDL_GAMEPAD;
+                joy_binds[num_joy_binds][1] = mask;
+                ++num_joy_binds;
+            #endif
         }
     }
 }
 
 static void controller_sdl_bind(void) {
     bzero(joy_binds, sizeof(joy_binds));
-    bzero(mouse_binds, sizeof(mouse_binds));
     num_joy_binds = 0;
+#ifdef MOUSE_ACTIONS
     num_mouse_binds = 0;
+    bzero(mouse_binds, sizeof(mouse_binds));
+#endif
 
     controller_add_binds(A_BUTTON,     configKeyA);
     controller_add_binds(B_BUTTON,     configKeyB);
@@ -286,6 +295,7 @@ static u32 controller_sdl_rawkey(void) {
         return ret;
     }
 
+#ifdef MOUSE_ACTIONS
     if (configMouse) {
         for (int i = 0; i < MAX_MOUSEBUTTONS; ++i) {
             if (last_mouse & SDL_BUTTON(i)) {
@@ -295,6 +305,7 @@ static u32 controller_sdl_rawkey(void) {
             }
         }
     }
+#endif
     return VK_INVALID;
 }
 
