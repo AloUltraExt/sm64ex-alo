@@ -339,6 +339,13 @@ void audio_game_loop_tick(void) {
     audio_signal_game_loop_tick();
 }
 
+void change_audio_volumes(void) {
+    const f32 master_mod = (f32)configMasterVolume / 127.0f;
+    set_sequence_player_volume(SEQ_PLAYER_LEVEL, (f32)configMusicVolume / 127.0f * master_mod);
+    set_sequence_player_volume(SEQ_PLAYER_SFX, (f32)configSfxVolume / 127.0f * master_mod);
+    set_sequence_player_volume(SEQ_PLAYER_ENV, (f32)configEnvVolume / 127.0f * master_mod);
+}
+
 /**
  * Sound processing thread. Runs at 60 FPS.
  */
@@ -367,10 +374,7 @@ void thread4_sound(UNUSED void *arg) {
         }
         
 #ifdef TARGET_N64 // TODO: save to EEPROM
-        const f32 master_mod = (f32)configMasterVolume / 127.0f;
-        set_sequence_player_volume(SEQ_PLAYER_LEVEL, (f32)configMusicVolume / 127.0f * master_mod);
-        set_sequence_player_volume(SEQ_PLAYER_SFX, (f32)configSfxVolume / 127.0f * master_mod);
-        set_sequence_player_volume(SEQ_PLAYER_ENV, (f32)configEnvVolume / 127.0f * master_mod);
+        change_audio_volumes();
 #endif
     }
 }

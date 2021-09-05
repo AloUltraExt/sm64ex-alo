@@ -9,6 +9,7 @@
 #include "sm64.h"
 
 #include "game/memory.h"
+#include "game/sound_init.h"
 #include "audio/external.h"
 
 #include "gfx/gfx_pc.h"
@@ -86,14 +87,6 @@ void exec_display_list(struct SPTask *spTask) {
     gfx_run((Gfx *)spTask->task.t.data_ptr);
 }
 
-#ifdef VERSION_EU
-#define SAMPLES_HIGH 656
-#define SAMPLES_LOW 640
-#else
-#define SAMPLES_HIGH 544
-#define SAMPLES_LOW 528
-#endif
-
 #ifdef HIGH_FPS_PC
 static inline void patch_interpolations(void) {
     extern void mtx_patch_interpolated(void);
@@ -115,30 +108,38 @@ static inline void patch_interpolations(void) {
 }
 #endif
 
-void produce_one_frame(void) {
-    gfx_start_frame();
-
-    const f32 master_mod = (f32)configMasterVolume / 127.0f;
-    set_sequence_player_volume(SEQ_PLAYER_LEVEL, (f32)configMusicVolume / 127.0f * master_mod);
-    set_sequence_player_volume(SEQ_PLAYER_SFX, (f32)configSfxVolume / 127.0f * master_mod);
-    set_sequence_player_volume(SEQ_PLAYER_ENV, (f32)configEnvVolume / 127.0f * master_mod);
-
-    game_loop_one_iteration();
-#ifdef RUMBLE_FEEDBACK
-    thread6_rumble_loop(NULL);
+#ifdef VERSION_EU
+#define SAMPLES_HIGH 656
+#define SAMPLES_LOW 640
+#else
+#define SAMPLES_HIGH 544
+#define SAMPLES_LOW 528
 #endif
 
 #ifndef TARGET_N3DS
-    int samples_left = audio_api->buffered();
-    u32 num_audio_samples = samples_left < audio_api->get_desired_buffered() ? SAMPLES_HIGH : SAMPLES_LOW;
-    s16 audio_buffer[SAMPLES_HIGH * 2 * 2];
+static inline void audio_frame(void) {
+    u32 num_audio_samples = audio_api->buffered() < audio_api->get_desired_buffered() ? SAMPLES_HIGH : SAMPLES_LOW;
+    static s16 audio_buffer[SAMPLES_HIGH * 2 * 2];
     for (int i = 0; i < 2; i++) {
         create_next_audio_buffer(audio_buffer + i * (num_audio_samples * 2), num_audio_samples);
     }
 
     audio_api->play((u8 *)audio_buffer, 2 * num_audio_samples * 4);
+}
 #endif
 
+void produce_one_frame(void) {
+    gfx_start_frame();
+
+    change_audio_volumes();
+
+    game_loop_one_iteration();
+#ifdef RUMBLE_FEEDBACK
+    thread6_rumble_loop(NULL);
+#endif
+#ifndef TARGET_N3DS
+    audio_frame();
+#endif
     gfx_end_frame();
 
 #ifdef HIGH_FPS_PC
@@ -148,10 +149,8 @@ void produce_one_frame(void) {
     gfx_end_frame();
 #endif
 
-#ifdef TARGET_N3DS
-#ifndef DISABLE_N3DS_AUDIO
+#if defined(TARGET_N3DS) && !defined(DISABLE_N3DS_AUDIO)
     LightEvent_Wait(&s_event_main);
-#endif
 #endif
 }
 
@@ -316,12 +315,10 @@ void main_func(void) {
         audio_api = &audio_sdl;
     #endif
 
-    #ifdef AAPI_3DS
-    #ifndef DISABLE_N3DS_AUDIO
+    #if defined(AAPI_3DS) && !defined(DISABLE_N3DS_AUDIO)
     if (audio_api == NULL && audio_3ds.init()) {
         audio_api = &audio_3ds;
     }
-    #endif
     #endif
 
     if (audio_api == NULL) {

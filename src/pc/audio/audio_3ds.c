@@ -7,14 +7,6 @@
 #include "audio_3ds.h"
 #include "audio_3ds_threading.h"
 
-#ifdef VERSION_EU
-#define SAMPLES_HIGH 656
-#define SAMPLES_LOW 640
-#else
-#define SAMPLES_HIGH 544
-#define SAMPLES_LOW 528
-#endif
-
 #define N3DS_DSP_DMA_BUFFER_COUNT   4
 
 static bool is_new_n3ds()
@@ -66,6 +58,24 @@ static void audio_3ds_play(const uint8_t *buf, size_t len)
 static bool running = true;
 LightEvent s_event_audio, s_event_main;
 
+#ifdef VERSION_EU
+#define SAMPLES_HIGH 656
+#define SAMPLES_LOW 640
+#else
+#define SAMPLES_HIGH 544
+#define SAMPLES_LOW 528
+#endif
+
+static inline void audio_3ds_frame() 
+{
+    u32 num_audio_samples = audio_3ds_buffered() < audio_3ds_get_desired_buffered() ? SAMPLES_HIGH : SAMPLES_LOW;
+    static s16 audio_buffer[SAMPLES_HIGH * 2 * 2];
+    for (int i = 0; i < 2; i++) {
+        create_next_audio_buffer(audio_buffer + i * (num_audio_samples * 2), num_audio_samples);
+    }
+    audio_3ds_play((u8 *)audio_buffer, 2 * num_audio_samples * 4);
+}
+
 static void audio_3ds_loop()
 {
     while (running)
@@ -73,12 +83,7 @@ static void audio_3ds_loop()
         LightEvent_Wait(&s_event_audio);
         if (!running)
             break;
-        u32 num_audio_samples = audio_3ds_buffered() < audio_3ds_get_desired_buffered() ? SAMPLES_HIGH : SAMPLES_LOW;
-        s16 audio_buffer[SAMPLES_HIGH * 2 * 2];
-        for (int i = 0; i < 2; i++) {
-            create_next_audio_buffer(audio_buffer + i * (num_audio_samples * 2), num_audio_samples);
-        }
-        audio_3ds_play((u8 *)audio_buffer, 2 * num_audio_samples * 4);
+        audio_3ds_frame();
         LightEvent_Signal(&s_event_main);
     }
 }

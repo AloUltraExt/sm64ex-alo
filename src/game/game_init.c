@@ -25,10 +25,8 @@
 #include "extras/bettercamera.h"
 #endif
 
-#ifdef TARGET_N3DS
-#ifndef DISABLE_N3DS_AUDIO
+#if defined(TARGET_N3DS) && !defined(DISABLE_N3DS_AUDIO)
 #include "pc/audio/audio_3ds_threading.h"
-#endif
 #endif
 
 // First 3 controller slots
@@ -568,7 +566,7 @@ void read_controller_inputs(void) {
     if (gControllerBits) {
         osRecvMesg(&gSIEventMesgQueue, &gMainReceivedMesg, OS_MESG_BLOCK);
         osContGetReadData(&gControllerPads[0]);
-#if ENABLE_RUMBLE
+#ifdef RUMBLE_FEEDBACK
         release_rumble_pak_control();
 #endif
     }
@@ -658,7 +656,7 @@ void init_controllers(void) {
             // into any port in order to play the game. this was probably
             // so if any of the ports didn't work, you can have controllers
             // plugged into any of them and it will work.
-#if ENABLE_RUMBLE
+#ifdef RUMBLE_FEEDBACK
             gControllers[cont].port = port;
 #endif
             gControllers[cont].statusData = &gControllerStatuses[port];
@@ -713,11 +711,11 @@ void thread5_game_loop(UNUSED void *arg) {
 #endif
 
     setup_game_memory();
-#if ENABLE_RUMBLE
+#ifdef RUMBLE_FEEDBACK
     init_rumble_pak_scheduler_queue();
 #endif
     init_controllers();
-#if ENABLE_RUMBLE
+#ifdef RUMBLE_FEEDBACK
     create_thread_6();
 #endif
     save_file_load_all();
@@ -757,7 +755,7 @@ void game_loop_one_iteration(void) {
         // If any controllers are plugged in, start read the data for when
         // read_controller_inputs is called later.
         if (gControllerBits) {
-#if ENABLE_RUMBLE
+#ifdef RUMBLE_FEEDBACK
             block_until_rumble_pak_free();
 #endif
             osContStartReadData(&gSIEventMesgQueue);
@@ -768,22 +766,20 @@ void game_loop_one_iteration(void) {
         read_controller_inputs();
         levelCommandAddr = level_script_execute(levelCommandAddr);
 
-#ifdef TARGET_N3DS
-#ifndef DISABLE_N3DS_AUDIO
+#if defined(TARGET_N3DS) && !defined(DISABLE_N3DS_AUDIO)
         LightEvent_Signal(&s_event_audio);
-#endif
 #endif
 
         display_and_vsync();
 
+#ifndef USE_SYSTEM_MALLOC
         // when debug info is enabled, print the "BUF %d" information.
         if (gShowDebugText) {
-#ifndef USE_SYSTEM_MALLOC
             // subtract the end of the gfx pool with the display list to obtain the
             // amount of free space remaining.
             print_text_fmt_int(180, 20, "BUF %d", gGfxPoolEnd - (u8 *) gDisplayListHead);
-#endif
         }
+#endif
 #ifdef TARGET_N64
     }
 #endif
