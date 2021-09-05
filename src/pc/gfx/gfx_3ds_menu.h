@@ -4,16 +4,16 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "3ds/minimap/textures/mode_400_t3x.h"
-#include "3ds/minimap/textures/mode_800_t3x.h"
-#include "3ds/minimap/textures/aa_on_t3x.h"
-#include "3ds/minimap/textures/aa_off_t3x.h"
-#include "3ds/minimap/textures/resume_t3x.h"
-#include "3ds/minimap/textures/exit_t3x.h"
-#include "3ds/minimap/textures/menu_cleft_t3x.h"
-#include "3ds/minimap/textures/menu_cright_t3x.h"
-#include "3ds/minimap/textures/menu_cdown_t3x.h"
-#include "3ds/minimap/textures/menu_cup_t3x.h"
+#include "platform/3ds/minimap/textures/mode_400_t3x.h"
+#include "platform/3ds/minimap/textures/mode_800_t3x.h"
+#include "platform/3ds/minimap/textures/aa_on_t3x.h"
+#include "platform/3ds/minimap/textures/aa_off_t3x.h"
+#include "platform/3ds/minimap/textures/resume_t3x.h"
+#include "platform/3ds/minimap/textures/exit_t3x.h"
+#include "platform/3ds/minimap/textures/menu_cleft_t3x.h"
+#include "platform/3ds/minimap/textures/menu_cright_t3x.h"
+#include "platform/3ds/minimap/textures/menu_cdown_t3x.h"
+#include "platform/3ds/minimap/textures/menu_cup_t3x.h"
 
 struct gfx_configuration
 {

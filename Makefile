@@ -266,6 +266,7 @@ else ifeq ($(GRUCODE),f3dzex) # Fast3DZEX (2.0J / Animal Forest - Dōbutsu no Mo
   DEFINES += F3DZEX_GBI_2=1 F3DEX_GBI_SHARED=1
 endif
 
+# Specify target defines
 ifeq ($(TARGET_RPI),1) # Define RPi to change SDL2 title & GLES2 hints
   DEFINES += TARGET_RPI=1 USE_GLES=1
 else ifeq ($(OSX_BUILD),1) # Modify GFX & SDL2 for OSX GL
@@ -385,17 +386,22 @@ ACTOR_DIR := actors
 LEVEL_DIRS := $(patsubst levels/%,%,$(dir $(wildcard levels/*/header.h)))
 
 # Directories containing source files
-
-
 SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers src/extras actors levels bin bin/$(VERSION) data assets sound
 ifeq ($(TARGET_N64),1)
   SRC_DIRS += asm lib
 else
-# Hi, I'm a PC
+# Specify target folders
+  PLATFORM_DIR := platform
+
   SRC_DIRS += src/pc src/pc/gfx src/pc/audio src/pc/controller src/pc/fs src/pc/fs/packtypes
   ifeq ($(WINDOWS_BUILD),1)
-    RES_DIRS := res_win
+    PLATFORM_DIR := $(PLATFORM_DIR)/win
+  else ifeq ($(TARGET_N3DS),1)
+    PLATFORM_DIR := $(PLATFORM_DIR)/3ds
+  else ifeq ($(TARGET_SWITCH),1)
+    PLATFORM_DIR := $(PLATFORM_DIR)/switch
   endif
+  SRC_DIRS += $(PLATFORM_DIR)
 endif
 
 ifeq ($(TARGET_WII_U),1)
@@ -520,7 +526,7 @@ ifeq ($(GODDARD_MFACE),1)
   GODDARD_C_FILES := $(foreach dir,$(GODDARD_SRC_DIRS),$(wildcard $(dir)/*.c))
 endif
 ifeq ($(WINDOWS_BUILD),1)
-  RC_FILES := $(foreach dir,$(RES_DIRS),$(wildcard $(dir)/*.rc))
+  RC_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.rc))
 endif
 
 GENERATED_C_FILES := $(BUILD_DIR)/assets/mario_anim_data.c $(BUILD_DIR)/assets/demo_data.c \
@@ -736,7 +742,7 @@ ifeq ($(TARGET_SWITCH),1)
   APP_TITLE := Super Mario 64
   APP_AUTHOR := Nintendo, n64decomp team, sm64pc team
   APP_VERSION := 1_master_$(VERSION)
-  APP_ICON := $(CURDIR)/switch/logo.jpg
+  APP_ICON := $(PLATFORM_DIR)/logo.jpg
   INCLUDE_DIRS += $(LIBNX)/include $(PORTLIBS)/include
   OPT_FLAGS := -O2
 endif
@@ -749,7 +755,7 @@ CPPFLAGS := -Wno-trigraphs $(DEF_INC_CFLAGS) $(CUSTOM_C_DEFINES)
 
 # 3DS Minimap flags
 ifeq ($(TARGET_N3DS),1)
-MINIMAP := 3ds/minimap
+MINIMAP := $(PLATFORM_DIR)/minimap
 
 MINIMAP_C := $(wildcard $(MINIMAP)/*.c)
 MINIMAP_O := $(foreach file,$(MINIMAP_C),$(BUILD_DIR)/$(file:.c=.o))
@@ -1264,13 +1270,9 @@ ifeq ($(EXTERNAL_DATA),1)
   ALL_DIRS += $(SKYTILE_DIR)
 endif
 
-ifeq ($(WINDOWS_BUILD),1)
-  ALL_DIRS += $(BUILD_DIR)/$(RES_DIRS)
-endif
-
 ifeq ($(TARGET_N3DS),1)
   # create build dir for .t3x etc
-  ALL_DIRS += $(BUILD_DIR)/$(MINIMAP_TEXTURES) $(BUILD_DIR)/3ds
+  ALL_DIRS += $(BUILD_DIR)/$(MINIMAP_TEXTURES) $(BUILD_DIR)/$(PLATFORM_DIR)
 endif
 
 # Make sure build directory exists before compiling anything
@@ -1560,9 +1562,12 @@ $(BUILD_DIR)/%.o: %.s
 	$(call print,Assembling:,$<,$@)
 	$(V)$(CPP) $(CPPFLAGS) $< | $(AS) $(ASFLAGS) -MD $(BUILD_DIR)/$*.d -o $@
 
+ifeq ($(WINDOWS_BUILD),1)
 # Windows Icon
 $(BUILD_DIR)/%.o: %.rc
-	$(WINDRES) -o $@ -i $<
+	$(call print,Applying Windows Icon...)
+	$(V)$(WINDRES) -o $@ -i $<
+endif
 
 ifeq ($(TARGET_N64),1)
 
@@ -1640,7 +1645,7 @@ $(BUILD_DIR)/src/pc/gfx/shader.shbin.o : src/pc/gfx/shader.v.pica
 SMDH_TITLE ?= Super Mario 64
 SMDH_DESCRIPTION ?= Super Mario 64 3DS Port
 SMDH_AUTHOR ?= mkst
-SMDH_ICON := 3ds/icon.smdh
+SMDH_ICON := $(PLATFORM_DIR)/icon.smdh
 
 $(ELF): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o $(SMDH_ICON)
 	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o $(MINIMAP_T3X_O) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
@@ -1650,7 +1655,7 @@ $(EXE): $(ELF)
 
 $(CIA): $(ELF)
 	@echo "Generating $@, please wait..."
-	makerom -f cia -o "$@" -rsf 3ds/template.rsf -target t -elf "$<" -icon 3ds/icon.icn -banner 3ds/banner.bnr
+	makerom -f cia -o "$@" -rsf $(PLATFORM_DIR)/template.rsf -target t -elf "$<" -icon $(PLATFORM_DIR)/icon.icn -banner $(PLATFORM_DIR)/banner.bnr
 
 # stolen from /opt/devkitpro/devkitARM/base_tools
 define bin2o
@@ -1669,7 +1674,7 @@ $(BUILD_DIR)/src/pc/gfx/gfx_3ds_menu.o: $(MINIMAP_T3X_HEADERS)
 	tex3ds -i $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
 
 %.t3s: %.png
-	@printf -- "-f rgba -z auto\n../../../../../$(<)\n" > $(BUILD_DIR)/$@
+	@printf -- "-f rgba -z auto\n../../../../../../$(<)\n" > $(BUILD_DIR)/$@
 
 %.smdh: %.png
 	smdhtool --create "$(SMDH_TITLE)" "$(SMDH_DESCRIPTION)" "$(SMDH_AUTHOR)" $< $(BUILD_DIR)/$@
