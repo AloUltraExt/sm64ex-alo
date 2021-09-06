@@ -23,7 +23,7 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex/tree/nightly) with addi
  **Clone the repository:**
 
  ```sh
- git clone https://github.com/sm64ex-alo/sm64ex-alo
+ git clone https://github.com/AloXado320/sm64ex-alo
  cd sm64ex-alo
  ```
  
@@ -94,7 +94,7 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex/tree/nightly) with addi
 
   **Enjoy your apk:**
   ```sh
-  ls -al build/us_pc/sm64.us.f3dex2e.apk
+  ls -al build/us_android/sm64.us.f3dex2e.apk
   ```
  
 </details>
