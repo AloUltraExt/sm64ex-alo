@@ -79,3 +79,9 @@ sm64config.txt
 !/sound/**/*custom*/**/*.aiff
 !/assets/**/*custom*.bin
 !/assets/**/*custom*/**/*.bin
+
+# Android files
+!/textures/touchcontrols/*.png
+platform/android/SDL/include
+!platform/android/android/**/*.so
+platform/android/android/lib/*/libc++_shared.so

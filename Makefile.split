@@ -220,6 +220,9 @@ SKY_TEXTURES                    := $(wildcard $(TEXTURE_DIR)/sky/*.png)
 MACHINE_TEXTURES                := $(wildcard $(TEXTURE_DIR)/machine/*.png)
 MOUNTAIN_TEXTURES               := $(wildcard $(TEXTURE_DIR)/mountain/*.png)
 GRASS_TEXTURES                  := $(wildcard $(TEXTURE_DIR)/grass/*.png)
+ifeq ($(TOUCH_CONTROLS),1)
+TOUCH_SCREEN_TEXTURES           := $(wildcard $(TEXTURE_DIR)/touchcontrols/*.png)
+endif
 
 # Texture Files
 $(BUILD_DIR)/bin/segment2.o:        $(SEGMENT2_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
@@ -237,6 +240,9 @@ $(BUILD_DIR)/bin/sky.o:             $(SKY_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
 $(BUILD_DIR)/bin/machine.o:         $(MACHINE_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
 $(BUILD_DIR)/bin/mountain.o:        $(MOUNTAIN_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
 $(BUILD_DIR)/bin/grass.o:           $(GRASS_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
+ifeq ($(TOUCH_CONTROLS),1)
+$(BUILD_DIR)/src/pc/controller/controller_touchscreen.o: $(TOUCH_SCREEN_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
+endif
 
 # Others
 $(BUILD_DIR)/bin/segment2.elf:           SEGMENT_ADDRESS := 0x02000000

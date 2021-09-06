@@ -146,7 +146,6 @@ WINDOWS_BUILD ?= 0
 
 ifeq ($(TARGET_N64),0)
   GRUCODE := f3dex2e
-  RUMBLE_FEEDBACK := 1
   PC_PORT_DEFINES := 1
 else
   GRUCODE := f3dzex
@@ -169,11 +168,27 @@ ifeq ($(TARGET_WEB),0)
   ifeq ($(TARGET_PORT_CONSOLE),0)
     ifeq ($(HOST_OS),Windows)
       WINDOWS_BUILD := 1
+    else
+      ifneq ($(shell which termux-setup-storage),)
+        TARGET_ANDROID := 1
+        ifeq ($(shell dpkg -s apksigner | grep Version | sed "s/Version: //"),0.7-2)
+          OLD_APKSIGNER := 1
+        endif
+      endif
     endif
   endif
 endif
 
 # MXE overrides
+
+ifeq ($(TARGET_ANDROID),1)
+  RENDER_API := GL
+  WINDOW_API := SDL2
+  AUDIO_API := SDL2
+  CONTROLLER_API := SDL2
+  
+  TOUCH_CONTROLS := 1
+endif
 
 ifeq ($(WINDOWS_BUILD),1)
   ifeq ($(CROSS),i686-w64-mingw32.static-)
@@ -269,6 +284,8 @@ endif
 # Specify target defines
 ifeq ($(TARGET_RPI),1) # Define RPi to change SDL2 title & GLES2 hints
   DEFINES += TARGET_RPI=1 USE_GLES=1
+else ifeq ($(TARGET_ANDROID),1)
+  DEFINES += TARGET_ANDROID=1 USE_GLES=1
 else ifeq ($(OSX_BUILD),1) # Modify GFX & SDL2 for OSX GL
   DEFINES += OSX_BUILD=1
 else ifeq ($(TARGET_WEB),1)
@@ -343,6 +360,8 @@ else ifeq ($(TARGET_N3DS),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_3ds
 else ifeq ($(TARGET_SWITCH),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_nx
+else ifeq ($(TARGET_ANDROID),1)
+  BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_android
 else
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_pc
 endif
@@ -361,7 +380,10 @@ else ifeq ($(TARGET_N3DS),1)
  CIA := $(BUILD_DIR)/$(TARGET).cia
 else ifeq ($(WINDOWS_BUILD),1)
   EXE := $(BUILD_DIR)/$(TARGET).exe
-
+else ifeq ($(TARGET_ANDROID),1)
+  EXE := $(BUILD_DIR)/libmain.so
+  APK := $(BUILD_DIR)/$(TARGET).unsigned.apk
+  APK_SIGNED := $(BUILD_DIR)/$(TARGET).apk
 else # Linux builds/binary namer
   ifeq ($(TARGET_RPI),1)
     EXE := $(BUILD_DIR)/$(TARGET).arm
@@ -400,6 +422,8 @@ else
     PLATFORM_DIR := $(PLATFORM_DIR)/3ds
   else ifeq ($(TARGET_SWITCH),1)
     PLATFORM_DIR := $(PLATFORM_DIR)/switch
+  else ifeq ($(TARGET_ANDROID),1)
+    PLATFORM_DIR := $(PLATFORM_DIR)/android
   endif
   SRC_DIRS += $(PLATFORM_DIR)
 endif
@@ -626,19 +650,28 @@ ifeq ($(HIGH_FPS_PC),1)
   CUSTOM_C_DEFINES += -DHIGH_FPS_PC
 endif
 
+# Check for text save format
+ifeq ($(TEXTSAVES),1)
+  CUSTOM_C_DEFINES += -DTEXTSAVES
+endif
+
 # Use PC-only exclusive defines
 ifeq ($(TARGET_PORT_CONSOLE),0)
+
+  ifeq ($(WINDOW_API),SDL2)
+    # Check for SDL2 touch controls
+    ifeq ($(TOUCH_CONTROLS),1)
+      CUSTOM_C_DEFINES += -DTOUCH_CONTROLS
+    endif
+  endif
+
+ifeq ($(TARGET_ANDROID),0)
 
   # Check for Discord Rich Presence option
   ifeq ($(DISCORDRPC),1)
     CUSTOM_C_DEFINES += -DDISCORDRPC
   endif
   
-  # Check for PC text save format
-  ifeq ($(TEXTSAVES),1)
-    CUSTOM_C_DEFINES += -DTEXTSAVES
-  endif
-
   # Check for Mouse Option
   ifeq ($(EXT_OPTIONS_MENU),1)
     CUSTOM_C_DEFINES += -DMOUSE_ACTIONS
@@ -649,9 +682,10 @@ ifeq ($(TARGET_PORT_CONSOLE),0)
     CUSTOM_C_DEFINES += -DCOMMAND_LINE_OPTIONS
   endif
 
-endif
+endif # !TARGET_ANDROID
+endif # !TARGET_PORT_CONSOLE
 
-endif
+endif # !TARGET_N64
 
 # Check for Debug option
 ifeq ($(DEBUG),1)
@@ -676,7 +710,6 @@ ifeq ($(EXT_OPTIONS_MENU),1)
 endif
 
 # Check for Rumble option
-
 ifeq ($(TARGET_N3DS)$(TARGET_WII_U),00)
 ifeq ($(RUMBLE_FEEDBACK),1)
   CUSTOM_C_DEFINES += -DRUMBLE_FEEDBACK
@@ -723,6 +756,9 @@ INCLUDE_DIRS := include $(BUILD_DIR) $(BUILD_DIR)/include src .
 ifeq ($(TARGET_N64),1)
   INCLUDE_DIRS += include/libc
 endif
+ifeq ($(TARGET_ANDROID),1)
+  INCLUDE_DIRS += $(PLATFORM_DIR)/SDL/include
+endif
 
 ifeq ($(TARGET_SWITCH),1)
   ifeq ($(strip $(DEVKITPRO)),)
@@ -751,7 +787,13 @@ C_DEFINES := $(foreach d,$(DEFINES),-D$(d))
 DEF_INC_CFLAGS := $(foreach i,$(INCLUDE_DIRS),-I $(i)) $(C_DEFINES)
 
 # Set C Preprocessor flags
-CPPFLAGS := -Wno-trigraphs $(DEF_INC_CFLAGS) $(CUSTOM_C_DEFINES)
+CPPFLAGS := -P -Wno-trigraphs $(DEF_INC_CFLAGS) $(CUSTOM_C_DEFINES)
+  
+ifeq ($(TARGET_ANDROID),1)
+  ifneq ($(shell which termux-setup-storage),) # Termux has clang
+    CPPFLAGS := -E -P -x c -Wno-trigraphs $(DEF_INC_CFLAGS) $(CUSTOM_C_DEFINES)
+  endif
+endif
 
 # 3DS Minimap flags
 ifeq ($(TARGET_N3DS),1)
@@ -791,7 +833,7 @@ endif
 
 AS        := $(CROSS)as
 CC        := $(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/bin/cc
-CPP       := cpp -P
+CPP       := cpp
 LD        := $(CROSS)ld
 AR        := $(CROSS)ar
 OBJDUMP   := $(CROSS)objdump
@@ -845,12 +887,12 @@ else # TARGET_N64
 ifeq ($(TARGET_WII_U),1)
 
 LD := $(CXX)
-CPP := powerpc-eabi-cpp -P
+CPP := powerpc-eabi-cpp
 OBJDUMP := powerpc-eabi-objdump
 SDLCONFIG :=
 
 else ifeq ($(TARGET_N3DS),1)
-  CPP := $(DEVKITARM)/bin/arm-none-eabi-cpp -P
+  CPP := $(DEVKITARM)/bin/arm-none-eabi-cpp
   OBJDUMP := $(DEVKITARM)/bin/arm-none-eabi-objdump
   OBJCOPY := $(DEVKITARM)/bin/arm-none-eabi-objcopy
   AS := $(DEVKITARM)/bin/arm-none-eabi-as
@@ -878,7 +920,7 @@ else
   CXX := emcc
 endif
 
-LD := $(CC)
+LD := $(CXX)
 
 ifeq ($(DISCORDRPC),1)
   LD := $(CXX)
@@ -893,15 +935,23 @@ else ifeq ($(WINDOWS_BUILD),1)
 endif
 
 ifeq ($(WINDOWS_BUILD),1) # fixes compilation in MXE on Linux and WSL
-  CPP := cpp -P
+  CPP := cpp
   OBJCOPY := objcopy
   OBJDUMP := $(CROSS)objdump
 else ifeq ($(OSX_BUILD),1)
-  CPP := cpp-9 -P
+  CPP := cpp-9
   OBJCOPY := i686-w64-mingw32-objcopy
   OBJDUMP := i686-w64-mingw32-objdump
+else ifeq ($(TARGET_ANDROID),1) # Termux has clang
+  ifneq ($(shell which termux-setup-storage),)
+    CPP      := clang
+  else
+    CPP      := cpp
+  endif
+  OBJCOPY := $(CROSS)objcopy
+  OBJDUMP := $(CROSS)objdump
 else # Linux & other builds
-  CPP := $(CROSS)cpp -P
+  CPP := $(CROSS)cpp
   OBJCOPY := $(CROSS)objcopy
   OBJDUMP := $(CROSS)objdump
 endif
@@ -933,6 +983,8 @@ ifeq ($(WINDOW_API),DXGI)
 else ifeq ($(findstring SDL,$(WINDOW_API)),SDL)
   ifeq ($(WINDOWS_BUILD),1)
     BACKEND_LDFLAGS += -lglew32 -lglu32 -lopengl32
+  else ifeq ($(TARGET_ANDROID),1)
+    BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(TARGET_RPI),1)
     BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(TARGET_SWITCH),1)
@@ -971,11 +1023,15 @@ else ifeq ($(SDL1_USED),1)
 endif
 
 ifneq ($(SDL1_USED)$(SDL2_USED),00)
-  BACKEND_CFLAGS += `$(SDLCONFIG) --cflags`
-  ifeq ($(WINDOWS_BUILD),1)
-    BACKEND_LDFLAGS += `$(SDLCONFIG) --static-libs` -lsetupapi -luser32 -limm32 -lole32 -loleaut32 -lshell32 -lwinmm -lversion
+  ifeq ($(TARGET_ANDROID),1)
+    BACKEND_LDFLAGS += -lhidapi -lSDL2
   else
-    BACKEND_LDFLAGS += `$(SDLCONFIG) --libs`
+    BACKEND_CFLAGS += `$(SDLCONFIG) --cflags`
+    ifeq ($(WINDOWS_BUILD),1)
+      BACKEND_LDFLAGS += `$(SDLCONFIG) --static-libs` -lsetupapi -luser32 -limm32 -lole32 -loleaut32 -lshell32 -lwinmm -lversion
+    else
+      BACKEND_LDFLAGS += `$(SDLCONFIG) --libs`
+    endif
   endif
 endif
 
@@ -1057,6 +1113,19 @@ else ifeq ($(WINDOWS_BUILD),1)
 else ifeq ($(TARGET_RPI),1)
   LDFLAGS := $(OPT_FLAGS) -lm $(BACKEND_LDFLAGS) -no-pie
 
+else ifeq ($(TARGET_ANDROID),1)
+  ifneq ($(shell uname -m | grep "i.86"),)
+    ARCH_APK := x86
+  else ifeq ($(shell uname -m),x86_64)
+    ARCH_APK := x86_64
+  else ifeq ($(shell getconf LONG_BIT),64)
+    ARCH_APK := arm64-v8a
+  else
+    ARCH_APK := armeabi-v7a
+  endif
+  CFLAGS  += -fPIC
+  LDFLAGS := -L ./$(PLATFORM_DIR)/android/lib/$(ARCH_APK)/ -lm $(BACKEND_LDFLAGS) -shared
+
 else ifeq ($(OSX_BUILD),1)
   LDFLAGS := -lm $(BACKEND_LDFLAGS) -no-pie -lpthread
 
@@ -1124,8 +1193,12 @@ endif
 
 ifeq ($(TARGET_N64),1)
 all: $(ROM)
+else ifeq ($(TARGET_ANDROID),1)
+all: $(APK_SIGNED)
+EXE_DEPEND := $(APK_SIGNED)
 else
 all: $(EXE)
+EXE_DEPEND := $(EXE)
 endif
 
 ifeq ($(TARGET_SWITCH),1)
@@ -1155,7 +1228,7 @@ all: $(BASEPACK_PATH)
 res: $(BASEPACK_PATH)
 
 # prepares the basepack.lst
-$(BASEPACK_LST): $(EXE)
+$(BASEPACK_LST): $(EXE_DEPEND)
 	@mkdir -p $(BUILD_DIR)/$(BASEDIR)
 	@echo "$(BUILD_DIR)/sound/bank_sets sound/bank_sets" > $(BASEPACK_LST)
 	@echo "$(BUILD_DIR)/sound/sequences.bin sound/sequences.bin" >> $(BASEPACK_LST)
@@ -1680,6 +1753,29 @@ $(BUILD_DIR)/src/pc/gfx/gfx_3ds_menu.o: $(MINIMAP_T3X_HEADERS)
 	smdhtool --create "$(SMDH_TITLE)" "$(SMDH_DESCRIPTION)" "$(SMDH_AUTHOR)" $< $(BUILD_DIR)/$@
 
 else
+
+ifeq ($(TARGET_ANDROID),1)
+APK_FILES := $(shell find $(PLATFORM_DIR)/android/ -type f)
+
+$(APK): $(EXE) $(APK_FILES)
+	cp -r $(PLATFORM_DIR)/android $(BUILD_DIR)/$(PLATFORM_DIR)/ && \
+	cp $(PREFIX)/lib/libc++_shared.so $(BUILD_DIR)/$(PLATFORM_DIR)/android/lib/$(ARCH_APK)/ && \
+	cp $(EXE) $(BUILD_DIR)/$(PLATFORM_DIR)/android/lib/$(ARCH_APK)/ && \
+	cd $(BUILD_DIR)/$(PLATFORM_DIR)/android && \
+	zip -r ../../../../../$@ ./* && \
+	cd ../../../../.. && \
+	rm -rf $(BUILD_DIR)/$(PLATFORM_DIR)/android
+
+ifeq ($(OLD_APKSIGNER),1)
+$(APK_SIGNED): $(APK)
+	apksigner $(BUILD_DIR)/keystore $< $@
+else
+$(APK_SIGNED): $(APK)
+	cp $< $@
+	apksigner sign --cert $(PLATFORM_DIR)/certificate.pem --key $(PLATFORM_DIR)/key.pk8 $@
+endif
+endif
+
 $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
 	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
 endif

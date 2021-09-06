@@ -6,6 +6,7 @@
 
 #include "controller_recorded_tas.h"
 #include "controller_keyboard.h"
+#include "controller_touchscreen.h"
 #include "controller_sdl.h"
 #include "controller_wiiu.h"
 #include "controller_3ds.h"
@@ -27,6 +28,9 @@ static struct ControllerAPI *controller_implementations[] = {
     &controller_sdl,
     #endif
     &controller_keyboard,
+    #ifdef TOUCH_CONTROLS
+    &controller_touchscreen,
+    #endif
 #endif
 };
 

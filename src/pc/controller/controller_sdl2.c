@@ -79,9 +79,11 @@ static inline void controller_add_binds(const u32 mask, const u32 *btns) {
 
 static void controller_sdl_bind(void) {
     bzero(joy_binds, sizeof(joy_binds));
-    bzero(mouse_binds, sizeof(mouse_binds));
     num_joy_binds = 0;
+#ifdef MOUSE_ACTIONS
+    bzero(mouse_binds, sizeof(mouse_binds));
     num_mouse_binds = 0;
+#endif
 
     controller_add_binds(A_BUTTON,     configKeyA);
     controller_add_binds(B_BUTTON,     configKeyB);

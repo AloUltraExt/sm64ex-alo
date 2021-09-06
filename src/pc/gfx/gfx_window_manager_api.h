@@ -14,6 +14,9 @@ struct GfxWindowManagerAPI {
 #ifndef TARGET_PORT_CONSOLE
     void (*set_keyboard_callbacks)(kb_callback_t on_key_down, kb_callback_t on_key_up, void (*on_all_keys_up)(void));
 #endif
+#ifdef TOUCH_CONTROLS
+    void (*set_touchscreen_callbacks)(void (*down)(void* event), void (*motion)(void* event), void (*up)(void* event));
+#endif
     void (*main_loop)(void (*run_one_game_iter)(void));
     void (*get_dimensions)(uint32_t *width, uint32_t *height);
     void (*handle_events)(void);

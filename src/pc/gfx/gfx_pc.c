@@ -66,6 +66,10 @@
 #define HASHMAP_LEN (MAX_CACHED_TEXTURES * 2)
 #define HASH_MASK (HASHMAP_LEN - 1)
 
+#ifdef __ANDROID__
+int render_multiplier;
+#endif
+
 struct RGBA {
     uint8_t r, g, b, a;
 };
@@ -721,6 +725,7 @@ uint32_t calculate_checksum(const uint8_t *buf, size_t len) {
 }
 
 static void import_texture(int tile) {
+    uint32_t checksum;
     uint8_t fmt = rdp.texture_tile.fmt;
     uint8_t siz = rdp.texture_tile.siz;
 
@@ -730,7 +735,7 @@ static void import_texture(int tile) {
         return;
     }
 
-    uint32_t checksum = calculate_checksum(rdp.loaded_texture[tile].addr, rdp.loaded_texture[tile].size_bytes);
+    checksum = calculate_checksum(rdp.loaded_texture[tile].addr, rdp.loaded_texture[tile].size_bytes);
 
     if (gfx_texture_cache_lookup(tile, &rendering_state.textures[tile], rdp.loaded_texture[tile].addr, fmt, siz, rdp.palette, checksum)) {
         return;
@@ -2016,11 +2021,17 @@ void gfx_run(Gfx *commands) {
     }
     dropped_frame = false;
 
+#ifdef __ANDROID__
+    for (int i = 0; i < (configWindow.vsync ? render_multiplier : 1); i++) {
+#endif
     gfx_rapi->start_frame();
     gfx_run_dl(commands);
     gfx_flush();
     gfx_rapi->end_frame();
     gfx_wapi->swap_buffers_begin();
+#ifdef __ANDROID__
+    }
+#endif
 }
 
 void gfx_end_frame(void) {

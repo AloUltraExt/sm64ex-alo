@@ -38,12 +38,17 @@
 #endif
 
 #include "src/pc/controller/controller_keyboard.h"
+#include "src/pc/controller/controller_touchscreen.h"
 
 // TODO: figure out if this shit even works
 #ifdef VERSION_EU
 # define FRAMERATE 25
 #else
 # define FRAMERATE 30
+#endif
+
+#ifdef __ANDROID__
+extern int render_multiplier;
 #endif
 
 static SDL_Window *wnd;
@@ -53,6 +58,9 @@ static int inverted_scancode_table[512];
 static kb_callback_t kb_key_down = NULL;
 static kb_callback_t kb_key_up = NULL;
 static void (*kb_all_keys_up)(void) = NULL;
+static void (*touch_down_callback)(void* event);
+static void (*touch_motion_callback)(void* event);
+static void (*touch_up_callback)(void* event);
 
 // whether to use timer for frame control
 static bool use_timer = true;
@@ -140,6 +148,7 @@ static int test_vsync(void) {
 
     const float average = 4.0 * 1000.0 / (end - start);
 
+#ifndef __ANDROID__
     if (average > 27.0f && average < 33.0f) return 1;
     if (average > 57.0f && average < 63.0f) return 2;
     if (average > 86.0f && average < 94.0f) return 3;
@@ -147,6 +156,29 @@ static int test_vsync(void) {
     if (average > 234.0f && average < 246.0f) return 8;
 
     return 0;
+#else
+    /*Android's vsync seems finicky but timer based sync seems unusable too.
+     * I think vsync does kind of work but not half-vsync and stuff like that.
+     * Let's try to render multiple times if neccessary to lower the framerate.
+     * I don't think this is a great solution but it works.
+     * On SGI models, turning vsync off will help with framerate, but the best is 60fps patch.
+     * The actual solution would be to render or copy the buffer to a texture
+     * and then render that to the screen.*/
+#ifdef HIGH_FPS_PC
+    render_multiplier = (average + 30) / 60;
+#else
+    render_multiplier = (average + 15) / 30;
+#endif
+    if (render_multiplier == 0)
+        render_multiplier = 1;
+
+#ifdef HIGH_FPS_PC
+    return 2;
+#else
+    return 1;
+#endif
+
+#endif
 }
 
 static inline void gfx_sdl_set_vsync(const bool enabled) {
@@ -231,6 +263,10 @@ static void gfx_sdl_reset_dimension_and_pos(void) {
 static void gfx_sdl_init(const char *window_title) {
     SDL_Init(SDL_INIT_VIDEO);
 
+    #ifdef __ANDROID__
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+    #endif
+
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
@@ -266,7 +302,7 @@ static void gfx_sdl_init(const char *window_title) {
         window_title,
         xpos, ypos, configWindow.w, configWindow.h,
         SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
-    #ifndef TARGET_SWITCH
+    #ifndef TARGET_PORT_CONSOLE
         | SDL_WINDOW_RESIZABLE
     #endif
     );
@@ -333,6 +369,38 @@ static void gfx_sdl_onkeyup(int scancode) {
         kb_key_up(translate_scancode(scancode));
 }
 
+#ifdef TOUCH_CONTROLS
+static void gfx_sdl_fingerdown(SDL_TouchFingerEvent sdl_event) {
+    struct TouchEvent event;
+    event.x = sdl_event.x;
+    event.y = sdl_event.y;
+    event.touchID = sdl_event.fingerId + 1;
+    if (touch_down_callback != NULL) {
+        touch_down_callback((void*)&event);
+    }
+}
+
+static void gfx_sdl_fingermotion(SDL_TouchFingerEvent sdl_event) {
+    struct TouchEvent event;
+    event.x = sdl_event.x;
+    event.y = sdl_event.y;
+    event.touchID = sdl_event.fingerId + 1;
+    if (touch_motion_callback != NULL) {
+        touch_motion_callback((void*)&event);
+    }
+}
+
+static void gfx_sdl_fingerup(SDL_TouchFingerEvent sdl_event) {
+    struct TouchEvent event;
+    event.x = sdl_event.x;
+    event.y = sdl_event.y;
+    event.touchID = sdl_event.fingerId + 1;
+    if (touch_up_callback != NULL) {
+        touch_up_callback((void*)&event);
+    }
+}
+#endif
+
 static void gfx_sdl_handle_events(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -344,6 +412,17 @@ static void gfx_sdl_handle_events(void) {
                 break;
             case SDL_KEYUP:
                 gfx_sdl_onkeyup(event.key.keysym.scancode);
+                break;
+#endif
+#ifdef TOUCH_CONTROLS
+	    case SDL_FINGERDOWN:
+                gfx_sdl_fingerdown(event.tfinger);
+                break;
+	    case SDL_FINGERMOTION:
+                gfx_sdl_fingermotion(event.tfinger);
+                break;
+	    case SDL_FINGERUP:
+                gfx_sdl_fingerup(event.tfinger);
                 break;
 #endif
             case SDL_WINDOWEVENT: // TODO: Check if this makes sense to be included in the Web build
@@ -383,8 +462,24 @@ static void gfx_sdl_set_keyboard_callbacks(kb_callback_t on_key_down, kb_callbac
 }
 #endif
 
+#ifdef TOUCH_CONTROLS
+static void gfx_sdl_set_touchscreen_callbacks(void (*down)(void* event), void (*motion)(void* event), void (*up)(void* event)) {
+    touch_down_callback = down;
+    touch_motion_callback = motion;
+    touch_up_callback = up;
+}
+#endif
+
 static bool gfx_sdl_start_frame(void) {
-    return true;
+    static uint32_t last_time = 0;
+    bool ret = true;
+    uint32_t ticks = SDL_GetTicks();
+    if ((last_time == 0) || (last_time + 10000 < ticks))
+        last_time = ticks;
+    if (last_time + frame_time < ticks)
+        ret = false;
+    last_time += frame_time;
+    return ret;
 }
 
 static inline void sync_framerate_with_timer(void) {
@@ -435,6 +530,9 @@ struct GfxWindowManagerAPI gfx_sdl = {
     gfx_sdl_init,
 #ifndef TARGET_PORT_CONSOLE
     gfx_sdl_set_keyboard_callbacks,
+#endif
+#ifdef TOUCH_CONTROLS
+    gfx_sdl_set_touchscreen_callbacks,
 #endif
     gfx_sdl_main_loop,
     gfx_sdl_get_dimensions,
