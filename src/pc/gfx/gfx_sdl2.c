@@ -126,6 +126,31 @@ static inline void sys_sleep(const uint64_t us) {
     usleep(us);
 }
 
+// TODO: Broken
+#if defined(__ANDROID__) && !defined(ANDROID_DISABLE_VSYNC)
+static inline int android_test_vsync(void)
+    /*Android's vsync seems finicky but timer based sync seems unusable too.
+     * I think vsync does kind of work but not half-vsync and stuff like that.
+     * Let's try to render multiple times if neccessary to lower the framerate.
+     * I don't think this is a great solution but it works.
+     * On SGI models, turning vsync off will help with framerate, but the best is 60fps patch.
+     * The actual solution would be to render or copy the buffer to a texture
+     * and then render that to the screen.*/
+#ifdef HIGH_FPS_PC
+    render_multiplier = (average + 30) / 60;
+#else
+    render_multiplier = (average + 15) / 30;
+#endif
+    if (render_multiplier == 0)
+        render_multiplier = 1;
+
+#ifdef HIGH_FPS_PC
+    return 2;
+#else
+    return 1;
+#endif
+#endif
+
 static int test_vsync(void) {
     // Even if SDL_GL_SetSwapInterval succeeds, it doesn't mean that VSync actually works.
     // A 60 Hz monitor should have a swap interval of 16.67 milliseconds.
@@ -148,7 +173,9 @@ static int test_vsync(void) {
 
     const float average = 4.0 * 1000.0 / (end - start);
 
-#ifndef __ANDROID__
+#if defined(__ANDROID__) && !defined(ANDROID_DISABLE_VSYNC)
+    return android_test_vsync();
+#else // PC
     if (average > 27.0f && average < 33.0f) return 1;
     if (average > 57.0f && average < 63.0f) return 2;
     if (average > 86.0f && average < 94.0f) return 3;
@@ -156,28 +183,6 @@ static int test_vsync(void) {
     if (average > 234.0f && average < 246.0f) return 8;
 
     return 0;
-#else
-    /*Android's vsync seems finicky but timer based sync seems unusable too.
-     * I think vsync does kind of work but not half-vsync and stuff like that.
-     * Let's try to render multiple times if neccessary to lower the framerate.
-     * I don't think this is a great solution but it works.
-     * On SGI models, turning vsync off will help with framerate, but the best is 60fps patch.
-     * The actual solution would be to render or copy the buffer to a texture
-     * and then render that to the screen.*/
-#ifdef HIGH_FPS_PC
-    render_multiplier = (average + 30) / 60;
-#else
-    render_multiplier = (average + 15) / 30;
-#endif
-    if (render_multiplier == 0)
-        render_multiplier = 1;
-
-#ifdef HIGH_FPS_PC
-    return 2;
-#else
-    return 1;
-#endif
-
 #endif
 }
 

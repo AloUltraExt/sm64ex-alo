@@ -66,7 +66,7 @@
 #define HASHMAP_LEN (MAX_CACHED_TEXTURES * 2)
 #define HASH_MASK (HASHMAP_LEN - 1)
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) && !defined(ANDROID_DISABLE_VSYNC)
 int render_multiplier;
 #endif
 
@@ -2021,7 +2021,7 @@ void gfx_run(Gfx *commands) {
     }
     dropped_frame = false;
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) && !defined(ANDROID_DISABLE_VSYNC)
     for (int i = 0; i < (configWindow.vsync ? render_multiplier : 1); i++) {
 #endif
     gfx_rapi->start_frame();
@@ -2029,7 +2029,7 @@ void gfx_run(Gfx *commands) {
     gfx_flush();
     gfx_rapi->end_frame();
     gfx_wapi->swap_buffers_begin();
-#ifdef __ANDROID__
+#if defined(__ANDROID__) && !defined(ANDROID_DISABLE_VSYNC)
     }
 #endif
 }

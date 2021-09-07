@@ -53,7 +53,7 @@ ConfigWindow configWindow       = {
     .y = WAPI_WIN_CENTERPOS,
     .w = DESIRED_SCREEN_WIDTH,
     .h = DESIRED_SCREEN_HEIGHT,
-    .vsync = 1,
+    .vsync = false,
     .reset = false,
     .fullscreen = false,
     .exiting_fullscreen = false,
@@ -126,7 +126,9 @@ static const struct ConfigOption options[] = {
     {.name = "window_y",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.y},
     {.name = "window_w",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.w},
     {.name = "window_h",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.h},
+    #if defined(TARGET_ANDROID) && !defined(ANDROID_DISABLE_VSYNC)
     {.name = "vsync",                .type = CONFIG_TYPE_BOOL, .boolValue = &configWindow.vsync},
+    #endif
 #endif
     {.name = "texture_filtering",    .type = CONFIG_TYPE_UINT, .uintValue = &configFiltering},
     {.name = "master_volume",        .type = CONFIG_TYPE_UINT, .uintValue = &configMasterVolume},
