@@ -93,7 +93,7 @@ bool configPrecacheRes = true;
 #endif
 
 #ifdef MOUSE_ACTIONS
-bool configMouse = true;
+bool configMouse = false;
 #endif
 
 #ifdef DISCORDRPC
@@ -108,7 +108,7 @@ bool configHUD = true;
 bool configEnableCamera  = true;
 bool configCameraAnalog  = false;
 #ifdef MOUSE_ACTIONS
-bool configCameraMouse   = true;
+bool configCameraMouse   = false;
 #endif
 bool configCameraInvertX = true;
 bool configCameraInvertY = true;
