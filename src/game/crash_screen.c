@@ -7,6 +7,9 @@
 
 #if defined(TARGET_N64) && defined(N64_CRASH_SCREEN)
 
+#define CRASH_BG_COLOR GPACK_RGBA5551(0, 0, 0, 1)
+#define CRASH_CH_COLOR GPACK_RGBA5551(255, 255, 255, 1)
+
 #include "lib/src/printf.h"
 
 u8 gCrashScreenCharToGlyph[128] = {
@@ -72,7 +75,7 @@ void crash_screen_draw_rect(s32 x, s32 y, s32 w, s32 h) {
     for (i = 0; i < h; i++) {
         for (j = 0; j < w; j++) {
             // 0xe738 = 0b1110011100111000
-            *ptr = ((*ptr & 0xe738) >> 2) | 1;
+            *ptr = ((*ptr & 0xe738) >> 2) | CRASH_BG_COLOR;
             ptr++;
         }
         ptr += gCrashScreen.width - w;
@@ -94,7 +97,7 @@ void crash_screen_draw_glyph(s32 x, s32 y, s32 glyph) {
         rowMask = *data++;
 
         for (j = 0; j < 6; j++) {
-            *ptr++ = (bit & rowMask) ? 0xffff : 1;
+            *ptr++ = (bit & rowMask) ? CRASH_CH_COLOR : CRASH_BG_COLOR;
             bit >>= 1;
         }
         ptr += gCrashScreen.width - 6;
@@ -212,6 +215,7 @@ void draw_crash_screen(OSThread *thread) {
                        (u32) tc->sp);
     crash_screen_print(30, 140, "S8:%08XH   RA:%08XH", (u32) tc->s8, (u32) tc->ra);
     crash_screen_print_fpcsr(tc->fpcsr);
+    osWritebackDCacheAll();
     crash_screen_print_float_reg(30, 170, 0, &tc->fp0.f.f_even);
     crash_screen_print_float_reg(120, 170, 2, &tc->fp2.f.f_even);
     crash_screen_print_float_reg(210, 170, 4, &tc->fp4.f.f_even);
@@ -228,6 +232,7 @@ void draw_crash_screen(OSThread *thread) {
     crash_screen_print_float_reg(120, 210, 26, &tc->fp26.f.f_even);
     crash_screen_print_float_reg(210, 210, 28, &tc->fp28.f.f_even);
     crash_screen_print_float_reg(30, 220, 30, &tc->fp30.f.f_even);
+    osWritebackDCacheAll();
     osViBlack(FALSE);
     osViSwapBuffer(gCrashScreen.framebuffer);
 }
