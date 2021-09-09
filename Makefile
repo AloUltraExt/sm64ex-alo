@@ -1,8 +1,8 @@
-
 # Makefile to rebuild SM64 split image
 
-### Default target ###
+include util.mk
 
+# Default target
 default: all
 
 # Preprocessor definitions
@@ -25,7 +25,7 @@ DEFINES :=
 #         an original matching N64 ROM
 #   gcc - uses the GNU C Compiler
 COMPILER_N64 ?= gcc
-$(eval $(call validate-option,COMPILER,ido gcc))
+$(eval $(call validate-option,COMPILER_N64,ido gcc))
 
 # Build debug version
 DEBUG ?= 0
@@ -263,9 +263,11 @@ TARGET := sm64.$(VERSION).$(GRUCODE)
 #   f3d_new - Second version the Fast3D (Originally in EU - SH)
 #   f3dex   - First version of Fast3D Extended
 #   f3dex2  - Second (rewritten) version of Fast3D Extended
+#   l3dex2  - F3DEX2 version that only renders in wireframe
 #   f3dex2e - Exclusive PC Version of the F3DEX2 microcode
 #   f3dzex  - newer, experimental microcode used in Animal Crossing
-$(eval $(call validate-option,GRUCODE,f3d_old f3dex f3dex2 f3dex2e f3d_new f3dzex))
+#   super3d - extremely experimental version of Fast3D lacking many features for speed
+$(eval $(call validate-option,GRUCODE,f3d_old f3dex f3dex2 f3dex2pl f3d_new f3dzex super3d l3dex2))
 
 ifeq      ($(GRUCODE),f3d_old)
   DEFINES += F3D_OLD=1
@@ -273,12 +275,17 @@ else ifeq ($(GRUCODE),f3d_new) # Fast3D 2.0H
   DEFINES += F3D_NEW=1
 else ifeq ($(GRUCODE),f3dex) # Fast3DEX
   DEFINES += F3DEX_GBI=1 F3DEX_GBI_SHARED=1
-else ifeq ($(GRUCODE), f3dex2) # Fast3DEX2
+else ifeq ($(GRUCODE),f3dex2) # Fast3DEX2
   DEFINES += F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
-else ifeq ($(GRUCODE), f3dex2e) # Fast3DEX2 Extended (for PC)
-  DEFINES += F3DEX_GBI_2E=1
-else ifeq ($(GRUCODE),f3dzex) # Fast3DZEX (2.0J / Animal Forest - Dōbutsu no Mori)
-  DEFINES += F3DZEX_GBI_2=1 F3DEX_GBI_SHARED=1
+else ifeq ($(GRUCODE),l3dex2) # Line3DEX2
+  DEFINES += L3DEX2_GBI=1 L3DEX2_ALONE=1 F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
+else ifeq ($(GRUCODE),f3dex2pl) # Fast3DEX2_PosLight
+  DEFINES += F3DEX2PL_GBI=1 F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
+else ifeq ($(GRUCODE),f3dzex) # Fast3DZEX (2.08J / Animal Forest - Dōbutsu no Mori)
+  DEFINES += F3DZEX_GBI_2=1 F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
+else ifeq ($(GRUCODE),super3d) # Super3D
+  $(warning Super3D is experimental. Try at your own risk.)
+  DEFINES += SUPER3D_GBI=1 F3D_NEW=1
 endif
 
 # Specify target defines
