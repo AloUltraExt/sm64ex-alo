@@ -273,6 +273,8 @@ s32 stationary_ground_step(struct MarioState *m) {
 #endif
 }
 
+extern s32 analog_stick_held_back(struct MarioState *m);
+
 static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
     UNUSED struct Surface *lowerWall;
     struct Surface *upperWall;
@@ -299,12 +301,15 @@ static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
     if ((m->action & ACT_FLAG_RIDING_SHELL) && floorHeight < waterLevel) {
         floorHeight = waterLevel;
         floor = &gWaterSurfacePseudoFloor;
+#if QOL_FIX_SHELL_SPEED_NEGATIVE_OFFSET
+        floor->originOffset = -floorHeight;
+#else
         floor->originOffset = floorHeight; //! Wrong origin offset (no effect)
+#endif
     }
 
     if (nextPos[1] > floorHeight + 100.0f) {
 #if QOL_FEATURE_LEDGE_PROTECTION
-        extern s32 analog_stick_held_back(struct MarioState *m);
         // Prevent some cases of slipping off ledges
         if ((m->input & INPUT_NONZERO_ANALOG)
          && (m->forwardVel < 32.0f)
@@ -452,7 +457,11 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
     if ((m->action & ACT_FLAG_RIDING_SHELL) && floorHeight < waterLevel) {
         floorHeight = waterLevel;
         floor = &gWaterSurfacePseudoFloor;
+#if QOL_FIX_SHELL_SPEED_NEGATIVE_OFFSET
+        floor->originOffset = -floorHeight;
+#else
         floor->originOffset = floorHeight; //! Incorrect origin offset (no effect)
+#endif
     }
 
     //! This check uses f32, but findFloor uses short (overflow jumps)
@@ -476,7 +485,13 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
             m->vel[1] = 0.0f;
 
             //! Uses referenced ceiling instead of ceil (ceiling hang upwarp)
-            if ((stepArg & AIR_STEP_CHECK_HANG) && m->ceil != NULL
+            if (
+#if QOL_FEATURE_HANG_AIR_ANYWHERE
+            (stepArg & ACT_FLAG_AIR)
+#else
+            (stepArg & AIR_STEP_CHECK_HANG)
+#endif
+                && m->ceil != NULL
                 && m->ceil->type == SURFACE_HANGABLE) {
                 return AIR_STEP_GRABBED_CEILING;
             }

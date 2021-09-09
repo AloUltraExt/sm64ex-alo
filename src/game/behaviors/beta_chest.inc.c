@@ -22,7 +22,7 @@ void bhv_beta_chest_bottom_init(void) {
     // cancelled by setting the yaw to 0, right before this beta
     // object was discarded?
     o->oMoveAngleYaw = random_u16();
-#if !QOL_FIXES_UNUSED_BETA_CHEST_YAW
+#if !QOL_FIX_UNUSED_BETA_CHEST_YAW
     o->oMoveAngleYaw = 0;
 #endif
 

@@ -62,6 +62,9 @@
 /// Adds "new" star grab action that uses floating star dance if on a lethal floor
 /// Credits: (AloXado320)
 #define QOL_FEATURE_STAR_GRAB_NO_FALL_DEATH (0 || QOL_FEATURES)
+/// Makes Mario grab hangable ceilings in any air actions
+/// Credits: (AloXado320)
+#define QOL_FEATURE_HANG_AIR_ANYWHERE (0 || QOL_FEATURES)
 /// Makes Mario not fall after star grab if the floor is too far below
 /// Credits: (Arceveti)
 #define QOL_FEATURE_STAR_GRAB_NO_FALL_HEIGHT (0 || QOL_FEATURES)
@@ -226,6 +229,12 @@
 /// Fixes (or rather, adjusts) Mario's head look at bosses
 /// Credits: (coltongit)
 #define QOL_FIX_MARIO_LOOK_HEAD_BOSSES (0 || QOL_FIXES)
+/// Fixes slide action so they have short hitbox
+/// Credits: (AloXado320)
+#define QOL_FIX_SHORT_HITBOX_SLIDE_ACTS (0 || QOL_FIXES)
+/// Fixes mist particles not spawning with an underwater shell
+/// Credits: (PyroJay4)
+#define QOL_FIX_DROPPED_UNDERWATER_SHELL (0 || QOL_FIXES)
 /// Fixes Mario floor height in the peach ending cutscene
 /// Credits: (Arceveti)
 #define QOL_FIX_END_CUTSCENE_MARIO_FLOOR (0 || QOL_FIXES)
@@ -274,7 +283,7 @@
 #define QOL_FIX_UNUSED_LOOP_AUDIO_EU_SH (0 || QOL_FIXES)
 /// Fixes (or rather removes) 0 yaw code in Beta Chest object
 /// Credits: (Easy Fix)
-#define QOL_FIXES_UNUSED_BETA_CHEST_YAW (0 || QOL_FIXES)
+#define QOL_FIX_UNUSED_BETA_CHEST_YAW (0 || QOL_FIXES)
 /// Fixes collision flags checks for free bowling ball behavior
 /// Credits: (Easy Fix)
 #define QOL_FIX_UNUSED_FREE_BOWLING_BALL_COL_FLAGS (0 || QOL_FIXES)
