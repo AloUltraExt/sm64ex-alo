@@ -33,7 +33,7 @@ static char sLevelSelectStageNames[64][16] = {
 #undef DEFINE_LEVEL
 
 static u16 sDemoCountdown = 0;
-#ifndef VERSION_JP
+#if !defined(VERSION_JP) && defined(GODDARD_MFACE)
 static s16 sPlayMarioGreeting = TRUE;
 static s16 sPlayMarioGameOver = TRUE;
 #endif
@@ -146,6 +146,7 @@ s16 intro_level_select(void) {
     return 0;
 }
 
+#ifdef GODDARD_MFACE
 /**
  * Regular intro function that handles Mario's greeting voice and game start.
  */
@@ -220,6 +221,7 @@ s32 intro_game_over(void) {
     }
     return run_level_id_or_demo(level);
 }
+#endif
 
 /**
  * Plays the casual "It's a me mario" when the game stars.
@@ -241,12 +243,19 @@ s32 lvl_intro_update(s16 arg, UNUSED s32 unusedArg) {
         case LVL_INTRO_PLAY_ITS_A_ME_MARIO:
             retVar = intro_play_its_a_me_mario();
             break;
+#ifdef GODDARD_MFACE
         case LVL_INTRO_REGULAR:
             retVar = intro_regular();
             break;
         case LVL_INTRO_GAME_OVER:
             retVar = intro_game_over();
             break;
+#else
+        case LVL_INTRO_REGULAR:
+        case LVL_INTRO_GAME_OVER:
+            retVar = (100 + gDebugLevelSelect);
+            break;
+#endif
         case LVL_INTRO_LEVEL_SELECT:
             retVar = intro_level_select();
             break;

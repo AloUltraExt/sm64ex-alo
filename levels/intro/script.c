@@ -116,10 +116,18 @@ const LevelScript level_intro_mario_head_dizzy[] = {
 };
 #else
 const LevelScript level_intro_mario_head_regular[] = {
+    INIT_LEVEL(),
+    CALL_LOOP(/*arg*/ LVL_INTRO_REGULAR, /*func*/ lvl_intro_update),
+    JUMP_IF(/*op*/ OP_EQ, /*arg*/ 100, script_intro_L1),
+    JUMP_IF(/*op*/ OP_EQ, /*arg*/ 101, script_intro_L2),
     EXIT_AND_EXECUTE(/*seg*/ 0x14, _menuSegmentRomStart, _menuSegmentRomEnd, level_main_menu_entry_1),
 };
 
 const LevelScript level_intro_mario_head_dizzy[] = {
+    INIT_LEVEL(),
+    CALL_LOOP(/*arg*/ LVL_INTRO_GAME_OVER, /*func*/ lvl_intro_update),
+    JUMP_IF(/*op*/ OP_EQ, /*arg*/ 100, script_intro_L1),
+    JUMP_IF(/*op*/ OP_EQ, /*arg*/ 101, script_intro_L2),
     EXIT_AND_EXECUTE(/*seg*/ 0x14, _introSegmentRomStart, _introSegmentRomEnd, level_intro_splash_screen),
 };
 #endif
