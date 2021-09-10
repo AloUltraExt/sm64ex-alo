@@ -143,6 +143,7 @@ BASEPACK ?= base.zip
 # Automatic settings for PC port(s)
 
 WINDOWS_BUILD ?= 0
+TARGET_ANDROID ?= 0
 
 ifeq ($(TARGET_N64),0)
   GRUCODE := f3dex2e
@@ -267,7 +268,7 @@ TARGET := sm64.$(VERSION).$(GRUCODE)
 #   f3dex2e - Exclusive PC Version of the F3DEX2 microcode
 #   f3dzex  - newer, experimental microcode used in Animal Crossing
 #   super3d - extremely experimental version of Fast3D lacking many features for speed
-$(eval $(call validate-option,GRUCODE,f3d_old f3dex f3dex2 f3dex2pl f3d_new f3dzex super3d l3dex2))
+$(eval $(call validate-option,GRUCODE,f3d_old f3dex f3dex2 f3dex2e f3dex2pl f3d_new f3dzex super3d l3dex2))
 
 ifeq      ($(GRUCODE),f3d_old)
   DEFINES += F3D_OLD=1
@@ -286,6 +287,12 @@ else ifeq ($(GRUCODE),f3dzex) # Fast3DZEX (2.08J / Animal Forest - Dōbutsu no M
 else ifeq ($(GRUCODE),super3d) # Super3D
   $(warning Super3D is experimental. Try at your own risk.)
   DEFINES += SUPER3D_GBI=1 F3D_NEW=1
+else ifeq ($(GRUCODE),f3dex2e) # Fast3DEX2 Extended (PC Only)
+  ifeq ($(TARGET_N64),1)
+    $(error f3dex2e is only supported on PC Port)
+  else
+    DEFINES += F3DEX_GBI_2E=1
+  endif
 endif
 
 # Specify target defines
@@ -660,6 +667,11 @@ endif
 # Check for text save format
 ifeq ($(TEXTSAVES),1)
   CUSTOM_C_DEFINES += -DTEXTSAVES
+endif
+
+# Check for external data
+ifeq ($(EXTERNAL_DATA),1)
+  CUSTOM_C_DEFINES += -DEXTERNAL_DATA
 endif
 
 # Use PC-only exclusive defines
@@ -1087,8 +1099,8 @@ CFLAGS += $(CUSTOM_C_DEFINES)
 
 # Load external textures
 ifeq ($(EXTERNAL_DATA),1)
-  CC_CHECK += -DEXTERNAL_DATA -DFS_BASEDIR="\"$(BASEDIR)\""
-  CFLAGS += -DEXTERNAL_DATA -DFS_BASEDIR="\"$(BASEDIR)\""
+  CC_CHECK += -DFS_BASEDIR="\"$(BASEDIR)\""
+  CFLAGS += -DFS_BASEDIR="\"$(BASEDIR)\""
   # tell skyconv to write names instead of actual texture data and save the split tiles so we can use them later
   SKYTILE_DIR := $(BUILD_DIR)/textures/skybox_tiles
   SKYCONV_ARGS := --store-names --write-tiles "$(SKYTILE_DIR)"
@@ -1245,6 +1257,9 @@ $(BASEPACK_LST): $(EXE_DEPEND)
 	@find actors -name \*.png -exec echo "{} gfx/{}" >> $(BASEPACK_LST) \;
 	@find levels -name \*.png -exec echo "{} gfx/{}" >> $(BASEPACK_LST) \;
 	@find textures -name \*.png -exec echo "{} gfx/{}" >> $(BASEPACK_LST) \;
+    ifeq ($(PORT_MOP_OBJS),1)
+	@find src/extras/mop/actors -name \*.png -exec echo "{} gfx/{}" >> $(BASEPACK_LST) \;
+    endif
 
 # prepares the resource ZIP with base data
 $(BASEPACK_PATH): $(BASEPACK_LST)

@@ -28,8 +28,7 @@ extern const Collision col_Sandblock_MOP_0xaa6444[];
 extern const GeoLayout Shrink_Platform_MOP[];
 extern const Collision col_Shrink_Platform_MOP_0xad3720[];
 //shrinkplat border
-extern const Gfx DL_Shrink_Platform_Border_MOP_0x3020860[];
-extern const Gfx DL_Shrink_Platform_Border_MOP_0x3021190[];
+extern const Gfx DL_Shrink_Platform_Border_MOP[];
 
 //spring
 extern const Gfx DL_Spring_MOP_0x301fc98[];
