@@ -127,7 +127,7 @@ static inline void sys_sleep(const uint64_t us) {
 }
 
 // TODO: Broken
-#if defined(__ANDROID__) && !defined(ANDROID_DISABLE_VSYNC)
+#if defined(__ANDROID__) && !defined(DISABLE_VSYNC)
 static inline int android_test_vsync(void)
     /*Android's vsync seems finicky but timer based sync seems unusable too.
      * I think vsync does kind of work but not half-vsync and stuff like that.
@@ -173,7 +173,7 @@ static int test_vsync(void) {
 
     const float average = 4.0 * 1000.0 / (end - start);
 
-#if defined(__ANDROID__) && !defined(ANDROID_DISABLE_VSYNC)
+#if defined(__ANDROID__) && !defined(DISABLE_VSYNC)
     return android_test_vsync();
 #else // PC
     if (average > 27.0f && average < 33.0f) return 1;

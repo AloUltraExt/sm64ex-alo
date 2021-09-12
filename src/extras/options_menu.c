@@ -134,12 +134,6 @@ static const u8 *filterChoices[] = {
     optsVideoStr[2],
     optsVideoStr[3],
 };
-
-static const u8 *vsyncChoices[] = {
-    toggleStr[0],
-    toggleStr[1],
-    optsVideoStr[6],
-};
 #endif
 
 /* button action functions */
@@ -195,7 +189,7 @@ static struct Option optsControls[] = {
 static struct Option optsVideo[] = {
 #ifndef TARGET_PORT_CONSOLE
     DEF_OPT_TOGGLE( optsVideoStr[0], &configWindow.fullscreen ),
-    #if defined(TARGET_ANDROID) && !defined(ANDROID_DISABLE_VSYNC)
+    #ifndef DISABLE_VSYNC
     DEF_OPT_TOGGLE( optsVideoStr[5], &configWindow.vsync ),
     #endif
 #endif
@@ -203,7 +197,7 @@ static struct Option optsVideo[] = {
 #if !defined(TARGET_PORT_CONSOLE) && !defined(TARGET_ANDROID)
     DEF_OPT_BUTTON( optsVideoStr[4], optvideo_reset_window ),
 #endif
-    DEF_OPT_BUTTON( optsVideoStr[7], optvideo_apply ),
+    DEF_OPT_BUTTON( optsVideoStr[6], optvideo_apply ),
 };
 #endif
 

@@ -126,7 +126,7 @@ static const struct ConfigOption options[] = {
     {.name = "window_y",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.y},
     {.name = "window_w",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.w},
     {.name = "window_h",             .type = CONFIG_TYPE_UINT, .uintValue = &configWindow.h},
-    #if defined(TARGET_ANDROID) && !defined(ANDROID_DISABLE_VSYNC)
+    #ifndef DISABLE_VSYNC
     {.name = "vsync",                .type = CONFIG_TYPE_BOOL, .boolValue = &configWindow.vsync},
     #endif
 #endif

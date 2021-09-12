@@ -299,7 +299,7 @@ endif
 ifeq ($(TARGET_RPI),1) # Define RPi to change SDL2 title & GLES2 hints
   DEFINES += TARGET_RPI=1 USE_GLES=1
 else ifeq ($(TARGET_ANDROID),1) # Android has broken V-Sync (causes black screen) so disable it
-  DEFINES += TARGET_ANDROID=1 USE_GLES=1 ANDROID_DISABLE_VSYNC=1
+  DEFINES += TARGET_ANDROID=1 USE_GLES=1 DISABLE_VSYNC=1
 else ifeq ($(OSX_BUILD),1) # Modify GFX & SDL2 for OSX GL
   DEFINES += OSX_BUILD=1
 else ifeq ($(TARGET_WEB),1)
