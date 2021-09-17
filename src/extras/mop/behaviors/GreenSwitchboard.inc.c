@@ -3,10 +3,10 @@
 // static char buf[12];
 
 void bhv_green_switchboard_loop(void) {
-	struct Object *child = o->oMopGreenSwitchboardGear;
+	struct Object *gearObj = o->oMopGreenSwitchboardGear;
 	f32 dot;
 	f32 dotH;
-	if (cur_obj_is_mario_on_platform()==1){
+	if (cur_obj_is_mario_on_platform()){
 		f32 dx = gMarioState->pos[0] - o->oPosX;
 		f32 dz = gMarioState->pos[2] - o->oPosZ;
 		f32 dHx = o->oPosX - o->oHomeX;
@@ -40,19 +40,22 @@ void bhv_green_switchboard_loop(void) {
 			if (o->oFaceAnglePitch>-2048){
 				o->oFaceAnglePitch = (u32)approach_by_increment(-2048.0f, o->oFaceAnglePitch, 128.0f);
 			}
-			
+
 		}
+
+        if ((o->oTimer & 1) && sqrtf(o->oForwardVel * o->oForwardVel) >= MAX_SPEED/2) {
+            cur_obj_play_sound_1(SOUND_OBJ_KOOPA_WALK);
+        }
 	}else{
 		o->oForwardVel = approach_by_increment(0.0f, o->oForwardVel, SPEED_INC);
 		o->oFaceAnglePitch = (u32)approach_by_increment(0.0f, o->oFaceAnglePitch, 128.0f);
 	}
-	child->oFaceAnglePitch+=(s32)(o->oForwardVel*200);
-	obj_copy_pos(child,o);
+
+	gearObj->oFaceAnglePitch+=(s16)(o->oForwardVel*200);
+	obj_copy_pos(gearObj,o);
 }
 
 
 void bhv_green_switchboard_init(void) {
 	o->oMopGreenSwitchboardGear = spawn_object(o, MODEL_MOP_SWITCHBOARD_GEARS, bhvUnused05A8);
 }
-
-

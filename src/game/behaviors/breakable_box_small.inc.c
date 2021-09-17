@@ -76,7 +76,7 @@ void breakable_box_small_released_loop(void) {
     // Despawn, and create a corkbox respawner
     if (o->oBreakableBoxSmallFramesSinceReleased > 900) {
 #ifdef PORT_MOP_OBJS
-        create_respawner(o->header.gfx.sharedChild, bhvBreakableBoxSmall, 3000);
+        create_respawner(obj_get_model(o), bhvBreakableBoxSmall, 3000);
 #else
         create_respawner(MODEL_BREAKABLE_BOX_SMALL, bhvBreakableBoxSmall, 3000);
 #endif
@@ -97,7 +97,7 @@ void breakable_box_small_idle_loop(void) {
         case 101:
             o->activeFlags = ACTIVE_FLAG_DEACTIVATED;
 #ifdef PORT_MOP_OBJS
-            create_respawner(o->header.gfx.sharedChild, bhvBreakableBoxSmall, 3000);
+            create_respawner(obj_get_model(o), bhvBreakableBoxSmall, 3000);
 #else
             create_respawner(MODEL_BREAKABLE_BOX_SMALL, bhvBreakableBoxSmall, 3000);
 #endif

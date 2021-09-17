@@ -197,23 +197,18 @@ Vtx VB_Checkpoint_Flag_MOP_0x606570[] = {
 {{{ 0, 627, 13 }, 0, { -875, 17365 }, { 223, 63, 104, 255}}},
 };
 
-const Light_t Light_Checkpoint_Flag_MOP_0x604400 = {
-{ 255, 255, 255}, 0, { 255, 255, 255}, 0, { 127, 127, 127}, 0
-};
+Lights1 Lights_CheckPoint_Flag_MOP = gdSPDefLights1(
+	0x7F, 0x7F, 0x7F,
+	0xFF, 0xFF, 0xFF, 0x28, 0x28, 0x28);
 
-const Ambient_t Light_Checkpoint_Flag_MOP_0x604408 = {
-{127, 127, 127}, 0, {127, 127, 127}, 0
-};
+Lights1 Lights_CheckPoint_Flag_MOP_brown = gdSPDefLights1(
+    0x39, 0x0e, 0x07,
+    0x72, 0x1c, 0x0e, 0x28, 0x28, 0x28);
 
-const Gfx DL_Checkpoint_Flag_MOP_0x606660[] = {
-gsDPPipeSync(),
-gsSPGeometryMode(0, 0),
+const Gfx DL_Checkpoint_Flag_MOP_0x606660_jump[] = {
 gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, TEXEL0, 0, SHADE, 0, TEXEL0, 0, SHADE, 0, TEXEL0, 0, SHADE, 0),
 gsSPTexture(65535, 65535, 0, 0, 1),
 gsDPTileSync(),
-gsDPLoadSync(),
-gsSPLight(&Light_Checkpoint_Flag_MOP_0x604400.col, 1),
-gsSPLight(&Light_Checkpoint_Flag_MOP_0x604408.col, 2),
 gsDPSetTextureImage(0, 2, 1, Checkpoint_Flag_MOP__texture_00604410),
 gsDPSetTile(0, 2, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0),
 gsDPLoadSync(),
@@ -297,3 +292,16 @@ gsSPTexture(65535, 65535, 0, 0, 0),
 gsSPEndDisplayList(),
 };
 
+const Gfx DL_Checkpoint_Flag_MOP_0x606660[] = {
+gsDPPipeSync(),
+gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, TEXEL0, 0, SHADE, 0, TEXEL0, 0, SHADE, 0, TEXEL0, 0, SHADE, 0),
+gsSPSetLights1(Lights_CheckPoint_Flag_MOP),
+gsSPBranchList(DL_Checkpoint_Flag_MOP_0x606660_jump),
+};
+
+const Gfx DL_Checkpoint_Flag_MOP_0x606660_active[] = {
+gsDPPipeSync(),
+gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, TEXEL0, 0, SHADE, 0, TEXEL0, 0, SHADE, 0, TEXEL0, 0, SHADE, 0),
+gsSPSetLights1(Lights_CheckPoint_Flag_MOP_brown),
+gsSPBranchList(DL_Checkpoint_Flag_MOP_0x606660_jump),
+};

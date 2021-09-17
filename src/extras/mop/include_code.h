@@ -17,7 +17,7 @@ void bhv_flipswitch_panel_init(void);
 void bhv_checkpoint_flag_init(void);
 void bhv_checkpoint_flag_loop(void);
 void bhv_flipswap_loop(void);
-void bhv_pswitch_loop(void);
+void bhv_pswitch_swap_coins_and_boxes(void);
 void bhv_blargg_mop(void);
 void bhv_move_rotate_init(void);
 void bhv_move_rotate_loop(void);

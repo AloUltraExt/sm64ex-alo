@@ -5,35 +5,37 @@
 #define LOOP 4
 
 static u8 MoveRotatePath1[] = {
-ZPLUS,
-XPLUS,
-ZMINUS,
-XMINUS,
-LOOP
+    ZPLUS,
+    XPLUS,
+    ZMINUS,
+    XMINUS,
+    LOOP
 };
+
 static u8 MoveRotatePath2[] = {
-ZPLUS,
-ZPLUS,
-ZPLUS,
-ZMINUS,
-ZMINUS,
-ZMINUS,
-LOOP
+    ZPLUS,
+    ZPLUS,
+    ZPLUS,
+    ZMINUS,
+    ZMINUS,
+    ZMINUS,
+    LOOP
 };
+
 static u8 MoveRotatePath3[] = {
-XPLUS,
-XPLUS,
-XPLUS,
-XMINUS,
-XMINUS,
-XMINUS,
-LOOP
+    XPLUS,
+    XPLUS,
+    XPLUS,
+    XMINUS,
+    XMINUS,
+    XMINUS,
+    LOOP
 };
 
 static u8 *Paths[] = {
-	&MoveRotatePath1,
-	&MoveRotatePath2,
-	&MoveRotatePath3
+	MoveRotatePath1,
+	MoveRotatePath2,
+	MoveRotatePath3
 };
 
 //speeds are 8 in each dir
@@ -94,6 +96,3 @@ void bhv_move_rotate_loop(void) {
 	cur_obj_rotate_face_angle_using_vel();
 	cur_obj_move_using_vel();
 }
-
-
-

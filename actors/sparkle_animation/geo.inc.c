@@ -14,3 +14,7 @@ const GeoLayout sparkles_animation_geo[] = {
    GEO_CLOSE_NODE(),
    GEO_END(),
 };
+
+#ifdef PORT_MOP_OBJS
+#include "src/extras/mop/actors/Emitter_MOP/geo.inc.c"
+#endif

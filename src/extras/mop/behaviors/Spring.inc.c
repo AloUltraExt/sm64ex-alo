@@ -1,10 +1,12 @@
+void bounce_off_object(struct MarioState *m, struct Object *o, f32 velY);
+
 void bhv_Spring_loop(void) {
 	f32 Yspd=56.0f;
 	u32 CarmackMeme;
 	u32 Tmp;
 	if (o->oAction==0){
 		if (obj_check_if_collided_with_object(o,gMarioObject)){
-			set_mario_action(gMarioState,ACT_FREEFALL,0);
+			set_mario_action(gMarioState,ACT_DOUBLE_JUMP,0);
 			gMarioStates[0].faceAngle[1]=o->oFaceAngleYaw;
 			CarmackMeme = * (u32 *) &Yspd;
 			Tmp=CarmackMeme+(o->oBehParams2ndByte<<16);

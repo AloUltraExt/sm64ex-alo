@@ -114,9 +114,9 @@ const LevelScript level_main_scripts_entry[] = {
     LOAD_MODEL_FROM_GEO(MODEL_CARTOON_STAR,            cartoon_star_geo),
 #ifdef PORT_MOP_OBJS
     LOAD_MODEL_FROM_GEO(MODEL_MOP_NOTEBLOCK,            Noteblock_MOP),
-    LOAD_MODEL_FROM_DL( MODEL_MOP_CHECKPOINT_FLAG,      DL_Checkpoint_Flag_MOP_0x606660, LAYER_OPAQUE),
+    LOAD_MODEL_FROM_GEO(MODEL_MOP_CHECKPOINT_FLAG,      Checkpoint_Flap_MOP),
     LOAD_MODEL_FROM_GEO(MODEL_MOP_FLIPBLOCK,            FlipBlock_MOP),
-	LOAD_MODEL_FROM_DL( MODEL_MOP_FLIPSWAP_PLATFORM,     DL_Flipswap_Platform_MOP_0x5f9ac0, LAYER_OPAQUE),
+	LOAD_MODEL_FROM_DL( MODEL_MOP_FLIPSWAP_PLATFORM,    DL_Flipswap_Platform_MOP_0x5f9ac0, LAYER_OPAQUE),
     LOAD_MODEL_FROM_DL( MODEL_MOP_FLIPSWAP_PLATFORM_BORDER,DL_Flipswap_Platform_Border_MOP_0x5f8560, LAYER_OPAQUE),
 	LOAD_MODEL_FROM_GEO(MODEL_MOP_FLIPSWITCH_PANEL,     Flipswitch_Panel_MOP),
 	LOAD_MODEL_FROM_DL( MODEL_MOP_SWITCHBOARD,          DL_Green_Switchboard_MOP_0x5fd8b0, LAYER_OPAQUE),
@@ -128,6 +128,7 @@ const LevelScript level_main_scripts_entry[] = {
 	LOAD_MODEL_FROM_GEO(MODEL_MOP_SHRINKPLAT,           Shrink_Platform_MOP),
 	LOAD_MODEL_FROM_GEO(MODEL_MOP_SWITCHBLOCK,          Switchblock_MOP),
 	LOAD_MODEL_FROM_GEO(MODEL_MOP_SWITCHBLOCK_SWITCH,   Switchblock_Switch_MOP),
+    LOAD_MODEL_FROM_GEO(MODEL_MOP_EMITTER_SPARKLES,     Sparkles_Emitter_MOP),
 #endif
     FREE_LEVEL_POOL(),
     CALL(/*arg*/ 0, /*func*/ lvl_init_from_save_file),

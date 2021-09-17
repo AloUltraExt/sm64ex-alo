@@ -14,7 +14,6 @@ extern Vtx VB_Checkpoint_Flag_MOP_0x606480[];
 extern Vtx VB_Checkpoint_Flag_MOP_0x606570[];
 extern const u8 Checkpoint_Flag_MOP__texture_00604410[];
 extern const u8 Checkpoint_Flag_MOP__texture_00604C10[];
-extern const Light_t Light_Checkpoint_Flag_MOP_0x604400;
-extern const Ambient_t Light_Checkpoint_Flag_MOP_0x604408;
 extern const Gfx DL_Checkpoint_Flag_MOP_0x606660[];
+extern const Gfx DL_Checkpoint_Flag_MOP_0x606660_active[];
 #endif

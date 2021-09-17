@@ -162,6 +162,10 @@ s16 gNumRoomedObjectsInMarioRoom;
 s16 gNumRoomedObjectsNotInMarioRoom;
 s16 gWDWWaterLevelChanging;
 s16 gMarioOnMerryGoRound;
+#ifdef PORT_MOP_OBJS
+s16 gMOPSwitchBlockState;
+s16 gMOPFlipSwitchStarSpawned;
+#endif
 
 /**
  * Nodes used to represent the doubly linked object lists.

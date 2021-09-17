@@ -560,6 +560,10 @@ void alloc_surface_pools(void) {
 
     gCCMEnteredSlide = 0;
     reset_red_coins_collected();
+#ifdef PORT_MOP_OBJS
+    gMOPSwitchBlockState = 1;
+    gMOPFlipSwitchStarSpawned = FALSE;
+#endif
 }
 
 #ifdef NO_SEGMENTED_MEMORY

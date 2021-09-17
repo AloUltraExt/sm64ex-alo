@@ -1,3 +1,6 @@
+#include "src/extras/mop/actors/Checkpoint_Flag_MOP/model.inc.h"
+#include "src/extras/mop/actors/Checkpoint_Flag_MOP/geo.inc.c"
+
 #include "src/extras/mop/actors/Noteblock_MOP/model.inc.h"
 #include "src/extras/mop/actors/Noteblock_MOP/geo.inc.c"
 

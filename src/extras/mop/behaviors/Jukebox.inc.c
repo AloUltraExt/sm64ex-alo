@@ -1,24 +1,43 @@
-// TODO: WIP, doesn't work
-void bhv_jukebox_loop(void) {
-    u8 minMusic = (u8) o->oBehParams >> 24;
-    u8 maxMusic = (u8) o->oBehParams >> 16;
-    
-    u8 playMusic;
+void set_background_music(u16 a, u16 seqArgs, s16 fadeTimer);
 
-    if (o->oDistanceToMario < 300.0f) {
-        if (minMusic <= playMusic && playMusic >= maxMusic) {
-            playMusic = minMusic;
-            
-            if (gPlayer1Controller->buttonPressed & L_JPAD) {
-                playMusic++;
-            }
-            
-            if (gPlayer1Controller->buttonPressed & R_JPAD) {
-                playMusic--;
-            }
-            
-            stop_background_music(SEQUENCE_ARGS(4, playMusic));
-            play_music(SEQ_PLAYER_LEVEL, SEQUENCE_ARGS(4, playMusic), 0);
+void bhv_jukebox_loop(void) {
+    u8 currMusic;
+
+    o->oMopJukeboxChangeMusic = FALSE;
+
+    if (obj_check_if_collided_with_object(o, gMarioObject)) {
+        if (o->oAction == 0) {
+            currMusic = ((o->oBehParams >> 24) & 0xFF); // bp1
+            o->oAction = (s32) currMusic;
+            set_background_music(0, currMusic, 0);
         }
-	}
+
+        o->oMopJukeboxIndexMusic = o->oAction;
+
+        if (gPlayer1Controller->buttonPressed & R_JPAD) {
+            o->oMopJukeboxIndexMusic++;
+            o->oMopJukeboxChangeMusic = TRUE;
+        }
+
+        if (gPlayer1Controller->buttonPressed & L_JPAD) {
+            o->oMopJukeboxIndexMusic--;
+            o->oMopJukeboxChangeMusic = TRUE;
+        }
+
+        if (o->oMopJukeboxIndexMusic > o->oBehParams2ndByte) {
+            o->oMopJukeboxIndexMusic = o->oBehParams2ndByte;
+            o->oMopJukeboxChangeMusic = FALSE;
+        }
+
+        if (o->oMopJukeboxIndexMusic < ((o->oBehParams >> 24) & 0xFF)) { // bp1
+            o->oMopJukeboxIndexMusic = ((o->oBehParams >> 24) & 0xFF);
+            o->oMopJukeboxChangeMusic = FALSE;
+        }
+
+        if (o->oMopJukeboxChangeMusic) {
+            o->oAction = o->oMopJukeboxIndexMusic;
+            set_background_music(0, o->oAction, 0);
+            o->oMopJukeboxChangeMusic = FALSE;
+        }
+    }
 }

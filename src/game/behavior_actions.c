@@ -44,7 +44,7 @@
 #include "spawn_object.h"
 #include "spawn_sound.h"
 #include "rumble_init.h"
-#ifdef MOP_PORT_OBJS
+#ifdef PORT_MOP_OBJS
 #include "src/extras/mop/include_code.h"
 #endif
 

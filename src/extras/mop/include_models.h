@@ -17,7 +17,6 @@ extern const Collision col_Flipswitch_Panel_MOP_0x7daf78[];
 extern const Gfx DL_Green_Switchboard_MOP_0x5fd8b0[];
 extern const Gfx DL_Green_Switchboard_Gears_MOP_0x600460[];
 extern const Collision col_Green_Switchboard_MOP_0x7ddc38[];
-
 //sunshine platforms
 extern const GeoLayout Moving_Rotating_Block_MOP[];
 extern const Collision col_Moving_Rotating_Block_MOP_0x7e3ea0[];
@@ -29,7 +28,6 @@ extern const GeoLayout Shrink_Platform_MOP[];
 extern const Collision col_Shrink_Platform_MOP_0xad3720[];
 //shrinkplat border
 extern const Gfx DL_Shrink_Platform_Border_MOP[];
-
 //spring
 extern const Gfx DL_Spring_MOP_0x301fc98[];
 //switch block
@@ -38,6 +36,10 @@ extern const Collision col_Switchblock_MOP_0x7d3058[];
 //switch block switch
 extern const GeoLayout Switchblock_Switch_MOP[];
 extern const Collision col_Switchblock_Switch_MOP_0x7d7348[];
+//emitter
+extern const GeoLayout Sparkles_Emitter_MOP[];
+//checkpoint flag
+extern const GeoLayout Checkpoint_Flap_MOP[];
 
 #include "src/extras/mop/actors/Noteblock_MOP/model.inc.h"
 

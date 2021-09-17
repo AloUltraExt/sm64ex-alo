@@ -81,10 +81,7 @@
 #define MODEL_CASTLE_GROUNDS_METAL_DOOR        0x29        // metal_door_geo
 #define MODEL_UNKNOWN_DOOR_2A                  0x2A        // referenced in special presets, undefined
 #define MODEL_UNKNOWN_DOOR_2B                  0x2B        // referenced in special presets, undefined
-#define MODEL_WF_TOWER_TRAPEZOID_PLATORM       0x2C        // wf_geo_000AF8 - unused
-#define MODEL_WF_TOWER_SQUARE_PLATORM          0x2D        // wf_geo_000B10
-#define MODEL_WF_TOWER_SQUARE_PLATORM_UNUSED   0x2E        // wf_geo_000B38 - unused & duplicated
-#define MODEL_WF_TOWER_SQUARE_PLATORM_ELEVATOR 0x2F        // wf_geo_000B60 - elevator platorm
+// Model 0x2C-0x2F were WF model so they were moved to 0x3B-0x3E
 
 // Level model IDs
 
@@ -286,6 +283,10 @@
 #define MODEL_WF_KICKABLE_BOARD                   0x38        // wf_geo_000BA8
 #define MODEL_WF_TOWER_DOOR                       0x39        // wf_geo_000BE0
 #define MODEL_WF_KICKABLE_BOARD_FELLED            0x3A        // wf_geo_000BC8
+#define MODEL_WF_TOWER_TRAPEZOID_PLATORM          0x3B        // wf_geo_000AF8 - unused
+#define MODEL_WF_TOWER_SQUARE_PLATORM             0x3C        // wf_geo_000B10
+#define MODEL_WF_TOWER_SQUARE_PLATORM_UNUSED      0x3D        // wf_geo_000B38 - unused & duplicated
+#define MODEL_WF_TOWER_SQUARE_PLATORM_ELEVATOR    0x3E        // wf_geo_000B60 - elevator platorm
 
 // ending
 
@@ -326,6 +327,7 @@
 #define MODEL_TTM_YELLOW_SMILEY                   0x38        // ttm_geo_000D4C
 #define MODEL_TTM_STAR_SMILEY                     0x39        // ttm_geo_000D84
 #define MODEL_TTM_MOON_SMILEY                     0x3A        // ttm_geo_000DBC
+#define MODEL_TTM_SLIDE_EXIT_PODIUM               0x3B        // ttm_geo_000DF4
 
 // actor model IDs
 
@@ -456,7 +458,7 @@
 #define MODEL_HEART                       0x78        // heart_geo
 #define MODEL_TRANSPARENT_STAR            0x79        // transparent_star_geo
 #define MODEL_STAR                        0x7A        // star_geo
-#define MODEL_TTM_SLIDE_EXIT_PODIUM       0x7B        // ttm_geo_000DF4
+// 0x7B used to be MODEL_TTM_SLIDE_EXIT_PODIUM, but i moved it to ttm 0x3B
 #define MODEL_WOODEN_SIGNPOST             0x7C        // wooden_signpost_geo
 #define MODEL_UNKNOWN_7D                  0x7D        // referenced in macro presets. Unknown usage
 // find me
@@ -562,23 +564,24 @@
 #define MODEL_TRAJECTORY_MARKER_BALL      0xE1        // bowling_ball_track_geo - duplicate used in SSL Pyramid small sized and as a track ball
 
 #ifdef PORT_MOP_OBJS
-#define MODEL_MOP_NOTEBLOCK 0x7B
-#define MODEL_MOP_CHECKPOINT_FLAG 0x2E
-#define MODEL_MOP_FLIPBLOCK 0xF0
-#define MODEL_MOP_FLIPSWAP_PLATFORM 0x2F
-#define MODEL_MOP_FLIPSWAP_PLATFORM_BORDER 0x30
-#define MODEL_MOP_FLIPSWITCH_PANEL 0x2A
-#define MODEL_MOP_SWITCHBOARD 0x2B
-#define MODEL_MOP_SWITCHBOARD_GEARS 0x2C
-#define MODEL_MOP_SHRINKPLAT_BORDER 0x97
-#define MODEL_MOP_SPRING 0x92
-#define MODEL_MOP_ROTATING_BLOCK 0x2D
-#define MODEL_MOP_SANDBLOCK 0x99
-#define MODEL_MOP_SHELL_GREEN 0x9B
-#define MODEL_MOP_SHELL_RED 0x9D
-#define MODEL_MOP_SHRINKPLAT 0x98
-#define MODEL_MOP_SWITCHBLOCK 0xF1
-#define MODEL_MOP_SWITCHBLOCK_SWITCH 0xF2
+#define MODEL_MOP_NOTEBLOCK                 0x7B
+#define MODEL_MOP_CHECKPOINT_FLAG           0x2E
+#define MODEL_MOP_FLIPBLOCK                 0xF0
+#define MODEL_MOP_FLIPSWAP_PLATFORM         0x2F
+#define MODEL_MOP_FLIPSWAP_PLATFORM_BORDER  0x30
+#define MODEL_MOP_FLIPSWITCH_PANEL          0x2A
+#define MODEL_MOP_SWITCHBOARD               0x2B
+#define MODEL_MOP_SWITCHBOARD_GEARS         0x2C
+#define MODEL_MOP_SHRINKPLAT_BORDER         0x97
+#define MODEL_MOP_SPRING                    0x92
+#define MODEL_MOP_ROTATING_BLOCK            0x2D
+#define MODEL_MOP_SANDBLOCK                 0x99
+#define MODEL_MOP_SHELL_GREEN               0x9B
+#define MODEL_MOP_SHELL_RED                 0x9D
+#define MODEL_MOP_SHRINKPLAT                0x98
+#define MODEL_MOP_SWITCHBLOCK               0xF1
+#define MODEL_MOP_SWITCHBLOCK_SWITCH        0xF2
+#define MODEL_MOP_EMITTER_SPARKLES          0xF3
 #endif
 
 // Menu Models (overwrites Level Geometry IDs)

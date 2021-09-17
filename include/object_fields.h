@@ -1172,7 +1172,11 @@
 #define oMopMovingRotatingTimer     OBJECT_FIELD_S32(0x1D)
 
 /* Green Switchboard */
-#define oMopGreenSwitchboardGear    OBJECT_FIELD_S32(0x1B)
+#define oMopGreenSwitchboardGear    OBJECT_FIELD_VPTR(0x1B)
+
+/* Jukebox */
+#define oMopJukeboxChangeMusic      OBJECT_FIELD_S32(0x1B)
+#define oMopJukeboxIndexMusic       OBJECT_FIELD_S32(0x1C)
 
 #endif
 

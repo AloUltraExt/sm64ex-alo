@@ -1,45 +1,47 @@
+s32 flip_block_sqrtf_diff(struct Object *obj) {
+    f32 dx;
+    f32 dy;
+    f32 dz;
 
-static struct ObjectHitbox sFlipBlockHitbox = {
-    /* interactType: */ INTERACT_BREAKABLE,
-    /* downOffset: */ 0,
-    /* damageOrCoinValue: */ 0,
-    /* health: */ 0,
-    /* numLootCoins: */ 0,
-    /* radius: */ 64,
-    /* height: */ 64,
-    /* hurtboxRadius: */ 0,
-    /* hurtboxHeight: */ 0,
-};
+    dx = gMarioObject->oPosX - obj->oPosX;
+    dz = obj->oPosZ - gMarioObject->oPosZ;
+    dy = obj->oPosY - gMarioObject->oPosY;
 
-#define FLIP_TIMER 210
+    if ((sqrtf(dx * dx) < 104.0f) && (sqrtf(dz * dz) < 104.0f) && (sqrtf(dy * dy) < 304.0f)) {
+        return TRUE;
+    }
+    return FALSE;
+}
 
 void bhv_flip_block_loop(void) {
-    if (o->oTimer == 0 && o->oAction==0){
-        obj_set_hitbox(o, &sBreakableBoxHitbox);
-		o->oAction=1;
-	}
-	//flipping
-	if (o->oAction==2){
-		//a guess
-		if (o->oTimer==FLIP_TIMER){
-			o->oAction=1;
-			o->oSubAction=0;
-		}
-		o->oFaceAnglePitch+=(FLIP_TIMER-o->oTimer)*16;
-		if (((o->oFaceAnglePitch/0x8000) - o->oSubAction)>0){
-			cur_obj_play_sound_1(SOUND_GENERAL_SWISH_WATER);
-			o->oSubAction+=1;
-		}
-	}else{
-		if (cur_obj_was_attacked_or_ground_pounded() != 0) {
-			o->oAction=2;
-			o->oIntangibleTimer=FLIP_TIMER;
-			o->header.gfx.scale[2]=0.1f;
-			cur_obj_play_sound_1(SOUND_GENERAL_SWISH_WATER);
-		}else{
-			o->oFaceAnglePitch=0;
-			o->header.gfx.scale[2]=1.0f;
-			load_object_collision_model();
-		}
-	}
+    if (o->oAction == 0) {
+        load_object_collision_model();
+        if (cur_obj_was_attacked_or_ground_pounded()){
+            o->oAction = 1;
+        }
+
+        if (flip_block_sqrtf_diff(o) && !(o->oPosY < gMarioObject->oPosY) && !(gMarioState[0].vel[1] < 15.0f)) {
+            gMarioState[0].vel[1] = 0.0f;
+            o->oAction = 1;
+        }
+    } else {
+        if (o->oTimer == 0) {
+            o->oAngleVelPitch = 0x1680;
+            o->header.gfx.scale[2] = 0.1f;
+            cur_obj_play_sound_1(SOUND_GENERAL_SWISH_WATER);
+        }
+
+        o->oFaceAnglePitch += o->oAngleVelPitch;
+        o->oAngleVelPitch -= 0x20;
+
+        if (o->oAngleVelPitch == 0) {
+            o->header.gfx.scale[2] = 1.0f;
+            o->oAction = 0;
+            o->oFaceAnglePitch = 0;
+        }
+
+        if (o->oFaceAnglePitch & 0x4000) {
+            cur_obj_play_sound_1(SOUND_GENERAL_SWISH_WATER);
+        }
+    }
 }

@@ -64,7 +64,6 @@ void bhv_beta_trampoline_top_loop(void) {
     // Maybe they intended to decrease the trampoline's position
     // when Mario's on it in this if statement?/*
     if (gMarioObject->platform == o) {
-        gMarioStates[0].vel[1] += o->oBetaTrampolineAdditiveYVel;
         o->oBetaTrampolineMarioOnTrampoline = TRUE;
 
         o->oVelY -= 4.f;
@@ -72,11 +71,17 @@ void bhv_beta_trampoline_top_loop(void) {
         o->oBetaTrampolineAdditiveYVel =
             ((o->oBehParams2ndByte >> 4) / 2.0f)
             + ((o->oHomeY - o->oPosY) / ((o->oBehParams2ndByte & 0x0F) / 2.0f));
-
     } else {
-        o->oBetaTrampolineMarioOnTrampoline = FALSE;
-        o->oBetaTrampolineAdditiveYVel = 0;
+        if (o->oBetaTrampolineMarioOnTrampoline) {
+            gMarioStates[0].vel[1] += o->oBetaTrampolineAdditiveYVel;
+            cur_obj_play_sound_2(SOUND_GENERAL_BOING3);
+
+            o->oBetaTrampolineMarioOnTrampoline = FALSE;
+        } else {
+            o->oBetaTrampolineAdditiveYVel = 0;
+        }
     }
+
     o->oVelY -= (o->oPosY - o->oHomeY) / 12.f;
     o->oVelY *= 0.90f;
     o->oPosY += o->oVelY;

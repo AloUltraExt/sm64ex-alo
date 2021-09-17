@@ -35,9 +35,6 @@ static const LevelScript script_func_local_1[] = {
     // A likely explanation is that this object was added in after the collision model was made, and they didn't want
     // to redo the collision so they just added a new behavior for it.
     OBJECT(/*model*/ MODEL_LEVEL_GEOMETRY_0E, /*pos*/ -5115, 300, -3200, /*angle*/ 0,  90, 0, /*behParam*/ 0x00000000, /*beh*/ bhvLllHexagonalMesh),
-#ifdef PORT_MOP_OBJS
-    OBJECT(/*model*/ MODEL_BLARGG, /*pos*/   -7200, 0, -7200, /*angle*/ 0, 0, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBlargg),
-#endif
     RETURN(),
 };
 
@@ -86,6 +83,16 @@ static const LevelScript script_func_local_4[] = {
     OBJECT(/*model*/ MODEL_NONE,            /*pos*/  5423,    2, -1991, /*angle*/ 0, 315, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBouncingFireball),
     OBJECT(/*model*/ MODEL_NONE,            /*pos*/  4921,    2, -1504, /*angle*/ 0,  90, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBouncingFireball),
     OBJECT_WITH_ACTS(/*model*/ MODEL_EXCLAMATION_BOX, /*pos*/  1050,  550,  6200, /*angle*/ 0,   0, 0, /*behParam*/ 0x00030000, /*beh*/ bhvExclamationBox, /*acts*/ ACT_5 | ACT_6),
+#ifdef PORT_MOP_OBJS // Blargg object list from Render96
+    OBJECT(/*model*/ MODEL_BLARGG,            /*pos*/  -6766, 0,  3033, /*angle*/ 0,  90, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBlargg),
+    OBJECT(/*model*/ MODEL_BLARGG,            /*pos*/  -6018, 0,  -5512, /*angle*/ 0,  90, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBlargg),
+    OBJECT(/*model*/ MODEL_BLARGG,            /*pos*/  -2151, 0,  -5254, /*angle*/ 0,  90, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBlargg),
+    OBJECT(/*model*/ MODEL_BLARGG,            /*pos*/  2012, 0,  -3440, /*angle*/ 0,  90, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBlargg),
+    OBJECT(/*model*/ MODEL_BLARGG,            /*pos*/  7408, 0,  -4223, /*angle*/ 0,  90, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBlargg),
+    OBJECT(/*model*/ MODEL_BLARGG,            /*pos*/  6318, 0,  752, /*angle*/ 0,  90, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBlargg),
+    OBJECT(/*model*/ MODEL_BLARGG,            /*pos*/  5647, 0,  3426, /*angle*/ 0,  90, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBlargg),
+    OBJECT(/*model*/ MODEL_BLARGG,            /*pos*/  -5315, 0,  7493, /*angle*/ 0,  90, 0, /*behParam*/ 0x00000000, /*beh*/ bhvBlargg),
+#endif
     RETURN(),
 };
 

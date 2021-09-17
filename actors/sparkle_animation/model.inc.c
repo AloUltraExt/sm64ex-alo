@@ -85,3 +85,7 @@ const Gfx sparkles_animation_seg4_dl_04035360[] = {
     gsDPSetTextureImage(G_IM_FMT_IA, G_IM_SIZ_16b, 1, sparkles_animation_seg4_texture_04034A88),
     gsSPBranchList(sparkles_animation_seg4_dl_04035288),
 };
+
+#ifdef PORT_MOP_OBJS
+#include "src/extras/mop/actors/Emitter_MOP/model.inc.c"
+#endif
