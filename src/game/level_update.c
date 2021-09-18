@@ -23,6 +23,7 @@
 #include "obj_behaviors.h"
 #include "save_file.h"
 #include "debug_course.h"
+#include "interaction.h"
 #ifdef VERSION_EU
 #include "memory.h"
 #include "eu_translation.h"
@@ -1183,6 +1184,20 @@ u8 should_intro_be_skipped(void) {
     ;
 }
 
+// ex-alo change
+// Merge misc reset values into one function
+void reset_misc_level_object_values(void) {
+    gCCMEnteredSlide = 0;
+    reset_red_coins_collected();
+#if QOL_FIX_RESET_PSS_SLIDE_STARTED
+    gPssSlideStarted = FALSE;
+#endif
+#ifdef PORT_MOP_OBJS
+    gMOPSwitchBlockState = 1;
+    gMOPFlipSwitchStarSpawned = FALSE;
+#endif
+}
+
 s32 update_level(void) {
     s32 changeLevel;
 
@@ -1220,11 +1235,15 @@ s32 update_level(void) {
 s32 init_level(void) {
     s32 val4 = FALSE;
 
+    set_play_mode(PLAY_MODE_NORMAL);
+
 #ifdef TARGET_N3DS
     gDPSetIod(gDisplayListHead++, iodNormal);
 #endif
 
-    set_play_mode(PLAY_MODE_NORMAL);
+    // ex-alo change
+    // Merge misc reset values into one function
+    reset_misc_level_object_values();
 
     sDelayedWarpOp = WARP_OP_NONE;
     sTransitionTimer = 0;

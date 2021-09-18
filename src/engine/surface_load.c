@@ -557,13 +557,6 @@ void alloc_surface_pools(void) {
     sSurfaceNodePool = main_pool_alloc(7000 * sizeof(struct SurfaceNode), MEMORY_POOL_LEFT);
     sSurfacePool = main_pool_alloc(sSurfacePoolSize * sizeof(struct Surface), MEMORY_POOL_LEFT);
 #endif
-
-    gCCMEnteredSlide = 0;
-    reset_red_coins_collected();
-#ifdef PORT_MOP_OBJS
-    gMOPSwitchBlockState = 1;
-    gMOPFlipSwitchStarSpawned = FALSE;
-#endif
 }
 
 #ifdef NO_SEGMENTED_MEMORY
@@ -809,6 +802,30 @@ void load_object_surfaces(s16 **data, s16 *vertexData) {
     }
 }
 
+#if QOL_FEATURE_AUTO_COLLISION_DISTANCE
+// From Kaze
+static void get_optimal_coll_dist(struct Object *o) {
+    register f32 thisVertDist, maxDist = 0.0f;
+    Vec3f v;
+    s16 *collisionData = gCurrentObject->collisionData;
+    o->oFlags |= OBJ_FLAG_DONT_CALC_COLL_DIST;
+    collisionData++;
+    register u32 vertsLeft = *(collisionData);
+    collisionData++;
+    // vertices = *data;
+    while (vertsLeft) {
+        v[0] = *(collisionData + 0) * o->header.gfx.scale[0];
+        v[1] = *(collisionData + 1) * o->header.gfx.scale[1];
+        v[2] = *(collisionData + 2) * o->header.gfx.scale[2];
+        thisVertDist = ((v[0] * v[0]) + (v[1] * v[1]) + (v[2] * v[2]));
+        if (thisVertDist > maxDist) maxDist = thisVertDist;
+        collisionData += 3;
+        vertsLeft--;
+    }
+    o->oCollisionDistance = (sqrtf(maxDist) + 100.0f);
+}
+#endif
+
 /**
  * Transform an object's vertices, reload them, and render the object.
  */
@@ -826,9 +843,15 @@ void load_object_collision_model(void) {
         marioDist = dist_between_objects(gCurrentObject, gMarioObject);
     }
 
+#if QOL_FEATURE_AUTO_COLLISION_DISTANCE
+    if (!(gCurrentObject->oFlags & OBJ_FLAG_DONT_CALC_COLL_DIST)) {
+        get_optimal_coll_dist(gCurrentObject);
+    }
+#endif
+
     // If the object collision is supposed to be loaded more than the
-    // drawing distance of 4000, extend the drawing range.
-    if (gCurrentObject->oCollisionDistance > 4000.0f) {
+    // drawing distance (changed), extend the drawing range.
+    if (gCurrentObject->oCollisionDistance > gCurrentObject->oDrawingDistance) {
         gCurrentObject->oDrawingDistance = gCurrentObject->oCollisionDistance;
     }
 
@@ -846,11 +869,11 @@ void load_object_collision_model(void) {
 
 #ifndef NODRAWINGDISTANCE
     if (marioDist < gCurrentObject->oDrawingDistance) {
-#endif
         gCurrentObject->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
-#ifndef NODRAWINGDISTANCE
     } else {
         gCurrentObject->header.gfx.node.flags &= ~GRAPH_RENDER_ACTIVE;
     }
+#else
+    gCurrentObject->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
 #endif
 }

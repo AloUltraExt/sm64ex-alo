@@ -89,12 +89,12 @@ void play_step_sound(struct MarioState *m, s16 frame1, s16 frame2) {
     }
 }
 
-void align_with_floor(struct MarioState *m) {
 #if QOL_FEATURE_FAST_FLOOR_ALIGN
+void align_with_floor(struct MarioState *m, s16 smooth) {
     struct Surface *floor = m->floor;
     Vec3f floorNormal;
     if ((floor != NULL) && (m->pos[1] < (m->floorHeight + 80.0f))) {
-        if (floor->normal.y > 0.76040596f && mario_get_floor_class(m) == SURFACE_CLASS_NOT_SLIPPERY) {
+        if (smooth) {
             mtxf_align_terrain_triangle(sFloorAlignMatrix[m->unk00], m->pos, m->faceAngle[1], 40.0f);
         } else {
             vec3f_set(floorNormal, floor->normal.x, floor->normal.y, floor->normal.z);
@@ -102,12 +102,14 @@ void align_with_floor(struct MarioState *m) {
         }
         m->marioObj->header.gfx.throwMatrix = &sFloorAlignMatrix[m->unk00];
     }
+}
 #else
+void align_with_floor(struct MarioState *m) {
     m->pos[1] = m->floorHeight;
     mtxf_align_terrain_triangle(sFloorAlignMatrix[m->unk00], m->pos, m->faceAngle[1], 40.0f);
     m->marioObj->header.gfx.throwMatrix = &sFloorAlignMatrix[m->unk00];
-#endif
 }
+#endif
 
 s32 begin_walking_action(struct MarioState *m, f32 forwardVel, u32 action, u32 actionArg) {
     m->faceAngle[1] = m->intendedYaw;
@@ -456,9 +458,6 @@ s32 update_decelerating_speed(struct MarioState *m) {
 void update_walking_speed(struct MarioState *m) {
     f32 maxTargetSpeed;
     f32 targetSpeed;
-#if QOL_FIX_GROUND_TURN_RADIUS
-    s16 turnRange;
-#endif
 
     if (m->floor != NULL && m->floor->type == SURFACE_SLOW) {
         maxTargetSpeed = 24.0f;
@@ -496,11 +495,11 @@ void update_walking_speed(struct MarioState *m) {
         m->faceAngle[1] += 0x8000; // DEG(180)
         m->forwardVel *= -1.0f;
     }
-    if (analog_stick_held_back(m) && (m->heldObj == NULL)) {
+    if (analog_stick_held_back(m) && (m->heldObj == NULL) && !(m->action & ACT_FLAG_SHORT_HITBOX)) {
         set_mario_action(m, ACT_TURNING_AROUND, 0);
         if (m->forwardVel < 16.0f) m->faceAngle[1] = m->intendedYaw;
     } else {
-        turnRange = (0xFFF - (m->forwardVel * 0x20));
+        s16 turnRange = (0xFFF - (m->forwardVel * 0x20));
         if (turnRange < 0x800) {
             turnRange = 0x800;
             set_mario_action(m, ACT_TURNING_AROUND, 0);
@@ -1090,6 +1089,11 @@ s32 act_finish_turning_around(struct MarioState *m) {
 }
 
 s32 act_braking(struct MarioState *m) {
+#if QOL_FIX_LESS_GROUND_BONKS
+    Vec3f startPos;
+    vec3f_copy(startPos, m->pos);
+#endif
+
     if (!(m->input & INPUT_FIRST_PERSON)
         && (m->input
             & (INPUT_NONZERO_ANALOG | INPUT_A_PRESSED | INPUT_OFF_FLOOR | INPUT_ABOVE_SLIDE))) {
@@ -1114,10 +1118,19 @@ s32 act_braking(struct MarioState *m) {
             break;
 
         case GROUND_STEP_HIT_WALL:
+#if QOL_FIX_LESS_GROUND_BONKS
+            push_or_sidle_wall(m, startPos);
+#else
             slide_bonk(m, ACT_BACKWARD_GROUND_KB, ACT_BRAKING_STOP);
+#endif
             break;
     }
-
+#if QOL_FIX_LESS_GROUND_BONKS
+    if (m->wall != NULL) {
+        push_or_sidle_wall(m, startPos);
+        m->actionTimer = 0;
+    }
+#endif
     play_sound(SOUND_MOVING_TERRAIN_SLIDE + m->terrainSoundAddend, m->marioObj->header.gfx.cameraToObject);
     adjust_sound_for_speed(m);
     set_mario_animation(m, MARIO_ANIM_SKID_ON_GROUND);
@@ -1344,7 +1357,11 @@ s32 act_crawling(struct MarioState *m) {
             //! Possibly unintended missing break
 
         case GROUND_STEP_NONE:
+#if QOL_FEATURE_FAST_FLOOR_ALIGN
+            align_with_floor(m, TRUE);
+#else
             align_with_floor(m);
+#endif 
             break;
     }
 
@@ -1436,7 +1453,11 @@ void common_slide_action(struct MarioState *m, u32 endAction, u32 airAction, s32
 
         case GROUND_STEP_NONE:
             set_mario_animation(m, animation);
+#if QOL_FEATURE_FAST_FLOOR_ALIGN
+            align_with_floor(m, FALSE);
+#else
             align_with_floor(m);
+#endif
             m->particleFlags |= PARTICLE_DUST;
             break;
 
@@ -1463,8 +1484,11 @@ void common_slide_action(struct MarioState *m, u32 endAction, u32 airAction, s32
                 m->vel[0] = m->slideVelX = slideSpeed * sins(m->slideYaw);
                 m->vel[2] = m->slideVelZ = slideSpeed * coss(m->slideYaw);
             }
-
+#if QOL_FEATURE_FAST_FLOOR_ALIGN
+            align_with_floor(m, FALSE);
+#else
             align_with_floor(m);
+#endif
             break;
     }
 }

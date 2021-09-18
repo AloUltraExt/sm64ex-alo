@@ -65,6 +65,9 @@
 /// Makes Mario grab hangable ceilings in any air actions
 /// Credits: (AloXado320)
 #define QOL_FEATURE_HANG_AIR_ANYWHERE (0 || QOL_FEATURES)
+/// Automatically calculate the optimal collision distance for an object based on its vertices.
+/// Credits: (Kaze)
+#define QOL_FEATURE_AUTO_COLLISION_DISTANCE (0 || QOL_FEATURES)
 /// Makes Mario not fall after star grab if the floor is too far below
 /// Credits: (Arceveti)
 #define QOL_FEATURE_STAR_GRAB_NO_FALL_HEIGHT (0 || QOL_FEATURES)
@@ -232,6 +235,9 @@
 /// Fixes slide action so they have short hitbox
 /// Credits: (AloXado320)
 #define QOL_FIX_SHORT_HITBOX_SLIDE_ACTS (0 || QOL_FIXES)
+/// Fixes pss slide value not being reset on exit
+/// Credits: (AloXado320)
+#define QOL_FIX_RESET_PSS_SLIDE_STARTED (0 || QOL_FIXES)
 /// Fixes mist particles not spawning with an underwater shell
 /// Credits: (PyroJay4)
 #define QOL_FIX_DROPPED_UNDERWATER_SHELL (0 || QOL_FIXES)
@@ -277,6 +283,10 @@
 /// Fixes shell speed water level origin offset
 /// Credits: (Arceveti)
 #define QOL_FIX_SHELL_SPEED_NEGATIVE_OFFSET (0 || QOL_FIXES)
+/// Fixes bonks when walking into a wall
+/// Credits: (Arceveti)
+#define QOL_FIX_LESS_GROUND_BONKS (0 || QOL_FIXES)
+
 // --| Unused Code Fixes (for convenience)
 /// Fixes code error in func_eu_802e27e4_unused
 /// Credits: (Easy Fix)

@@ -1003,10 +1003,11 @@ void cur_obj_update(void) {
                 // Out of render distance, hide the object.
                 gCurrentObject->header.gfx.node.flags &= ~GRAPH_RENDER_ACTIVE;
                 gCurrentObject->activeFlags |= ACTIVE_FLAG_FAR_AWAY;
-            } else if (gCurrentObject->oHeldState == HELD_FREE) {
+            } else if (gCurrentObject->oHeldState == HELD_FREE)
 #else
-            if (distanceFromMario <= gCurrentObject->oDrawingDistance && gCurrentObject->oHeldState == HELD_FREE) {
+            if (distanceFromMario <= gCurrentObject->oDrawingDistance && gCurrentObject->oHeldState == HELD_FREE)
 #endif
+            {
                 // In render distance (and not being held), show the object.
                 gCurrentObject->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
                 gCurrentObject->activeFlags &= ~ACTIVE_FLAG_FAR_AWAY;
