@@ -117,6 +117,7 @@ unsigned int configCameraYSens   = 100;
 unsigned int configCameraAggr    = 50;
 unsigned int configCameraScheme  = 0; // PUPPYCAM_INPUT_TYPE_DOUBLE_TAB
 unsigned int configCameraOpacity = 1; // PUPPYCAM_OPACITY_TYPE_FADE
+bool configDebugCamera   = false;
 #endif
 
 static const struct ConfigOption options[] = {
@@ -180,6 +181,7 @@ static const struct ConfigOption options[] = {
     {.name = "bettercam_aggression", .type = CONFIG_TYPE_UINT, .uintValue = &configCameraAggr},
     {.name = "bettercam_scheme",     .type = CONFIG_TYPE_UINT, .uintValue = &configCameraScheme},
     {.name = "bettercam_opacity",    .type = CONFIG_TYPE_UINT, .uintValue = &configCameraOpacity},
+    {.name = "bettercam_debug",      .type = CONFIG_TYPE_BOOL, .boolValue = &configDebugCamera},
 #endif
 };
 

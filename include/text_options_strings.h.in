@@ -46,6 +46,7 @@
 #define TEXT_OPT_ANALOGUE  _("ANALOGUE CAMERA")
 #define TEXT_OPT_CAMSCHEME _("CONTROL SCHEME")
 #define TEXT_OPT_OPA_TYPE  _("OPACITY TYPE")
+#define TEXT_OPT_DBG_CAM   _("DEBUG CAMERA")
 
 #define TEXT_OPT_CAM_SCH1  _("DOUBLE TAP")
 #define TEXT_OPT_CAM_SCH2  _("SINGLE PRESS")
@@ -116,6 +117,7 @@
 #define TEXT_OPT_ANALOGUE  _("Analogue Camera")
 #define TEXT_OPT_CAMSCHEME _("Control Scheme")
 #define TEXT_OPT_OPA_TYPE  _("Opacity Type")
+#define TEXT_OPT_DBG_CAM   _("Debug Camera")
 
 #define TEXT_OPT_CAM_SCH1  _("Double Tap")
 #define TEXT_OPT_CAM_SCH2  _("Single Press")

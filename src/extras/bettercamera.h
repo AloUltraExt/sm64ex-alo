@@ -31,6 +31,9 @@
 #define PUPPYSPLINE_NONE 1 //Will not write to focus at all.
 #define PUPPYSPLINE_FOLLOW 2 //Focus will follow a separate spline, but will mirror the speed and progress of the pos.
 
+#define PUPPYDEBUG_LOCK_CONTROLS (1 << 0) // 0x0001
+#define PUPPYDEBUG_TRACK_MARIO   (1 << 1) // 0x0002
+
 #define RAYCAST_FIND_FLOOR  (1 << 0) // 0x0001
 #define RAYCAST_FIND_WALL   (1 << 1) // 0x0002
 #define RAYCAST_FIND_CEIL   (1 << 2) // 0x0004
@@ -76,6 +79,7 @@ struct gPuppyOptions
     s16 turnAggression;
     s16 inputType;
     s16 opacityType;
+    s16 debugCam;
 };
 
 struct gPuppyStruct
@@ -118,6 +122,7 @@ struct gPuppyStruct
     s16 targetDist[2]; //Used with secondary view targets to smooth out the between status.
     s16 intendedTerrainPitch; //The pitch that the game wants the game to tilt towards, following the terrain.
     s16 terrainPitch; //The pitch the game tilts towards, when following terrain inclines.
+    u8 debugFlags; //Behaviour flags during free view.
 
     u8 cutscene; //A boolean that decides whether a cutscene is active
     s32 (*sceneFunc)();
@@ -190,6 +195,7 @@ enum gPuppyCamBeh
 
     PUPPYCAM_BEHAVIOUR_COLLISION = 0x4000,
 
+    PUPPYCAM_BEHAVIOUR_FREE = 0x8000,
 
     PUPPYCAM_BEHAVIOUR_DEFAULT = PUPPYCAM_BEHAVIOUR_X_MOVEMENT | PUPPYCAM_BEHAVIOUR_Y_MOVEMENT | PUPPYCAM_BEHAVIOUR_Z_MOVEMENT |
     PUPPYCAM_BEHAVIOUR_YAW_ROTATION | PUPPYCAM_BEHAVIOUR_PITCH_ROTATION | PUPPYCAM_BEHAVIOUR_ZOOM_CHANGE |

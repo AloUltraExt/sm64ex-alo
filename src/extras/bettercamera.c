@@ -63,6 +63,7 @@ unsigned int configCameraYSens   = 100;
 unsigned int configCameraAggr    = 50;
 unsigned int configCameraScheme  = PUPPYCAM_INPUT_TYPE_DOUBLE_TAB;
 unsigned int configCameraOpacity = PUPPYCAM_OPACITY_TYPE_FADE;
+bool configDebugCamera   = 0;
 #endif
 
 //Some macros for the sake of basic human sanity.
@@ -101,6 +102,7 @@ const u8 optsCameraStr[][32] = {
     { TEXT_OPT_CAMC },
     { TEXT_OPT_CAMSCHEME },
     { TEXT_OPT_OPA_TYPE },
+    { TEXT_OPT_DBG_CAM },
 };
 
 static const u8 optsCameraSchemeStr[][64] = {
@@ -140,6 +142,7 @@ static struct Option optsCamera[] = {
     DEF_OPT_SCROLL( optsCameraStr[8], &configCameraAggr, 0, 100, 1 ),
     DEF_OPT_CHOICE( optsCameraStr[9], &configCameraScheme, cameraChoicesScheme ),
     DEF_OPT_CHOICE(optsCameraStr[10], &configCameraOpacity, cameraChoicesOpacity ),
+    DEF_OPT_TOGGLE(optsCameraStr[11], &configDebugCamera ),
 };
 
 struct SubMenu menuCamera   = DEF_SUBMENU( optsCameraStr[0], optsCamera );
@@ -157,6 +160,7 @@ void puppycam_default_config(void) {
     gPuppyCam.options.turnAggression = configCameraAggr;
     gPuppyCam.options.inputType = configCameraScheme;
     gPuppyCam.options.opacityType = configCameraOpacity;
+    gPuppyCam.options.debugCam = configDebugCamera;
 }
 
 //Initial setup. Ran at the beginning of the game and never again.
@@ -345,6 +349,7 @@ void puppycam_init(void)
     gPuppyCam.framesSinceC[0] = 10; //This just exists to stop input type B being stupid.
     gPuppyCam.framesSinceC[1] = 10; //This just exists to stop input type B being stupid.
     gPuppyCam.mode3Flags = PUPPYCAM_MODE3_ZOOMED_MED;
+    gPuppyCam.debugFlags = PUPPYDEBUG_LOCK_CONTROLS;
     puppycam_reset_values();
 }
 
@@ -371,7 +376,7 @@ void puppycam_input_pitch(void)
 
 void puppycam_input_zoom(void)
 {
-    
+
     //Update zoom if it doesn't match with the zoom target point
     if (gPuppyCam.zoomTarget != gPuppyCam.zoomPoints[gPuppyCam.zoomSet]) {
         gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[gPuppyCam.zoomSet];
@@ -392,6 +397,8 @@ void puppycam_input_zoom(void)
 
 void puppycam_input_centre(void)
 {
+    if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE)
+        return;
     s32 inputDefault = L_TRIG;
     if (gPuppyCam.options.inputType == PUPPYCAM_INPUT_TYPE_CLASSIC)
         inputDefault = R_TRIG;
@@ -587,6 +594,18 @@ static void puppycam_input_hold(void)
     f32 ivY = ((gPuppyCam.options.invertY*2)-1)*(gPuppyCam.options.sensitivityY/100.f);
     s8 stickMag[2] = {100, 100};
 
+    if (gPuppyCam.options.debugCam)
+    {
+        gPuppyCam.flags = PUPPYCAM_BEHAVIOUR_FREE | PUPPYCAM_BEHAVIOUR_YAW_ROTATION | PUPPYCAM_BEHAVIOUR_PITCH_ROTATION;
+
+        if (configMouse && gPuppyCam.mouse)
+            return;
+    } 
+    else 
+    {
+        gPuppyCam.flags &= ~PUPPYCAM_BEHAVIOUR_FREE;
+    }
+
     //Analogue Camera stuff. If it fails to find an input, then it just sets stickmag to 100, which after calculations means the value goes unchanged.
     if (gPuppyCam.options.analogue && gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC)
     {
@@ -598,7 +617,7 @@ static void puppycam_input_hold(void)
     if (!(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_YAW_ROTATION))
         return;
 
-    if (!gPuppyCam.options.analogue)
+    if (!gPuppyCam.options.analogue && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE))
     {
         switch (gPuppyCam.options.inputType)
         {
@@ -610,12 +629,12 @@ static void puppycam_input_hold(void)
     else
     {
         puppycam_input_hold_preset1(ivX);
-        //puppycam_input_pitch();
-        //puppycam_input_zoom();
+        puppycam_input_pitch();
+        puppycam_input_zoom();
         puppycam_input_centre();
     }
 
-    
+
     gPuppyCam.framesSinceC[0]++;
     gPuppyCam.framesSinceC[1]++;
 
@@ -665,7 +684,70 @@ static void puppycam_input_press(void)
         play_sound(SOUND_MENU_CAMERA_ZOOM_IN,gGlobalSoundSource);
     }
     puppycam_input_pitch();
+    puppycam_input_zoom();
+    puppycam_input_centre();
     gPuppyCam.pitchTarget += ((4+gPuppyCam.moveFlagAdd)*gPuppyCam.pitchAcceleration*ivY)*(stickMag*0.01f);
+}
+
+void puppycam_debug_view(void)
+{
+    if (gPuppyCam.debugFlags & PUPPYDEBUG_LOCK_CONTROLS)
+    {
+        if (ABS(gPlayer1Controller->rawStickX) > PUPPYCAM_DEADZONE)
+        {
+            gPuppyCam.pos[0] += (gPlayer1Controller->rawStickX/4) * -sins(gPuppyCam.yawTarget);
+            gPuppyCam.pos[2] += (gPlayer1Controller->rawStickX/4) * coss(gPuppyCam.yawTarget);
+        }
+        if (ABS(gPlayer1Controller->rawStickY) > PUPPYCAM_DEADZONE)
+        {
+            gPuppyCam.pos[0] += (gPlayer1Controller->rawStickY/4) * coss(gPuppyCam.yawTarget);
+            gPuppyCam.pos[1] += (gPlayer1Controller->rawStickY/4) * sins(gPuppyCam.pitchTarget);
+            gPuppyCam.pos[2] += (gPlayer1Controller->rawStickY/4) * sins(gPuppyCam.yawTarget);
+        }
+        if (gPlayer1Controller->buttonDown & Z_TRIG || gPlayer1Controller->buttonDown & L_TRIG)
+            gPuppyCam.pos[1] -= 20;
+        if (gPlayer1Controller->buttonDown & R_TRIG)
+            gPuppyCam.pos[1] += 20;
+
+        gPuppyCam.focus[0] = gPuppyCam.pos[0] + (100 *coss(gPuppyCam.yawTarget));
+        gPuppyCam.focus[1] = gPuppyCam.pos[1] + (100 *sins(gPuppyCam.pitchTarget));
+        gPuppyCam.focus[2] = gPuppyCam.pos[2] + (100 *sins(gPuppyCam.yawTarget));
+    }
+    else
+    {
+        if (gPuppyCam.debugFlags & PUPPYDEBUG_TRACK_MARIO)
+        {
+            gPuppyCam.focus[0] = gPuppyCam.targetObj->oPosX;
+            gPuppyCam.focus[1] = gPuppyCam.targetObj->oPosY;
+            gPuppyCam.focus[2] = gPuppyCam.targetObj->oPosZ;
+        }
+
+        gPuppyCam.yawTarget = atan2s(gPuppyCam.pos[2] - gPuppyCam.focus[2], gPuppyCam.pos[0] - gPuppyCam.focus[0]);
+        gPuppyCam.pitchTarget = atan2s(gPuppyCam.pos[1] - gPuppyCam.focus[1], 100);
+    }
+
+    gPuppyCam.yaw = gPuppyCam.yawTarget;
+    gPuppyCam.pitch = gPuppyCam.pitchTarget;
+
+    if (gPlayer1Controller->buttonPressed & A_BUTTON && gPuppyCam.debugFlags & PUPPYDEBUG_LOCK_CONTROLS)
+    {
+        vec3f_set(gMarioState->pos, gPuppyCam.pos[0], gPuppyCam.pos[1], gPuppyCam.pos[2]);
+    }
+    if (gPlayer1Controller->buttonPressed & B_BUTTON)
+    {
+        if (gPuppyCam.debugFlags & PUPPYDEBUG_LOCK_CONTROLS)
+            gPuppyCam.debugFlags &= ~PUPPYDEBUG_LOCK_CONTROLS;
+        else
+            gPuppyCam.debugFlags |= PUPPYDEBUG_LOCK_CONTROLS;
+    }
+
+    if (gPlayer1Controller->buttonPressed & R_TRIG && !(gPuppyCam.debugFlags & PUPPYDEBUG_LOCK_CONTROLS))
+    {
+        if (gPuppyCam.debugFlags & PUPPYDEBUG_TRACK_MARIO)
+            gPuppyCam.debugFlags &= ~PUPPYDEBUG_TRACK_MARIO;
+        else
+            gPuppyCam.debugFlags |= PUPPYDEBUG_TRACK_MARIO;
+    }
 }
 
 #ifdef MOUSE_ACTIONS
@@ -677,10 +759,71 @@ static void puppycam_input_mouse(void) {
     if (configMouse && gPuppyCam.mouse && gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC) {
         gMouseHasCenterControl = TRUE;
 
-        gPuppyCam.yawTarget += ivX * gMouseXPos * 16;
-        gPuppyCam.pitchTarget += ivY * gMouseYPos * 16;
+        if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE) {
+            if (gPlayer1Controller->buttonDown & A_BUTTON) {
+                gPuppyCam.yawTarget += ivX * gMouseXPos * 32;
+                gPuppyCam.pitchTarget += ivY * gMouseYPos * 32;
+            }
+        } else {
+            gPuppyCam.yawTarget += ivX * gMouseXPos * 16;
+            gPuppyCam.pitchTarget += ivY * gMouseYPos * 16;
+        }
     } else {
         gMouseHasCenterControl = FALSE;
+    }
+}
+
+// Free debug view to better fit with a mouse
+void puppycam_debug_view_mouse(void)
+{
+    gPuppyCam.debugFlags |= PUPPYDEBUG_LOCK_CONTROLS;
+    gPuppyCam.debugFlags &= ~PUPPYDEBUG_TRACK_MARIO;
+
+    // Stick controls
+    if (ABS(gPlayer1Controller->rawStickX) > PUPPYCAM_DEADZONE)
+    {
+        gPuppyCam.pos[0] += (gPlayer1Controller->rawStickX/2) * -sins(gPuppyCam.yawTarget);
+        gPuppyCam.pos[2] += (gPlayer1Controller->rawStickX/2) * coss(gPuppyCam.yawTarget);
+    }
+
+    if (ABS(gPlayer1Controller->rawStickY) > PUPPYCAM_DEADZONE)
+    {
+        gPuppyCam.pos[0] += (gPlayer1Controller->rawStickY/2) * coss(gPuppyCam.yawTarget);
+        gPuppyCam.pos[1] += (gPlayer1Controller->rawStickY/2) * sins(gPuppyCam.pitchTarget);
+        gPuppyCam.pos[2] += (gPlayer1Controller->rawStickY/2) * sins(gPuppyCam.yawTarget);
+    }
+
+#define STATIC_SPEED 64
+    // C - Controls
+    if (gPlayer1Controller->buttonDown & D_CBUTTONS)
+        gPuppyCam.pos[1] -= STATIC_SPEED;
+
+    if (gPlayer1Controller->buttonDown & U_CBUTTONS)
+        gPuppyCam.pos[1] += STATIC_SPEED;
+
+    if (gPlayer1Controller->buttonDown & L_CBUTTONS)
+    {
+        gPuppyCam.pos[0] += (-STATIC_SPEED) * -sins(gPuppyCam.yawTarget);
+        gPuppyCam.pos[2] += (-STATIC_SPEED) * coss(gPuppyCam.yawTarget);
+    }
+
+    if (gPlayer1Controller->buttonDown & R_CBUTTONS)
+    {
+        gPuppyCam.pos[0] += (STATIC_SPEED) * -sins(gPuppyCam.yawTarget);
+        gPuppyCam.pos[2] += (STATIC_SPEED) * coss(gPuppyCam.yawTarget);
+    }
+#undef STATIC_SPEED
+
+    gPuppyCam.focus[0] = gPuppyCam.pos[0] + (100 *coss(gPuppyCam.yawTarget));
+    gPuppyCam.focus[1] = gPuppyCam.pos[1] + (100 *sins(gPuppyCam.pitchTarget));
+    gPuppyCam.focus[2] = gPuppyCam.pos[2] + (100 *sins(gPuppyCam.yawTarget));
+
+    gPuppyCam.yaw = gPuppyCam.yawTarget;
+    gPuppyCam.pitch = gPuppyCam.pitchTarget;
+
+    if (gPlayer1Controller->buttonPressed & B_BUTTON)
+    {
+        vec3f_set(gMarioState->pos, gPuppyCam.pos[0], gPuppyCam.pos[1], gPuppyCam.pos[2]);
     }
 }
 #endif
@@ -1243,8 +1386,9 @@ static void puppycam_input_core(void)
     gPuppyCam.moveFlagAdd = 0;
 
     //Decide which input for left and right C buttons to use based on behaviour type.
-    if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_NORMAL)
+    if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_NORMAL || gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE)
         puppycam_input_hold();
+    else
     if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_8DIR || gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_INPUT_4DIR)
         puppycam_input_press();
 
@@ -1259,6 +1403,17 @@ static void puppycam_projection(void)
     Vec3s targetPos, targetPos2, targetPos3;
     s16 pitchTotal;
     s32 panD = (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_PANSHIFT)/8192;
+
+    if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE)
+    {
+        puppycam_reset_values();
+        if (configMouse && gPuppyCam.mouse) {
+            puppycam_debug_view_mouse();
+        } else {
+            puppycam_debug_view();
+        }
+        return;
+    }
 
     //Extra behaviours that get tacked onto the projection. Will be completely ignored if there is no target object.
     puppycam_projection_behaviours();
@@ -1402,7 +1557,7 @@ void puppycam_script_clear(void)
 // PUPPYCAM_OPACITY_TYPE_FADE
 #define PUPPYCAM_OPACITY_FADE_START_DIST 500
 #define PUPPYCAM_OPACITY_FADE_END_DIST   250
-    
+
 // PUPPYCAM_OPACITY_TYPE_POP
 #define PUPPYCAM_OPACITY_POP_THRESHOLD   320
 
