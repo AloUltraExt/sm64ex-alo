@@ -61,6 +61,12 @@ void bhv_platform_on_track_init(void) {
         s16 pathIndex = (u16)(o->oBehParams >> 16) & PLATFORM_ON_TRACK_BP_MASK_PATH;
         o->oPlatformOnTrackType = ((u16)(o->oBehParams >> 16) & PLATFORM_ON_TRACK_BP_MASK_TYPE) >> 4;
 
+#if QOL_FIX_PLATFORM_TRACK_CHECKERED
+        if (cur_obj_has_model(MODEL_CHECKERBOARD_PLATFORM) && o->oPlatformOnTrackType != PLATFORM_ON_TRACK_TYPE_CHECKERED) {
+            o->oPlatformOnTrackType = PLATFORM_ON_TRACK_TYPE_CHECKERED;
+        }
+#endif
+
         o->oPlatformOnTrackIsNotSkiLift = o->oPlatformOnTrackType - PLATFORM_ON_TRACK_TYPE_SKI_LIFT;
 
         o->collisionData =
@@ -68,7 +74,11 @@ void bhv_platform_on_track_init(void) {
 
         o->oPlatformOnTrackStartWaypoint = segmented_to_virtual(sPlatformOnTrackPaths[pathIndex]);
 
+#if QOL_FIX_PLATFORM_TRACK_CHECKERED
+        o->oPlatformOnTrackIsNotHMC = (o->oPlatformOnTrackType != PLATFORM_ON_TRACK_TYPE_CHECKERED);
+#else
         o->oPlatformOnTrackIsNotHMC = pathIndex - 4;
+#endif
 
         o->oBehParams2ndByte = o->oMoveAngleYaw; // TODO: Weird?
 

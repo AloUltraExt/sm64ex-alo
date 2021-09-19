@@ -159,7 +159,13 @@ static void platform_on_track_update_pos_or_spawn_ball(s32 ballIndex, f32 x, f32
     f32 dz;
     f32 distToNextWaypoint;
 
-    if (ballIndex == 0 || ((u16)(o->oBehParams >> 16) & 0x0080)) {
+    if (ballIndex == 0 ||
+#if QOL_FIX_PLATFORM_TRACK_CHECKERED
+    (!o->oPlatformOnTrackIsNotHMC)
+#else
+    ((u16)(o->oBehParams >> 16) & 0x0080)
+#endif
+    ) {
         initialPrevWaypoint = o->oPlatformOnTrackPrevWaypoint;
         nextWaypoint = initialPrevWaypoint;
 

@@ -241,6 +241,9 @@
 /// Fixes mist particles not spawning with an underwater shell
 /// Credits: (PyroJay4)
 #define QOL_FIX_DROPPED_UNDERWATER_SHELL (0 || QOL_FIXES)
+/// Fixes platform on track checkered detection
+/// Credits: (AloXado320)
+#define QOL_FIX_PLATFORM_TRACK_CHECKERED (0 || QOL_FIXES)
 /// Fixes Mario floor height in the peach ending cutscene
 /// Credits: (Arceveti)
 #define QOL_FIX_END_CUTSCENE_MARIO_FLOOR (0 || QOL_FIXES)

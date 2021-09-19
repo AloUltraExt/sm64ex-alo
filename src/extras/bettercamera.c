@@ -597,9 +597,10 @@ static void puppycam_input_hold(void)
     if (gPuppyCam.options.debugCam)
     {
         gPuppyCam.flags = PUPPYCAM_BEHAVIOUR_FREE | PUPPYCAM_BEHAVIOUR_YAW_ROTATION | PUPPYCAM_BEHAVIOUR_PITCH_ROTATION;
-
+#ifdef MOUSE_ACTIONS
         if (configMouse && gPuppyCam.mouse)
             return;
+#endif
     } 
     else 
     {
@@ -1407,11 +1408,15 @@ static void puppycam_projection(void)
     if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE)
     {
         puppycam_reset_values();
+#ifdef MOUSE_ACTIONS
         if (configMouse && gPuppyCam.mouse) {
             puppycam_debug_view_mouse();
         } else {
             puppycam_debug_view();
         }
+#else
+        puppycam_debug_view();
+#endif
         return;
     }
 
