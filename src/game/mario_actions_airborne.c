@@ -25,6 +25,10 @@ void play_flip_sounds(struct MarioState *m, s16 frame1, s16 frame2, s16 frame3) 
 }
 
 void play_far_fall_sound(struct MarioState *m) {
+#ifdef CHEATS_ACTIONS
+	if (Cheats.EnableCheats && Cheats.NoFallDamage) return;
+#endif
+
     u32 action = m->action;
     if (!(action & ACT_FLAG_INVULNERABLE) && action != ACT_TWIRLING && action != ACT_FLYING
         && !(m->flags & MARIO_UNKNOWN_18)) {
@@ -83,12 +87,16 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
 
 #pragma GCC diagnostic pop
 
-	#ifdef PORT_MOP_OBJS
-	if (m->SelFallDmg){
-		m->SelFallDmg=0;
+#ifdef CHEATS_ACTIONS
+	if (Cheats.EnableCheats && Cheats.NoFallDamage) return FALSE;
+#endif
+
+#ifdef PORT_MOP_OBJS
+	if (m->SelFallDmg) {
+		m->SelFallDmg = 0;
 		return FALSE;
 	}
-	#endif
+#endif
 
     if (m->action != ACT_TWIRLING && m->floor->type != SURFACE_BURNING) {
         if (m->vel[1] < -55.0f) {

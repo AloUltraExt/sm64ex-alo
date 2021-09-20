@@ -38,9 +38,11 @@ struct CheatList {
     bool    MoonJump;
     bool    InfiniteHealth;
     bool    InfiniteLives;
+    bool    InvinciblePlayer;
     bool    SuperSpeed;
     bool    Responsive;
     bool    ExitAnywhere;
+    bool    NoFallDamage;
     u32     MarioSize;
     struct CheatListWalkOn WalkOn;
 };

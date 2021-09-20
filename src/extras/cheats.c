@@ -38,6 +38,8 @@ static const u8 optsCheatsStr[][64] = {
     { TEXT_OPT_CHEAT6 },
     { TEXT_OPT_CHEAT7 },
     { TEXT_OPT_CHEAT8 },
+    { TEXT_OPT_CHEAT9 },
+    { TEXT_OPT_CHEAT10 },
 };
 
 static const u8 optsMarioSizeCheatStr[][64] = {
@@ -77,11 +79,13 @@ struct Option optsCheats[] = {
     DEF_OPT_TOGGLE( optsCheatsStr[1], &Cheats.MoonJump ),
     DEF_OPT_TOGGLE( optsCheatsStr[2], &Cheats.InfiniteHealth ),
     DEF_OPT_TOGGLE( optsCheatsStr[3], &Cheats.InfiniteLives ),
-    DEF_OPT_TOGGLE( optsCheatsStr[4], &Cheats.SuperSpeed ),
-    DEF_OPT_TOGGLE( optsCheatsStr[5], &Cheats.Responsive ),
-    DEF_OPT_TOGGLE( optsCheatsStr[6], &Cheats.ExitAnywhere ),
-    DEF_OPT_CHOICE( optsCheatsStr[7], &Cheats.MarioSize, cheatChoicesMarioSize ),
-    DEF_OPT_SUBMENU( optsCheatsStr[8], &menuCheatWalkOn ),
+    DEF_OPT_TOGGLE( optsCheatsStr[4], &Cheats.InvinciblePlayer ),
+    DEF_OPT_TOGGLE( optsCheatsStr[5], &Cheats.SuperSpeed ),
+    DEF_OPT_TOGGLE( optsCheatsStr[6], &Cheats.Responsive ),
+    DEF_OPT_TOGGLE( optsCheatsStr[7], &Cheats.ExitAnywhere ),
+    DEF_OPT_TOGGLE( optsCheatsStr[8], &Cheats.NoFallDamage ),
+    DEF_OPT_CHOICE( optsCheatsStr[9], &Cheats.MarioSize, cheatChoicesMarioSize ),
+    DEF_OPT_SUBMENU(optsCheatsStr[10], &menuCheatWalkOn ),
 };
 
 struct SubMenu menuCheats = DEF_SUBMENU( optCheatMenuStr[0], optsCheats );
@@ -128,6 +132,11 @@ void cheats_super_speed(struct MarioState *m) {
         m->forwardVel += 100;
 }
 
+void cheats_invincible_player(struct MarioState *m) {
+    if (Cheats.InvinciblePlayer)
+        m->invincTimer = 1;
+}
+
 void cheats_mario_action(struct MarioState *m) {
     if (Cheats.EnableCheats) {
         cheats_infinite_health(m);
@@ -135,6 +144,8 @@ void cheats_mario_action(struct MarioState *m) {
         cheats_infinite_lives(m);
 
         cheats_super_speed(m);
+        
+        cheats_invincible_player(m);
     }
 }
 
