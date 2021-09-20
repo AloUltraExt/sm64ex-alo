@@ -289,7 +289,9 @@
 /// Fixes bonks when walking into a wall
 /// Credits: (Arceveti)
 #define QOL_FIX_LESS_GROUND_BONKS (0 || QOL_FIXES)
-
+/// Fixes possible weird behavior when spiny didn't have a proper parent obj
+/// Credits: (Arceveti)
+#define QOL_FIX_SPINE_CHECK_ACTIVE_PARENT (0 || QOL_FIXES)
 // --| Unused Code Fixes (for convenience)
 /// Fixes code error in func_eu_802e27e4_unused
 /// Credits: (Easy Fix)

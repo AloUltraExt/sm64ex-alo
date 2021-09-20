@@ -39,6 +39,11 @@ static u8 sSpinyWalkAttackHandlers[] = {
 static s32 spiny_check_active(void) {
     if (o->parentObj != o) {
         if (o->oDistanceToMario > 2500.0f) {
+#if QOL_FIX_SPINE_CHECK_ACTIVE_PARENT
+            if (obj_has_behavior(o->parentObj, bhvEnemyLakitu)) {
+                o->parentObj->oEnemyLakituNumSpinies--;
+            }
+#else
             //! It's possible for the lakitu to despawn while the spiny still
             //  references it. This line allows us to decrement the 0x1B field
             //  in an object that loads into the lakitu's former slot.
@@ -47,6 +52,7 @@ static s32 spiny_check_active(void) {
             //  It can also be used on a bob-omb respawner to change its model
             //  to a butterfly or fish.
             o->parentObj->oEnemyLakituNumSpinies--;
+#endif
             obj_mark_for_deletion(o);
             return FALSE;
         }

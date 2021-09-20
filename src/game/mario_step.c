@@ -487,7 +487,7 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
             //! Uses referenced ceiling instead of ceil (ceiling hang upwarp)
             if (
 #if QOL_FEATURE_HANG_AIR_ANYWHERE
-            (stepArg & ACT_FLAG_AIR)
+            (m->action & ACT_FLAG_AIR)
 #else
             (stepArg & AIR_STEP_CHECK_HANG)
 #endif
