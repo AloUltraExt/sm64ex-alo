@@ -75,9 +75,15 @@ void bhv_mr_i_body_loop(void) {
         }
     }
 
+#if QOL_FIX_MR_I_DELETED_PARENT
+    if (!(o->parentObj->activeFlags & ACTIVE_FLAG_ACTIVE) || !obj_has_behavior(o->parentObj, bhvMrI)) {
+        obj_mark_for_deletion(o);
+    }
+#else
     if (o->parentObj->activeFlags == ACTIVE_FLAG_DEACTIVATED) {
         obj_mark_for_deletion(o);
     }
+#endif
 }
 
 void mr_i_act_3(void) {
@@ -275,7 +281,9 @@ void mr_i_act_0(void) {
     o->oMoveAngleRoll = 0;
 #endif
     cur_obj_scale(o->oBehParams2ndByte + 1);
-
+#if QOL_FIX_MR_I_EYEBALL_POSITION
+    o->oGraphYOffset = 100.0f * o->header.gfx.scale[1];
+#endif
     if (o->oTimer == 0) {
         cur_obj_set_pos_to_home();
     }

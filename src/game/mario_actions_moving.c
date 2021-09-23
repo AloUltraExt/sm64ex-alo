@@ -491,13 +491,15 @@ void update_walking_speed(struct MarioState *m) {
     #if QOL_FIX_GROUND_TURN_RADIUS
     extern s32 analog_stick_held_back(struct MarioState *m);
 
-    if ((m->forwardVel < 0.0f) && (m->heldObj == NULL)) {
+    if ((m->forwardVel < 0.0f) && (m->heldObj == NULL) && !(m->action & ACT_FLAG_SHORT_HITBOX)) {
         m->faceAngle[1] += 0x8000; // DEG(180)
         m->forwardVel *= -1.0f;
     }
     if (analog_stick_held_back(m) && (m->heldObj == NULL) && !(m->action & ACT_FLAG_SHORT_HITBOX)) {
         set_mario_action(m, ACT_TURNING_AROUND, 0);
-        if (m->forwardVel < 16.0f) m->faceAngle[1] = m->intendedYaw;
+        if (m->forwardVel < 10.0f) {
+            m->faceAngle[1] = m->intendedYaw;
+        }
     } else {
         s16 turnRange = (0xFFF - (m->forwardVel * 0x20));
         if (turnRange < 0x800) {

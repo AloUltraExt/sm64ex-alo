@@ -112,9 +112,6 @@
 /// Fixes bug where the castle trap sound in the entrance of Bowser 1 doesn't play
 /// Credits: (Easy Fix)
 #define QOL_FIX_CASTLE_TRAP_SOUND (0 || QOL_FIXES)
-/// Fixes undefined anim return in the hit wall code, more info in the fix itself
-/// Credits: (Arceveti)
-#define QOL_FIX_HIT_WALL_ACTION (0 || QOL_FIXES)
 /// Fixes manta's water rings to match where it looks
 /// Credits: (Kaze Emanuar)
 #define QOL_FIX_WATER_RING (0 || QOL_FIXES)
@@ -244,6 +241,15 @@
 /// Fixes platform on track checkered detection
 /// Credits: (AloXado320)
 #define QOL_FIX_PLATFORM_TRACK_CHECKERED (0 || QOL_FIXES)
+/// Fixes cutscenes where Mario goes out of camera view on moving platforms
+/// Credits: (AloXado320)
+#define QOL_FIX_CAMERA_CUTSCENE_MOVING_PLATFORMS (0 || QOL_FIXES)
+/// Fixes lower horizontal wind speed value
+/// Credits: (Easy Fix)
+#define QOL_FIX_HORIZONTAL_WIND_SPEED (0 || QOL_FIXES)
+/// Fixes undefined anim return in the hit wall code, more info in the fix itself
+/// Credits: (Arceveti)
+#define QOL_FIX_HIT_WALL_ACTION (0 || QOL_FIXES)
 /// Fixes Mario floor height in the peach ending cutscene
 /// Credits: (Arceveti)
 #define QOL_FIX_END_CUTSCENE_MARIO_FLOOR (0 || QOL_FIXES)
@@ -289,9 +295,21 @@
 /// Fixes bonks when walking into a wall
 /// Credits: (Arceveti)
 #define QOL_FIX_LESS_GROUND_BONKS (0 || QOL_FIXES)
-/// Fixes possible weird behavior when spiny didn't have a proper parent obj
+/// Fixes possible weird behavior when spiny didn't have a proper parent object
 /// Credits: (Arceveti)
-#define QOL_FIX_SPINE_CHECK_ACTIVE_PARENT (0 || QOL_FIXES)
+#define QOL_FIX_SPINY_CHECK_ACTIVE_PARENT (0 || QOL_FIXES)
+/// Fixes side flip ground pound visual bug
+/// Credits: (Arceveti)
+#define QOL_FIX_SIDE_FLIP_VISUAL_LOOK (0 || QOL_FIXES)
+/// Fixes Mario disappearance when squished with no health (originally intentional but causes some bugs)
+/// Credits: (Arceveti)
+#define QOL_FIX_NO_DISAPPEARANCE_SQUISH (0 || QOL_FIXES)
+/// Fixes Mr L eyeball billboard position
+/// Credits: (Arceveti)
+#define QOL_FIX_MR_I_EYEBALL_POSITION (0 || QOL_FIXES)
+/// Fixes Mr L iris parent object when it deactivates
+/// Credits: (Arceveti)
+#define QOL_FIX_MR_I_DELETED_PARENT (0 || QOL_FIXES)
 // --| Unused Code Fixes (for convenience)
 /// Fixes code error in func_eu_802e27e4_unused
 /// Credits: (Easy Fix)

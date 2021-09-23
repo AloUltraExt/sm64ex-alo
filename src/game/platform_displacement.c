@@ -1,4 +1,5 @@
 #include <PR/ultratypes.h>
+#include "sm64.h"
 
 #include "engine/math_util.h"
 #include "engine/surface_collision.h"
@@ -171,7 +172,11 @@ void apply_platform_displacement(u32 isMario, struct Object *platform) {
 void apply_mario_platform_displacement(void) {
     struct Object *platform = gMarioPlatform;
 
-    if (!(gTimeStopState & TIME_STOP_ACTIVE) && gMarioObject != NULL && platform != NULL) {
+    if (!(gTimeStopState & TIME_STOP_ACTIVE) && gMarioObject != NULL && platform != NULL
+#if QOL_FIX_CAMERA_CUTSCENE_MOVING_PLATFORMS
+    && !(gMarioStates[0].action & ACT_FLAG_INTANGIBLE)
+#endif
+    ) {
         apply_platform_displacement(TRUE, platform);
     }
 }

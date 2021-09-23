@@ -1,6 +1,18 @@
 // Mr I (white eyeball)
 
 // 0x06000000
+#if QOL_FIX_MR_I_EYEBALL_POSITION
+static const Vtx mr_i_eyeball_seg6_vertex_06000000[] = {
+    {{{  -100,   -100,      0}, 0, {     0,   2016}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{     0,   -100,      0}, 0, {   992,   2016}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{     0,    100,      0}, 0, {   992,      0}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{  -100,    100,      0}, 0, {     0,      0}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{     0,   -100,      0}, 0, {     0,   2016}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{   100,   -100,      0}, 0, {   992,   2016}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{   100,    100,      0}, 0, {   992,      0}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{     0,    100,      0}, 0, {     0,      0}, {0xff, 0xff, 0xff, 0xff}}},
+};
+#else
 static const Vtx mr_i_eyeball_seg6_vertex_06000000[] = {
     {{{  -100,      0,      0}, 0, {     0,   2016}, {0xff, 0xff, 0xff, 0xff}}},
     {{{     0,      0,      0}, 0, {   992,   2016}, {0xff, 0xff, 0xff, 0xff}}},
@@ -11,6 +23,7 @@ static const Vtx mr_i_eyeball_seg6_vertex_06000000[] = {
     {{{   100,    200,      0}, 0, {   992,      0}, {0xff, 0xff, 0xff, 0xff}}},
     {{{     0,    200,      0}, 0, {     0,      0}, {0xff, 0xff, 0xff, 0xff}}},
 };
+#endif
 
 // 0x06000080
 ALIGNED8 static const Texture mr_i_eyeball_seg6_texture_06000080[] = {

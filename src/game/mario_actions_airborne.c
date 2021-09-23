@@ -182,7 +182,11 @@ s32 check_horizontal_wind(struct MarioState *m) {
         if (speed > 48.0f) {
             m->slideVelX = m->slideVelX * 48.0f / speed;
             m->slideVelZ = m->slideVelZ * 48.0f / speed;
+#if QOL_FIX_HORIZONTAL_WIND_SPEED
+            speed = 48.0f;
+#else
             speed = 32.0f; //! This was meant to be 48?
+#endif
         } else if (speed > 32.0f) {
             speed = 32.0f;
         }
@@ -612,10 +616,16 @@ s32 act_hold_freefall(struct MarioState *m) {
 
 s32 act_side_flip(struct MarioState *m) {
     if (m->input & INPUT_B_PRESSED) {
+#if QOL_FIX_SIDE_FLIP_VISUAL_LOOK
+        m->marioObj->header.gfx.angle[1] += 0x8000;
+#endif
         return set_mario_action(m, ACT_DIVE, 0);
     }
 
     if (m->input & INPUT_Z_PRESSED) {
+#if QOL_FIX_SIDE_FLIP_VISUAL_LOOK
+        m->marioObj->header.gfx.angle[1] += 0x8000;
+#endif
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
@@ -1332,10 +1342,6 @@ s32 act_getting_blown(struct MarioState *m) {
 }
 
 s32 act_air_hit_wall(struct MarioState *m) {
-#if QOL_FIX_HIT_WALL_ACTION
-    s32 ret = FALSE;
-#endif
-
     if (m->heldObj != NULL) {
         mario_drop_held_object(m);
     }
@@ -1366,7 +1372,13 @@ s32 act_air_hit_wall(struct MarioState *m) {
         return set_mario_action(m, ACT_SOFT_BONK, 0);
     }
 
-#if !QOL_FIX_HIT_WALL_ACTION
+#if QOL_FIX_HIT_WALL_ACTION
+    m->marioObj->header.gfx.angle[1] = atan2s(m->wall->normal.z, m->wall->normal.x);
+    return set_mario_animation(m, MARIO_ANIM_START_WALLKICK);
+#else
+    #ifdef AVOID_UB
+    return
+    #endif
     set_mario_animation(m, MARIO_ANIM_START_WALLKICK);
 
     //! Missing return statement. The returned value is the result of the call
@@ -1375,10 +1387,6 @@ s32 act_air_hit_wall(struct MarioState *m) {
     // execute on two frames, but instead it executes twice on the same frame.
     // This results in firsties only being possible for a single frame, instead
     // of two.
-#else
-    ret = set_mario_animation(m, MARIO_ANIM_START_WALLKICK);
-    m->marioObj->header.gfx.angle[1] = atan2s(m->wall->normal.z, m->wall->normal.x);
-    return ret;
 #endif
 }
 

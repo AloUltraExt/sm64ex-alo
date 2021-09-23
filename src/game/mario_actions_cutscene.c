@@ -808,20 +808,14 @@ s32 launch_mario_until_land(struct MarioState *m, s32 endAction, s32 animation, 
 }
 
 s32 act_unlocking_key_door(struct MarioState *m) {
-#if QOL_FIX_DOOR_KEY_CUTSCENE
-    f32 angle;
-#endif
     m->faceAngle[1] = m->usedObj->oMoveAngleYaw;
 
 #if QOL_FIX_DOOR_KEY_CUTSCENE
-    if (m->faceAngle[1] >= -0x4000 && m->faceAngle[1] <= 0x4000) {
-        angle = -75.0f;
-    } else {
-        angle = 75.0f;
-    }
-    
-    m->pos[0] = m->usedObj->oPosX + coss(m->faceAngle[1]) * angle;
-    m->pos[2] = m->usedObj->oPosZ + sins(m->faceAngle[1]) * angle;
+    s16 dAngle = abs_angle_diff(m->usedObj->oFaceAngleYaw, m->faceAngle[1]);
+    f32 offset = ((dAngle <= 0x4000) ? 75.0f : -75.0f);
+
+    m->pos[0] = m->usedObj->oPosX + coss(m->faceAngle[1]) * offset;
+    m->pos[2] = m->usedObj->oPosZ + sins(m->faceAngle[1]) * offset;
 #else
     m->pos[0] = m->usedObj->oPosX + coss(m->faceAngle[1]) * 75.0f;
     m->pos[2] = m->usedObj->oPosZ + sins(m->faceAngle[1]) * 75.0f;
@@ -1597,8 +1591,10 @@ s32 act_squished(struct MarioState *m) {
                 // 1 unit of health
                 if (m->health < 0x0100) {
                     level_trigger_warp(m, WARP_OP_DEATH);
+                    #if !QOL_FIX_NO_DISAPPEARANCE_SQUISH
                     // woosh, he's gone!
                     set_mario_action(m, ACT_DISAPPEARED, 0);
+                    #endif
                 } else if (m->hurtCounter == 0) {
                     // un-squish animation
                     m->squishTimer = 30;
@@ -1639,8 +1635,10 @@ s32 act_squished(struct MarioState *m) {
         m->health = 0x00FF;
         m->hurtCounter = 0;
         level_trigger_warp(m, WARP_OP_DEATH);
+        #if !QOL_FIX_NO_DISAPPEARANCE_SQUISH
         // woosh, he's gone!
         set_mario_action(m, ACT_DISAPPEARED, 0);
+        #endif
     }
     stop_and_set_height_to_floor(m);
     set_mario_animation(m, MARIO_ANIM_A_POSE);
