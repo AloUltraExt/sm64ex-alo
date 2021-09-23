@@ -527,23 +527,26 @@ static void puppycam_input_hold_preset3(f32 ivX)
         if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_OUT)
             gPuppyCam.pitchTarget = approach_s32(gPuppyCam.pitchTarget, 0x3000, 0x200, 0x200);
 
-        if (gPlayer1Controller->buttonPressed & L_CBUTTONS)
+        if ((gPlayer1Controller->buttonPressed & L_CBUTTONS && !gPuppyCam.options.analogue) || (gPuppyCam.stick2[0] > PUPPYCAM_DEADZONE && !gPuppyCam.stickN[0]))
         {
+            gPuppyCam.stickN[0] = 1;
             gPuppyCam.yawTarget -= 0x2000*ivX;
             play_sound(SOUND_MENU_CAMERA_TURN,gGlobalSoundSource);
         }
-        if (gPlayer1Controller->buttonPressed & R_CBUTTONS)
+        if ((gPlayer1Controller->buttonPressed & R_CBUTTONS && !gPuppyCam.options.analogue) || (gPuppyCam.stick2[0] < -PUPPYCAM_DEADZONE && !gPuppyCam.stickN[0]))
         {
+            gPuppyCam.stickN[0] = 1;
             gPuppyCam.yawTarget += 0x2000*ivX;
             play_sound(SOUND_MENU_CAMERA_TURN,gGlobalSoundSource);
         }
     }
 
     //Handles zooming in. Works just like vanilla.
-    if (gPlayer1Controller->buttonPressed & U_CBUTTONS)
+    if ((gPlayer1Controller->buttonPressed & U_CBUTTONS && !gPuppyCam.options.analogue) || (gPuppyCam.stick2[1] > PUPPYCAM_DEADZONE && !gPuppyCam.stickN[1]))
     {
         if ((gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_MED) && !(gMarioState->action & ACT_FLAG_AIR) && !(gMarioState->action & ACT_FLAG_SWIMMING))
         {
+            gPuppyCam.stickN[1] = 1;
             gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ZOOMED_IN;
             gPuppyCam.mode3Flags &= ~PUPPYCAM_MODE3_ZOOMED_MED;
             gPuppyCam.zoomTarget = 200;
@@ -554,6 +557,7 @@ static void puppycam_input_hold_preset3(f32 ivX)
         else
         if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_OUT)
         {
+            gPuppyCam.stickN[1] = 1;
             gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ZOOMED_MED;
             gPuppyCam.mode3Flags &= ~PUPPYCAM_MODE3_ZOOMED_OUT;
             gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[1];
@@ -562,10 +566,11 @@ static void puppycam_input_hold_preset3(f32 ivX)
         }
     }
     else //Otherwise handle zooming out.
-    if (gPlayer1Controller->buttonPressed & D_CBUTTONS)
+    if ((gPlayer1Controller->buttonPressed & D_CBUTTONS && !gPuppyCam.options.analogue) || (gPuppyCam.stick2[1] < -PUPPYCAM_DEADZONE && !gPuppyCam.stickN[1]))
     {
         if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_MED)
         {
+            gPuppyCam.stickN[1] = 1;
             gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ZOOMED_OUT;
             gPuppyCam.mode3Flags &= ~PUPPYCAM_MODE3_ZOOMED_MED;
             gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[2];
@@ -573,10 +578,12 @@ static void puppycam_input_hold_preset3(f32 ivX)
             play_sound(SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource);
         }
     }
-    if (gPlayer1Controller->buttonPressed & D_CBUTTONS || gPlayer1Controller->buttonPressed & B_BUTTON || gPlayer1Controller->buttonPressed & A_BUTTON)
+    if (((gPlayer1Controller->buttonPressed & D_CBUTTONS) && !gPuppyCam.options.analogue) || (gPuppyCam.stick2[1] < -PUPPYCAM_DEADZONE && !gPuppyCam.stickN[1]) || 
+        gPlayer1Controller->buttonPressed & (A_BUTTON | B_BUTTON))
     {
         if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_IN)
         {
+            gPuppyCam.stickN[1] = 1;
             gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ZOOMED_MED;
             gPuppyCam.mode3Flags &= ~PUPPYCAM_MODE3_ZOOMED_IN;
             gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[1];
@@ -618,7 +625,7 @@ static void puppycam_input_hold(void)
     if (!(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_YAW_ROTATION))
         return;
 
-    if (!gPuppyCam.options.analogue && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE))
+    if ((!gPuppyCam.options.analogue || gPuppyCam.options.inputType == PUPPYCAM_INPUT_TYPE_CLASSIC) && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE))
     {
         switch (gPuppyCam.options.inputType)
         {
@@ -940,6 +947,10 @@ s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface 
         || surface->type == SURFACE_VANISH_CAP_WALLS || surface->flags & SURFACE_FLAG_NO_CAM_COLLISION)
         return FALSE;
 
+    //Ignore hangable surface if Mario is hanging
+    if (surface->type == SURFACE_HANGABLE && gMarioState->action & ACT_FLAG_HANGING)
+        return FALSE;
+
     // Get surface normal and some other stuff
     norm[0] = 0;
     norm[1] = surface->normal.y;
@@ -1239,12 +1250,12 @@ void puppycam_projection_behaviours(void)
         }
 
         //This is the base floor height when stood on the ground. It's used to set a baseline for where the camera sits while Mario remains a height from this point, so it keeps a consistent motion.
-        gPuppyCam.targetFloorHeight = CLAMP(find_floor_height(gPuppyCam.targetObj->oPosX, gPuppyCam.targetObj->oPosY, gPuppyCam.targetObj->oPosZ), gPuppyCam.targetObj->oPosY-PUPPYCAM_FLOOR_DIST_DOWN, gPuppyCam.targetObj->oPosY+PUPPYCAM_FLOOR_DIST_UP);
-
-        gPuppyCam.lastTargetFloorHeight = approach_f32_asymptotic(gPuppyCam.lastTargetFloorHeight
-                                                                , gPuppyCam.targetFloorHeight
-                                                                , CLAMP((absf(gMarioState->vel[1]) - 17.f) / 200.f, 0, 0.1f)
-                                                                + CLAMP((absf(gPuppyCam.targetFloorHeight - gPuppyCam.lastTargetFloorHeight) - 30.f) / 300.f, 0, 0.1f));
+        gPuppyCam.targetFloorHeight = CLAMP(find_floor_height(gPuppyCam.targetObj->oPosX, gPuppyCam.targetObj->oPosY, gPuppyCam.targetObj->oPosZ), (gPuppyCam.targetObj->oPosY - PUPPYCAM_FLOOR_DIST_DOWN), gPuppyCam.targetObj->oPosY + PUPPYCAM_FLOOR_DIST_UP);
+        // gPuppyCam.lastTargetFloorHeight = approach_f32_asymptotic(gPuppyCam.lastTargetFloorHeight,
+        //                                                          gPuppyCam.targetFloorHeight,
+        //                                                          CLAMP(((absf(gMarioState->vel[1]) - 17.0f) / 200.0f), 0, 0.1f)
+        //                                                        + CLAMP(((absf(gPuppyCam.targetFloorHeight - gPuppyCam.lastTargetFloorHeight) - 30.0f) / PUPPYCAM_FLOOR_DIST_UP), 0, 0.1f));
+        /* //! if (gMarioState->vel[1] <= 0.0f) */ gPuppyCam.lastTargetFloorHeight = CLAMP(approach_f32_asymptotic(gPuppyCam.lastTargetFloorHeight, gPuppyCam.targetFloorHeight, 0.1f), (gPuppyCam.targetObj->oPosY - PUPPYCAM_FLOOR_DIST_DOWN), (gPuppyCam.targetObj->oPosY + PUPPYCAM_FLOOR_DIST_UP));
 
         if (gMarioState->action == ACT_SLEEPING || gMarioState->action == ACT_START_SLEEPING)
             gPuppyCam.zoom = approach_f32_asymptotic(gPuppyCam.zoom,gPuppyCam.zoomPoints[0],0.01f);
