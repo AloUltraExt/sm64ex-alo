@@ -47,12 +47,6 @@
 /// Adds blinking to King Bob-omb, reusing it's unused blinking texture
 /// Credits: (AloXado320)
 #define QOL_FEATURE_KING_BOBOMB_BLINK (0 || QOL_FEATURES)
-/// Changes hanging so you don't need to hold A to stay hanging, adjusts speed and position
-/// Credits: (AloXado320, Arceveti)
-#define QOL_FEATURE_BETTER_HANGING (0 || QOL_FEATURES)
-/// Changes blue coin switch to respawn instead of disappearing
-/// Credits: (MorsGames, Arceveti)
-#define QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH (0 || QOL_FEATURES)
 /// Changes WF breakable wall by no taking damage and returning safely if the proper wall is broken
 /// Credits: (AloXado320)
 #define QOL_FEATURE_BETTER_WF_BREAKEABLE_WALL (0 || QOL_FEATURES)
@@ -68,6 +62,12 @@
 /// Automatically calculate the optimal collision distance for an object based on its vertices.
 /// Credits: (Kaze)
 #define QOL_FEATURE_AUTO_COLLISION_DISTANCE (0 || QOL_FEATURES)
+/// Changes blue coin switch to respawn instead of disappearing
+/// Credits: (Arceveti)
+#define QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH (0 || QOL_FEATURES)
+/// Changes hanging so you don't need to hold A to stay hanging, adjusts speed and position
+/// Credits: (Arceveti)
+#define QOL_FEATURE_BETTER_HANGING (0 || QOL_FEATURES)
 /// Makes Mario not fall after star grab if the floor is too far below
 /// Credits: (Arceveti)
 #define QOL_FEATURE_STAR_GRAB_NO_FALL_HEIGHT (0 || QOL_FEATURES)

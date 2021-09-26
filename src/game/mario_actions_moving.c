@@ -90,16 +90,18 @@ void play_step_sound(struct MarioState *m, s16 frame1, s16 frame2) {
 }
 
 #if QOL_FEATURE_FAST_FLOOR_ALIGN
-void align_with_floor(struct MarioState *m, s16 smooth) {
+void align_with_floor(struct MarioState *m) {
     struct Surface *floor = m->floor;
-    Vec3f floorNormal;
     if ((floor != NULL) && (m->pos[1] < (m->floorHeight + 80.0f))) {
-        if (smooth) {
-            mtxf_align_terrain_triangle(sFloorAlignMatrix[m->unk00], m->pos, m->faceAngle[1], 40.0f);
-        } else {
-            vec3f_set(floorNormal, floor->normal.x, floor->normal.y, floor->normal.z);
+        m->pos[1] = m->floorHeight;  
+
+        if (ABS(m->forwardVel) > 10) { // FAST_FLOOR_ALIGN = 10
+            Vec3f floorNormal = { floor->normal.x, floor->normal.y, floor->normal.z };
             mtxf_align_terrain_normal(sFloorAlignMatrix[m->unk00], floorNormal, m->pos, m->faceAngle[1]);
+        } else {
+            mtxf_align_terrain_triangle(sFloorAlignMatrix[m->unk00], m->pos, m->faceAngle[1], 40.0f);
         }
+
         m->marioObj->header.gfx.throwMatrix = &sFloorAlignMatrix[m->unk00];
     }
 }
@@ -1359,11 +1361,7 @@ s32 act_crawling(struct MarioState *m) {
             //! Possibly unintended missing break
 
         case GROUND_STEP_NONE:
-#if QOL_FEATURE_FAST_FLOOR_ALIGN
-            align_with_floor(m, TRUE);
-#else
             align_with_floor(m);
-#endif 
             break;
     }
 
@@ -1455,11 +1453,7 @@ void common_slide_action(struct MarioState *m, u32 endAction, u32 airAction, s32
 
         case GROUND_STEP_NONE:
             set_mario_animation(m, animation);
-#if QOL_FEATURE_FAST_FLOOR_ALIGN
-            align_with_floor(m, FALSE);
-#else
             align_with_floor(m);
-#endif
             m->particleFlags |= PARTICLE_DUST;
             break;
 
@@ -1486,11 +1480,7 @@ void common_slide_action(struct MarioState *m, u32 endAction, u32 airAction, s32
                 m->vel[0] = m->slideVelX = slideSpeed * sins(m->slideYaw);
                 m->vel[2] = m->slideVelZ = slideSpeed * coss(m->slideYaw);
             }
-#if QOL_FEATURE_FAST_FLOOR_ALIGN
-            align_with_floor(m, FALSE);
-#else
             align_with_floor(m);
-#endif
             break;
     }
 }
