@@ -1,4 +1,4 @@
-#ifdef DEBUG
+#ifdef EXT_DEBUG_MENU
 
 #include <stdio.h>
 
@@ -59,6 +59,8 @@ static const u8 optsDebugStr[][64] = {
 static const u8 optsDebugWarpDestStr[][64] = {
     { TEXT_DEBUG_WARP0 },
     { TEXT_DEBUG_WARP1 },
+    { TEXT_DEBUG_WARP2 },
+    { TEXT_DEBUG_WARP3 },
 };
 
 static void force_quit_pause_debug(void) {
@@ -81,7 +83,6 @@ static void opt_debug_warp_0(UNUSED struct Option *self, s32 arg) {
 static void opt_debug_warp_1(UNUSED struct Option *self, s32 arg) {
     if (!arg) {
         force_quit_pause_debug();
-        level_trigger_warp(gMarioState, WARP_OP_CREDITS_NEXT);
         // ensure medium water level in WDW credits cutscene
         gPaintingMarioYEntry = 1500.0f;
         // Define credits sequence (if not then crashes)
@@ -91,12 +92,34 @@ static void opt_debug_warp_1(UNUSED struct Option *self, s32 arg) {
         // Play music (sounds off but it's better than no music)
         seq_player_unlower_volume(SEQ_PLAYER_LEVEL, 60);
         play_cutscene_music(SEQUENCE_ARGS(15, SEQ_EVENT_CUTSCENE_CREDITS));
+
+        level_trigger_warp(gMarioState, WARP_OP_CREDITS_NEXT);
+    }
+}
+
+static void opt_debug_warp_2(UNUSED struct Option *self, s32 arg) {
+    if (!arg) {
+        force_quit_pause_debug();
+        // Set Course and Act Num to avoid string crashes
+        gLastCompletedCourseNum = gCurrCourseNum;
+        gLastCompletedStarNum = gCurrActNum;
+
+        level_trigger_warp(gMarioState, WARP_OP_STAR_EXIT);
+    }
+}
+
+static void opt_debug_warp_3(UNUSED struct Option *self, s32 arg) {
+    if (!arg) {
+        force_quit_pause_debug();
+        level_trigger_warp(gMarioState, WARP_OP_DEATH);
     }
 }
 
 static struct Option optDebugWarpDest[] = {
     DEF_OPT_BUTTON( optsDebugWarpDestStr[0], opt_debug_warp_0 ),
     DEF_OPT_BUTTON( optsDebugWarpDestStr[1], opt_debug_warp_1 ),
+    DEF_OPT_BUTTON( optsDebugWarpDestStr[2], opt_debug_warp_2 ),
+    DEF_OPT_BUTTON( optsDebugWarpDestStr[3], opt_debug_warp_3 ),
 };
 
 static struct SubMenu menuDebugWarpDest = DEF_SUBMENU( optDebugMenuStr[1], optDebugWarpDest );
@@ -185,7 +208,9 @@ void set_debug_mario_action(struct MarioState *m) {
     if (DebugOpt.CapChanger) {
         set_debug_cap_changer();
     }
+}
 
+void set_debug_main_action(void) {
     if (DebugOpt.ShowFps) {
         debug_calculate_and_print_fps();
     }

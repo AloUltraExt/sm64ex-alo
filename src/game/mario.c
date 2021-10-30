@@ -42,7 +42,7 @@
 #include "extras/cheats.h"
 #endif
 
-#ifdef DEBUG
+#ifdef EXT_DEBUG_MENU
 #include "extras/debug_menu.h"
 #endif
 
@@ -1777,7 +1777,7 @@ s32 execute_mario_action(UNUSED struct Object *o) {
     cheats_mario_action(gMarioState);
 #endif
 
-#ifdef DEBUG
+#ifdef EXT_DEBUG_MENU
     set_debug_mario_action(gMarioState);
 #endif
 

@@ -49,6 +49,8 @@ TARGET_BITS ?= 0
 
 # Enable extended options menu by default
 EXT_OPTIONS_MENU ?= 1
+# Enable debug options menu (Enabled if DEBUG=1)
+EXT_DEBUG_MENU ?= 0
 # Enable better camera (Puppycam)
 BETTERCAMERA ?= 1
 # Enable cheats
@@ -709,6 +711,13 @@ endif # !TARGET_N64
 # Check for Debug option
 ifeq ($(DEBUG),1)
   CUSTOM_C_DEFINES += -DDEBUG
+  EXT_DEBUG_MENU := 1
+endif
+
+# Check for Debug Menu option
+ifeq ($(EXT_DEBUG_MENU),1)
+  CUSTOM_C_DEFINES += -DEXT_DEBUG_MENU
+  EXT_OPTIONS_MENU := 1
 endif
 
 # Check for Puppycam option
@@ -1317,7 +1326,7 @@ $(BUILD_DIR)/include/text_cheats_strings.h: include/text_cheats_strings.h.in
 	$(V)$(TEXTCONV) charmap.txt $< $@
 endif
 
-ifeq ($(DEBUG),1)
+ifeq ($(EXT_DEBUG_MENU),1)
 $(BUILD_DIR)/include/text_debug_strings.h: include/text_debug_strings.h.in
 	$(call print,Encoding:,$<,$@)
 	$(V)$(TEXTCONV) charmap.txt $< $@
@@ -1383,7 +1392,7 @@ ifeq ($(CHEATS_ACTIONS),1)
   $(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_cheats_strings.h
 endif
 
-ifeq ($(DEBUG),1)
+ifeq ($(EXT_DEBUG_MENU),1)
   $(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_debug_strings.h
 endif
 
@@ -1411,7 +1420,7 @@ ifeq ($(EXT_OPTIONS_MENU),1)
     $(BUILD_DIR)/src/extras/cheats.o:       $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
   endif
   
-  ifeq ($(DEBUG),1)
+  ifeq ($(EXT_DEBUG_MENU),1)
     $(BUILD_DIR)/src/extras/debug_menu.o:   $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
   endif
 

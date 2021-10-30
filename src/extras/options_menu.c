@@ -35,7 +35,7 @@
 #include "cheats.h"
 #endif
 
-#ifdef DEBUG
+#ifdef EXT_DEBUG_MENU
 #include "debug_menu.h"
 #endif
 
@@ -246,7 +246,7 @@ static struct Option optsMain[] = {
     DEF_OPT_SUBMENU( optMainStr[3], &menuAudio ),
     DEF_OPT_SUBMENU( optMainStr[4], &menuSettings ),
 
-#ifdef DEBUG
+#ifdef EXT_DEBUG_MENU
     // NOTE: always keep cheats the last option here because of the half-assed way I toggle them
     DEF_OPT_SUBMENU( optDebugMenuStr[0], &menuDebug ),
 #endif

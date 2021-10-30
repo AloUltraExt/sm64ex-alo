@@ -29,6 +29,10 @@
 #include "pc/audio/audio_3ds_threading.h"
 #endif
 
+#ifdef EXT_DEBUG_MENU
+#include "extras/debug_menu.h"
+#endif
+
 // First 3 controller slots
 struct Controller gControllers[3];
 
@@ -779,6 +783,9 @@ void game_loop_one_iteration(void) {
             // amount of free space remaining.
             print_text_fmt_int(180, 20, "BUF %d", gGfxPoolEnd - (u8 *) gDisplayListHead);
         }
+#endif
+#ifdef EXT_DEBUG_MENU
+        set_debug_main_action();
 #endif
 #ifdef TARGET_N64
     }

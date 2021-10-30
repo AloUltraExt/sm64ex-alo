@@ -17,6 +17,8 @@
 
 #define TEXT_DEBUG_WARP0        _("WARP TO ENDING")
 #define TEXT_DEBUG_WARP1        _("WARP TO CREDITS")
+#define TEXT_DEBUG_WARP2        _("WARP TO LEVEL SUCCESS")
+#define TEXT_DEBUG_WARP3        _("WARP TO LEVEL FAILURE")
 
 #else
 #define TEXT_OPT_DEBUG0         _("Simple Debug Display")
@@ -30,6 +32,8 @@
 
 #define TEXT_DEBUG_WARP0        _("Warp to Ending")
 #define TEXT_DEBUG_WARP1        _("Warp to Credits")
+#define TEXT_DEBUG_WARP2        _("Warp to Level Success")
+#define TEXT_DEBUG_WARP3        _("Warp to Level Failure")
 
 #endif
 

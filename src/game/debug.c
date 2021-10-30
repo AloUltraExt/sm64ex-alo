@@ -14,7 +14,7 @@
 #include "sm64.h"
 #include "types.h"
 
-#ifdef DEBUG
+#ifdef EXT_DEBUG_MENU
 #include "extras/debug_menu.h"
 #endif
 
@@ -459,7 +459,7 @@ void try_print_debug_mario_level_info(void) {
             break;
     }
     
-#ifdef DEBUG
+#ifdef EXT_DEBUG_MENU
     activate_complex_debug_display();
 #endif
 }

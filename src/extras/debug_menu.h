@@ -40,6 +40,7 @@ extern struct DebugOptList DebugOpt;
 extern struct SubMenu menuDebug;
 
 void activate_complex_debug_display(void);
+void set_debug_main_action(void);
 void set_debug_mario_action(struct MarioState *m);
 
 #endif // DEBUG_MENU_OPT_H
