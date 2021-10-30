@@ -454,7 +454,7 @@ static void common_swimming_step(struct MarioState *m, s16 swimStrength) {
             #else
             floorPitch = -find_floor_slope(m, -0x8000);
             if (m->faceAngle[0] < floorPitch) {
-                m->faceAngle[0] = floorPitch
+                m->faceAngle[0] = floorPitch;
             }
             #endif
             break;

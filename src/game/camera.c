@@ -768,9 +768,6 @@ void set_camera_height(struct Camera *c, f32 goalHeight) {
     f32 marioFloorHeight;
     f32 marioCeilHeight;
     f32 camFloorHeight;
-#if QOL_FIX_CAMERA_VERTICAL_MOVEMENT
-    f32 approachRate = 20.0f;
-#endif
     UNUSED s16 action = sMarioCamState->action;
     f32 baseOff = 125.f;
     f32 camCeilHeight = find_ceil(c->pos[0], gLakituState.goalPos[1] - 50.f, c->pos[2], &surface);
@@ -809,12 +806,7 @@ void set_camera_height(struct Camera *c, f32 goalHeight) {
                 c->pos[1] = goalHeight;
             }
         }
-#if QOL_FIX_CAMERA_VERTICAL_MOVEMENT
-        approachRate += (absf(c->pos[1] - goalHeight) / 20);
-        approach_camera_height(c, goalHeight, approachRate);
-#else
         approach_camera_height(c, goalHeight, 20.f);
-#endif
         if (camCeilHeight != CELL_HEIGHT_LIMIT) {
             camCeilHeight -= baseOff;
             if ((c->pos[1] > camCeilHeight && sMarioGeometry.currFloorHeight + baseOff < camCeilHeight)
@@ -5417,6 +5409,9 @@ void warp_camera(f32 displacementX, f32 displacementY, f32 displacementZ) {
  */
 void approach_camera_height(struct Camera *c, f32 goal, f32 inc) {
     if (sStatusFlags & CAM_FLAG_SMOOTH_MOVEMENT) {
+#if QOL_FIX_CAMERA_VERTICAL_MOVEMENT
+        approach_f32_asymptotic_bool(&c->pos[1], goal, inc);
+#else
         if (c->pos[1] < goal) {
             if ((c->pos[1] += inc) > goal) {
                 c->pos[1] = goal;
@@ -5426,6 +5421,7 @@ void approach_camera_height(struct Camera *c, f32 goal, f32 inc) {
                 c->pos[1] = goal;
             }
         }
+#endif
     } else {
         c->pos[1] = goal;
     }

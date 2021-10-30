@@ -45,7 +45,7 @@ void bhv_tree_snow_or_leaf_loop(void) {
 
 void bhv_snow_leaf_particle_spawn_init(void) {
     struct Object *obj; // Either snow or leaf
-#ifdef QOL_FIX_HARDCODED_TREE_PARTICLES
+#if QOL_FIX_HARDCODED_TREE_PARTICLES
     struct Object *nearestTree = NULL;
 #endif
     UNUSED u8 filler1[4];

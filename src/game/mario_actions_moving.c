@@ -10,6 +10,7 @@
 #include "interaction.h"
 #include "mario_actions_object.h"
 #include "memory.h"
+#include "object_helpers.h"
 #include "behavior_data.h"
 #include "rumble_init.h"
 #include "pc/configfile.h"
@@ -491,26 +492,24 @@ void update_walking_speed(struct MarioState *m) {
     } else {
 #endif
     #if QOL_FIX_GROUND_TURN_RADIUS
-    extern s32 analog_stick_held_back(struct MarioState *m);
+    if ((m->heldObj == NULL) && !(m->action & ACT_FLAG_SHORT_HITBOX)) {
+        if (m->forwardVel >= 16.0f) {
+            s16 turnRange = abs_angle_diff(m->faceAngle[1], m->intendedYaw);
+            f32 fac = (m->forwardVel + m->intendedMag);
+            //turnRange *= (1.0f - (CLAMP(fac, 0.0f, 32.0f) / 32.0f));
 
-    if ((m->forwardVel < 0.0f) && (m->heldObj == NULL) && !(m->action & ACT_FLAG_SHORT_HITBOX)) {
-        m->faceAngle[1] += 0x8000; // DEG(180)
-        m->forwardVel *= -1.0f;
-    }
-    if (analog_stick_held_back(m) && (m->heldObj == NULL) && !(m->action & ACT_FLAG_SHORT_HITBOX)) {
-        set_mario_action(m, ACT_TURNING_AROUND, 0);
-        if (m->forwardVel < 10.0f) {
+            if (fac > 32.0f) fac = 32.0f;
+            if (fac < 0.0f) fac = 0.0f;
+            fac /= 32.0f;
+
+            turnRange *= (1.0f - fac);
+            turnRange = MAX(turnRange, 0x800);
+            m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, turnRange, turnRange);
+        } else {
             m->faceAngle[1] = m->intendedYaw;
         }
     } else {
-        s16 turnRange = (0xFFF - (m->forwardVel * 0x20));
-        if (turnRange < 0x800) {
-            turnRange = 0x800;
-            set_mario_action(m, ACT_TURNING_AROUND, 0);
-        } else if (turnRange > 0xFFF) {
-            turnRange = 0xFFF;
-        }
-        m->faceAngle[1]  = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, turnRange, turnRange);
+        m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0x800, 0x800);
     }
     #else
     m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0x800, 0x800);

@@ -1568,7 +1568,7 @@ s32 act_lava_boost(struct MarioState *m) {
         case AIR_STEP_LANDED:
             if (m->floor->type == SURFACE_BURNING
 #ifdef CHEATS_ACTIONS
-            && (Cheats.EnableCheats && !Cheats.WalkOn.Lava)
+            && (!Cheats.EnableCheats || !Cheats.WalkOn.Lava)
 #endif
             ) {
                 m->actionState = 0;
