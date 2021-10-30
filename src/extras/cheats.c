@@ -26,6 +26,7 @@ struct CheatList Cheats;
 const u8 optCheatMenuStr[][32] = {
     { TEXT_OPT_CHEATS },
     { TEXT_OPT_CHEATS_WALKON },
+    { TEXT_OPT_CHEATS_BLJANY },
 };
 
 static const u8 optsCheatsStr[][64] = {
@@ -40,6 +41,7 @@ static const u8 optsCheatsStr[][64] = {
     { TEXT_OPT_CHEAT8 },
     { TEXT_OPT_CHEAT9 },
     { TEXT_OPT_CHEAT10 },
+    { TEXT_OPT_CHEAT11 },
 };
 
 static const u8 optsMarioSizeCheatStr[][64] = {
@@ -63,6 +65,23 @@ static const u8 optsWalkOnCheatStr[][64] = {
     { TEXT_CHEAT_WALKON5 },
 };
 
+static const u8 optsBljOptAnyCheatStr[][64] = {
+    { TEXT_CHEAT_BLJOPT0 },
+    { TEXT_CHEAT_BLJOPT1 },
+    { TEXT_CHEAT_BLJOPT2 },
+};
+
+static const u8 *cheatChoicesBljOptAny[] = {
+    optsBljOptAnyCheatStr[0],
+    optsBljOptAnyCheatStr[1],
+    optsBljOptAnyCheatStr[2],
+};
+
+static const u8 optsBljAnyCheatStr[][64] = {
+    { TEXT_CHEAT_BLJANY0 },
+    { TEXT_CHEAT_BLJANY1 },
+};
+
 static struct Option optWalkOnCheats[] = {
     DEF_OPT_TOGGLE( optsWalkOnCheatStr[0], &Cheats.WalkOn.Lava ),
     DEF_OPT_TOGGLE( optsWalkOnCheatStr[1], &Cheats.WalkOn.Quicksand ),
@@ -73,6 +92,13 @@ static struct Option optWalkOnCheats[] = {
 };
 
 static struct SubMenu menuCheatWalkOn = DEF_SUBMENU( optCheatMenuStr[1], optWalkOnCheats );
+
+static struct Option optBljAnyCheats[] = {
+    DEF_OPT_CHOICE( optsCheatsStr[10], &Cheats.BljAny.Mode, cheatChoicesBljOptAny ),
+    DEF_OPT_SCROLL( optsBljAnyCheatStr[1], &Cheats.BljAny.VelForce, 0, 10, 1 ),
+};
+
+static struct SubMenu menuCheatBljAny = DEF_SUBMENU( optCheatMenuStr[2], optBljAnyCheats );
 
 struct Option optsCheats[] = {
     DEF_OPT_TOGGLE( optsCheatsStr[0], &Cheats.EnableCheats ),
@@ -85,14 +111,17 @@ struct Option optsCheats[] = {
     DEF_OPT_TOGGLE( optsCheatsStr[7], &Cheats.ExitAnywhere ),
     DEF_OPT_TOGGLE( optsCheatsStr[8], &Cheats.NoFallDamage ),
     DEF_OPT_CHOICE( optsCheatsStr[9], &Cheats.MarioSize, cheatChoicesMarioSize ),
-    DEF_OPT_SUBMENU(optsCheatsStr[10], &menuCheatWalkOn ),
+    DEF_OPT_SUBMENU(optsCheatsStr[10], &menuCheatBljAny ),
+    DEF_OPT_SUBMENU(optsCheatsStr[11], &menuCheatWalkOn ),
 };
 
 struct SubMenu menuCheats = DEF_SUBMENU( optCheatMenuStr[0], optsCheats );
 
 void cheats_moon_jump(struct MarioState *m) {
-    if (Cheats.MoonJump) {        
+    if (Cheats.MoonJump) {
         if (m->controller->buttonDown & L_TRIG) {
+            
+            m->vel[1] = 40.0f;
 
             if (m->action != ACT_JUMP && m->heldObj == NULL) {
                 set_mario_action(m, ACT_JUMP, 0);
@@ -102,18 +131,42 @@ void cheats_moon_jump(struct MarioState *m) {
                 set_mario_action(m, ACT_HOLD_JUMP, 0);
             }
 
-            m->vel[1] = 25;
+            
+        }
+    }
+}
+
+void cheats_blj_anywhere(struct MarioState *m) {
+    if (m->forwardVel < -7.0f && (m->action == ACT_LONG_JUMP || m->action == ACT_LONG_JUMP_LAND)) {
+        switch (Cheats.BljAny.Mode) {
+            case 1: // Pressing
+                if (m->controller->buttonPressed & A_BUTTON && m->controller->buttonDown & Z_TRIG) {
+                    m->forwardVel -= (Cheats.BljAny.VelForce + 1) * 2.5f;
+                    m->vel[1] -= 50.0f;
+                }
+                break;
+            case 2: // Holding
+                if (m->controller->buttonDown & (A_BUTTON | Z_TRIG)) {
+                    m->forwardVel -= (Cheats.BljAny.VelForce + 1) * 2.5f;
+                    m->vel[1] -= 50.0f;
+
+                    m->controller->buttonDown &= ~A_BUTTON;
+                }
+                break;
+            default: // Disabled
+                break;
         }
     }
 }
 
 void cheats_mario_inputs(struct MarioState *m) {
     m->particleFlags = 0;
-    m->collidedObjInteractTypes = m->marioObj->collidedObjInteractTypes;
     m->flags &= 0xFFFFFF;
-    
+
     if (Cheats.EnableCheats) {
         cheats_moon_jump(m);
+
+        cheats_blj_anywhere(m);
     }
 }
 
@@ -140,11 +193,11 @@ void cheats_invincible_player(struct MarioState *m) {
 void cheats_mario_action(struct MarioState *m) {
     if (Cheats.EnableCheats) {
         cheats_infinite_health(m);
-        
+
         cheats_infinite_lives(m);
 
         cheats_super_speed(m);
-        
+
         cheats_invincible_player(m);
     }
 }
@@ -152,15 +205,14 @@ void cheats_mario_action(struct MarioState *m) {
 void cheats_mario_size(struct MarioState *m) {
     if (Cheats.EnableCheats) {
         switch (Cheats.MarioSize) {
-            case 0: // Normal
-            default:
-                vec3f_set(m->marioObj->header.gfx.scale, 1.0f, 1.0f, 1.0f);
-                break;
             case 1: // Tiny
                 vec3f_set(m->marioObj->header.gfx.scale, 0.2f, 0.2f, 0.2f);
                 break;
-            case 2: // Huge   
+            case 2: // Huge
                 vec3f_set(m->marioObj->header.gfx.scale, 2.5f, 2.5f, 2.5f);
+                break;
+            default: // Normal
+                vec3f_set(m->marioObj->header.gfx.scale, 1.0f, 1.0f, 1.0f);
                 break;
         }
     } else {

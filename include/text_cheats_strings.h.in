@@ -3,6 +3,7 @@
 
 #define TEXT_OPT_CHEATS          _("CHEATS")
 #define TEXT_OPT_CHEATS_WALKON   _("WALK ON CHEATS")
+#define TEXT_OPT_CHEATS_BLJANY   _("BLJ ANYWHERE CHEAT")
 
 #if defined(VERSION_JP) || defined(VERSION_SH)
 
@@ -18,11 +19,19 @@
 #define TEXT_OPT_CHEAT7    _("EXIT COURSE AT ANY TIME")
 #define TEXT_OPT_CHEAT8    _("NO FALL DAMAGE")
 #define TEXT_OPT_CHEAT9    _("PLAYER SIZE")
-#define TEXT_OPT_CHEAT10   _("WALK ON CHEATS")
+#define TEXT_OPT_CHEAT10   _("BLJ ANYWHERE CHEAT")
+#define TEXT_OPT_CHEAT11   _("WALK ON CHEATS")
 
 #define TEXT_CHEAT_MSIZE0   _("NORMAL")
 #define TEXT_CHEAT_MSIZE1   _("TINY")
 #define TEXT_CHEAT_MSIZE2   _("HUGE")
+
+#define TEXT_CHEAT_BLJOPT0   _("DISABLED")
+#define TEXT_CHEAT_BLJOPT1   _("PRESSING")
+#define TEXT_CHEAT_BLJOPT2   _("HOLDING")
+
+#define TEXT_CHEAT_BLJANY0   _("BLJ TOGGLE")
+#define TEXT_CHEAT_BLJANY1   _("BLJ START SPEED")
 
 #define TEXT_CHEAT_WALKON0   _("WALK ON LAVA")
 #define TEXT_CHEAT_WALKON1   _("WALK ON QUICKSAND")
@@ -43,11 +52,19 @@
 #define TEXT_OPT_CHEAT7    _("Exit course at any time")
 #define TEXT_OPT_CHEAT8    _("No fall damage")
 #define TEXT_OPT_CHEAT9    _("Player size")
-#define TEXT_OPT_CHEAT10   _("Walk on cheats")
+#define TEXT_OPT_CHEAT10   _("BLJ anywhere cheat")
+#define TEXT_OPT_CHEAT11   _("Walk on cheats")
 
 #define TEXT_CHEAT_MSIZE0   _("Normal")
 #define TEXT_CHEAT_MSIZE1   _("Tiny")
 #define TEXT_CHEAT_MSIZE2   _("Huge")
+
+#define TEXT_CHEAT_BLJOPT0   _("Disabled")
+#define TEXT_CHEAT_BLJOPT1   _("Pressing")
+#define TEXT_CHEAT_BLJOPT2   _("Holding")
+
+#define TEXT_CHEAT_BLJANY0   _("BLG toggle")
+#define TEXT_CHEAT_BLJANY1   _("BLJ start speed")
 
 #define TEXT_CHEAT_WALKON0   _("Walk on lava")
 #define TEXT_CHEAT_WALKON1   _("Walk on quicksand")

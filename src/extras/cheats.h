@@ -33,6 +33,11 @@ struct CheatListWalkOn {
     bool    DeathBarrier;
 };
 
+struct CheatListBljAny {
+    u32     Mode;
+    u32     VelForce;
+};
+
 struct CheatList {
     bool    EnableCheats;
     bool    MoonJump;
@@ -45,6 +50,7 @@ struct CheatList {
     bool    NoFallDamage;
     u32     MarioSize;
     struct CheatListWalkOn WalkOn;
+    struct CheatListBljAny BljAny;
 };
 
 extern struct CheatList Cheats;
