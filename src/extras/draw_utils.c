@@ -6,7 +6,7 @@
 #include "game/game_init.h"
 #include "game/segment2.h"
 
-#if !defined(VERSION_JP) && !defined(VERSION_SH)
+#if defined(VERSION_US) || defined(VERSION_EU)
 extern u8 gDialogCharWidths[];
 #endif
 
@@ -72,7 +72,6 @@ void print_generic_str_ascii(s16 x, s16 y, const char *str) {
     print_generic_string(x, y, buf);
 }
 
-#if !defined(VERSION_JP) && !defined(VERSION_SH)
 s16 get_string_width_ascii(char *str) {
     s16 i;
     u8  buf[50];
@@ -84,13 +83,16 @@ s16 get_string_width_ascii(char *str) {
     buf[i] = DIALOG_CHAR_TERMINATOR;
 
     while (buf[bufPos] != DIALOG_CHAR_TERMINATOR) {
+        #if defined(VERSION_US) || defined(VERSION_EU)
         width += gDialogCharWidths[buf[bufPos]];
+        #else
+        width += JP_DIALOG_CHAR_STRING;
+        #endif
         bufPos++;
     }
 
     return width;
 }
-#endif
 
 static s8 ext_f3d_res_to_mask(s16 res) {
     if(res >= 2)    return 1;

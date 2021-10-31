@@ -727,7 +727,7 @@ void print_menu_generic_string(s16 x, s16 y, const u8 *str) {
                 }
 #endif
 #if defined(VERSION_JP) || defined(VERSION_SH)
-                curX += 9;
+                curX += JP_DIALOG_CHAR_STRING;
 #else
                 curX += gDialogCharWidths[str[strPos]];
 #endif
@@ -877,18 +877,22 @@ s16 get_str_x_pos_from_center_scale(s16 centerPos, u8 *str, f32 scale) {
 }
 #endif
 
-#if defined(VERSION_US) || defined(VERSION_EU)
+// ex-alo change
+// Set a fixed value for JP regions
 s16 get_string_width(u8 *str) {
     s16 strPos = 0;
     s16 width = 0;
 
     while (str[strPos] != DIALOG_CHAR_TERMINATOR) {
+        #if defined(VERSION_US) || defined(VERSION_EU)
         width += gDialogCharWidths[str[strPos]];
+        #else
+        width += JP_DIALOG_CHAR_STRING;
+        #endif
         strPos++;
     }
     return width;
 }
-#endif
 
 u8 gHudSymCoin[] = { GLYPH_COIN, GLYPH_SPACE };
 u8 gHudSymX[] = { GLYPH_MULTIPLY, GLYPH_SPACE };

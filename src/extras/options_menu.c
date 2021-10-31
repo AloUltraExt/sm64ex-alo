@@ -85,7 +85,6 @@ static const u8 optsVideoStr[][32] = {
     { TEXT_OPT_LINEAR },
     { TEXT_OPT_RESETWND },
     { TEXT_OPT_VSYNC },
-    { TEXT_OPT_AUTO },
     { TEXT_OPT_APPLY },
 };
 #endif
@@ -405,12 +404,18 @@ static void optmenu_opt_change(struct Option *opt, s32 val) {
     }
 }
 
+#ifdef VERSION_JP
+#define STRIDE 8
+#else
+#define STRIDE 6
+#endif
 static inline s16 get_hudstr_centered_x(const s16 sx, const u8 *str) {
     const u8 *chr = str;
     s16 len = 0;
     while (*chr != GLOBAR_CHAR_TERMINATOR) ++chr, ++len;
-    return sx - len * 6; // stride is 12
+    return sx - len * STRIDE; // stride is 12 (14 in JP)
 }
+#undef STRIDE
 
 //Options menu
 void optmenu_draw(void) {
@@ -427,7 +432,7 @@ void optmenu_draw(void) {
 
     ext_print_quad_rect(48, 84, 272, 218, 0x0, 0x0, 0x0, 0x50);
 
-    const s16 labelX = get_hudstr_centered_x(160, currentMenu->label);
+    const s16 labelX = get_hudstr_centered_x(SCREEN_WIDTH / 2, currentMenu->label);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
     print_hud_lut_string(HUD_LUT_GLOBAL, labelX, 40, currentMenu->label);
@@ -446,7 +451,7 @@ void optmenu_draw(void) {
         scroll = 140-(32*i)+(currentMenu->scroll*32);
         // FIXME: just start from the first visible option bruh
         if (scroll <= 140 && scroll > 32)
-            optmenu_draw_opt(&currentMenu->opts[i], 160, scroll, (currentMenu->select == i), i);
+            optmenu_draw_opt(&currentMenu->opts[i], SCREEN_WIDTH / 2, scroll, (currentMenu->select == i), i);
     }
 
     sinpos = sins(gGlobalTimer*5000)*4;
@@ -457,10 +462,19 @@ void optmenu_draw(void) {
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 }
 
+
 //This has been separated for interesting reasons. Don't question it.
 void optmenu_draw_prompt(void) {
+    s16 strValue = get_string_width((u8*)optSmallStr[optmenu_open]);
+
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
-    optmenu_draw_text(264, 212, optSmallStr[optmenu_open], 0);
+
+    gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
+    print_generic_string(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(56 + strValue), 211, optSmallStr[optmenu_open]);
+
+    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
+    print_generic_string(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(57 + strValue), 212, optSmallStr[optmenu_open]);
+
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 }
 

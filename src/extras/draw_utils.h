@@ -1,6 +1,9 @@
 #ifndef DRAW_ULTILS_EXTRAS_H
 #define DRAW_ULTILS_EXTRAS_H
 
+#include <PR/ultratypes.h>
+#include "game/ingame_menu.h"
+
 s16 get_string_width_ascii(char *str);
 
 void ext_print_generic_string_ascii_adv(s16 x, s16 y, char *text, u8 r, u8 g, u8 b, u8 a, s8 dropShadow);
