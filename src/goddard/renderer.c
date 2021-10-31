@@ -1670,7 +1670,7 @@ void gd_dl_set_fill(struct GdColour *colour) {
 }
 
 /* 24CDB4 -> 24CE10; orig name: func_8019E5E4 */
-void gd_dl_set_zbuffer_area(void) {
+void gd_dl_set_z_buffer_area(void) {
     gDPSetDepthImage(next_gfx(), GD_LOWER_24(sActiveView->parent->zbuf));
 }
 
@@ -2378,7 +2378,7 @@ void Unknown801A1E70(void) {
     gDPPipeSync(next_gfx());
     gDPSetCycleType(next_gfx(), G_CYC_FILL);
     gDPSetRenderMode(next_gfx(), G_RM_OPA_SURF, G_RM_OPA_SURF2);
-    gd_dl_set_zbuffer_area();
+    gd_dl_set_z_buffer_area();
     gDPSetColorImage(next_gfx(), G_IM_FMT_RGBA, G_IM_SIZ_16b, sActiveView->parent->lowerRight.x,
                      GD_LOWER_24(sActiveView->parent->zbuf));
     gDPSetFillColor(next_gfx(), GPACK_ZDZ(G_MAXFBZ, 0) << 16 | GPACK_ZDZ(G_MAXFBZ, 0));

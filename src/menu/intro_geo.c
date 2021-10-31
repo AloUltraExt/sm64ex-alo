@@ -511,7 +511,7 @@ Gfx *intro_draw_face(u16 *image, s32 imageW, s32 imageH) {
     return dl;
 }
 
-u16 *intro_sample_frame_buffer(s32 imageW, s32 imageH, s32 sampleW, s32 sampleH) {
+u16 *intro_sample_framebuffer(s32 imageW, s32 imageH, s32 sampleW, s32 sampleH) {
     u16 *fb;
     u16 *image;
     s32 pixel;
@@ -608,7 +608,7 @@ Gfx *geo_intro_face_easter_egg(s32 state, struct GraphNode *node, UNUSED void *c
 
         // Draw while the first or last face is visible.
         if (sFaceVisible[0] == 1 || sFaceVisible[17] == 1) {
-            image = intro_sample_frame_buffer(40, 40, 2, 2);
+            image = intro_sample_framebuffer(40, 40, 2, 2);
             if (image != NULL) {
                 genNode->fnNode.node.flags = (genNode->fnNode.node.flags & 0xFF) | (LAYER_OPAQUE << 8);
                 dl = intro_draw_face(image, 40, 40);

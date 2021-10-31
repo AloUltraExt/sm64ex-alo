@@ -170,7 +170,7 @@ void init_z_buffer(void) {
 /**
  * Tells the RDP which of the three framebuffers it shall draw to.
  */
-void select_frame_buffer(void) {
+void select_framebuffer(void) {
     gDPPipeSync(gDisplayListHead++);
 
     gDPSetCycleType(gDisplayListHead++, G_CYC_1CYCLE);
@@ -184,7 +184,7 @@ void select_frame_buffer(void) {
  * Clear the framebuffer and fill it with a 32-bit color.
  * Information about the color argument: https://jrra.zone/n64/doc/n64man/gdp/gDPSetFillColor.htm
  */
-void clear_frame_buffer(s32 color) {
+void clear_framebuffer(s32 color) {
     gDPPipeSync(gDisplayListHead++);
 
     gDPSetRenderMode(gDisplayListHead++, G_RM_OPA_SURF, G_RM_OPA_SURF2);
@@ -299,7 +299,7 @@ void init_rcp(void) {
     init_rdp();
     init_rsp();
     init_z_buffer();
-    select_frame_buffer();
+    select_framebuffer();
 }
 
 /**
@@ -358,7 +358,7 @@ void render_init(void) {
     gDisplayListHead = gGfxPool->buffer;
     gGfxPoolEnd = (u8 *)(gGfxPool->buffer + GFX_POOL_SIZE);
     init_rcp();
-    clear_frame_buffer(0);
+    clear_framebuffer(0);
     end_master_display_list();
     exec_display_list(&gGfxPool->spTask);
 

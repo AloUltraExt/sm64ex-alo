@@ -442,7 +442,7 @@ void render_game(void) {
         if (D_8032CE78 != NULL) {
             clear_viewport(D_8032CE78, gWarpTransFBSetColor);
         } else {
-            clear_frame_buffer(gWarpTransFBSetColor);
+            clear_framebuffer(gWarpTransFBSetColor);
         }
     }
 
