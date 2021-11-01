@@ -2889,7 +2889,7 @@ void print_hud_course_complete_coins(s16 x, s16 y) {
             gCourseCompleteCoins++;
             play_sound(SOUND_MENU_YOSHI_GAIN_LIVES, gGlobalSoundSource);
 
-#ifdef QOL_FIX_COMPLETE_COURSE_50_COINS
+#if QOL_FIX_COMPLETE_COURSE_50_COINS
             if (gCourseCompleteCoins % 50 == 0)
 #else
             if (gCourseCompleteCoins == 50 || gCourseCompleteCoins == 100 || gCourseCompleteCoins == 150)
