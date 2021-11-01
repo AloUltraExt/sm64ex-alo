@@ -3,13 +3,15 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex/tree/nightly) with addi
 
 ## Changes
  * N64 Building - Support for it was removed in sm64ex
- * Based of the latest refresh (14, since sm64ex is stuck on 12)
- * Quality of Life Fixes and Features (QOL_FIXES=1 and QOL_FEATURES=1 respectively)
- * Mouse Support for Desktop targets (MOUSE_ACTIONS=1) (SDL1/SDL2 only, DirectX Mouse not implemented yet)
- * Simple Debug Options Menu (DEBUG=1)
+ * Based of the latest refresh (since sm64ex is stuck on 12)
+ * Puppycam 2 (sm64ex still has Puppycam 1)
+ * Quality of life fixes and features (QOL_FIXES=1 and QOL_FEATURES=1 respectively)
+ * Mouse support for desktop targets (MOUSE_ACTIONS=1) (SDL1/SDL2 only, DirectX Mouse not implemented yet)
+ * Simple debug options menu (EXT_DEBUG_MENU=1)
+ * Kaze's more objects patch (PORT_MOP_OBJS=1)
  
 ## Backends included
- * Same ones as in [sm64ex](https://github.com/sm64pc/sm64ex/tree/nightly) (macOS - Raspberry Pi Series - Windows - Linux) etc.
+ * Same ones as in [sm64ex](https://github.com/sm64pc/sm64ex/tree/nightly) (macOS - Raspberry Pi Series - Windows - Linux), etc.
  * [Nintendo 64](https://github.com/n64decomp/sm64) along with some [HackerSM64](https://github.com/Reonu/HackerSM64) Makefile changes
  * [Nintendo Wii U](https://github.com/aboood40091/sm64ex/tree/nightly) (by AboodXD)
  * [Nintendo 3DS](https://github.com/mkst/sm64-port) (by Fnouwt, mkst)
