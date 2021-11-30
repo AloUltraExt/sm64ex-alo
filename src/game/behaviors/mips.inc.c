@@ -109,16 +109,18 @@ void bhv_mips_act_wait_for_nearby_mario(void) {
 void bhv_mips_act_follow_path(void) {
     s16 collisionFlags = 0;
     s32 followStatus;
-#ifdef AVOID_UB
-    followStatus = 0;
-#endif
 
     // Retrieve current waypoint.
     struct Waypoint **pathBase = segmented_to_virtual(&inside_castle_seg7_trajectory_mips);
     struct Waypoint *waypoint = segmented_to_virtual(*(pathBase + o->oMipsStartWaypointIndex));
 
+#ifdef AVOID_UB
+    followStatus = 0;
+#endif
+
     // Set start waypoint and follow the path from there.
     o->oPathedStartWaypoint = waypoint;
+    //! Uninitialized parameter, but the parameter is unused in the called function
     followStatus = cur_obj_follow_path(followStatus);
 
     // Update velocity and angle and do movement.

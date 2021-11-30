@@ -60,6 +60,7 @@ void snowmans_bottom_act_1(void) {
 
     o->oPathedStartWaypoint = segmented_to_virtual(&ccm_seg7_trajectory_snowman);
     collisionFlags = object_step_without_floor_orient();
+    //! Uninitialized parameter, but the parameter is unused in the called function
     followStatus = cur_obj_follow_path(followStatus);
     o->oSnowmansBottomUnkF8 = o->oPathedTargetYaw;
     o->oMoveAngleYaw = approach_s16_symmetric(o->oMoveAngleYaw, o->oSnowmansBottomUnkF8, 0x400);

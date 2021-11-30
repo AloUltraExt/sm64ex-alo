@@ -48,6 +48,7 @@ static void manta_ray_move(void) {
 #endif
 
     o->oPathedStartWaypoint = (struct Waypoint *) sMantaRayTraj;
+    //! Uninitialized parameter, but the parameter is unused in the called function
     pathStatus = cur_obj_follow_path(pathStatus);
 
     o->oMantaTargetYaw   = o->oPathedTargetYaw;

@@ -87,7 +87,7 @@ void bhv_bowling_ball_roll_loop(void) {
     bowling_ball_set_waypoints();
     collisionFlags = object_step();
 
-    //! Uninitialzed parameter, but the parameter is unused in the called function
+    //! Uninitialized parameter, but the parameter is unused in the called function
     followStatus = cur_obj_follow_path(followStatus);
 
     o->oBowlingBallTargetYaw = o->oPathedTargetYaw;
@@ -120,7 +120,7 @@ void bhv_bowling_ball_initialize_loop(void) {
 
     bowling_ball_set_waypoints();
 
-    //! Uninitialzed parameter, but the parameter is unused in the called function
+    //! Uninitialized parameter, but the parameter is unused in the called function
     followStatus = cur_obj_follow_path(followStatus);
 
     o->oMoveAngleYaw = o->oPathedTargetYaw;

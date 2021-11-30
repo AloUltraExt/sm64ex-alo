@@ -134,10 +134,11 @@ Gfx *geo_update_layer_transparency(s32 callContext, struct GraphNode *node, UNUS
  * o32 calling convention.
  */
 #ifdef AVOID_UB
-Gfx *geo_switch_anim_state(s32 callContext, struct GraphNode *node, UNUSED void *context) {
+Gfx *geo_switch_anim_state(s32 callContext, struct GraphNode *node, UNUSED void *context)
 #else
-Gfx *geo_switch_anim_state(s32 callContext, struct GraphNode *node) {
+Gfx *geo_switch_anim_state(s32 callContext, struct GraphNode *node)
 #endif
+{
     struct Object *obj;
     struct GraphNodeSwitchCase *switchCase;
 
@@ -167,10 +168,11 @@ Gfx *geo_switch_anim_state(s32 callContext, struct GraphNode *node) {
 
 //! @bug Same issue as geo_switch_anim_state.
 #ifdef AVOID_UB
-Gfx *geo_switch_area(s32 callContext, struct GraphNode *node, UNUSED void *context) {
+Gfx *geo_switch_area(s32 callContext, struct GraphNode *node, UNUSED void *context)
 #else
-Gfx *geo_switch_area(s32 callContext, struct GraphNode *node) {
+Gfx *geo_switch_area(s32 callContext, struct GraphNode *node)
 #endif
+{
     s16 sp26;
     struct Surface *sp20;
     UNUSED struct Object *sp1C =
@@ -257,9 +259,9 @@ void create_transformation_from_matrices(Mat4 a0, Mat4 a1, Mat4 a2) {
     a0[3][1] = a1[3][0] * a2[1][0] + a1[3][1] * a2[1][1] + a1[3][2] * a2[1][2] - sp8;
     a0[3][2] = a1[3][0] * a2[2][0] + a1[3][1] * a2[2][1] + a1[3][2] * a2[2][2] - sp4;
 
-    a0[0][3] = 0;
-    a0[1][3] = 0;
-    a0[2][3] = 0;
+    a0[0][3] = 0.0f;
+    a0[1][3] = 0.0f;
+    a0[2][3] = 0.0f;
     a0[3][3] = 1.0f;
 }
 
@@ -742,8 +744,8 @@ void cur_obj_init_animation_with_accel_and_sound(s32 animIndex, f32 accel) {
 }
 
 void obj_init_animation_with_sound(struct Object *obj, const struct Animation * const* animations, s32 animIndex) {
-    struct Animation **anims = (struct Animation **)animations;
-    obj->oAnimations = (struct Animation **)animations;
+    struct Animation **anims = (struct Animation **) animations;
+    obj->oAnimations = (struct Animation **) animations;
     geo_obj_init_animation(&obj->header.gfx, &anims[animIndex]);
     obj->oSoundStateID = animIndex;
 }
@@ -917,13 +919,9 @@ s32 count_objects_with_behavior(const BehaviorScript *behavior) {
 
 struct Object *cur_obj_find_nearby_held_actor(const BehaviorScript *behavior, f32 maxDist) {
     const BehaviorScript *behaviorAddr = segmented_to_virtual(behavior);
-    struct ObjectNode *listHead;
-    struct Object *obj;
-    struct Object *foundObj;
-
-    listHead = &gObjectLists[OBJ_LIST_GENACTOR];
-    obj = (struct Object *) listHead->next;
-    foundObj = NULL;
+    struct ObjectNode *listHead = &gObjectLists[OBJ_LIST_GENACTOR];
+    struct Object *obj = (struct Object *) listHead->next;
+    struct Object *foundObj = NULL;
 
     while ((struct Object *) listHead != obj) {
         if (obj->behavior == behaviorAddr) {
@@ -977,7 +975,9 @@ BAD_RETURN(s32) cur_obj_extend_animation_if_at_end(void) {
     s32 sp4 = o->header.gfx.animInfo.animFrame;
     s32 sp0 = o->header.gfx.animInfo.curAnim->loopEnd - 2;
 
-    if (sp4 == sp0) o->header.gfx.animInfo.animFrame--;
+    if (sp4 == sp0) {
+        o->header.gfx.animInfo.animFrame--;
+    }
 }
 
 s32 cur_obj_check_if_near_animation_end(void) {
@@ -1562,8 +1562,8 @@ void cur_obj_set_pos_to_home(void) {
 void cur_obj_set_pos_to_home_and_stop(void) {
     cur_obj_set_pos_to_home();
 
-    o->oForwardVel = 0;
-    o->oVelY = 0;
+    o->oForwardVel = 0.0f;
+    o->oVelY = 0.0f;
 }
 
 void cur_obj_shake_y(f32 amount) {
