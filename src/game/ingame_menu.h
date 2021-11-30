@@ -126,10 +126,10 @@ enum DialogResponseDefines {
 };
 
 extern s32 gDialogResponse;
-extern u16 gDialogColorFadeTimer;
+extern u16 gMenuTextColorTransTimer;
 extern s8 gLastDialogLineNum;
 extern s32 gDialogVariable;
-extern u16 gDialogTextAlpha;
+extern u16 gMenuTextAlpha;
 extern s16 gCutsceneMsgXOffset;
 extern s16 gCutsceneMsgYOffset;
 extern s8 gRedCoinsCollected;

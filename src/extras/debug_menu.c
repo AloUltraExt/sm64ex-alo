@@ -31,7 +31,7 @@ extern s8 gShowDebugText;
 extern s8 gDebugLevelSelect;
 extern s8 gShowProfiler;
 extern s16 gMenuMode;
-extern s8 gDialogBoxState;
+extern s8 gMenuState;
 extern struct CreditsEntry sCreditsSequence[];
 extern void try_modify_debug_controls(void);
 extern void try_change_debug_page(void);
@@ -67,7 +67,7 @@ static void force_quit_pause_debug(void) {
     level_set_transition(0, NULL);
     optmenu_open = 0;
     gMenuMode = -1;
-    gDialogBoxState = 0;
+    gMenuState = 0;
     raise_background_noise(1);
     gCameraMovementFlags &= ~CAM_MOVE_PAUSE_SCREEN;
     set_play_mode(0);

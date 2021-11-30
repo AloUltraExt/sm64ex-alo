@@ -2290,7 +2290,7 @@ void print_copy_menu_strings(void) {
  * Prints the "YES NO" prompt and checks if one of the prompts are hovered to do it's functions.
  */
 void print_erase_menu_prompt(s16 x, s16 y) {
-    s16 colorFade = gGlobalTimer << 12;
+    s16 colorTransTimer = gGlobalTimer << 12;
 
     s16 cursorX = sCursorPos[0] + CURSOR_X;
     s16 cursorY = sCursorPos[1] + 120.0f;
@@ -2298,14 +2298,14 @@ void print_erase_menu_prompt(s16 x, s16 y) {
     if (cursorX < MENU_ERASE_YES_MAX_X && cursorX >= MENU_ERASE_YES_MIN_X &&
         cursorY < MENU_ERASE_YES_NO_MAX_Y && cursorY >= MENU_ERASE_YES_NO_MIN_Y) {
         // Fade "YES" string color but keep "NO" gray
-        sYesNoColor[0] = sins(colorFade) * 50.0f + 205.0f;
+        sYesNoColor[0] = sins(colorTransTimer) * 50.0f + 205.0f;
         sYesNoColor[1] = 150;
         sEraseYesNoHoverState = MENU_ERASE_HOVER_YES;
     } else if (cursorX < MENU_ERASE_NO_MAX_X && cursorX >= MENU_ERASE_NO_MIN_X
         && cursorY < MENU_ERASE_YES_NO_MAX_Y && cursorY >= MENU_ERASE_YES_NO_MIN_Y) {
         // Fade "NO" string color but keep "YES" gray
         sYesNoColor[0] = 150;
-        sYesNoColor[1] = sins(colorFade) * 50.0f + 205.0f;
+        sYesNoColor[1] = sins(colorTransTimer) * 50.0f + 205.0f;
         sEraseYesNoHoverState = MENU_ERASE_HOVER_NO;
     } else {
         // Don't fade both strings and keep them gray

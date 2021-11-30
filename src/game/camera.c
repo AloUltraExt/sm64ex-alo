@@ -7018,7 +7018,7 @@ s16 unused_dialog_cutscene_response(u8 cutscene) {
     }
 
     // if playing this cutscene and Mario responded, return the response
-    if ((gCamera->cutscene == cutscene) && (sCutsceneDialogResponse)) {
+    if ((gCamera->cutscene == cutscene) && (sCutsceneDialogResponse != DIALOG_RESPONSE_NONE)) {
         return sCutsceneDialogResponse;
     } else {
         return 0;
