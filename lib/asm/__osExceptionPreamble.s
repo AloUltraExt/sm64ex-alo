@@ -285,9 +285,9 @@ glabel L80326984
     and   $s0, $s0, $at
 #endif
     li    $t2, 4
-    lui   $at, %hi(D_80334920)
+    lui   $at, %hi(__osHwIntTable)
     addu  $at, $at, $t2
-    lw    $t2, %lo(D_80334920)($at)
+    lw    $t2, %lo(__osHwIntTable)($at)
 #if defined(VERSION_EU) || defined(VERSION_SH)
     lui   $sp, %hi(leoDiskStack)
     addiu $sp, %lo(leoDiskStack)
@@ -787,7 +787,7 @@ glabel __osCleanupThread
 
 .section .data
 
-glabel D_80334920
+glabel __osHwIntTable
     .word 0
     .word 0
     .word 0

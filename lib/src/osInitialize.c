@@ -12,7 +12,7 @@ typedef struct {
 } exceptionPreamble;
 
 #if defined(VERSION_EU) || defined(VERSION_SH)
-extern u32 EU_D_802f4330(u32, void (*));
+extern u32 __osSetHWintrRoutine(OSHWIntr, s32 (*));
 extern void D_802F4380();
 
 #endif
@@ -93,7 +93,7 @@ void osInitialize(void) {
     };
     if (!((eu_sp34 = HW_REG(ASIC_STATUS, u32)) & _64DD_PRESENT_MASK)) {
         EU_D_80302090 = 1;
-        EU_D_802f4330(1, D_802F4380);
+        __osSetHWIntrRoutine(1, D_802F4380);
     } else {
         EU_D_80302090 = 0;
     }

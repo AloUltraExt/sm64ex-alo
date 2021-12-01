@@ -195,7 +195,7 @@ SECTIONS
         BUILD_DIR/libultra.a:string.o(.text);
         BUILD_DIR/libultra.a:_Printf.o(.text);
         BUILD_DIR/libultra.a:llmuldiv.o(.text);
-        BUILD_DIR/libultra.a:llmuldiv_gcc.o(.text);
+        BUILD_DIR/libultra.a:llmuldiv_gcc.o(.text); // for gcc to build
         BUILD_DIR/libultra.a:osInitialize.o(.text);
         BUILD_DIR/libultra.a:osSetTime.o(.text);
         BUILD_DIR/libultra.a:osGetTime.o(.text);
@@ -271,7 +271,7 @@ SECTIONS
         BUILD_DIR/libultra.a:osWritebackDCache.o(.text);
         BUILD_DIR/libultra.a:osMapTLBRdb.o(.text);
         BUILD_DIR/libultra.a:osPiRawReadIo.o(.text);
-        BUILD_DIR/libultra.a:EU_D_802f4330.o(.text);
+        BUILD_DIR/libultra.a:__osSetHWintrRoutine.o(.text);
         BUILD_DIR/libultra.a:D_802F4380.o(.text);
         BUILD_DIR/libultra.a:func_802F4A20.o(.text);
         BUILD_DIR/libultra.a:osTimer.o(.text);
@@ -315,7 +315,6 @@ SECTIONS
         BUILD_DIR/libultra.a:guNormalize.o(.text);
         BUILD_DIR/libultra.a:__osAiDeviceBusy.o(.text);
         BUILD_DIR/libultra.a:ldiv.o(.text);
-        BUILD_DIR/libultra.a:__osGetCause.o(.text);
         BUILD_DIR/libultra.a:__osSiDeviceBusy.o(.text);
 #ifdef VERSION_SH
         BUILD_DIR/libultra.a:leointerrupt.o(.text);
@@ -338,7 +337,6 @@ SECTIONS
 #ifdef RUMBLE_FEEDBACK
         BUILD_DIR/libultra.a:unk_shindou_file_3.o(.text);
 #endif
-        BUILD_DIR/libultra.a:guLookAtRef.o(.text); /* Fast3DEX2 only */
         BUILD_DIR/lib/rsp.o(.text);
 #else
         BUILD_DIR/src/game*.o(.text);
@@ -556,7 +554,6 @@ SECTIONS
         BUILD_DIR/libultra.a:__osPiCreateAccessQueue.o(.data*);
         BUILD_DIR/libultra.a:__osSiCreateAccessQueue.o(.data*);
         BUILD_DIR/libultra.a:osViData.o(.data*);
-        BUILD_DIR/libultra.a:__osSyncPutChars.o(.data*);
 #else
         BUILD_DIR/libultra.a:osViTable.o(.data*);
         BUILD_DIR/libultra.a:osCreateViManager.o(.data*);
@@ -654,26 +651,22 @@ SECTIONS
         BUILD_DIR/src/audio/external.o(.rodata*);
         BUILD_DIR/src/audio/port_eu.o(.rodata*);
         BUILD_DIR/src/audio*.o(.rodata*);
+
 #if defined(VERSION_EU) || defined(VERSION_SH)
         BUILD_DIR/libultra.a:_Printf.o(.rodata*);
 #endif
-        BUILD_DIR/libultra.a:guOrthoF.o(.rodata*);
+
         BUILD_DIR/libultra.a:guPerspectiveF.o(.rodata*);
         BUILD_DIR/libultra.a:llconv.o(.rodata*);
         BUILD_DIR/libultra.a:cosf.o(.rodata*);
         BUILD_DIR/libultra.a:sinf.o(.rodata*);
         BUILD_DIR/libultra.a:guRotateF.o(.rodata*);
-        BUILD_DIR/libultra.a:guScaleF.o(.rodata*);
-        BUILD_DIR/libultra.a:osAiSetFrequency.o(.rodata*);
 
 #if defined(VERSION_EU) || defined(VERSION_SH)
         BUILD_DIR/libultra.a:_Litob.o(.rodata*);
         BUILD_DIR/libultra.a:_Ldtob.o(.rodata*);
         BUILD_DIR/libultra.a:__osExceptionPreamble.o(.rodata*);
-        BUILD_DIR/libultra.a:__osViSwapContext.o(.rodata*);
         BUILD_DIR/libultra.a:__osDevMgrMain.o(.rodata*);
-        BUILD_DIR/libultra.a:guMtxF2L.o(.rodata*);
-        BUILD_DIR/libultra.a:guNormalize.o(.rodata*);
         BUILD_DIR/libultra.a:NaN.o(.rodata*);
 #else
         BUILD_DIR/libultra.a:_Printf.o(.rodata*);
@@ -759,6 +752,7 @@ SECTIONS
         BUILD_DIR/src/audio/load_sh.o(.bss*);
         BUILD_DIR/src/audio/data.o(.bss*);
 #endif
+
 #if defined(VERSION_EU) || defined(VERSION_SH)
         BUILD_DIR/libultra.a:osInitialize.o(.bss*);
         BUILD_DIR/libultra.a:osSetEventMesg.o(.bss*);
@@ -794,11 +788,9 @@ SECTIONS
 #ifdef VERSION_EU
         BUILD_DIR/libultra.a:osLeoDiskInit.o(.bss*);
 #endif
-        BUILD_DIR/libultra.a:__osViInit.o(.bss*)
-        BUILD_DIR/libultra.a:__osSyncPutChars.o(.bss*);
-        BUILD_DIR/libultra.a:_Printf.o(.bss*);
-        BUILD_DIR/libultra.a:osAiSetNextBuffer.o(.bss*);
-        BUILD_DIR/libultra.a:EU_D_802f4330.o(.bss*);
+      BUILD_DIR/libultra.a:_Printf.o(.bss*);
+      BUILD_DIR/libultra.a:osAiSetNextBuffer.o(.bss*);
+      BUILD_DIR/libultra.a:__osSetHWintrRoutine.o(.bss*);
 #else
         BUILD_DIR/libultra.a:osSetEventMesg.o(.bss*);
         BUILD_DIR/libultra.a:osSpTaskLoadGo.o(.bss*);
