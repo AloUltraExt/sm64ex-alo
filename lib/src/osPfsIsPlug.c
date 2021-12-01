@@ -1,6 +1,7 @@
 #include "PR/os_pi.h"
 #include "libultra_internal.h"
 #include "controller.h"
+#include "macros.h"
 
 OSPifRam __osPfsPifRam;
 
@@ -52,7 +53,7 @@ void __osPfsRequestData(u8 cmd) {
 
     _osLastSentSiCmd = cmd;
 
-    for (i = 0; i < ARRLEN(__osPfsPifRam.ramarray) + 1; i++) { // also clear pifstatus
+    for (i = 0; i < ARRAY_COUNT(__osPfsPifRam.ramarray) + 1; i++) { // also clear pifstatus
         __osPfsPifRam.ramarray[i] = 0;
     }
 

@@ -11,26 +11,26 @@ void osStartThread(OSThread *thread) {
             do {
             } while (0);
             thread->state = OS_STATE_RUNNABLE;
-            __osEnqueueThread(&D_80334898, thread);
+            __osEnqueueThread(&__osRunQueue, thread);
         }
     } else {
-        if (thread->queue == NULL || thread->queue == &D_80334898) {
+        if (thread->queue == NULL || thread->queue == &__osRunQueue) {
             thread->state = OS_STATE_RUNNABLE;
 
-            __osEnqueueThread(&D_80334898, thread);
+            __osEnqueueThread(&__osRunQueue, thread);
         } else {
             thread->state = OS_STATE_WAITING;
             __osEnqueueThread(thread->queue, thread);
             state = (uintptr_t) __osPopThread(thread->queue);
-            __osEnqueueThread(&D_80334898, (OSThread *) state);
+            __osEnqueueThread(&__osRunQueue, (OSThread *) state);
         }
     }
-    if (D_803348A0 == NULL) {
+    if (__osRunningThread == NULL) {
         __osDispatchThread();
     } else {
-        if (D_803348A0->priority < D_80334898->priority) {
-            D_803348A0->state = OS_STATE_RUNNABLE;
-            __osEnqueueAndYield(&D_80334898);
+        if (__osRunningThread->priority < __osRunQueue->priority) {
+            __osRunningThread->state = OS_STATE_RUNNABLE;
+            __osEnqueueAndYield(&__osRunQueue);
         }
     }
     __osRestoreInt(int_disabled);

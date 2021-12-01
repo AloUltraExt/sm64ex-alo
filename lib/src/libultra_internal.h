@@ -20,13 +20,13 @@ typedef struct OSThread_ListHead_s
 } OSThread_ListHead;
 
 // Now fix the symbols to the new one.
-extern OSThread_ListHead D_80334890_fix;
+extern OSThread_ListHead __osThreadTail_fix;
 
-#define D_80334890 D_80334890_fix.next
-#define D_80334894 D_80334890_fix.priority
-#define D_80334898 D_80334890_fix.queue
-#define D_8033489C D_80334890_fix.tlnext
-#define D_803348A0 D_80334890_fix.unk10
+#define __osThreadTail __osThreadTail_fix.next
+#define D_80334894 __osThreadTail_fix.priority
+#define __osRunQueue __osThreadTail_fix.queue
+#define __osActiveQueue __osThreadTail_fix.tlnext
+#define __osRunningThread __osThreadTail_fix.unk10
 
 // Fix for the EEPROM array.
 extern u32 D_80365E00[16];
@@ -35,11 +35,11 @@ extern u32 D_80365E00[16];
 #define D_80365E3C D_80365E00[15]
 #else
 // Original OSThread_ListHead definitions
-extern OSThread *D_80334890;
+extern OSThread *__osThreadTail;
 extern u32 D_80334894;
-extern OSThread *D_80334898;
-extern OSThread *D_8033489C;
-extern OSThread *D_803348A0;
+extern OSThread *__osRunQueue;
+extern OSThread *__osActiveQueue;
+extern OSThread *__osRunningThread;
 
 // Original EEPROM definitions
 extern u32 D_80365E00[15];

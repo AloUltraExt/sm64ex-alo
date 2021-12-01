@@ -177,7 +177,7 @@ static void __osLeoResume(void) {
     mq->msg[last] = es->message;
     mq->validCount++;
     if (mq->mtqueue->next != NULL) {
-        __osEnqueueThread(&D_80334898, __osPopThread(&mq->mtqueue));
+        __osEnqueueThread(&__osRunQueue, __osPopThread(&mq->mtqueue));
     }
 }
 

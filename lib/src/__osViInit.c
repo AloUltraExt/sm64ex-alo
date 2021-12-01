@@ -12,10 +12,10 @@ u32 sTvType = TV_TYPE_NTSC;
 u32 osViClock = 0x02E6D354;
 #endif
 
-extern OSViMode D_80334990;
-extern OSViMode D_803349E0;
+extern OSViMode osViModePalLan1;
+extern OSViMode osViModeMpalLan1;
 #if defined(VERSION_EU) || defined(VERSION_SH)
-extern OSViMode D_80302FD0;
+extern OSViMode osViModeNtscLan1;
 #endif
 
 void __osViInit(void) {
@@ -32,13 +32,13 @@ void __osViInit(void) {
 #if defined(VERSION_EU)
 
     if (osTvType == TV_TYPE_PAL) {
-        __osViNext->modep = &D_80334990;
+        __osViNext->modep = &osViModePalLan1;
         osViClock = 0x02F5B2D2;
     } else if (osTvType == TV_TYPE_MPAL) {
-        __osViNext->modep = &D_803349E0;
+        __osViNext->modep = &osViModeMpalLan1;
         osViClock = 0x02E6025C;
     } else {
-        __osViNext->modep = &D_80302FD0;
+        __osViNext->modep = &osViModeNtscLan1;
         osViClock = 0x02E6D354;
     }
 
@@ -47,11 +47,11 @@ void __osViInit(void) {
     __osViNext->buffer = (void *) 0x80000000;
     __osViCurr->buffer = (void *) 0x80000000;
     if (osTvType == TV_TYPE_PAL) {
-        __osViNext->modep = &D_80334990;
+        __osViNext->modep = &osViModePalLan1;
     } else if (osTvType == TV_TYPE_MPAL) {
-        __osViNext->modep = &D_803349E0;
+        __osViNext->modep = &osViModeMpalLan1;
     } else {
-        __osViNext->modep = &D_80302FD0;
+        __osViNext->modep = &osViModeNtscLan1;
     }
 
 #else
@@ -62,10 +62,10 @@ void __osViInit(void) {
     if (sTvType == TV_TYPE_NTSC)
 #endif
     {
-        __osViNext->modep = &D_80334990;
+        __osViNext->modep = &osViModePalLan1;
         osViClock = 0x02E6D354;
     } else {
-        __osViNext->modep = &D_803349E0;
+        __osViNext->modep = &osViModeMpalLan1;
 #if defined(VERSION_JP)
         osViClock = 0x02F5B2D2;
 #elif defined(VERSION_US)

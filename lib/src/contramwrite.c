@@ -1,6 +1,7 @@
 #include "libultra_internal.h"
 #include "PR/rcp.h"
 #include "controller.h"
+#include "macros.h"
 
 extern s32 func_8030A5C0(OSMesgQueue *, s32);
 void __osPackRamWriteData(int channel, u16 address, u8 *buffer);
@@ -63,7 +64,7 @@ void __osPackRamWriteData(int channel, u16 address, u8 *buffer) {
 
     ptr = (u8 *)__osPfsPifRam.ramarray;
 
-    for (i = 0; i < ARRLEN(__osPfsPifRam.ramarray) + 1; i++) { // also clear pifstatus
+    for (i = 0; i < ARRAY_COUNT(__osPfsPifRam.ramarray) + 1; i++) { // also clear pifstatus
         __osPfsPifRam.ramarray[i] = 0;
     }
 
@@ -74,7 +75,7 @@ void __osPackRamWriteData(int channel, u16 address, u8 *buffer) {
     ramreadformat.cmd = CONT_CMD_WRITE_MEMPACK;
     ramreadformat.address = (address << 0x5) | __osContAddressCrc(address);
     ramreadformat.datacrc = CONT_CMD_NOP;
-    for (i = 0; i < ARRLEN(ramreadformat.data); i++) {
+    for (i = 0; i < ARRAY_COUNT(ramreadformat.data); i++) {
         ramreadformat.data[i] = *buffer++;
     }
     if (channel != 0) {

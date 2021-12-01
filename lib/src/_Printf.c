@@ -28,8 +28,8 @@
 const char length_str[] = "hlL";
 const char flags_str[] = " +-#0";
 const u32 flags_arr[] = { FLAGS_SPACE, FLAGS_PLUS, FLAGS_MINUS, FLAGS_HASH, FLAGS_ZERO, 0 };
-char _spaces[] = "                                ";
-char _zeroes[] = "00000000000000000000000000000000";
+char spaces[] = "                                ";
+char zeroes[] = "00000000000000000000000000000000";
 
 static void _Putfld(printf_struct *, va_list *, u8, u8 *);
 
@@ -99,14 +99,14 @@ s32 _Printf(char *(*prout)(char *, const char *, size_t), char *dst, const char 
         _Putfld(&sp78, &args, *fmt_ptr, sp4c);
         sp78.width -= sp78.part1_len + sp78.num_leading_zeros + sp78.part2_len + sp78.num_mid_zeros
                       + sp78.part3_len + sp78.num_trailing_zeros;
-        _PAD(sp44, sp78.width, sp48, _spaces, !(sp78.flags & FLAGS_MINUS));
+        _PAD(sp44, sp78.width, sp48, spaces, !(sp78.flags & FLAGS_MINUS));
         _PROUT(dst, (char *) sp4c, sp78.part1_len);
-        _PAD(sp3c, sp78.num_leading_zeros, sp40, _zeroes, 1);
+        _PAD(sp3c, sp78.num_leading_zeros, sp40, zeroes, 1);
         _PROUT(dst, sp78.buff, sp78.part2_len);
-        _PAD(sp34, sp78.num_mid_zeros, sp38, _zeroes, 1);
+        _PAD(sp34, sp78.num_mid_zeros, sp38, zeroes, 1);
         _PROUT(dst, (char *) (&sp78.buff[sp78.part2_len]), sp78.part3_len)
-        _PAD(sp2c, sp78.num_trailing_zeros, sp30, _zeroes, 1);
-        _PAD(sp24, sp78.width, sp28, _spaces, sp78.flags & FLAGS_MINUS);
+        _PAD(sp2c, sp78.num_trailing_zeros, sp30, zeroes, 1);
+        _PAD(sp24, sp78.width, sp28, spaces, sp78.flags & FLAGS_MINUS);
         fmt = (char *) fmt_ptr + 1;
     }
 }

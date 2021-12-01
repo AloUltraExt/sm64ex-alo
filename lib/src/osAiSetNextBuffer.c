@@ -2,8 +2,6 @@
 #include "osAi.h"
 #include "hardware.h"
 
-u8 D_80334820 = 0;
-
 /**
  * It is worth noting that a previous hardware bug has been fixed by a software
  * patch in osAiSetNextBuffer. This bug occurred when the address of the end of the
@@ -19,22 +17,23 @@ u8 D_80334820 = 0;
  */
 
 s32 osAiSetNextBuffer(void *buff, u32 len) {
-    u8 *sp1c = buff;
-    if (D_80334820 != 0) {
-        sp1c -= 0x2000;
+    static u8 hdwrBugFlag = 0;
+    char *bptr = buff;
+    if (hdwrBugFlag != 0) {
+        bptr -= 0x2000;
     }
 
     if ((((uintptr_t) buff + len) & 0x3fff) == 0x2000) {
-        D_80334820 = 1;
+        hdwrBugFlag = 1;
     } else {
-        D_80334820 = 0;
+        hdwrBugFlag = 0;
     }
 
     if (__osAiDeviceBusy()) {
         return -1;
     }
 
-    HW_REG(AI_DRAM_ADDR_REG, void *) = (void *) osVirtualToPhysical(sp1c);
+    HW_REG(AI_DRAM_ADDR_REG, void *) = (void *) osVirtualToPhysical(bptr);
     HW_REG(AI_LEN_REG, u32) = len;
     return 0;
 }

@@ -5,7 +5,6 @@
 #include "PR/rcp.h"
 
 //should go somewhere else but
-#define ARRLEN(x) ((s32)(sizeof(x) / sizeof(x[0])))
 #define CHNL_ERR(format) ((format.rxsize & CHNL_ERR_MASK) >> 4)
 
 typedef struct
