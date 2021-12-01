@@ -28,7 +28,7 @@ static Collision const *sActivatedBackAndForthPlatformCollisionModels[] = {
  */
 void bhv_activated_back_and_forth_platform_init(void) {
     // Equivalent to the first behavior param byte & 3 (last 2 bits of the byte).
-    s32 platformType = ((u16)(o->oBehParams >> 16) & 0x0300) >> 8;
+    s32 platformType = ((u16)(o->oBehParams >> 16) & ACTIVATED_BF_PLAT_BP_MASK_TYPE) >> 8;
 
     // The BitS arrow platform should flip 180º (0x8000 angle units), but
     // there is no reason for the other platforms to flip.

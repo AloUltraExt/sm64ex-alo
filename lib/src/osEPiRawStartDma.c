@@ -24,8 +24,9 @@ s32 osEPiRawStartDma(OSPiHandle *pihandle, s32 dir, u32 cart_addr, void *dram_ad
 #endif
 
     status = HW_REG(PI_STATUS_REG, u32);
-    while (status & PI_STATUS_ERROR)
+    while (status & PI_STATUS_ERROR) {
         status = HW_REG(PI_STATUS_REG, u32);
+    }
 #ifdef VERSION_SH // TODO: This is the EPI_SYNC macro
     domain = pihandle->domain;
     if (__osCurrentHandle[domain] != pihandle) {

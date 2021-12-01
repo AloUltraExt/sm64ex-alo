@@ -33,7 +33,7 @@ void sequence_channel_process_sound(struct SequenceChannel *seqChannel, s32 reca
         seqChannel->pan = seqChannel->newPan * seqChannel->panChannelWeight;
     }
 
-    for (i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; i++) {
         struct SequenceChannelLayer *layer = seqChannel->layers[i];
         if (layer != NULL && layer->enabled && layer->note != NULL) {
             if (layer->notePropertiesNeedInit) {

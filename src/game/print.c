@@ -185,7 +185,7 @@ void print_text_fmt_int(s32 x, s32 y, const char *str, s32 n) {
 
     c = str[srcIndex];
 
-    while (c != 0) {
+    while (c != '\0') {
         if (c == '%') {
             srcIndex++;
 
@@ -236,7 +236,7 @@ void print_text(s32 x, s32 y, const char *str) {
     c = str[srcIndex];
 
     // Set the array with the text to print while finding length.
-    while (c != 0) {
+    while (c != '\0') {
         sTextLabels[sTextLabelsCount]->buffer[length] = c;
         length++;
         srcIndex++;
@@ -266,7 +266,7 @@ void print_text_centered(s32 x, s32 y, const char *str) {
     c = str[srcIndex];
 
     // Set the array with the text to print while finding length.
-    while (c != 0) {
+    while (c != '\0') {
         sTextLabels[sTextLabelsCount]->buffer[length] = c;
         length++;
         srcIndex++;

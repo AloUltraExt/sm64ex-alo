@@ -204,17 +204,19 @@ void discard_bank(s32 bankId) {
         struct Note *note = &gNotes[i];
 
 #if defined(VERSION_EU)
-        if (note->noteSubEu.bankId == bankId) {
+        if (note->noteSubEu.bankId == bankId)
 #else
-        if (note->bankId == bankId) {
+        if (note->bankId == bankId)
 #endif
+        {
             // (These prints are unclear. Arguments are picked semi-randomly.)
             eu_stubbed_printf_1("Warning:Kill Note  %x \n", i);
 #ifdef VERSION_SH
-            if (note->unkSH34 == NOTE_PRIORITY_DISABLED && note->priority) {
+            if (note->unkSH34 == NOTE_PRIORITY_DISABLED && note->priority)
 #else
-            if (note->priority >= NOTE_PRIORITY_MIN) {
+            if (note->priority >= NOTE_PRIORITY_MIN)
 #endif
+            {
                 eu_stubbed_printf_3("Kill Voice %d (ID %d) %d\n", note->waveId,
                         bankId, note->priority);
                 eu_stubbed_printf_0("Warning: Running Sequence's data disappear!\n");
@@ -1143,8 +1145,9 @@ void audio_reset_session(void) {
             }
 
             for (i = 0; i < gMaxSimultaneousNotes; i++) {
-                if (gNotes[i].enabled)
+                if (gNotes[i].enabled) {
                     break;
+                }
             }
 
             if (i == gMaxSimultaneousNotes) {

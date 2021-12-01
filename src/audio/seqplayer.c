@@ -773,7 +773,9 @@ void seq_channel_layer_process_script(struct SequenceChannelLayer *layer) {
         } else {
 #if defined(VERSION_EU) || defined(VERSION_SH)
             s32 temp = layer->instOrWave;
-            if (temp == 0xff) temp = seqChannel->instOrWave;
+            if (temp == 0xff) {
+                temp = seqChannel->instOrWave;
+            }
             if (temp == 0)
 #else
             if (seqChannel->instOrWave == 0)
@@ -1615,12 +1617,15 @@ void sequence_channel_process_script(struct SequenceChannel *seqChannel) {
                     case 0xf9: // chan_bltz
                     case 0xf5: // chan_bgez
                         sp5A = m64_read_s16(state);
-                        if (cmd == 0xfa && value != 0)
+                        if (cmd == 0xfa && value != 0) {
                             break;
-                        if (cmd == 0xf9 && value >= 0)
+                        }
+                        if (cmd == 0xf9 && value >= 0) {
                             break;
-                        if (cmd == 0xf5 && value < 0)
+                        }
+                        if (cmd == 0xf5 && value < 0) {
                             break;
+                        }
                         state->pc = seqPlayer->seqData + sp5A;
                         break;
 
@@ -1629,10 +1634,12 @@ void sequence_channel_process_script(struct SequenceChannel *seqChannel) {
                     case 0xf3: // chan_beqz_rel
                     case 0xf2: // chan_bltz_rel
                         temp = m64_read_u8(state);
-                        if (cmd == 0xf3 && value != 0)
+                        if (cmd == 0xf3 && value != 0) {
                             break;
-                        if (cmd == 0xf2 && value >= 0)
+                        }
+                        if (cmd == 0xf2 && value >= 0) {
                             break;
+                        }
                         state->pc += temp;
                         break;
 #endif

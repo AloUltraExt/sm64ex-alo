@@ -108,7 +108,7 @@ index d550b846..bbaf2bcc 100644
      __osSiRelAccess();
      return status;
 diff --git a/lib/src/osEepromRead.c b/lib/src/osEepromRead.c
-index ea784b2c..116dae2d 100644
+index 7f3a0292..15dc1f06 100644
 --- a/lib/src/osEepromRead.c
 +++ b/lib/src/osEepromRead.c
 @@ -1,4 +1,5 @@
@@ -188,7 +188,7 @@ index ea784b2c..116dae2d 100644
      __osSiRelAccess();
      return sp34;
 diff --git a/lib/src/osEepromWrite.c b/lib/src/osEepromWrite.c
-index 1a86477b..a94f8721 100644
+index 67c42a59..f2c029cc 100644
 --- a/lib/src/osEepromWrite.c
 +++ b/lib/src/osEepromWrite.c
 @@ -1,5 +1,6 @@
@@ -289,24 +289,24 @@ index ba73024b..6deaf407 100644
      __osSetSR(__osGetSR() | 0x20000000);
      __osSetFpcCsr(0x01000800);
 diff --git a/sm64.ld b/sm64.ld
-index 7d9b5b4a..be853a3b 100755
+index da9bc4dd..9c1cebba 100755
 --- a/sm64.ld
 +++ b/sm64.ld
-@@ -306,6 +306,8 @@ SECTIONS
+@@ -310,6 +310,8 @@ SECTIONS
  #if ENABLE_RUMBLE
-       BUILD_DIR/libultra.a:unk_shindou_file_3.o(.text);
+         BUILD_DIR/libultra.a:unk_shindou_file_3.o(.text);
  #endif
-+      BUILD_DIR/libultra.a:consoleType.o(.text)
-+      BUILD_DIR/libultra.a:skGetId.o(.text)
-       BUILD_DIR/lib/rsp.o(.text);
++        BUILD_DIR/libultra.a:consoleType.o(.text);
++        BUILD_DIR/libultra.a:skGetId.o(.text);
+         BUILD_DIR/lib/rsp.o(.text);
  #else
-       BUILD_DIR/src/game*.o(.text);
-@@ -428,6 +430,8 @@ SECTIONS
+         BUILD_DIR/src/game*.o(.text);
+@@ -432,6 +434,8 @@ SECTIONS
  #if ENABLE_RUMBLE
-       BUILD_DIR/libultra.a:unk_shindou_file_3.o(.text);
+         BUILD_DIR/libultra.a:unk_shindou_file_3.o(.text);
  #endif
-+      BUILD_DIR/libultra.a:consoleType.o(.text)
-+      BUILD_DIR/libultra.a:skGetId.o(.text)
-       BUILD_DIR/lib/rsp.o(.text);
++        BUILD_DIR/libultra.a:consoleType.o(.text);
++        BUILD_DIR/libultra.a:skGetId.o(.text);
+         BUILD_DIR/lib/rsp.o(.text);
  #endif
  

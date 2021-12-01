@@ -1860,7 +1860,7 @@ void render_dialog_entries(void) {
             gDialogBoxAngle = 0.0f;
 
             if ((gPlayer3Controller->buttonPressed & A_BUTTON)
-                || (gPlayer3Controller->buttonPressed & B_BUTTON)) {
+             || (gPlayer3Controller->buttonPressed & B_BUTTON)) {
                 if (gNextDialogPageStartStrIndex == -1) {
                     handle_special_dialog_text(gDialogID);
                     gMenuState = MENU_STATE_DIALOG_CLOSING;
@@ -2032,7 +2032,7 @@ void print_credits_str_ascii(s16 x, s16 y, const char *str) {
     u8 c = str[pos];
     u8 creditStr[100];
 
-    while (c != 0) {
+    while (c != '\0') {
         creditStr[pos++] = ascii_to_credits_char(c);
         c = str[pos];
     }
@@ -2554,19 +2554,19 @@ void render_pause_castle_menu_box(s16 x, s16 y) {
 }
 
 void highlight_last_course_complete_stars(void) {
-    u8 doneCourseIndex;
+    u8 completedCourseIndex;
 
     if (gLastCompletedCourseNum == COURSE_NONE) {
-        doneCourseIndex = 0;
+        completedCourseIndex = 0;
     } else {
-        doneCourseIndex = COURSE_NUM_TO_INDEX(gLastCompletedCourseNum);
+        completedCourseIndex = COURSE_NUM_TO_INDEX(gLastCompletedCourseNum);
 
-        if (doneCourseIndex >= COURSE_NUM_TO_INDEX(COURSE_BONUS_STAGES)) {
-            doneCourseIndex = COURSE_NUM_TO_INDEX(COURSE_BONUS_STAGES);
+        if (completedCourseIndex >= COURSE_NUM_TO_INDEX(COURSE_BONUS_STAGES)) {
+            completedCourseIndex = COURSE_NUM_TO_INDEX(COURSE_BONUS_STAGES);
         }
     }
 
-    gMenuLineNum = doneCourseIndex;
+    gMenuLineNum = completedCourseIndex;
 }
 
 #ifdef VERSION_EU
@@ -2766,10 +2766,10 @@ s16 render_pause_screen(void) {
             }
 
 #if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
-            if (gPlayer3Controller->buttonPressed & (A_BUTTON | Z_TRIG | START_BUTTON))
+            if (gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | Z_TRIG))
 #else
             if (gPlayer3Controller->buttonPressed & A_BUTTON
-                || gPlayer3Controller->buttonPressed & START_BUTTON)
+                || (gPlayer3Controller->buttonPressed & START_BUTTON))
 #endif
             {
                 level_set_transition(0, NULL);
@@ -2794,10 +2794,10 @@ s16 render_pause_screen(void) {
             render_pause_castle_main_strings(104, 60);
 
 #if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
-            if (gPlayer3Controller->buttonPressed & (A_BUTTON | Z_TRIG | START_BUTTON))
+            if (gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | Z_TRIG))
 #else
-            if (gPlayer3Controller->buttonPressed & A_BUTTON
-                || gPlayer3Controller->buttonPressed & START_BUTTON)
+            if ((gPlayer3Controller->buttonPressed & A_BUTTON)
+             || (gPlayer3Controller->buttonPressed & START_BUTTON))
 #endif
             {
                 level_set_transition(0, NULL);
@@ -2922,8 +2922,8 @@ void print_hud_course_complete_coins(s16 x, s16 y) {
     }
 }
 
-void play_star_fanfare_and_flash_hud(s32 arg, u8 starNum) {
-    if (gHudDisplay.coins == gCourseCompleteCoins && (gCurrCourseStarFlags & starNum) == 0 && gHudFlash == 0) {
+void play_star_fanfare_and_flash_hud(s32 arg, u8 starFlag) {
+    if (gHudDisplay.coins == gCourseCompleteCoins && !(gCurrCourseStarFlags & starFlag) && gHudFlash == 0) {
         play_star_fanfare();
         gHudFlash = arg;
     }
@@ -3113,9 +3113,9 @@ void render_course_complete_lvl_info_and_hud_str(void) {
 #endif
 
 #ifdef VERSION_EU
-void render_save_confirmation(s16 y, s8 *index, s16 sp6e)
+void render_save_confirmation(s16 y, s8 *index, s16 yOffset)
 #else
-void render_save_confirmation(s16 x, s16 y, s8 *index, s16 sp6e)
+void render_save_confirmation(s16 x, s16 y, s8 *index, s16 yOffset)
 #endif
 {
 #ifdef VERSION_EU
@@ -3167,7 +3167,7 @@ void render_save_confirmation(s16 x, s16 y, s8 *index, s16 sp6e)
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 
-    create_dl_translation_matrix(MENU_MTX_PUSH, X_VAL9, y - ((*index - 1) * sp6e), 0);
+    create_dl_translation_matrix(MENU_MTX_PUSH, X_VAL9, y - ((*index - 1) * yOffset), 0);
 
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, gMenuTextAlpha);
     gSPDisplayList(gDisplayListHead++, dl_draw_triangle);

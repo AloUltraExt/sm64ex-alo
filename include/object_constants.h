@@ -135,10 +135,10 @@
     #define BOBOMB_BP_STYPE_STATIONARY 1
 
     /* oAction */
-    #define BOBOMB_ACT_PATROL              0
-    #define BOBOMB_ACT_LAUNCHED            1
-    #define BOBOMB_ACT_CHASE_MARIO         2
-    #define BOBOMB_ACT_EXPLODE             3
+    #define BOBOMB_ACT_PATROL            0
+    #define BOBOMB_ACT_LAUNCHED          1
+    #define BOBOMB_ACT_CHASE_MARIO       2
+    #define BOBOMB_ACT_EXPLODE           3
     #define BOBOMB_ACT_LAVA_DEATH        100
     #define BOBOMB_ACT_DEATH_PLANE_DEATH 101
 
@@ -162,8 +162,8 @@
 
 /* Moving Yellow Coin */
     /* oAction */
-    #define MOV_YCOIN_ACT_IDLE                0
-    #define MOV_YCOIN_ACT_BLINKING            1
+    #define MOV_YCOIN_ACT_IDLE              0
+    #define MOV_YCOIN_ACT_BLINKING          1
     #define MOV_YCOIN_ACT_LAVA_DEATH        100
     #define MOV_YCOIN_ACT_DEATH_PLANE_DEATH 101
 
@@ -385,18 +385,18 @@
     #define BULLY_BP_SIZE_BIG   1
 
     /* oAction */
-    #define BULLY_ACT_PATROL              0
-    #define BULLY_ACT_CHASE_MARIO         1
-    #define BULLY_ACT_KNOCKBACK           2
-    #define BULLY_ACT_BACK_UP             3
-    #define BULLY_ACT_INACTIVE            4
-    #define BULLY_ACT_ACTIVATE_AND_FALL   5
+    #define BULLY_ACT_PATROL            0
+    #define BULLY_ACT_CHASE_MARIO       1
+    #define BULLY_ACT_KNOCKBACK         2
+    #define BULLY_ACT_BACK_UP           3
+    #define BULLY_ACT_INACTIVE          4
+    #define BULLY_ACT_ACTIVATE_AND_FALL 5
     #define BULLY_ACT_LAVA_DEATH        100
     #define BULLY_ACT_DEATH_PLANE_DEATH 101
 
     /* oBullySubtype */
-    #define BULLY_STYPE_GENERIC  0
-    #define BULLY_STYPE_MINION   1
+    #define BULLY_STYPE_GENERIC 0
+    #define BULLY_STYPE_MINION  1
     #define BULLY_STYPE_CHILL   16
 
 /* Water Ring (all variants) */
@@ -497,8 +497,8 @@
     #define BOO_DEATH_STATUS_DEAD  2
 
     /* attackStatus */
-    #define BOO_NOT_ATTACKED  0
-    #define BOO_ATTACKED      1
+    #define BOO_NOT_ATTACKED 0
+    #define BOO_ATTACKED     1
     #define BOO_BOUNCED_ON   -1
 
 /* Beta Boo Key */
@@ -523,7 +523,7 @@
 /* BBH Merry-Go-Round */
     /* gMarioCurrentRoom */
     #define BBH_NEAR_MERRY_GO_ROUND_ROOM 10
-    #define BBH_DYNAMIC_SURFACE_ROOM      0
+    #define BBH_DYNAMIC_SURFACE_ROOM     0
     #define BBH_OUTSIDE_ROOM             13
 
 /* Coffin Spawner */
@@ -550,12 +550,12 @@
 
 /* Yoshi */
     /* oAction */
-    #define YOSHI_ACT_IDLE                        0
-    #define YOSHI_ACT_WALK                        1
-    #define YOSHI_ACT_TALK                        2
-    #define YOSHI_ACT_WALK_JUMP_OFF_ROOF          3
-    #define YOSHI_ACT_FINISH_JUMPING_AND_DESPAWN  4
-    #define YOSHI_ACT_GIVE_PRESENT                5
+    #define YOSHI_ACT_IDLE                       0
+    #define YOSHI_ACT_WALK                       1
+    #define YOSHI_ACT_TALK                       2
+    #define YOSHI_ACT_WALK_JUMP_OFF_ROOF         3
+    #define YOSHI_ACT_FINISH_JUMPING_AND_DESPAWN 4
+    #define YOSHI_ACT_GIVE_PRESENT               5
     #define YOSHI_ACT_CREDITS                    10
 
 /* Koopa */
@@ -783,16 +783,16 @@
     #define UKIKI_CAP  1
 
     /* Animations */
-    #define UKIKI_ANIM_RUN           0
-    #define UKIKI_ANIM_UNUSED_WALK   1
-    #define UKIKI_ANIM_UNUSED_APOSE  2
-    #define UKIKI_ANIM_UNUSED_DEATH  3
-    #define UKIKI_ANIM_SCREECH       4
-    #define UKIKI_ANIM_JUMP_CLAP     5
-    #define UKIKI_ANIM_UNUSED_HOP    6
-    #define UKIKI_ANIM_LAND          7
-    #define UKIKI_ANIM_JUMP          8
-    #define UKIKI_ANIM_ITCH          9
+    #define UKIKI_ANIM_RUN          0
+    #define UKIKI_ANIM_UNUSED_WALK  1
+    #define UKIKI_ANIM_UNUSED_APOSE 2
+    #define UKIKI_ANIM_UNUSED_DEATH 3
+    #define UKIKI_ANIM_SCREECH      4
+    #define UKIKI_ANIM_JUMP_CLAP    5
+    #define UKIKI_ANIM_UNUSED_HOP   6
+    #define UKIKI_ANIM_LAND         7
+    #define UKIKI_ANIM_JUMP         8
+    #define UKIKI_ANIM_ITCH         9
     #define UKIKI_ANIM_HANDSTAND    10
     #define UKIKI_ANIM_TURN         11
     #define UKIKI_ANIM_HELD         12
@@ -846,10 +846,10 @@
     #define PLATFORM_ON_TRACK_ACT_FALL             4
 
     /* oBehParams >> 16 */
-    #define PLATFORM_ON_TRACK_BP_MASK_PATH       0xF
-    #define PLATFORM_ON_TRACK_BP_MASK_TYPE       (0x7 << 4)
-    #define PLATFORM_ON_TRACK_BP_RETURN_TO_START (1 << 8)
-    #define PLATFORM_ON_TRACK_BP_DONT_DISAPPEAR  (1 << 9)
+    #define PLATFORM_ON_TRACK_BP_MASK_PATH       0x000F
+    #define PLATFORM_ON_TRACK_BP_MASK_TYPE       0x0070
+    #define PLATFORM_ON_TRACK_BP_RETURN_TO_START (1 <<  8)
+    #define PLATFORM_ON_TRACK_BP_DONT_DISAPPEAR  (1 <<  9)
     #define PLATFORM_ON_TRACK_BP_DONT_TURN_YAW   (1 << 10)
     #define PLATFORM_ON_TRACK_BP_DONT_TURN_ROLL  (1 << 11)
 
@@ -951,7 +951,9 @@
     #define TTC_2D_ROTATOR_BP_2D_COG 1
 
 /* Activated Back-and-Forth Platform */
-    /* ((u16)(o->oBehParams >> 16) & 0x0300) >> 8 aka platform type */
+    /* oBehParams >> 16 */
+    #define ACTIVATED_BF_PLAT_BP_MASK_TYPE 0x0300
+
     #define ACTIVATED_BF_PLAT_TYPE_BITS_ARROW_PLAT 0
     #define ACTIVATED_BF_PLAT_TYPE_BITFS_MESH_PLAT 1
     #define ACTIVATED_BF_PLAT_TYPE_BITFS_ELEVATOR  2
@@ -987,16 +989,16 @@
 
 /* Eyerok hand */
     /* oAction */
-    #define EYEROK_HAND_ACT_SLEEP               0
-    #define EYEROK_HAND_ACT_IDLE                1
-    #define EYEROK_HAND_ACT_OPEN                2
-    #define EYEROK_HAND_ACT_SHOW_EYE            3
-    #define EYEROK_HAND_ACT_CLOSE               4
-    #define EYEROK_HAND_ACT_RETREAT             5
-    #define EYEROK_HAND_ACT_TARGET_MARIO        6
-    #define EYEROK_HAND_ACT_SMASH               7
-    #define EYEROK_HAND_ACT_FIST_PUSH           8
-    #define EYEROK_HAND_ACT_FIST_SWEEP          9
+    #define EYEROK_HAND_ACT_SLEEP              0
+    #define EYEROK_HAND_ACT_IDLE               1
+    #define EYEROK_HAND_ACT_OPEN               2
+    #define EYEROK_HAND_ACT_SHOW_EYE           3
+    #define EYEROK_HAND_ACT_CLOSE              4
+    #define EYEROK_HAND_ACT_RETREAT            5
+    #define EYEROK_HAND_ACT_TARGET_MARIO       6
+    #define EYEROK_HAND_ACT_SMASH              7
+    #define EYEROK_HAND_ACT_FIST_PUSH          8
+    #define EYEROK_HAND_ACT_FIST_SWEEP         9
     #define EYEROK_HAND_ACT_BEGIN_DOUBLE_POUND 10 // raising for double smash
     #define EYEROK_HAND_ACT_DOUBLE_POUND       11 // double smashing
     #define EYEROK_HAND_ACT_ATTACKED           12
@@ -1065,8 +1067,8 @@
 
     /* oTripletButterflyType */
     #define TRIPLET_BUTTERFLY_TYPE_NORMAL    -1
-    #define TRIPLET_BUTTERFLY_TYPE_EXPLODES   0
-    #define TRIPLET_BUTTERFLY_TYPE_SPAWN_1UP  1
+    #define TRIPLET_BUTTERFLY_TYPE_EXPLODES  0
+    #define TRIPLET_BUTTERFLY_TYPE_SPAWN_1UP 1
 
 /* Water level diamond */
     /* oAction */
