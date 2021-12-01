@@ -272,7 +272,9 @@ SECTIONS
         BUILD_DIR/libultra.a:osMapTLBRdb.o(.text);
         BUILD_DIR/libultra.a:osPiRawReadIo.o(.text);
         BUILD_DIR/libultra.a:__osSetHWintrRoutine.o(.text);
+#ifdef VERSION_EU
         BUILD_DIR/libultra.a:D_802F4380.o(.text);
+#endif
         BUILD_DIR/libultra.a:func_802F4A20.o(.text);
         BUILD_DIR/libultra.a:osTimer.o(.text);
 #ifdef VERSION_EU

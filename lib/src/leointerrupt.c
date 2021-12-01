@@ -28,10 +28,10 @@ s32 __osLeoInterrupt() {
         __osLeoResume();
         return 1;
     }
-    WAIT_ON_IOBUSY(pi_stat);
+    WAIT_ON_LEO_IO_BUSY(pi_stat);
     stat = IO_READ(LEO_STATUS);
     if (stat & LEO_STATUS_MECHANIC_INTERRUPT) {
-        WAIT_ON_IOBUSY(pi_stat);
+        WAIT_ON_LEO_IO_BUSY(pi_stat);
         IO_WRITE(LEO_BM_CTL, info->bmCtlShadow | LEO_BM_CTL_CLR_MECHANIC_INTR);
         blockInfo->errStatus = LEO_ERROR_GOOD;
         return 0;
@@ -40,7 +40,7 @@ s32 __osLeoInterrupt() {
         return 1;
     }
     if (stat & LEO_STATUS_BUFFER_MANAGER_ERROR) {
-        WAIT_ON_IOBUSY(pi_stat);
+        WAIT_ON_LEO_IO_BUSY(pi_stat);
         stat = IO_READ(LEO_STATUS);
         blockInfo->errStatus = LEO_ERROR_22;
         __osLeoResume();
@@ -155,9 +155,9 @@ static void __osLeoAbnormalResume(void) {
     __OSTranxInfo *info;
     u32 pi_stat;
     info = &__osDiskHandle->transferInfo;
-    WAIT_ON_IOBUSY(pi_stat);
+    WAIT_ON_LEO_IO_BUSY(pi_stat);
     IO_WRITE(LEO_BM_CTL, info->bmCtlShadow | LEO_BM_CTL_RESET);
-    WAIT_ON_IOBUSY(pi_stat);
+    WAIT_ON_LEO_IO_BUSY(pi_stat);
     IO_WRITE(LEO_BM_CTL, info->bmCtlShadow);
     __osLeoResume();
     IO_WRITE(PI_STATUS_REG, PI_STATUS_CLR_INTR);

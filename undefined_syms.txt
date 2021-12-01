@@ -1,7 +1,6 @@
 /* libultra OS symbols */
 
 /* boot and osException symbols */
-/* most of these should be in hardware.h */
 
 /* exceptions */
 

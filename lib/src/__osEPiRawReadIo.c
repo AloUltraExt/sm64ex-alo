@@ -1,11 +1,12 @@
 #include "libultra_internal.h"
-#include "hardware.h"
+#include "PR/rcp.h"
+#include "piint.h"
 
-s32 __osEPiRawReadIo(OSPiHandle *arg0, u32 devAddr, u32 *data) {
+s32 __osEPiRawReadIo(OSPiHandle *pihandle, u32 devAddr, u32 *data) {
     register s32 stat;
-    while (stat = HW_REG(PI_STATUS_REG, s32), stat & (PI_STATUS_BUSY | PI_STATUS_IOBUSY | PI_STATUS_ERROR)) {
-        ;
-    }
-    *data = HW_REG(arg0->baseAddress | devAddr, s32);
+
+    WAIT_ON_IO_BUSY(stat);
+    *data = IO_READ(pihandle->baseAddress | devAddr);
+
     return 0;
 }

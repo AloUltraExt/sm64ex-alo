@@ -3,6 +3,7 @@
 
 #if defined(VERSION_EU) || defined(VERSION_SH)
 #include "new_func.h"
+#include "PR/rcp.h"
 
 void __osDevMgrMain(void *args) {
     OSIoMesg *mb;
@@ -58,7 +59,7 @@ void __osDevMgrMain(void *args) {
                         __osEPiRawWriteIo(mb->piHandle, 0x5000510, sp24->bmCtlShadow | 0x1000000);
                     }
                     sp28->errStatus = 4;
-                    HW_REG(PI_STATUS_REG, u32) = PI_STATUS_CLEAR_INTR;
+                    IO_WRITE(PI_STATUS_REG, PI_STATUS_CLR_INTR);
                     __osSetGlobalIntMask(0x100C01);
                 }
                 osSendMesg(mb->hdr.retQueue, mb, OS_MESG_NOBLOCK);

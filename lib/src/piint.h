@@ -110,10 +110,19 @@ OSMesgQueue *osPiGetCmdQueue(void);
 
 #define OS_RAMROM_STACKSIZE 1024
 
-#define WAIT_ON_IOBUSY(stat)                                \
+#define WAIT_ON_IO_BUSY(stat)                                \
     stat = IO_READ(PI_STATUS_REG);                          \
     while (stat & (PI_STATUS_IO_BUSY | PI_STATUS_DMA_BUSY)) \
         stat = IO_READ(PI_STATUS_REG);
+
+#ifdef VERSION_EU
+#define WAIT_ON_LEO_IO_BUSY(stat)    \
+    stat = IO_READ(PI_STATUS_REG);   \
+    while (stat & PI_STATUS_IO_BUSY) \
+        stat = IO_READ(PI_STATUS_REG);
+#else
+#define WAIT_ON_LEO_IO_BUSY WAIT_ON_IO_BUSY
+#endif
 
 #define UPDATE_REG(reg, var)           \
     if (cHandle->var != pihandle->var) \
@@ -121,7 +130,7 @@ OSMesgQueue *osPiGetCmdQueue(void);
 
 #define EPI_SYNC(pihandle, stat, domain)                  \
                                                           \
-    WAIT_ON_IOBUSY(stat)                                  \
+    WAIT_ON_IO_BUSY(stat)                                  \
                                                           \
     domain = pihandle->domain;                            \
     if (__osCurrentHandle[domain] != pihandle)            \

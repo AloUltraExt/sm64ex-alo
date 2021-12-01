@@ -40,13 +40,13 @@ index 990cb11f..22756e91 100644
 --- a/lib/src/__osViSwapContext.c
 +++ b/lib/src/__osViSwapContext.c
 @@ -54,7 +54,9 @@ void __osViSwapContext() {
-     HW_REG(VI_INTR_REG, u32) = s0->fldRegs[field].vIntr;
-     HW_REG(VI_X_SCALE_REG, u32) = s1->unk20;
-     HW_REG(VI_Y_SCALE_REG, u32) = s1->unk2c;
--    HW_REG(VI_CONTROL_REG, u32) = s1->features;
+     IO_WRITE(VI_INTR_REG, s0->fldRegs[field].vIntr);
+     IO_WRITE(VI_X_SCALE_REG, s1->unk20);
+     IO_WRITE(VI_Y_SCALE_REG, s1->unk2c);
+-    IO_WRITE(VI_CONTROL_REG, s1->features);
 +    /* Make sure bit 13 is cleared. Otherwise, graphics will be corrupted on
 +     * iQue Player. This has no effect on N64. */
-+    HW_REG(VI_CONTROL_REG, u32) = s1->features & ~(1 << 13);
++    IO_WRITE(VI_CONTROL_REG, s1->features & ~(1 << 13));
      __osViNext = __osViCurr;
      __osViCurr = s1;
      *__osViNext = *__osViCurr;
@@ -272,22 +272,24 @@ diff --git a/lib/src/osInitialize.c b/lib/src/osInitialize.c
 index ba73024b..6deaf407 100644
 --- a/lib/src/osInitialize.c
 +++ b/lib/src/osInitialize.c
-@@ -1,6 +1,7 @@
- #include "libultra_internal.h"
- #include "hardware.h"
+@@ -3,6 +3,7 @@
+ #include "piint.h"
+ #include "PR/rcp.h"
  #include <macros.h>
 +#include <PR/console_type.h>
  
- #define PIF_ADDR_START (void *) 0x1FC007FC
- 
-@@ -51,6 +52,7 @@ void osInitialize(void) {
-     UNUSED u32 eu_sp30;
+ typedef struct {
+
+@@ -45,8 +45,9 @@ void osInitialize(void) {
+     u32 status;
  #endif
+
      UNUSED u32 sp2c;
+
 +    gConsoleType = get_console_type();
-     D_80365CD0 = TRUE;
-     __osSetSR(__osGetSR() | 0x20000000);
-     __osSetFpcCsr(0x01000800);
+     __osFinalrom = TRUE;
+     __osSetSR(__osGetSR() | SR_CU1);
+     __osSetFpcCsr(FPCSR_FS | FPCSR_EV);
 diff --git a/sm64.ld b/sm64.ld
 index da9bc4dd..9c1cebba 100755
 --- a/sm64.ld

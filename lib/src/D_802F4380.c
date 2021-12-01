@@ -1,10 +1,11 @@
 #include "libultra_internal.h"
-#include "hardware.h"
+#include "piint.h"
+#include "PR/rcp.h"
 #include "new_func.h"
 #include "macros.h"
 
 #if defined(VERSION_EU)
-u32 D_802F4380() {
+s32 __osLeoInterrupt(void) {
     u32 sp3c;
     u32 sp38;
     u32 sp34;
@@ -12,45 +13,45 @@ u32 D_802F4380() {
     __OSBlockInfo *sp2c;
     u32 sp28;
     UNUSED __OSBlockInfo *sp24;
-    if (!EU_D_80302090) {
+    if (!osDDActive) {
         return 0;
     }
     sp30 = &__osDiskHandle->transferInfo;
     sp2c = &sp30->block[sp30->blockNum];
-    sp38 = HW_REG(PI_STATUS_REG, u32);
-    if (sp38 & PI_STATUS_BUSY) {
-        HW_REG(PI_STATUS_REG, u32) = PI_STATUS_RESET_CONTROLLER | PI_STATUS_CLEAR_INTR;
-        WAIT_ON_IOBUSY(sp38);
-        sp3c = HW_REG(ASIC_STATUS, u32);
-        if (sp3c & MECHANIC_INTERRUPT) {
-            WAIT_ON_IOBUSY(sp38);
-            HW_REG(ASIC_BM_CTL, u32) = sp30->bmCtlShadow | MECHANIC_INTERRUPT_RESET;
+    sp38 = IO_READ(PI_STATUS_REG);
+    if (sp38 & PI_STATUS_DMA_BUSY) {
+        IO_WRITE(PI_STATUS_REG, PI_STATUS_RESET | PI_STATUS_CLR_INTR);
+        WAIT_ON_LEO_IO_BUSY(sp38);
+        sp3c = IO_READ(LEO_STATUS);
+        if (sp3c & LEO_STATUS_MECHANIC_INTERRUPT) {
+            WAIT_ON_LEO_IO_BUSY(sp38);
+            IO_WRITE(LEO_BM_CTL, sp30->bmCtlShadow | LEO_BM_CTL_CLR_MECHANIC_INTR);
         }
         sp30->errStatus = 75;
         func_802F4A20();
         return 1;
     }
-    WAIT_ON_IOBUSY(sp38);
-    sp3c = HW_REG(ASIC_STATUS, u32);
-    if (sp3c & MECHANIC_INTERRUPT) {
-        WAIT_ON_IOBUSY(sp38);
-        HW_REG(ASIC_BM_CTL, u32) = sp30->bmCtlShadow | MECHANIC_INTERRUPT_RESET;
+    WAIT_ON_LEO_IO_BUSY(sp38);
+    sp3c = IO_READ(LEO_STATUS);
+    if (sp3c & LEO_STATUS_MECHANIC_INTERRUPT) {
+        WAIT_ON_LEO_IO_BUSY(sp38);
+        IO_WRITE(LEO_BM_CTL, sp30->bmCtlShadow | LEO_BM_CTL_CLR_MECHANIC_INTR);
         sp30->errStatus = 0;
         return 0;
     }
-    if (sp3c & BUFFER_MANAGER_ERROR) {
+    if (sp3c & LEO_STATUS_BUFFER_MANAGER_ERROR) {
         sp30->errStatus = 3;
         func_802F4A20();
         return 1;
     }
     if (sp30->cmdType == 1) {
-        if ((sp3c & DATA_REQUEST) == 0) {
+        if ((sp3c & LEO_STATUS_DATA_REQUEST) == 0) {
             if (sp30->sectorNum + 1 != sp30->transferMode * 85) {
                 sp30->errStatus = 6;
                 func_802F4A20();
                 return 1;
             }
-            HW_REG(PI_STATUS_REG, u32) = PI_STATUS_CLEAR_INTR;
+            IO_WRITE(PI_STATUS_REG, PI_STATUS_CLR_INTR);
             __OSGlobalIntMask |= 0x00100401;
             sp30->errStatus = 0;
             func_802F4B08();
@@ -68,7 +69,7 @@ u32 D_802F4380() {
                 func_802F4A20();
                 return 1;
             }
-            if ((sp3c & DATA_REQUEST) == 0) {
+            if ((sp3c & LEO_STATUS_DATA_REQUEST) == 0) {
                 sp30->errStatus = 17;
                 func_802F4A20();
                 return 1;
@@ -76,8 +77,8 @@ u32 D_802F4380() {
         } else {
             sp2c->dramAddr = (void *) ((u32) sp2c->dramAddr + sp2c->sectorSize);
         }
-        sp34 = HW_REG(ASIC_BM_STATUS, u32);
-        if (((C1_SINGLE & sp34) && (C1_DOUBLE & sp34)) || (sp34 & MICRO_STATUS)) {
+        sp34 = IO_READ(LEO_BM_STATUS);
+        if (((LEO_BM_STATUS_C1SINGLE & sp34) && (LEO_BM_STATUS_C1DOUBLE & sp34)) || (sp34 & LEO_BM_STATUS_MICRO)) {
             if (sp2c->C1ErrNum > 3) {
                 if (sp30->transferMode != 3 || sp30->sectorNum > 0x52) {
                     sp30->errStatus = 17;
@@ -90,7 +91,7 @@ u32 D_802F4380() {
             }
             sp2c->C1ErrNum++;
         }
-        if (sp3c & C2_TRANSFER) {
+        if (sp3c & LEO_STATUS_C2_TRANSFER) {
             if (sp30->sectorNum != 87) {
                 sp30->errStatus = 6;
                 func_802F4A20();
@@ -101,7 +102,7 @@ u32 D_802F4380() {
                 sp30->block[1].dramAddr =
                     (void *) ((u32) sp30->block[1].dramAddr - sp30->block[1].sectorSize);
             } else {
-                HW_REG(PI_STATUS_REG, u32) = PI_STATUS_CLEAR_INTR;
+                IO_WRITE(PI_STATUS_REG, PI_STATUS_CLR_INTR);
                 __OSGlobalIntMask |= 0x00100401;
             }
             osEPiRawStartDma(__osDiskHandle, 0, 0x5000000, sp2c->C2Addr, sp2c->sectorSize * 4);
@@ -123,7 +124,7 @@ u32 D_802F4380() {
             func_802F4B08();
         }
         sp30->sectorNum++;
-        if (sp3c & DATA_REQUEST) {
+        if (sp3c & LEO_STATUS_DATA_REQUEST) {
             if (sp30->sectorNum > 0x54) {
                 sp30->errStatus = 6;
                 func_802F4A20();

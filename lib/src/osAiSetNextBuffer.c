@@ -1,6 +1,5 @@
 #include "libultra_internal.h"
-#include "osAi.h"
-#include "hardware.h"
+#include "PR/rcp.h"
 
 /**
  * It is worth noting that a previous hardware bug has been fixed by a software
@@ -33,7 +32,7 @@ s32 osAiSetNextBuffer(void *buff, u32 len) {
         return -1;
     }
 
-    HW_REG(AI_DRAM_ADDR_REG, void *) = (void *) osVirtualToPhysical(bptr);
-    HW_REG(AI_LEN_REG, u32) = len;
+    IO_WRITE(AI_DRAM_ADDR_REG, osVirtualToPhysical(bptr));
+    IO_WRITE(AI_LEN_REG, len);
     return 0;
 }

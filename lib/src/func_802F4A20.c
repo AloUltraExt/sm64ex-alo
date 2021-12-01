@@ -1,15 +1,17 @@
+#include "PR/rcp.h"
+#include "piint.h"
 #include "new_func.h"
 
 void func_802F4A20(void) {
     __OSTranxInfo *sp1c;
     volatile u32 sp18;
     sp1c = &__osDiskHandle->transferInfo;
-    WAIT_ON_IOBUSY(sp18);
-    HW_REG(ASIC_BM_CTL, u32) = BUFFER_MANAGER_RESET | sp1c->bmCtlShadow; //should be unk10??
-    WAIT_ON_IOBUSY(sp18);
-    HW_REG(ASIC_BM_CTL, u32) = sp1c->bmCtlShadow;
+    WAIT_ON_LEO_IO_BUSY(sp18);
+    IO_WRITE(LEO_BM_CTL, (LEO_BM_CTL_RESET | sp1c->bmCtlShadow));
+    WAIT_ON_LEO_IO_BUSY(sp18);
+    IO_WRITE(LEO_BM_CTL, sp1c->bmCtlShadow);
     func_802F4B08();
-    HW_REG(PI_STATUS_REG, u32) = PI_STATUS_CLEAR_INTR;
+    IO_WRITE(PI_STATUS_REG, PI_STATUS_CLR_INTR);
     __OSGlobalIntMask |= 0x00100401; // TODO: fix magic numbers
 }
 

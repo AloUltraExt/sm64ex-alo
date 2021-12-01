@@ -76,9 +76,9 @@ void __osPiGetAccess(void);
 void __osSetSR(u32);
 u32 __osGetSR(void);
 void __osSetFpcCsr(u32);
-s32 __osSiRawReadIo(void *, u32 *);
-s32 __osSiRawWriteIo(void *, u32);
-s32 osPiRawReadIo(u32 a0, u32 *a1);
+s32 __osSiRawReadIo(u32, u32 *);
+s32 __osSiRawWriteIo(u32, u32);
+s32 osPiRawReadIo(u32, u32 *);
 void __osSpSetStatus(u32);
 u32 __osSpGetStatus(void);
 s32 __osSpSetPc(void *);
@@ -96,4 +96,5 @@ s32 __osAiDeviceBusy(void);
 void __osDispatchThread(void);
 u32 __osGetCause(void);
 s32 __osAtomicDec(u32 *);
+void __osSetHWIntrRoutine(OSHWIntr interrupt, s32 (*handler)(void));
 #endif
