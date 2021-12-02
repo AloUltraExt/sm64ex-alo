@@ -78,6 +78,6 @@ ido5.3_recomp:
 $(foreach p,$(BUILD_PROGRAMS),$(eval $(call COMPILE,$(p))))
 
 $(LIBAUDIOFILE):
-	@CC=$(CC) CXX=$(CXX)    @$(MAKE) -C audiofile
+	@CC=$(CC) CXX=$(CXX) $(MAKE) -C audiofile
 
 .PHONY: all all-except-recomp clean default ido5.3_recomp

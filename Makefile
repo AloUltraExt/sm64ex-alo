@@ -1316,7 +1316,7 @@ cleantools:
 
 distclean:
 	$(RM) -r $(BUILD_DIR_BASE)
-	./extract_assets.py --clean
+	$(PYTHON) ./extract_assets.py --clean
 
 test: $(ROM)
 	$(EMULATOR) $(EMU_FLAGS) $<
