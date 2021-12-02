@@ -12,7 +12,6 @@ struct PCCLIOptions  {
     unsigned int Profiler;
     unsigned int Debug;
     unsigned int PoolSize;
-    unsigned int SyncFrames;
     char ConfigFile[SYS_MAX_PATH];
     char SavePath[SYS_MAX_PATH];
     char GameDir[SYS_MAX_PATH];

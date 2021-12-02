@@ -188,9 +188,7 @@ static struct Option optsControls[] = {
 static struct Option optsVideo[] = {
 #ifndef TARGET_PORT_CONSOLE
     DEF_OPT_TOGGLE( optsVideoStr[0], &configWindow.fullscreen ),
-    #ifndef DISABLE_VSYNC
     DEF_OPT_TOGGLE( optsVideoStr[5], &configWindow.vsync ),
-    #endif
 #endif
     DEF_OPT_CHOICE( optsVideoStr[1], &configFiltering, filterChoices ),
 #if !defined(TARGET_PORT_CONSOLE) && !defined(TARGET_ANDROID)

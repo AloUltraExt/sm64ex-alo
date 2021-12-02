@@ -97,11 +97,6 @@ void parse_cli_opts(int argc, char* argv[]) {
             arg_uint("--poolsize", argv[++i], &gCLIOpts.PoolSize);
 #endif
 
-#if defined(WAPI_SDL2) || !defined(HIGH_FPS_PC)
-        else if (strcmp(argv[i], "--syncframes") == 0) // VBlanks to wait
-            arg_uint("--syncframes", argv[++i], &gCLIOpts.SyncFrames);
-#endif
-
         else if (strcmp(argv[i], "--configfile") == 0 && (i + 1) < argc)
             arg_string("--configfile", argv[++i], gCLIOpts.ConfigFile);
 

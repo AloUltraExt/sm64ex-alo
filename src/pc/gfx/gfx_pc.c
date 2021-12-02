@@ -66,10 +66,6 @@
 #define HASHMAP_LEN (MAX_CACHED_TEXTURES * 2)
 #define HASH_MASK (HASHMAP_LEN - 1)
 
-#if defined(__ANDROID__) && !defined(DISABLE_VSYNC)
-int render_multiplier;
-#endif
-
 struct RGBA {
     uint8_t r, g, b, a;
 };
@@ -2021,17 +2017,11 @@ void gfx_run(Gfx *commands) {
     }
     dropped_frame = false;
 
-#if defined(__ANDROID__) && !defined(DISABLE_VSYNC)
-    for (int i = 0; i < (configWindow.vsync ? render_multiplier : 1); i++) {
-#endif
     gfx_rapi->start_frame();
     gfx_run_dl(commands);
     gfx_flush();
     gfx_rapi->end_frame();
     gfx_wapi->swap_buffers_begin();
-#if defined(__ANDROID__) && !defined(DISABLE_VSYNC)
-    }
-#endif
 }
 
 void gfx_end_frame(void) {
