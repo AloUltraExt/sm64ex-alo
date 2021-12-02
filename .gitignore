@@ -85,3 +85,6 @@ sm64config.txt
 platform/android/SDL/include
 !platform/android/android/**/*.so
 platform/android/android/lib/*/libc++_shared.so
+
+# macOS autocreated directory settings file 
+.DS_Store

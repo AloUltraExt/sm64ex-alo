@@ -1,4 +1,4 @@
-CXX := g++
+CXX ?= g++
 
 libaudiofile.a: audiofile.o
 	$(AR) rcs $@ $^
