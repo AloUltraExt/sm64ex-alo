@@ -215,11 +215,6 @@ static void assign_tile_positions() {
     }
 }
 
-// Provide a replacement for realpath on Windows
-#ifdef _WIN32
-#define realpath(path, resolved_path) _fullpath(resolved_path, path, PATH_MAX)
-#endif
-
 /* write pngs to disc */
 void write_tiles() {
     const ImageProps props = IMAGE_PROPERTIES[type][true];

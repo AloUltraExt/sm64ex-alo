@@ -745,7 +745,7 @@ void debug_surface_list_info(f32 xPos, f32 zPos) {
  * An unused function that finds and interacts with any type of surface.
  * Perhaps an original implementation of surfaces before they were more specialized.
  */
-static s32 unused_resolve_floor_or_ceil_collisions(s32 checkCeil, f32 *px, f32 *py, f32 *pz, f32 radius,
+UNUSED static s32 unused_resolve_floor_or_ceil_collisions(s32 checkCeil, f32 *px, f32 *py, f32 *pz, f32 radius,
                                             struct Surface **psurface, f32 *surfaceHeight) {
     f32 nx, ny, nz, oo;
     f32 x = *px;

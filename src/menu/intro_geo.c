@@ -563,16 +563,11 @@ u16 *intro_sample_framebuffer(s32 imageW, s32 imageH, s32 sampleW, s32 sampleH) 
             }
 
             size = sampleW * sampleH;
-            u16 color = ((((u16) (r / size + 0.5) << 0xB) & 0xF800) & 0xffff) +
-                        ((((u16) (g / size + 0.5) << 0x6) &  0x7C0) & 0xffff) +
-                        ((((u16) (b / size + 0.5) << 0x1) &   0x3E) & 0xffff) + 1;
-
-#ifdef TARGET_N64
-            image[imageH * iy + ix] = color;
-#else
-            // Endian swap
-            image[imageH * iy + ix] = (color << 8) | (color >> 8);
-#endif
+            image[imageH * iy + ix] = BE_TO_HOST16(
+                                      ((((u16) (r / size + 0.5) << 0xB) & 0xF800) & 0xffff) +
+                                      ((((u16) (g / size + 0.5) << 0x6) &  0x7C0) & 0xffff) +
+                                      ((((u16) (b / size + 0.5) << 0x1) &   0x3E) & 0xffff) + 1
+                                      );
         }
     }
 
