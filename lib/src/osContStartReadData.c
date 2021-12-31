@@ -1,6 +1,7 @@
 #include "libultra_internal.h"
 #include "osContInternal.h"
 #include <macros.h>
+#include "controller.h"
 
 #ifndef AVOID_UB
 ALIGNED8 OSContPackedStruct _osContCmdBuf[7];
@@ -11,15 +12,15 @@ u32 _osContPifCtrl;
 ALIGNED8 OSContPackedStruct _osContCmdBuf[8];
 #endif
 
-extern u8 _osLastSentSiCmd;
-extern u8 _osContNumControllers;
+extern u8 __osContLastCmd;
+extern u8 __osMaxControllers;
 
 void __osPackReadData(void);
 s32 osContStartReadData(OSMesgQueue *mesg) {
     s32 ret = 0;
     s32 i;
     __osSiGetAccess();
-    if (_osLastSentSiCmd != 1) {
+    if (__osContLastCmd != CONT_CMD_READ_BUTTON) {
         __osPackReadData();
         ret = __osSiRawStartDma(OS_WRITE, _osContCmdBuf);
         osRecvMesg(mesg, NULL, OS_MESG_BLOCK);
@@ -30,7 +31,7 @@ s32 osContStartReadData(OSMesgQueue *mesg) {
 
     _osContPifCtrl = 0;
     ret = __osSiRawStartDma(OS_READ, _osContCmdBuf);
-    _osLastSentSiCmd = 1;
+    __osContLastCmd = CONT_CMD_READ_BUTTON;
     __osSiRelAccess();
     return ret;
 }
@@ -39,7 +40,7 @@ void osContGetReadData(OSContPad *pad) {
     OSContPackedRead response;
     s32 i;
     cmdBufPtr = &_osContCmdBuf[0].read;
-    for (i = 0; i < _osContNumControllers; i++, cmdBufPtr++, pad++) {
+    for (i = 0; i < __osMaxControllers; i++, cmdBufPtr++, pad++) {
         response = *cmdBufPtr;
         pad->errnum = (response.rxLen & 0xc0) >> 4;
         if (pad->errnum == 0) {
@@ -66,7 +67,7 @@ void __osPackReadData() {
     request.button = 65535;
     request.rawStickX = -1;
     request.rawStickY = -1;
-    for (i = 0; i < _osContNumControllers; i++) {
+    for (i = 0; i < __osMaxControllers; i++) {
         *cmdBufPtr++ = request;
     }
     cmdBufPtr->padOrEnd = 254;

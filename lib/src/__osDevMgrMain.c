@@ -1,5 +1,6 @@
 #include "libultra_internal.h"
 #include "macros.h"
+#include "PR/os.h"
 
 #if defined(VERSION_EU) || defined(VERSION_SH)
 #include "new_func.h"
@@ -44,19 +45,19 @@ void __osDevMgrMain(void *args) {
                 sp2c = 0;
             }
             osRecvMesg(sp34->accessQueue, &dummy, OS_MESG_BLOCK);
-            __osResetGlobalIntMask(0x00100401); // remove magic constant!
-            __osEPiRawWriteIo(mb->piHandle, 0x05000510, (sp24->bmCtlShadow | 0x80000000));
+            __osResetGlobalIntMask(OS_IM_PI);
+            osEPiRawWriteIo(mb->piHandle, 0x05000510, (sp24->bmCtlShadow | 0x80000000));
             while (TRUE) {
                 osRecvMesg(sp34->eventQueue, &em, OS_MESG_BLOCK);
 #ifdef VERSION_SH
                 sp24 = &mb->piHandle->transferInfo;
                 sp28 = &sp24->block[sp24->blockNum];
                 if (sp28->errStatus == 0x1D) {
-                    __osEPiRawWriteIo(mb->piHandle, 0x5000510, sp24->bmCtlShadow | 0x10000000);
-                    __osEPiRawWriteIo(mb->piHandle, 0x5000510, sp24->bmCtlShadow);
-                    __osEPiRawReadIo(mb->piHandle, 0x5000508, &tmp);
+                    osEPiRawWriteIo(mb->piHandle, 0x5000510, sp24->bmCtlShadow | 0x10000000);
+                    osEPiRawWriteIo(mb->piHandle, 0x5000510, sp24->bmCtlShadow);
+                    osEPiRawReadIo(mb->piHandle, 0x5000508, &tmp);
                     if ((tmp & 0x2000000) != 0) {
-                        __osEPiRawWriteIo(mb->piHandle, 0x5000510, sp24->bmCtlShadow | 0x1000000);
+                        osEPiRawWriteIo(mb->piHandle, 0x5000510, sp24->bmCtlShadow | 0x1000000);
                     }
                     sp28->errStatus = 4;
                     IO_WRITE(PI_STATUS_REG, PI_STATUS_CLR_INTR);
@@ -76,7 +77,7 @@ void __osDevMgrMain(void *args) {
             }
             osSendMesg(sp34->accessQueue, NULL, OS_MESG_NOBLOCK);
             if (mb->piHandle->transferInfo.blockNum == 1) {
-                func_802F71F0();
+                osYieldThread();
             }
         } else {
             switch (mb->hdr.type) {

@@ -7,11 +7,11 @@ void guRotateF(float m[4][4], float a, float x, float y, float z) {
     float sp28;
     float sp24;
     float xx, yy, zz;
-    static float D_80365D70 = GU_PI / 180;
+    static float dtor = GU_PI / 180;
 
     guNormalize(&x, &y, &z);
 
-    a = a * D_80365D70;
+    a = a * dtor;
 
     sin_a = sinf(a);
     cos_a = cosf(a);

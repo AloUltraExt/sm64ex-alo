@@ -27,12 +27,6 @@ extern OSThread_ListHead __osThreadTail_fix;
 #define __osRunQueue __osThreadTail_fix.queue
 #define __osActiveQueue __osThreadTail_fix.tlnext
 #define __osRunningThread __osThreadTail_fix.unk10
-
-// Fix for the EEPROM array.
-extern u32 D_80365E00[16];
-
-// alias the last array element correctly
-#define D_80365E3C D_80365E00[15]
 #else
 // Original OSThread_ListHead definitions
 extern OSThread *__osThreadTail;
@@ -40,10 +34,6 @@ extern u32 D_80334894;
 extern OSThread *__osRunQueue;
 extern OSThread *__osActiveQueue;
 extern OSThread *__osRunningThread;
-
-// Original EEPROM definitions
-extern u32 D_80365E00[15];
-extern u32 D_80365E3C;
 #endif
 
 typedef struct {

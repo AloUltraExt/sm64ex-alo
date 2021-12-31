@@ -88,11 +88,15 @@
 #define LEO_CMD_TYPE_2 2 //TODO: name
 
 #define LEO_ERROR_GOOD 0
+#define LEO_ERROR_3 3 //
 #define LEO_ERROR_4 4   //maybe busy?
+#define LEO_ERROR_6 6 //
+#define LEO_ERROR_17 17 //
 #define LEO_ERROR_22 22 //
 #define LEO_ERROR_23 23 //unrecovered read error?
 #define LEO_ERROR_24 24 //no reference position found?
 #define LEO_ERROR_29 29 //
+#define LEO_ERROR_75 75 //
 
 extern OSDevMgr __osPiDevMgr;
 extern OSPiHandle *__osCurrentHandle[2];

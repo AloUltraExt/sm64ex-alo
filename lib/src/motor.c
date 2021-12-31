@@ -23,7 +23,7 @@ s32 osMotorStop(OSPfs *pfs) {
     }
     __osSiGetAccess();
 
-    _osLastSentSiCmd = CONT_CMD_WRITE_MEMPACK;
+    __osContLastCmd = CONT_CMD_WRITE_MEMPACK;
     __osSiRawStartDma(OS_WRITE, &_MotorStopData[pfs->channel]);
     osRecvMesg(pfs->queue, NULL, OS_MESG_BLOCK);
     ret = __osSiRawStartDma(OS_READ, &__osPfsPifRam);
@@ -59,7 +59,7 @@ s32 osMotorStart(OSPfs *pfs) {
 
     __osSiGetAccess();
 
-    _osLastSentSiCmd = CONT_CMD_WRITE_MEMPACK;
+    __osContLastCmd = CONT_CMD_WRITE_MEMPACK;
     __osSiRawStartDma(OS_WRITE, &_MotorStartData[pfs->channel]);
     osRecvMesg(pfs->queue, NULL, OS_MESG_BLOCK);
     ret = __osSiRawStartDma(OS_READ, &__osPfsPifRam);
@@ -86,11 +86,11 @@ void _MakeMotorData(int channel, u16 address, u8 *buffer, OSPifRam *mdata) {
     __OSContRamReadFormat ramreadformat;
     int i;
 
-    ptr = (u8 *) mdata->ramarray;
-    for (i = 0; i < ARRAY_COUNT(mdata->ramarray); i++) {
-        mdata->ramarray[i] = 0;
+    ptr = (u8 *) mdata->s.ramarray;
+    for (i = 0; i < ARRAY_COUNT(mdata->s.ramarray); i++) {
+        mdata->s.ramarray[i] = 0;
     }
-    mdata->pifstatus = CONT_CMD_EXE;
+    mdata->s.pifstatus = CONT_CMD_EXE;
     ramreadformat.dummy = CONT_CMD_NOP;
     ramreadformat.txsize = CONT_CMD_WRITE_MEMPACK_TX;
     ramreadformat.rxsize = CONT_CMD_WRITE_MEMPACK_RX;

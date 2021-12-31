@@ -273,9 +273,8 @@ SECTIONS
         BUILD_DIR/libultra.a:osPiRawReadIo.o(.text);
         BUILD_DIR/libultra.a:__osSetHWintrRoutine.o(.text);
 #ifdef VERSION_EU
-        BUILD_DIR/libultra.a:D_802F4380.o(.text);
+        BUILD_DIR/libultra.a:leointerrupt.o(.text);
 #endif
-        BUILD_DIR/libultra.a:func_802F4A20.o(.text);
         BUILD_DIR/libultra.a:osTimer.o(.text);
 #ifdef VERSION_EU
         BUILD_DIR/libultra.a:__osDisableInt.o(.text);
@@ -330,14 +329,14 @@ SECTIONS
         BUILD_DIR/libultra.a:__osDequeueThread.o(.text);
         BUILD_DIR/libultra.a:__osProbeTLB.o(.text);
         BUILD_DIR/libultra.a:__osResetGlobalIntMask.o(.text);
-        BUILD_DIR/libultra.a:__osEPiRawWriteIo.o(.text);
+        BUILD_DIR/libultra.a:osEPiRawWriteIo.o(.text);
 #ifdef VERSION_SH
-        BUILD_DIR/libultra.a:__osEPiRawReadIo.o(.text);
+        BUILD_DIR/libultra.a:osEPiRawReadIo.o(.text);
         BUILD_DIR/libultra.a:__osSetGlobalIntMask.o(.text);
 #endif
-        BUILD_DIR/libultra.a:func_802F71F0.o(.text);
+        BUILD_DIR/libultra.a:osYieldThread.o(.text);
 #ifdef RUMBLE_FEEDBACK
-        BUILD_DIR/libultra.a:unk_shindou_file_3.o(.text);
+        BUILD_DIR/libultra.a:pfsgetstatus.o(.text);
 #endif
         BUILD_DIR/lib/rsp.o(.text);
 #else
@@ -458,7 +457,7 @@ SECTIONS
         BUILD_DIR/libultra.a:__osAtomicDec.o(.text);
         BUILD_DIR/libultra.a:guLookAtRef.o(.text); /* Fast3DEX2 only */
 #ifdef RUMBLE_FEEDBACK
-        BUILD_DIR/libultra.a:unk_shindou_file_3.o(.text);
+        BUILD_DIR/libultra.a:pfsgetstatus.o(.text);
 #endif
         BUILD_DIR/lib/rsp.o(.text);
 #endif

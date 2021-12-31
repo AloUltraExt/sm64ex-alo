@@ -7,14 +7,18 @@
 //should go somewhere else but
 #define CHNL_ERR(format) ((format.rxsize & CHNL_ERR_MASK) >> 4)
 
-typedef struct
-{
-    /* 0x0 */ u32 ramarray[15];
-    /* 0x3C */ u32 pifstatus;
+
+// Although this is not the technical struct used, unionizing this removes UB.
+// pifstatus is often referenced as ramarray[16].
+typedef union{
+    struct s {
+        /* 0x0 */ u32 ramarray[15];
+        /* 0x3C */ u32 pifstatus;
+    } s;
+    u32 ramarray[16];
 } OSPifRam;
 
-typedef struct
-{
+typedef struct {
     /* 0x0 */ u8 dummy;
     /* 0x1 */ u8 txsize;
     /* 0x2 */ u8 rxsize;
@@ -24,8 +28,7 @@ typedef struct
     /* 0x7 */ s8 stick_y;
 } __OSContReadFormat;
 
-typedef struct
-{
+typedef struct  {
     /* 0x0 */ u8 dummy;
     /* 0x1 */ u8 txsize;
     /* 0x2 */ u8 rxsize;
@@ -36,8 +39,7 @@ typedef struct
     /* 0x7 */ u8 dummy1;
 } __OSContRequesFormat;
 
-typedef struct
-{
+typedef struct {
     /* 0x0 */ u8 txsize;
     /* 0x1 */ u8 rxsize;
     /* 0x2 */ u8 cmd;
@@ -46,8 +48,7 @@ typedef struct
     /* 0x5 */ u8 status;
 } __OSContRequesFormatShort;
 
-typedef struct
-{
+typedef struct {
     /* 0x0 */ u8 dummy;
     /* 0x1 */ u8 txsize;
     /* 0x2 */ u8 rxsize;
@@ -66,8 +67,7 @@ typedef union {
     /* 0x0 */ u16 ipage;
 } __OSInodeUnit;
 
-typedef struct
-{
+typedef struct {
     /* 0x0 */ u32 game_code;
     /* 0x4 */ u16 company_code;
     /* 0x6 */ __OSInodeUnit start_page;
@@ -78,13 +78,11 @@ typedef struct
     /* 0x10 */ u8 game_name[PFS_FILE_NAME_LEN];
 } __OSDir;
 
-typedef struct
-{
+typedef struct {
     /* 0x0 */ __OSInodeUnit inode_page[128];
 } __OSInode;
 
-typedef struct
-{
+typedef struct {
     /* 0x0 */ u32 repaired;
     /* 0x4 */ u32 random;
     /* 0x8 */ u64 serial_mid;
@@ -96,8 +94,7 @@ typedef struct
     /* 0x1E */ u16 inverted_checksum;
 } __OSPackId;
 
-typedef struct
-{
+typedef struct {
     /* 0x0 */ u8 txsize;
     /* 0x1 */ u8 rxsize;
     /* 0x2 */ u8 cmd;
@@ -159,7 +156,7 @@ s32 __osPfsDeclearPage(OSPfs *pfs, __OSInode *inode, int file_size_in_pages, int
 s32 __osPfsReleasePages(OSPfs *pfs, __OSInode *inode, u8 start_page, u16 *sum, u8 bank, __OSInodeUnit *last_page, int flag);
 s32 __osBlockSum(OSPfs *pfs, u8 page_no, u16 *sum, u8 bank);
 s32 __osContRamRead(OSMesgQueue *mq, int channel, u16 address, u8 *buffer);
-s32 __osContRamWrite(OSMesgQueue *mq, int channel, u16 address, u8 *buffer, int force);
+s32 __osContRamWrite(OSMesgQueue *mq, s32 channel, u16 address, u8 *buffer, s32 force);
 void __osContGetInitData(u8 *pattern, OSContStatus *data);
 void __osPackRequestData(u8 cmd);
 void __osPfsRequestData(u8 cmd);
@@ -168,14 +165,14 @@ u8 __osContAddressCrc(u16 addr);
 u8 __osContDataCrc(u8 *data);
 s32 __osPfsGetStatus(OSMesgQueue *queue, int channel);
 
-extern u8 _osLastSentSiCmd;
+extern u8 __osContLastCmd;
 extern OSTimer __osEepromTimer;
-extern OSMesg __osEepromTimerMsg;
+extern OSMesg __osEepromTimerMsg[4];
 extern OSMesgQueue __osEepromTimerQ;
 extern OSPifRam __osEepPifRam;
 extern OSPifRam __osContPifRam;
 extern OSPifRam __osPfsPifRam;
-extern u8 _osContNumControllers;
+extern u8 __osMaxControllers;
 
 //some version of this almost certainly existed since there's plenty of times where it's used right before a return 0
 #define ERRCK(fn) \

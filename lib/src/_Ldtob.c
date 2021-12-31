@@ -9,7 +9,7 @@
 static s16 _Ldunscale(s16 *, printf_struct *);
 static void _Genld(printf_struct *, u8, u8 *, s16, s16);
 
-const double D_80338670[] = { 10e0L, 10e1L, 10e3L, 10e7L, 10e15L, 10e31L, 10e63L, 10e127L, 10e255L };
+const double pows[] = { 10e0L, 10e1L, 10e3L, 10e7L, 10e15L, 10e31L, 10e63L, 10e127L, 10e255L };
 
 /* float properties */
 #define _D0 0
@@ -92,7 +92,7 @@ void _Ldtob(printf_struct *args, u8 type) {
             exp = -n;
             for (i = 0; n > 0; n >>= 1, i++) {
                 if ((n & 1) != 0) {
-                    val *= D_80338670[i];
+                    val *= pows[i];
                 }
             }
         } else {
@@ -101,7 +101,7 @@ void _Ldtob(printf_struct *args, u8 type) {
                 exp &= ~3;
                 for (n = exp, i = 0; n > 0; n >>= 1, i++) {
                     if ((n & 1) != 0) {
-                        factor *= D_80338670[i];
+                        factor *= pows[i];
                     }
                 }
                 val /= factor;

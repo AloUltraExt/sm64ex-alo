@@ -17,8 +17,8 @@ glabel __osExceptionPreamble
      nop
 
 glabel __osException
-    lui   $k0, %hi(gInterruptedThread)
-    addiu $k0, %lo(gInterruptedThread)
+    lui   $k0, %hi(__osThreadSave)
+    addiu $k0, %lo(__osThreadSave)
     sd    $at, 0x20($k0)
     mfc0  $k1, $12
     sw    $k1, 0x118($k0)
@@ -217,20 +217,20 @@ glabel __osException
      nop
     lui   $t2, %hi(D_C000000C)
     sw    $zero, %lo(D_C000000C)($t2)
-    lui   $t1, %hi(D_80334A40)
-    lw    $t1, %lo(D_80334A40)($t1)
+    lui   $t1, %hi(__osRdbSendMessage)
+    lw    $t1, %lo(__osRdbSendMessage)($t1)
     addiu $t2, %lo(D_C000000C)
     beqz  $t1, .L803268E8
      nop
     jal   send_mesg
      li    $a0, 120
 .L803268E8:
-    lui   $t1, %hi(D_80334A44)
-    lw    $t1, %lo(D_80334A44)($t1)
-    lui   $at, %hi(D_80334A44)
+    lui   $t1, %hi(__osRdbWriteOK)
+    lw    $t1, %lo(__osRdbWriteOK)($t1)
+    lui   $at, %hi(__osRdbWriteOK)
     addi  $t1, $t1, 1
     b     .L80326E08
-     sw    $t1, %lo(D_80334A44)($at)
+     sw    $t1, %lo(__osRdbWriteOK)($at)
 .L80326900:
 #endif
     andi  $t1, $t0, 0x7c

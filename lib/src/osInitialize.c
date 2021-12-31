@@ -45,7 +45,7 @@ void osInitialize(void) {
     u32 status;
 #endif
 
-    UNUSED u32 sp2c;
+    UNUSED u32 ptr;
 
     __osFinalrom = TRUE;
     __osSetSR(__osGetSR() | SR_CU1);

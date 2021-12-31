@@ -114,65 +114,71 @@ index 7f3a0292..15dc1f06 100644
 @@ -1,4 +1,5 @@
  #include "libultra_internal.h"
 +#include <PR/console_type.h>
+ #include "controller.h"
+ #include "macros.h"
  
- extern u8 _osLastSentSiCmd;
  
-@@ -42,33 +43,44 @@ s32 osEepromRead(OSMesgQueue *mq, u8 address, u8 *buffer) {
+@@ -8,37 +9,48 @@ s32 osEepromRead(OSMesgQueue *mq, u8 address, u8 *buffer) {
          return -1;
      }
      __osSiGetAccess();
--    sp34 = __osEepStatus(mq, &sp28);
--    if (sp34 != 0 || sp28.unk00 != 0x8000) {
+-    ret = __osEepStatus(mq, &sdata);
+-    if (ret != 0 || sdata.type != CONT_EEPROM) {
 +    if (gConsoleType == CONSOLE_N64) {
-+        sp34 = __osEepStatus(mq, &sp28);
-+        if (sp34 != 0 || sp28.unk00 != 0x8000) {
++        ret = __osEepStatus(mq, &sdata);
++        if (ret != 0 || sdata.type != CONT_EEPROM) {
  
--        return 8;
+-        return CONT_NO_RESPONSE_ERROR;
 -    }
--    while (sp28.unk02 & 0x80) {
--        __osEepStatus(mq, &sp28);
+-    while (sdata.status & CONT_EEPROM_BUSY) {
+-        __osEepStatus(mq, &sdata);
 -    }
 -    __osPackEepReadData(address);
--    sp34 = __osSiRawStartDma(OS_WRITE, &D_80365E00);
+-
+-    ret = __osSiRawStartDma(OS_WRITE, &__osEepPifRam);
 -    osRecvMesg(mq, NULL, OS_MESG_BLOCK);
--    for (sp30 = 0; sp30 < 0x10; sp30++) {
--        (D_80365E00)[sp30] = 255;
+-
+-    for (i = 0; i < ARRAY_COUNT(__osEepPifRam.ramarray); i++) {
+-        __osEepPifRam.ramarray[i] = CONT_CMD_NOP;
 -    }
--    D_80365E3C = 0;
--    sp34 = __osSiRawStartDma(OS_READ, D_80365E00);
--    _osLastSentSiCmd = 4;
+-    __osEepPifRam.s.pifstatus = 0;
+-
+-    ret = __osSiRawStartDma(OS_READ, __osEepPifRam);
+-    __osContLastCmd = CONT_CMD_READ_EEPROM;
 -    osRecvMesg(mq, NULL, OS_MESG_BLOCK);
--    for (sp30 = 0; sp30 < 4; sp30++) {
--        sp2c++;
+-
+-    for (i = 0; i < 4; i++) {
+-        ptr++;
 -    }
--    sp20 = *(unkStruct2 *) sp2c;
--    sp34 = (sp20.unk01 & 0xc0) >> 4;
--    if (sp34 == 0) {
--        for (sp30 = 0; sp30 < 8; sp30++) {
--            *buffer++ = ((u8 *) &sp20.unk04)[sp30];
-+            return 8;
+-
+-    eepromformat = *(__OSContEepromFormat *) ptr;
+-    ret = CHNL_ERR(eepromformat);
+-    if (ret == 0) {
+-        for (i = 0; i < 8; i++) {
+-            *buffer++ = eepromformat.data[i];
++            return CONT_NO_RESPONSE_ERROR;
 +        }
-+        while (sp28.unk02 & 0x80) {
-+            __osEepStatus(mq, &sp28);
++        while (sdata.status & CONT_EEPROM_BUSY) {
++            __osEepStatus(mq, &sdata);
 +        }
 +        __osPackEepReadData(address);
-+        sp34 = __osSiRawStartDma(OS_WRITE, &D_80365E00);
++        ret = __osSiRawStartDma(OS_WRITE, &__osEepPifRam);
 +        osRecvMesg(mq, NULL, OS_MESG_BLOCK);
-+        for (sp30 = 0; sp30 < 0x10; sp30++) {
-+            (D_80365E00)[sp30] = 255;
++        for (i = 0; i < 0x10; i++) {
++            __osEepPifRam.ramarray[i] = CONT_CMD_NOP;
          }
-+        D_80365E3C = 0;
-+        sp34 = __osSiRawStartDma(OS_READ, D_80365E00);
-+        _osLastSentSiCmd = 4;
++        __osEepPifRam.s.pifstatus = 0;
++        ret = __osSiRawStartDma(OS_READ, __osEepPifRam);
++        __osContLastCmd = CONT_CMD_READ_EEPROM;
 +        osRecvMesg(mq, NULL, OS_MESG_BLOCK);
-+        for (sp30 = 0; sp30 < 4; sp30++) {
-+            sp2c++;
++        for (i = 0; i < 4; i++) {
++            ptr++;
 +        }
-+        sp20 = *(unkStruct2 *) sp2c;
-+        sp34 = (sp20.unk01 & 0xc0) >> 4;
-+        if (sp34 == 0) {
-+            for (sp30 = 0; sp30 < 8; sp30++) {
-+                *buffer++ = ((u8 *) &sp20.unk04)[sp30];
++        eepromformat = *(__OSContEepromFormat *) ptr;
++        ret = CHNL_ERR(eepromformat);
++        if (ret == 0) {
++            for (i = 0; i < 8; i++) {
++                *buffer++ = ((u8 *) &eepromformat.unk04)[i];
 +            }
 +        }
 +    } else if (gConsoleType == CONSOLE_IQUE) {
@@ -183,10 +189,10 @@ index 7f3a0292..15dc1f06 100644
 +            buffer[i] = __osBbEepromAddress[(address << 3) + i];
 +        }
 +
-+        sp34 = 0;
++        ret = 0;
      }
      __osSiRelAccess();
-     return sp34;
+     return ret;
 diff --git a/lib/src/osEepromWrite.c b/lib/src/osEepromWrite.c
 index 67c42a59..f2c029cc 100644
 --- a/lib/src/osEepromWrite.c
@@ -194,79 +200,79 @@ index 67c42a59..f2c029cc 100644
 @@ -1,5 +1,6 @@
  #include "libultra_internal.h"
  #include "osContInternal.h"
+ #include "controller.h"
 +#include <PR/console_type.h>
  
- #ifndef AVOID_UB
- ALIGNED8 u32 D_80365E00[15];
-@@ -52,36 +53,47 @@ s32 osEepromWrite(OSMesgQueue *mq, u8 address, u8 *buffer) {
+ OSPifRam __osEepPifRam;
+@@ -19,36 +20,47 @@ s32 osEepromWrite(OSMesgQueue *mq, u8 address, u8 *buffer) {
      }
  
      __osSiGetAccess();
--    sp34 = __osEepStatus(mq, &sp1c);
+-    ret = __osEepStatus(mq, &sdata);
 +    if (gConsoleType == CONSOLE_N64) {
-+        sp34 = __osEepStatus(mq, &sp1c);
++        ret = __osEepStatus(mq, &sdata);
  
--    if (sp34 != 0 || sp1c.unk00 != 0x8000) {
--        return 8;
+-    if (ret != 0 || sdata.type != CONT_EEPROM) {
+-        return CONT_NO_RESPONSE_ERROR;
 -    }
-+        if (sp34 != 0 || sp1c.unk00 != 0x8000) {
++        if (ret != 0 || sdata.type != CONT_EEPROM) {
 +            return 8;
 +        }
  
--    while (sp1c.unk02 & 0x80) {
--        __osEepStatus(mq, &sp1c);
+-    while (sdata.status & CONT_EEPROM_BUSY) {
+-        __osEepStatus(mq, &sdata);
 -    }
-+        while (sp1c.unk02 & 0x80) {
-+            __osEepStatus(mq, &sp1c);
++        while (sdata.status & CONT_EEPROM_BUSY) {
++            __osEepStatus(mq, &sdata);
 +        }
  
 -    __osPackEepWriteData(address, buffer);
 +        __osPackEepWriteData(address, buffer);
  
--    sp34 = __osSiRawStartDma(OS_WRITE, &D_80365E00);
+-    ret = __osSiRawStartDma(OS_WRITE, &__osEepPifRam);
 -    osRecvMesg(mq, NULL, OS_MESG_BLOCK);
-+        sp34 = __osSiRawStartDma(OS_WRITE, &D_80365E00);
++        ret = __osSiRawStartDma(OS_WRITE, &__osEepPifRam);
 +        osRecvMesg(mq, NULL, OS_MESG_BLOCK);
  
--    for (sp30 = 0; sp30 < 0x10; sp30++) {
--        (D_80365E00)[sp30] = 255;
+-    for (i = 0; i < ARRAY_COUNT(__osEepPifRam.ramarray); i++) {
+-        __osEepPifRam.ramarray[i] = CONT_CMD_NOP;
 -    }
-+        for (sp30 = 0; sp30 < 0x10; sp30++) {
-+            (D_80365E00)[sp30] = 255;
++        for (i = 0; i < ARRAY_COUNT(__osEepPifRam.ramarray); i++) {
++            __osEepPifRam.ramarray[i] = CONT_CMD_NOP;
 +        }
  
--    D_80365E3C = 0;
--    sp34 = __osSiRawStartDma(OS_READ, D_80365E00);
--    _osLastSentSiCmd = 5;
+-    __osEepPifRam.s.pifstatus = 0;
+-    ret = __osSiRawStartDma(OS_READ, &__osEepPifRam);
+-    __osContLastCmd = CONT_CMD_WRITE_EEPROM;
 -    osRecvMesg(mq, NULL, OS_MESG_BLOCK);
-+        D_80365E3C = 0;
-+        sp34 = __osSiRawStartDma(OS_READ, D_80365E00);
-+        _osLastSentSiCmd = 5;
++        __osEepPifRam.s.pifstatus = 0;
++        ret = __osSiRawStartDma(OS_READ, &__osEepPifRam);
++        __osContLastCmd = CONT_CMD_WRITE_EEPROM;
 +        osRecvMesg(mq, NULL, OS_MESG_BLOCK);
  
--    for (sp30 = 0; sp30 < 4; sp30++) {
--        sp2c++;
+-    for (i = 0; i < 4; i++) {
+-        ptr++;
 -    }
-+        for (sp30 = 0; sp30 < 4; sp30++) {
-+            sp2c++;
++        for (i = 0; i < 4; i++) {
++            ptr++;
 +        }
 +
-+        sp20 = *(unkStruct2 *) sp2c;
-+        sp34 = (sp20.unk01 & 0xc0) >> 4;
++        eepromformat = *(__OSContEepromFormat *) ptr;
++        ret = CHNL_ERR(eepromformat);
 +    } else if (gConsoleType == CONSOLE_IQUE) {
 +        u8 *__osBbEepromAddress = * (u8**) 0x8000035C;
-+        s32 i;
++
  
--    sp20 = *(unkStruct2 *) sp2c;
--    sp34 = (sp20.unk01 & 0xc0) >> 4;
+-    eepromformat = *(__OSContEepromFormat *) ptr;
+-    ret = CHNL_ERR(eepromformat);
 +        for (i = 0; i < 8; i++) {
 +            __osBbEepromAddress[(address << 3) + i] = buffer[i];
 +        }
 +
-+        sp34 = 0;
++        ret = 0;
 +    }
      __osSiRelAccess();
-     return sp34;
+     return ret;
  }
 diff --git a/lib/src/osInitialize.c b/lib/src/osInitialize.c
 index ba73024b..6deaf407 100644
@@ -284,7 +290,7 @@ index ba73024b..6deaf407 100644
      u32 status;
  #endif
 
-     UNUSED u32 sp2c;
+     UNUSED u32 ptr;
 
 +    gConsoleType = get_console_type();
      __osFinalrom = TRUE;
@@ -296,7 +302,7 @@ index da9bc4dd..9c1cebba 100755
 +++ b/sm64.ld
 @@ -310,6 +310,8 @@ SECTIONS
  #if ENABLE_RUMBLE
-         BUILD_DIR/libultra.a:unk_shindou_file_3.o(.text);
+         BUILD_DIR/libultra.a:pfsgetstatus.o(.text);
  #endif
 +        BUILD_DIR/libultra.a:consoleType.o(.text);
 +        BUILD_DIR/libultra.a:skGetId.o(.text);
@@ -305,7 +311,7 @@ index da9bc4dd..9c1cebba 100755
          BUILD_DIR/src/game*.o(.text);
 @@ -432,6 +434,8 @@ SECTIONS
  #if ENABLE_RUMBLE
-         BUILD_DIR/libultra.a:unk_shindou_file_3.o(.text);
+         BUILD_DIR/libultra.a:pfsgetstatus.o(.text);
  #endif
 +        BUILD_DIR/libultra.a:consoleType.o(.text);
 +        BUILD_DIR/libultra.a:skGetId.o(.text);

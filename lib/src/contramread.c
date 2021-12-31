@@ -3,7 +3,7 @@
 #include "controller.h"
 #include "macros.h"
 
-extern s32 func_8030A5C0(OSMesgQueue *, s32);
+extern s32 __osPfsGetStatus(OSMesgQueue *, s32);
 void __osPackRamReadData(int channel, u16 address);
 
 s32 __osContRamRead(OSMesgQueue *mq, int channel, u16 address, u8 *buffer) {
@@ -16,7 +16,7 @@ s32 __osContRamRead(OSMesgQueue *mq, int channel, u16 address, u8 *buffer) {
     ptr = (u8 *)&__osPfsPifRam;
     retry = 2;
     __osSiGetAccess();
-    _osLastSentSiCmd = CONT_CMD_READ_MEMPACK;
+    __osContLastCmd = CONT_CMD_READ_MEMPACK;
     __osPackRamReadData(channel, address);
     ret = __osSiRawStartDma(OS_WRITE, &__osPfsPifRam);
     osRecvMesg(mq, NULL, OS_MESG_BLOCK);
@@ -35,7 +35,7 @@ s32 __osContRamRead(OSMesgQueue *mq, int channel, u16 address, u8 *buffer) {
             u8 c;
             c = __osContDataCrc((u8*)&ramreadformat.data);
             if (c != ramreadformat.datacrc) {
-                ret = func_8030A5C0(mq, channel);
+                ret = __osPfsGetStatus(mq, channel);
                 if (ret != 0) {
                     __osSiRelAccess();
                     return ret;
@@ -64,11 +64,11 @@ void __osPackRamReadData(int channel, u16 address) {
 
     ptr = (u8 *)__osPfsPifRam.ramarray;
 
-    for (i = 0; i < ARRAY_COUNT(__osPfsPifRam.ramarray) + 1; i++) { // also clear pifstatus
+    for (i = 0; i < ARRAY_COUNT(__osPfsPifRam.ramarray); i++) {
         __osPfsPifRam.ramarray[i] = 0;
     }
 
-    __osPfsPifRam.pifstatus = CONT_CMD_EXE;
+    __osPfsPifRam.s.pifstatus = CONT_CMD_EXE;
     ramreadformat.dummy = CONT_CMD_NOP;
     ramreadformat.txsize = CONT_CMD_READ_MEMPACK_TX;
     ramreadformat.rxsize = CONT_CMD_READ_MEMPACK_RX;

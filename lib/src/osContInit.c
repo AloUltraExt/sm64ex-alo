@@ -1,19 +1,19 @@
 #include "libultra_internal.h"
 #include "osContInternal.h"
+#include "PR/os.h"
+#include "controller.h"
 
 void __osPackRequestData(u8);
 void __osContGetInitData(u8 *, OSContStatus *);
 
 u32 _osContInitialized = 0; // probably initialized
 
-extern u64 osClockRate;
-
 // these probably belong in EEPROMlongread or something
-u8 _osLastSentSiCmd;
-u8 _osContNumControllers;
-OSTimer D_80365D28;
-OSMesgQueue _osContMesgQueue;
-OSMesg _osContMesgBuff[4];
+u8 __osContLastCmd;
+u8 __osMaxControllers;
+OSTimer __osEepromTimer;
+OSMesgQueue __osEepromTimerQ;
+OSMesg __osEepromTimerMsg[4];
 s32 osContInit(OSMesgQueue *mq, u8 *bitpattern, OSContStatus *status) {
     OSMesg mesg;
     u32 ret = 0;
@@ -31,7 +31,7 @@ s32 osContInit(OSMesgQueue *mq, u8 *bitpattern, OSContStatus *status) {
         osSetTimer(&timer, 500000 * osClockRate / 1000000 - currentTime, 0, &timerMesgQueue, &mesg);
         osRecvMesg(&timerMesgQueue, &mesg, OS_MESG_BLOCK);
     }
-    _osContNumControllers = 4; // TODO: figure out what it means
+    __osMaxControllers = MAXCONTROLLERS;
 #if defined(VERSION_EU) || defined(VERSION_SH)
     __osPackRequestData(0);
 #else
@@ -43,12 +43,12 @@ s32 osContInit(OSMesgQueue *mq, u8 *bitpattern, OSContStatus *status) {
     osRecvMesg(mq, &mesg, OS_MESG_BLOCK);
     __osContGetInitData(bitpattern, status);
 #if defined(VERSION_EU) || defined(VERSION_SH)
-    _osLastSentSiCmd = 0;
+    __osContLastCmd = CONT_CMD_REQUEST_STATUS;
 #else
-    _osLastSentSiCmd = 255;
+    __osContLastCmd = CONT_CMD_RESET;
 #endif
     __osSiCreateAccessQueue();
-    osCreateMesgQueue(&_osContMesgQueue, _osContMesgBuff, 1);
+    osCreateMesgQueue(&__osEepromTimerQ, __osEepromTimerMsg, 1);
     return ret;
 }
 void __osContGetInitData(u8 *bitpattern, OSContStatus *status) {
@@ -59,7 +59,7 @@ void __osContGetInitData(u8 *bitpattern, OSContStatus *status) {
 
     sp7 = 0;
     cmdBufPtr = &(_osContCmdBuf[0].request);
-    for (i = 0; i < _osContNumControllers; i++, cmdBufPtr++, status++) {
+    for (i = 0; i < __osMaxControllers; i++, cmdBufPtr++, status++) {
         response = *(OSContPackedRequest *) cmdBufPtr;
         status->errnum = (response.rxLen & 0xc0) >> 4;
         if (status->errnum == 0) {
@@ -92,7 +92,7 @@ void __osPackRequestData(u8 command) {
     request.data3 = 255;
     request.data4 = 255;
 
-    for (i = 0; i < _osContNumControllers; i++) {
+    for (i = 0; i < __osMaxControllers; i++) {
         *cmdBufPtr++ = request;
     }
     cmdBufPtr->padOrEnd = 254;

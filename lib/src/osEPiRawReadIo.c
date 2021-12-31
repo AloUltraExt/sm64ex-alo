@@ -2,7 +2,7 @@
 #include "PR/rcp.h"
 #include "piint.h"
 
-s32 __osEPiRawReadIo(OSPiHandle *pihandle, u32 devAddr, u32 *data) {
+s32 osEPiRawReadIo(OSPiHandle *pihandle, u32 devAddr, u32 *data) {
     register s32 stat;
 
     WAIT_ON_IO_BUSY(stat);
