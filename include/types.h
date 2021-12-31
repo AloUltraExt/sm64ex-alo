@@ -51,11 +51,14 @@ typedef uintptr_t GeoLayout;
 typedef uintptr_t LevelScript;
 typedef s16 Movtex;
 typedef s16 MacroObject;
-typedef s16 Collision;
+typedef s16 Collision; // Collision data is limited to -32768 to 32767. Change this if you want to increase it.
 typedef s16 Trajectory;
 typedef s16 PaintingData;
 typedef uintptr_t BehaviorScript;
 typedef u8 Texture;
+typedef s8 RoomData; // Rooms are limited to -128 to 127. Change the type if you wish to have more rooms.
+typedef Collision TerrainData;
+typedef TerrainData Vec3Terrain[3];
 
 enum SpTaskState {
     SPTASK_STATE_NOT_STARTED,
@@ -239,16 +242,17 @@ struct Waypoint {
     Vec3s pos;
 };
 
-struct Surface {
-    /*0x00*/ s16 type;
-    /*0x02*/ s16 force;
+struct Surface
+{
+    /*0x00*/ TerrainData type;
+    /*0x02*/ TerrainData force;
     /*0x04*/ s8 flags;
-    /*0x05*/ s8 room;
-    /*0x06*/ s16 lowerY;
-    /*0x08*/ s16 upperY;
-    /*0x0A*/ Vec3s vertex1;
-    /*0x10*/ Vec3s vertex2;
-    /*0x16*/ Vec3s vertex3;
+    /*0x05*/ RoomData room;
+    /*0x06*/ TerrainData lowerY;
+    /*0x08*/ TerrainData upperY;
+    /*0x0A*/ Vec3Terrain vertex1;
+    /*0x10*/ Vec3Terrain vertex2;
+    /*0x16*/ Vec3Terrain vertex3;
     /*0x1C*/ struct {
         f32 x;
         f32 y;

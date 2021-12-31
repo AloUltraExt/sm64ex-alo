@@ -237,7 +237,7 @@ void spawn_macro_objects_hardcoded(s16 areaIndex, s16 *macroObjList) {
     }
 }
 
-void spawn_special_objects(s16 areaIndex, s16 **specialObjList) {
+void spawn_special_objects(s16 areaIndex, TerrainData **specialObjList) {
     s32 numOfSpecialObjects;
     s32 i;
     s32 offset;
