@@ -5,6 +5,9 @@
 
 #include "types.h"
 
+#define NEAR_ZERO   __FLT_EPSILON__
+#define NEAR_ONE    (1.0f - __FLT_EPSILON__)
+
 /*
  * The sine and cosine tables overlap, but "#define gCosineTable (gSineTable +
  * 0x400)" doesn't give expected codegen; gSineTable and gCosineTable need to
@@ -33,6 +36,11 @@ extern f32 gCosineTable[];
 #define sqr(x) ((x) * (x))
 
 #define absx(x) ((x) < 0 ? -(x) : (x))
+
+// On console, (x != 0) still returns true for denormalized floats,
+// which will count as a division by zero when divided and crash.
+// For console compatibility, use this check instead when avoiding a division by zero.
+#define FLT_IS_NONZERO(x) (absf(x) > NEAR_ZERO)
 
 #include "../../include/libc/stdlib.h"
 

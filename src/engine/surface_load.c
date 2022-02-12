@@ -15,8 +15,6 @@
 #include "game/game_init.h"
 #include "engine/math_util.h"
 
-s32 unused8038BE90;
-
 /**
  * Partitions for course and object surfaces. The arrays represent
  * the 16x16 cells that each level is split into.
@@ -38,13 +36,15 @@ struct SurfaceNode *sSurfaceNodePool;
 struct Surface *sSurfacePool;
 
 /**
- * The size of the surface pool (2300).
+ * The size of the surface node pool.
  */
-s16 sSurfacePoolSize;
+s32 sSurfaceNodePoolSize = SURFACE_NODE_POOL_SIZE;
+
+/**
+ * The size of the surface pool.
+ */
+s32 sSurfacePoolSize = SURFACE_POOL_SIZE;
 #endif
-
-
-u8 unused8038EEA8[0x30];
 
 /**
  * Allocate the part of the surface node pool to contain a surface node.
@@ -62,10 +62,10 @@ static struct SurfaceNode *alloc_surface_node(void) {
     node->next = NULL;
 
 #ifndef USE_SYSTEM_MALLOC
-    //! A bounds check! If there's more surface nodes than 7000 allowed,
+    //! A bounds check! If there's more surface nodes than SURFACE_NODE_POOL_SIZE allowed,
     //  we, um...
     // Perhaps originally just debug feedback?
-    if (gSurfaceNodesAllocated >= 7000) {
+    if (gSurfaceNodesAllocated >= sSurfaceNodePoolSize) {
     }
 #endif
 
@@ -113,6 +113,9 @@ static void clear_spatial_partition(SpatialPartitionCell *cells) {
         (*cells)[SPATIAL_PARTITION_FLOORS].next = NULL;
         (*cells)[SPATIAL_PARTITION_CEILS].next = NULL;
         (*cells)[SPATIAL_PARTITION_WALLS].next = NULL;
+#ifdef WATER_SURFACES
+        (*cells)[SPATIAL_PARTITION_WATER].next = NULL;
+#endif
 
         cells++;
     }
@@ -132,29 +135,38 @@ static void clear_static_surfaces(void) {
  * @param cellZ The Z position of the cell in which the surface resides
  * @param surface The surface to add
  */
-static void add_surface_to_cell(s16 dynamic, s16 cellX, s16 cellZ, struct Surface *surface) {
+static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surface *surface) {
     struct SurfaceNode *newNode = alloc_surface_node();
     struct SurfaceNode *list;
-    s16 surfacePriority;
-    s16 priority;
-    s16 sortDir;
-    s16 listIndex;
+    s32 surfacePriority;
+    s32 priority;
+    s32 sortDir;
+    s32 listIndex;
 
-    if (surface->normal.y > 0.01) {
+    if (surface->normal.y > NORMAL_FLOOR_THRESHOLD) {
         listIndex = SPATIAL_PARTITION_FLOORS;
         sortDir = 1; // highest to lowest, then insertion order
-    } else if (surface->normal.y < -0.01) {
+    } else if (surface->normal.y < NORMAL_CEIL_THRESHOLD) {
         listIndex = SPATIAL_PARTITION_CEILS;
         sortDir = -1; // lowest to highest, then insertion order
+#ifdef WATER_SURFACES
+    } else if (SURFACE_IS_NEW_WATER(surface->type)) {
+        listIndex = SPATIAL_PARTITION_WATER;
+#endif
     } else {
         listIndex = SPATIAL_PARTITION_WALLS;
         sortDir = 0; // insertion order
 
+#ifndef BETTER_FIND_WALL_COLLISION
         if (surface->normal.x < -0.707 || surface->normal.x > 0.707) {
             surface->flags |= SURFACE_FLAG_X_PROJECTION;
         }
+#endif
     }
 
+#ifdef COLLISION_IMPROVEMENTS
+    surfacePriority = surface->upperY * sortDir;
+#else
     //! (Surface Cucking) Surfaces are sorted by the height of their first
     //  vertex. Since vertices aren't ordered by height, this causes many
     //  lower triangles to be sorted higher. This worsens surface cucking since
@@ -162,6 +174,7 @@ static void add_surface_to_cell(s16 dynamic, s16 cellX, s16 cellZ, struct Surfac
     //  missing higher surfaces.
     //  upperY would be a better sort method.
     surfacePriority = surface->vertex1[1] * sortDir;
+#endif
 
     newNode->surface = surface;
 
@@ -173,7 +186,11 @@ static void add_surface_to_cell(s16 dynamic, s16 cellX, s16 cellZ, struct Surfac
 
     // Loop until we find the appropriate place for the surface in the list.
     while (list->next != NULL) {
+#ifdef COLLISION_IMPROVEMENTS
+        priority = list->next->surface->upperY * sortDir;
+#else
         priority = list->next->surface->vertex1[1] * sortDir;
+#endif
 
         if (surfacePriority > priority) {
             break;
@@ -189,7 +206,7 @@ static void add_surface_to_cell(s16 dynamic, s16 cellX, s16 cellZ, struct Surfac
 /**
  * Returns the lowest of three values.
  */
-static s16 min_3(TerrainData a0, TerrainData a1, TerrainData a2) {
+static s32 min_3(s32 a0, s32 a1, s32 a2) {
     if (a1 < a0) {
         a0 = a1;
     }
@@ -204,7 +221,7 @@ static s16 min_3(TerrainData a0, TerrainData a1, TerrainData a2) {
 /**
  * Returns the highest of three values.
  */
-static s16 max_3(TerrainData a0, TerrainData a1, TerrainData a2) {
+static s32 max_3(s32 a0, s32 a1, s32 a2) {
     if (a1 > a0) {
         a0 = a1;
     }
@@ -221,8 +238,8 @@ static s16 max_3(TerrainData a0, TerrainData a1, TerrainData a2) {
  * time). This function determines the lower cell for a given x/z position.
  * @param coord The coordinate to test
  */
-static s16 lower_cell_index(TerrainData coord) {
-    s16 index;
+static s32 lower_cell_index(s32 coord) {
+    s32 index;
 
     // Move from range [-0x2000, 0x2000) to [0, 0x4000)
     coord += LEVEL_BOUNDARY_MAX;
@@ -233,12 +250,14 @@ static s16 lower_cell_index(TerrainData coord) {
     // [0, 16)
     index = coord / CELL_SIZE;
 
+#ifndef CELL_BUFFER_FIX
     // Include extra cell if close to boundary
     //! Some wall checks are larger than the buffer, meaning wall checks can
     //  miss walls that are near a cell border.
     if (coord % CELL_SIZE < 50) {
         index--;
     }
+#endif
 
     if (index < 0) {
         index = 0;
@@ -253,8 +272,8 @@ static s16 lower_cell_index(TerrainData coord) {
  * time). This function determines the upper cell for a given x/z position.
  * @param coord The coordinate to test
  */
-static s16 upper_cell_index(TerrainData coord) {
-    s16 index;
+static s32 upper_cell_index(s32 coord) {
+    s32 index;
 
     // Move from range [-0x2000, 0x2000) to [0, 0x4000)
     coord += LEVEL_BOUNDARY_MAX;
@@ -265,15 +284,17 @@ static s16 upper_cell_index(TerrainData coord) {
     // [0, 16)
     index = coord / CELL_SIZE;
 
+#ifndef CELL_BUFFER_FIX
     // Include extra cell if close to boundary
     //! Some wall checks are larger than the buffer, meaning wall checks can
     //  miss walls that are near a cell border.
     if (coord % CELL_SIZE > CELL_SIZE - 50) {
         index++;
     }
+#endif
 
-    if (index > NUM_CELLS_INDEX) {
-        index = NUM_CELLS_INDEX;
+    if (index > (NUM_CELLS - 1)) {
+        index = (NUM_CELLS - 1);
     }
 
     // Potentially < 0, but since lower index is >= 0, not exploitable
@@ -290,11 +311,11 @@ static s16 upper_cell_index(TerrainData coord) {
 static void add_surface(struct Surface *surface, s32 dynamic) {
     // minY/maxY maybe? s32 instead of s16, though.
     UNUSED s32 unused1, unused2;
-    s16 minX, minZ, maxX, maxZ;
+    s32 minX, minZ, maxX, maxZ;
 
-    s16 minCellX, minCellZ, maxCellX, maxCellZ;
+    s32 minCellX, minCellZ, maxCellX, maxCellZ;
 
-    s16 cellZ, cellX;
+    s32 cellZ, cellX;
     // cellY maybe? s32 instead of s16, though.
     UNUSED s32 unused3 = 0;
 
@@ -313,9 +334,6 @@ static void add_surface(struct Surface *surface, s32 dynamic) {
             add_surface_to_cell(dynamic, cellX, cellZ, surface);
         }
     }
-}
-
-UNUSED static void stub_surface_load_1(void) {
 }
 
 /**
@@ -401,8 +419,8 @@ static struct Surface *read_surface_data(TerrainData *vertexData, TerrainData **
 
     surface->originOffset = -(nx * x1 + ny * y1 + nz * z1);
 
-    surface->lowerY = minY - 5;
-    surface->upperY = maxY + 5;
+    surface->lowerY = minY - SURFACE_VERTICAL_BUFFER;
+    surface->upperY = maxY + SURFACE_VERTICAL_BUFFER;
 
     return surface;
 }
@@ -554,8 +572,7 @@ void alloc_surface_pools(void) {
     sDynamicSurfaceNodePool = alloc_only_pool_init();
     sDynamicSurfacePool = alloc_only_pool_init();
 #else
-    sSurfacePoolSize = 2300;
-    sSurfaceNodePool = main_pool_alloc(7000 * sizeof(struct SurfaceNode), MEMORY_POOL_LEFT);
+    sSurfaceNodePool = main_pool_alloc(sSurfaceNodePoolSize * sizeof(struct SurfaceNode), MEMORY_POOL_LEFT);
     sSurfacePool = main_pool_alloc(sSurfacePoolSize * sizeof(struct Surface), MEMORY_POOL_LEFT);
 #endif
 }
@@ -621,7 +638,6 @@ void load_area_terrain(s16 index, TerrainData *data, RoomData *surfaceRooms, s16
 
     // Initialize the data for this.
     gEnvironmentRegions = NULL;
-    unused8038BE90 = 0;
     gSurfaceNodesAllocated = 0;
     gSurfacesAllocated = 0;
 #ifdef USE_SYSTEM_MALLOC
@@ -808,7 +824,7 @@ void load_object_surfaces(TerrainData **data, TerrainData *vertexData) {
 static void get_optimal_coll_dist(struct Object *o) {
     register f32 thisVertDist, maxDist = 0.0f;
     Vec3f v;
-    s16 *collisionData = gCurrentObject->collisionData;
+    TerrainData *collisionData = gCurrentObject->collisionData;
     o->oFlags |= OBJ_FLAG_DONT_CALC_COLL_DIST;
     collisionData++;
     register u32 vertsLeft = *(collisionData);

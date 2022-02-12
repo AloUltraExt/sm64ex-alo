@@ -537,6 +537,11 @@ u32 mario_get_terrain_sound_addend(struct MarioState *m) {
 struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 radius) {
     struct WallCollisionData collisionData;
     struct Surface *wall = NULL;
+#ifdef BETTER_RESOLVE_WALL_COLLISION
+    u8 i = 0;
+    s16 angleDiffStore = 0xFFFF;
+    s16 angleDiff = 0;
+#endif
 
     collisionData.x = pos[0];
     collisionData.y = pos[1];
@@ -548,22 +553,56 @@ struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 ra
         wall = collisionData.walls[collisionData.numWalls - 1];
     }
 
+#ifdef BETTER_RESOLVE_WALL_COLLISION
+    for (i = 0; i < collisionData.numWalls; i++) {
+        angleDiff = abs_angle_diff(gCurrentObject->oMoveAngleYaw - 0x8000,
+                atan2s(collisionData.walls[i]->normal.z, collisionData.walls[i]->normal.x));
+        if (angleDiff < angleDiffStore) {
+            wall = collisionData.walls[i];
+            angleDiffStore = angleDiff;
+        }
+    }
+#endif
+
     pos[0] = collisionData.x;
     pos[1] = collisionData.y;
     pos[2] = collisionData.z;
 
+#ifdef BETTER_RESOLVE_WALL_COLLISION
+    // Returns the wall the actor is closest to facing
+#else
     // This only returns the most recent wall and can also return NULL
     // there are no wall collisions.
+#endif
     return wall;
 }
 
+#ifdef BETTER_RESOLVE_WALL_COLLISION
+void resolve_and_return_wall_collisions_data(Vec3f pos, f32 offset, f32 radius, struct WallCollisionData *collisionData) {
+    collisionData->x = pos[0];
+    collisionData->y = pos[1];
+    collisionData->z = pos[2];
+    collisionData->radius = radius;
+    collisionData->offsetY = offset;
+
+	find_wall_collisions(collisionData);
+
+    pos[0] = collisionData->x;
+    pos[1] = collisionData->y;
+    pos[2] = collisionData->z;
+}
+#endif
+
 /**
- * Finds the ceiling from a vec3f horizontally and a height (with 80 vertical buffer).
+ * Finds the ceiling from a vec3f horizontally and a height 
+ * (with 80 vertical buffer, 3 with exposed ceilings fix).
  */
 f32 vec3f_find_ceil(Vec3f pos, f32 height, struct Surface **ceil) {
-    UNUSED u8 filler[4];
-
+#ifdef EXPOSED_CEILINGS_FIX
+    return find_ceil(pos[0], MAX(height, pos[1]) + 3.0f, pos[2], ceil);
+#else
     return find_ceil(pos[0], height + 80.0f, pos[2], ceil);
+#endif
 }
 
 /**
@@ -725,10 +764,8 @@ s16 find_floor_slope(struct MarioState *m, s16 yawOffset) {
 
 #if QOL_FEATURE_FAST_FLOOR_ALIGN
     if (ABS(m->forwardVel) > 10) { // FAST_FLOOR_ALIGN = 10
-        //forwardFloorY  = get_surface_height_at_location((m->pos[0] + x), (m->pos[2] + z), floor);
-        //backwardFloorY = get_surface_height_at_location((m->pos[0] - x), (m->pos[2] - z), floor);
-        forwardFloorY  = (-((m->pos[0] + x) * (floor)->normal.x + (floor)->normal.z * (m->pos[2] + z) + (floor)->originOffset) / (floor)->normal.y);
-        backwardFloorY = (-((m->pos[0] - x) * (floor)->normal.x + (floor)->normal.z * (m->pos[2] - z) + (floor)->originOffset) / (floor)->normal.y);
+        forwardFloorY  = get_surface_height_at_pos((m->pos[0] + x), (m->pos[2] + z), floor);
+        backwardFloorY = get_surface_height_at_pos((m->pos[0] - x), (m->pos[2] - z), floor);
     } else {
         forwardFloorY  = find_floor((m->pos[0] + x), (m->pos[1] + 100.0f), (m->pos[2] + z), &floor);
         if (floor == NULL)  forwardFloorY = m->floorHeight; // handle OOB slopes

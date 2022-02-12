@@ -1604,13 +1604,27 @@ s32 act_squished(struct MarioState *m) {
             break;
     }
 
+#ifdef BETTER_CEILING_HANDLING
+    m->actionArg++;
+    if ((m->floor != NULL) && (m->ceil != NULL) && ((m->actionArg > 8) || (m->floor->type == SURFACE_BURNING) || (m->ceil->type == SURFACE_BURNING))) {
+
     // steep floor
-    if (m->floor != NULL && m->floor->normal.y < 0.5f) {
+    if (m->floor->normal.y < 0.90630779f)
+#else
+    // steep floor
+    if (m->floor != NULL && m->floor->normal.y < 0.5f) 
+#endif
+    {
         surfAngle = atan2s(m->floor->normal.z, m->floor->normal.x);
         underSteepSurf = TRUE;
     }
     // steep ceiling
-    if (m->ceil != NULL && -0.5f < m->ceil->normal.y) {
+#ifdef BETTER_CEILING_HANDLING
+    if (-0.90630779f < m->ceil->normal.y)
+#else
+    if (m->ceil != NULL && -0.5f < m->ceil->normal.y)
+#endif
+    {
         surfAngle = atan2s(m->ceil->normal.z, m->ceil->normal.x);
         underSteepSurf = TRUE;
     }
@@ -1628,6 +1642,9 @@ s32 act_squished(struct MarioState *m) {
             return FALSE;
         }
     }
+#ifdef BETTER_CEILING_HANDLING
+    }
+#endif
 
     // squished for more than 10 seconds, so kill Mario
     if (m->actionArg++ > 300) {

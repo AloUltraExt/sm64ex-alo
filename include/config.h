@@ -8,7 +8,7 @@
  * (maybe eventually) in SM64
  */
 
-// Qol Defines
+// QOL Defines
 #include "qol_defines.h"
 
 // Bug Fixes
@@ -63,6 +63,9 @@
 #define AUDIO_NO_LIMIT_BANK_SIZE_TABLE
 /// Removes vibrato restriction set in JP and US, EU and SH already has it removed
 #define AUDIO_NO_VIBRATO_LIMIT
+
+// Collision Settings
+#include "config/config_collision.h"
 
 // Screen Size Defines
 #define SCREEN_WIDTH 320

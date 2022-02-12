@@ -13,10 +13,6 @@
 #include "shadow.h"
 #include "sm64.h"
 
-// Avoid Z-fighting
-#define find_floor_height_and_data 0.4 + find_floor_height_and_data
-#define find_water_level -1.4 + find_water_level
-
 /**
  * @file shadow.c
  * This file implements a self-contained subsystem used to draw shadows.
@@ -106,6 +102,9 @@ shadowRectangle rectangles[2] = {
 
 // See shadow.h for documentation.
 s8 gShadowAboveWaterOrLava;
+#ifdef WATER_SURFACES
+s8 gShadowAboveCustomWater;
+#endif
 s8 gMarioOnIceOrCarpet;
 s8 sMarioOnFlyingCarpet;
 s16 sSurfaceTypeBelowShadow;
@@ -181,19 +180,25 @@ u8 dim_shadow_with_distance(u8 solidity, f32 distFromFloor) {
  * Return the water level below a shadow, or 0 if the water level is below
  * -10,000.
  */
-f32 get_water_level_below_shadow(struct Shadow *s) {
+#ifdef WATER_SURFACES
+f32 get_water_level_below_shadow(struct Shadow *s, struct Surface **waterFloor)
+#else
+f32 get_water_level_below_shadow(struct Shadow *s)
+#endif
+{
+#ifdef WATER_SURFACES
+    f32 waterLevel = find_water_level_and_floor(s->parentX, s->parentZ, waterFloor);
+#else
     f32 waterLevel = find_water_level(s->parentX, s->parentZ);
-    if (waterLevel < FLOOR_LOWER_LIMIT_SHADOW) {
+#endif
+    if (waterLevel < FLOOR_LOWER_LIMIT_MISC) {
         return 0;
     } else if (s->parentY >= waterLevel && s->floorHeight <= waterLevel) {
         gShadowAboveWaterOrLava = TRUE;
         return waterLevel;
     }
-    //! @bug Missing return statement. This compiles to return `waterLevel`
-    //! incidentally.
-#ifdef AVOID_UB
+
     return waterLevel;
-#endif
 }
 
 /**
@@ -207,39 +212,62 @@ f32 get_water_level_below_shadow(struct Shadow *s) {
 s8 init_shadow(struct Shadow *s, f32 xPos, f32 yPos, f32 zPos, s16 shadowScale, u8 overwriteSolidity) {
     f32 waterLevel;
     f32 floorSteepness;
-    struct FloorGeometry *floorGeometry;
+    struct Surface *floor;
+#ifdef WATER_SURFACES
+    struct Surface *waterFloor = NULL;
+#endif
 
     s->parentX = xPos;
     s->parentY = yPos;
     s->parentZ = zPos;
 
-    s->floorHeight = find_floor_height_and_data(s->parentX, s->parentY, s->parentZ, &floorGeometry);
+    s->floorHeight = find_floor(s->parentX, s->parentY, s->parentZ, &floor);
 
+#ifdef WATER_SURFACES
+    waterLevel = get_water_level_below_shadow(s, &waterFloor);
+#else
     if (gEnvironmentRegions != NULL) {
         waterLevel = get_water_level_below_shadow(s);
     }
+#endif
 
     if (gShadowAboveWaterOrLava) {
-        //! @bug Use of potentially undefined variable `waterLevel`
-        //  UB Fixed in the function above
         s->floorHeight = waterLevel;
-
+#ifdef WATER_SURFACES
+        if (waterFloor != NULL) {
+            s->floorNormalX = waterFloor->normal.x;
+            s->floorNormalY = waterFloor->normal.y;
+            s->floorNormalZ = waterFloor->normal.z;
+            s->floorOriginOffset = waterFloor->originOffset;
+            gShadowAboveWaterOrLava = FALSE;
+            gShadowAboveCustomWater = TRUE;
+            s->solidity = 200;
+        } else {
+            gShadowAboveCustomWater = FALSE;
+            // Assume that the water is flat.
+            s->floorNormalX = 0;
+            s->floorNormalY = 1.0;
+            s->floorNormalZ = 0;
+            s->floorOriginOffset = -waterLevel;
+        }
+#else
         // Assume that the water is flat.
         s->floorNormalX = 0;
         s->floorNormalY = 1.0;
         s->floorNormalZ = 0;
         s->floorOriginOffset = -waterLevel;
+#endif
     } else {
         // Don't draw a shadow if the floor is lower than expected possible,
         // or if the y-normal is negative (an unexpected result).
-        if (s->floorHeight < FLOOR_LOWER_LIMIT_SHADOW || floorGeometry->normalY <= 0.0) {
+        if (s->floorHeight < FLOOR_LOWER_LIMIT_MISC || floor->normal.y <= 0.0) {
             return 1;
         }
 
-        s->floorNormalX = floorGeometry->normalX;
-        s->floorNormalY = floorGeometry->normalY;
-        s->floorNormalZ = floorGeometry->normalZ;
-        s->floorOriginOffset = floorGeometry->originOffset;
+        s->floorNormalX = floor->normal.x;
+        s->floorNormalY = floor->normal.y;
+        s->floorNormalZ = floor->normal.z;
+        s->floorOriginOffset = floor->originOffset;
     }
 
     if (overwriteSolidity) {
@@ -370,7 +398,6 @@ void calculate_vertex_xyz(s8 index, struct Shadow s, f32 *xPosVtx, f32 *yPosVtx,
     f32 halfTiltedScale;
     s8 xCoordUnit;
     s8 zCoordUnit;
-    struct FloorGeometry *dummy;
 
     // This makes xCoordUnit and yCoordUnit each one of -1, 0, or 1.
     get_vertex_coords(index, shadowVertexType, &xCoordUnit, &zCoordUnit);
@@ -393,7 +420,7 @@ void calculate_vertex_xyz(s8 index, struct Shadow s, f32 *xPosVtx, f32 *yPosVtx,
                 // Clamp this vertex's y-position to that of the floor directly
                 // below it, which may differ from the floor below the center
                 // vertex.
-                *yPosVtx = find_floor_height_and_data(*xPosVtx, s.parentY, *zPosVtx, &dummy);
+                *yPosVtx = find_floor_height(*xPosVtx, s.parentY, *zPosVtx);
                 break;
             case SHADOW_WITH_4_VERTS:
                 // Do not clamp. Instead, extrapolate the y-position of this
@@ -707,12 +734,11 @@ Gfx *create_shadow_circle_assuming_flat_ground(f32 xPos, f32 yPos, f32 zPos, s16
                                                u8 solidity) {
     Vtx *verts;
     Gfx *displayList;
-    struct FloorGeometry *dummy; // only for calling find_floor_height_and_data
     f32 distBelowFloor;
-    f32 floorHeight = find_floor_height_and_data(xPos, yPos, zPos, &dummy);
+    f32 floorHeight = find_floor_height(xPos, yPos, zPos);
     f32 radius = shadowScale / 2;
 
-    if (floorHeight < FLOOR_LOWER_LIMIT_SHADOW) {
+    if (floorHeight < FLOOR_LOWER_LIMIT_MISC) {
         return NULL;
     } else {
         distBelowFloor = floorHeight - yPos;
@@ -767,16 +793,15 @@ Gfx *create_shadow_rectangle(f32 halfWidth, f32 halfLength, f32 relY, u8 solidit
  * value is 200. Return 0 if a shadow should be drawn, 1 if not.
  */
 s32 get_shadow_height_solidity(f32 xPos, f32 yPos, f32 zPos, f32 *shadowHeight, u8 *solidity) {
-    struct FloorGeometry *dummy;
     f32 waterLevel;
-    *shadowHeight = find_floor_height_and_data(xPos, yPos, zPos, &dummy);
+    *shadowHeight = find_floor_height(xPos, yPos, zPos);
 
-    if (*shadowHeight < FLOOR_LOWER_LIMIT_SHADOW) {
+    if (*shadowHeight < FLOOR_LOWER_LIMIT_MISC) {
         return 1;
     } else {
         waterLevel = find_water_level(xPos, zPos);
 
-        if (waterLevel < FLOOR_LOWER_LIMIT_SHADOW) {
+        if (waterLevel < FLOOR_LOWER_LIMIT_MISC) {
             // Dead if-statement. There may have been an assert here.
         } else if (yPos >= waterLevel && waterLevel >= *shadowHeight) {
             gShadowAboveWaterOrLava = TRUE;
@@ -862,6 +887,9 @@ Gfx *create_shadow_below_xyz(f32 xPos, f32 yPos, f32 zPos, s16 shadowScale, u8 s
     find_floor(xPos, yPos, zPos, &pfloor);
 
     gShadowAboveWaterOrLava = FALSE;
+#ifdef WATER_SURFACES
+    gShadowAboveCustomWater = FALSE;
+#endif
     gMarioOnIceOrCarpet = 0;
     sMarioOnFlyingCarpet = 0;
     if (pfloor != NULL) {

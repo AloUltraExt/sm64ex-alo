@@ -107,6 +107,10 @@
 /// Makes Koopa Shell boxes respawn
 /// Credits: (Arceveti)
 #define QOL_FEATURE_KOOPA_SHELL_BOXES_RESPAWN (0 || QOL_FEATURES)
+/// Makes rooms code use find_room_floor, removes harcoding and adds extra calls
+/// Credits: (Arceveti)
+#define QOL_FEATURE_BETTER_ROOM_CHECKS (0 || QOL_FEATURES)
+
 // --| Quality of life fixes
 // --| Code Fixes
 /// Fixes bug where the castle trap sound in the entrance of Bowser 1 doesn't play
@@ -154,9 +158,6 @@
 /// Fixes cutscene loop code (see comment in the fix)
 /// Credits: (Easy Fix)
 #define QOL_FIX_CUTSCENE_LOOP (0 || QOL_FIXES)
-/// Fixes (or rather changes) an oversight if Mario is in a room
-/// Credits: (AloXado320)
-#define QOL_FIX_MARIO_IS_IN_ROOM (0 || QOL_FIXES)
 /// Fixes incorrect yellow sparkle offset positions
 /// Credits: (Easy Fix)
 #define QOL_FIX_YELLOW_SPARKLES_OFFSET (0 || QOL_FIXES)

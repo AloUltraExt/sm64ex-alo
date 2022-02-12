@@ -88,6 +88,7 @@ int strcmp(char *s, char *t);
 #define AIR_STEP_GRABBED_LEDGE   3
 #define AIR_STEP_GRABBED_CEILING 4
 #define AIR_STEP_HIT_LAVA_WALL   6
+#define AIR_STEP_HIT_CEILING     7 // used when BETTER_RESOLVE_WALL_COLLISION is set
 
 #define WATER_STEP_NONE        0
 #define WATER_STEP_HIT_FLOOR   1

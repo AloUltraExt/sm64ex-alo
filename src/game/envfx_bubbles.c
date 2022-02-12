@@ -89,7 +89,6 @@ s32 random_flower_offset(void) {
  */
 void envfx_update_flower(Vec3s centerPos) {
     s32 i;
-    struct FloorGeometry *floorGeo; // unused
     s32 globalTimer = gGlobalTimer;
 
     s16 centerX = centerPos[0];
@@ -101,8 +100,7 @@ void envfx_update_flower(Vec3s centerPos) {
         if (!(gEnvFxBuffer + i)->isAlive) {
             (gEnvFxBuffer + i)->xPos = random_flower_offset() + centerX;
             (gEnvFxBuffer + i)->zPos = random_flower_offset() + centerZ;
-            (gEnvFxBuffer + i)->yPos = find_floor_height_and_data((gEnvFxBuffer + i)->xPos, 10000.0f,
-                                                                  (gEnvFxBuffer + i)->zPos, &floorGeo);
+            (gEnvFxBuffer + i)->yPos = find_floor_height((gEnvFxBuffer + i)->xPos, CELL_HEIGHT_LIMIT, (gEnvFxBuffer + i)->zPos);
             (gEnvFxBuffer + i)->isAlive = TRUE;
             (gEnvFxBuffer + i)->animFrame = random_float() * 5.0f;
         } else if (!(globalTimer & 3)) {

@@ -6,6 +6,8 @@
 #include "macros.h"
 #include "types.h"
 
+#include "engine/surface_collision.h"
+
 s32 is_anim_at_end(struct MarioState *m);
 s32 is_anim_past_end(struct MarioState *m);
 s16 set_mario_animation(struct MarioState *m, s32 targetAnimID);
@@ -29,6 +31,9 @@ void mario_set_forward_vel(struct MarioState *m, f32 speed);
 s32 mario_get_floor_class(struct MarioState *m);
 u32 mario_get_terrain_sound_addend(struct MarioState *m);
 struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 radius);
+#ifdef BETTER_RESOLVE_WALL_COLLISION
+void resolve_and_return_wall_collisions_data(Vec3f pos, f32 offset, f32 radius, struct WallCollisionData *collisionData);
+#endif
 f32 vec3f_find_ceil(Vec3f pos, f32 height, struct Surface **ceil);
 s32 mario_facing_downhill(struct MarioState *m, s32 turnYaw);
 u32 mario_floor_is_slippery(struct MarioState *m);

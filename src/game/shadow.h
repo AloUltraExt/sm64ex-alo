@@ -43,6 +43,10 @@ extern s8 gShadowAboveWaterOrLava;
  */
 extern s8 gMarioOnIceOrCarpet;
 
+#ifdef WATER_SURFACES
+extern s8 gShadowAboveCustomWater;
+#endif
+
 /**
  * Given the (x, y, z) location of an object, create a shadow below that object
  * with the given initial solidity and "shadowType" (described above).

@@ -102,8 +102,13 @@ extern s32 gNumStaticSurfaces;
 
 extern struct MemoryPool *gObjectMemoryPool;
 
-extern s16 gCheckingSurfaceCollisionsForCamera;
-extern s16 gFindFloorIncludeSurfaceIntangible;
+enum CollisionFlags {
+    COLLISION_FLAGS_NONE              = (0 << 0),
+    COLLISION_FLAG_CAMERA             = (1 << 1),
+    COLLISION_FLAG_INCLUDE_INTANGIBLE = (1 << 2),
+};
+
+extern s16 gCollisionFlags;
 extern TerrainData *gEnvironmentRegions;
 extern s32 gEnvironmentLevels[20];
 extern RoomData gDoorAdjacentRooms[60][2];

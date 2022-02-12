@@ -3,11 +3,23 @@
 
 #include <PR/ultratypes.h>
 
-#include "surface_collision.h"
 #include "types.h"
+#include "config.h"
+#include "config/config_world.h"
 
-#define NUM_CELLS       (2 * LEVEL_BOUNDARY_MAX / CELL_SIZE)
-#define NUM_CELLS_INDEX (NUM_CELLS - 1)
+#ifndef EXTENDED_BOUNDS
+#define SURFACE_POOL_SIZE       2300
+#define SURFACE_NODE_POOL_SIZE  7000
+
+#define NUM_CELLS   16
+#endif
+
+#ifndef CUSTOM_SURFACE_VALUES
+#define NORMAL_FLOOR_THRESHOLD 0.01f
+#define NORMAL_CEIL_THRESHOLD -NORMAL_FLOOR_THRESHOLD
+#endif
+
+#define SURFACE_VERTICAL_BUFFER 5
 
 struct SurfaceNode {
     struct SurfaceNode *next;
@@ -17,19 +29,21 @@ struct SurfaceNode {
 enum {
     SPATIAL_PARTITION_FLOORS,
     SPATIAL_PARTITION_CEILS,
-    SPATIAL_PARTITION_WALLS
+    SPATIAL_PARTITION_WALLS,
+#ifdef WATER_SURFACES
+    SPATIAL_PARTITION_WATER,
+#endif
+    NUM_SPATIAL_PARTITIONS
 };
 
-typedef struct SurfaceNode SpatialPartitionCell[3];
-
-// Needed for bs bss reordering memes.
-extern s32 unused8038BE90;
+typedef struct SurfaceNode SpatialPartitionCell[NUM_SPATIAL_PARTITIONS];
 
 extern SpatialPartitionCell gStaticSurfacePartition[NUM_CELLS][NUM_CELLS];
 extern SpatialPartitionCell gDynamicSurfacePartition[NUM_CELLS][NUM_CELLS];
 extern struct SurfaceNode *sSurfaceNodePool;
 extern struct Surface *sSurfacePool;
-extern s16 sSurfacePoolSize;
+extern s32 sSurfaceNodePoolSize;
+extern s32 sSurfacePoolSize;
 
 void alloc_surface_pools(void);
 #ifdef NO_SEGMENTED_MEMORY

@@ -85,28 +85,33 @@ void bhv_door_loop(void) {
     bhv_star_door_loop_2();
 }
 
-void bhv_door_init(void) {
-    f32 x;
-    f32 z;
-    struct Surface *floor;
+#if QOL_FEATURE_BETTER_ROOM_CHECKS
+#define FIND_FLOOR_DOOR find_room_floor
+#else
+#define FIND_FLOOR_DOOR find_floor
+#endif
 
-    x = o->oPosX;
-    z = o->oPosZ;
-    find_floor(x, o->oPosY, z, &floor);
+void bhv_door_init(void) {
+    struct Surface *floor;
+    f32 x = o->oPosX;
+    f32 y = o->oPosY;
+    f32 z = o->oPosZ;
+
+    FIND_FLOOR_DOOR(x, y, z, &floor);
     if (floor != NULL) {
         o->oDoorUnkF8 = floor->room;
     }
 
     x = o->oPosX + sins(o->oMoveAngleYaw) * 200.0f;
     z = o->oPosZ + coss(o->oMoveAngleYaw) * 200.0f;
-    find_floor(x, o->oPosY, z, &floor);
+    FIND_FLOOR_DOOR(x, y, z, &floor);
     if (floor != NULL) {
         o->oDoorUnkFC = floor->room;
     }
 
     x = o->oPosX + sins(o->oMoveAngleYaw) * -200.0f;
     z = o->oPosZ + coss(o->oMoveAngleYaw) * -200.0f;
-    find_floor(x, o->oPosY, z, &floor);
+    FIND_FLOOR_DOOR(x, y, z, &floor);
     if (floor != NULL) {
         o->oDoorUnk100 = floor->room;
     }
@@ -116,6 +121,8 @@ void bhv_door_init(void) {
         gDoorAdjacentRooms[o->oDoorUnkF8][1] = o->oDoorUnk100;
     }
 }
+
+#undef FIND_FLOOR_DOOR
 
 void bhv_star_door_loop_2(void) {
     s32 sp4 = FALSE;

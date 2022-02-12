@@ -362,13 +362,20 @@ static void geo_process_perspective(struct GraphNodePerspective *node) {
         f32 aspect = (f32) gCurGraphNodeRoot->width / (f32) gCurGraphNodeRoot->height;
 #endif
 
+        #ifdef WORLD_SCALE
+        guPerspective(mtx, &perspNorm, node->fov, aspect, node->near / (f32)WORLD_SCALE, node->far / (f32)WORLD_SCALE, 1.0f);
+        #else
         guPerspective(mtx, &perspNorm, node->fov, aspect, node->near, node->far, 1.0f);
+        #endif
 
 #ifdef HIGH_FPS_PC
         if (gGlobalTimer == node->prevTimestamp + 1 && gGlobalTimer != gLakituState.skipCameraInterpolationTimestamp) {
-
             fovInterpolated = (node->prevFov + node->fov) / 2.0f;
+            #ifdef WORLD_SCALE
+            guPerspective(mtxInterpolated, &perspNorm, fovInterpolated, aspect, node->near / (f32)WORLD_SCALE, node->far / (f32)WORLD_SCALE, 1.0f);
+            #else
             guPerspective(mtxInterpolated, &perspNorm, fovInterpolated, aspect, node->near, node->far, 1.0f);
+            #endif
             gSPPerspNormalize(gDisplayListHead++, perspNorm);
 
             sPerspectivePos = gDisplayListHead;
@@ -994,8 +1001,12 @@ static void geo_process_shadow(struct GraphNodeShadow *node) {
 
             if (gShadowAboveWaterOrLava == TRUE) {
                 geo_append_display_list_extra(shadowList, LAYER_ALPHA);
-            } else if (gMarioOnIceOrCarpet == TRUE) {
+            } else if (gMarioOnIceOrCarpet == TRUE) {                
                 geo_append_display_list_extra(shadowList, LAYER_TRANSPARENT);
+#ifdef WATER_SURFACES
+            } else if (gShadowAboveCustomWater == TRUE) {                
+                geo_append_display_list_extra(shadowList, LAYER_TRANSPARENT);
+#endif
             } else {
                 geo_append_display_list_extra(shadowList, LAYER_TRANSPARENT_DECAL);
             }

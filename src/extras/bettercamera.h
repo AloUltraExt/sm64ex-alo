@@ -34,11 +34,6 @@
 #define PUPPYDEBUG_LOCK_CONTROLS (1 << 0) // 0x0001
 #define PUPPYDEBUG_TRACK_MARIO   (1 << 1) // 0x0002
 
-#define RAYCAST_FIND_FLOOR  (1 << 0) // 0x0001
-#define RAYCAST_FIND_WALL   (1 << 1) // 0x0002
-#define RAYCAST_FIND_CEIL   (1 << 2) // 0x0004
-#define RAYCAST_FIND_ALL    (0xFFFFFFFF)
-
 enum gPuppyCamInputType
 {
     PUPPYCAM_INPUT_TYPE_DOUBLE_TAB,
@@ -211,7 +206,6 @@ extern void puppycam_boot(void);
 extern void puppycam_init(void);
 extern void puppycam_loop(void);
 //extern void puppycam_shake(s16 x, s16 y, s16 z);
-extern void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Vec3f hit_pos, s32 flags);
 extern f32 approach_f32_asymptotic(f32 current, f32 target, f32 multiplier);
 extern void puppycam_default_config(void);
 extern s16 LENCOS(s16 length, s16 direction);

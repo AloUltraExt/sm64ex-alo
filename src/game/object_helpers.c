@@ -29,7 +29,9 @@
 
 static s8 sBbhStairJiggleOffsets[] = { -8, 8, -4, 4 };
 static s16 sPowersOfTwo[] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
+#if !QOL_FEATURE_BETTER_ROOM_CHECKS
 static s8 sLevelsWithRooms[] = { LEVEL_BBH, LEVEL_CASTLE, LEVEL_HMC, -1 };
+#endif
 
 static s32 clear_move_flag(u32 *, s32);
 
@@ -133,12 +135,7 @@ Gfx *geo_update_layer_transparency(s32 callContext, struct GraphNode *node, UNUS
  * declare it. This is undefined behavior, but harmless in practice due to the
  * o32 calling convention.
  */
-#ifdef AVOID_UB
-Gfx *geo_switch_anim_state(s32 callContext, struct GraphNode *node, UNUSED void *context)
-#else
-Gfx *geo_switch_anim_state(s32 callContext, struct GraphNode *node)
-#endif
-{
+Gfx *geo_switch_anim_state(s32 callContext, struct GraphNode *node, UNUSED void *context) {
     struct Object *obj;
     struct GraphNodeSwitchCase *switchCase;
 
@@ -166,34 +163,30 @@ Gfx *geo_switch_anim_state(s32 callContext, struct GraphNode *node)
     return NULL;
 }
 
-//! @bug Same issue as geo_switch_anim_state.
-#ifdef AVOID_UB
-Gfx *geo_switch_area(s32 callContext, struct GraphNode *node, UNUSED void *context)
-#else
-Gfx *geo_switch_area(s32 callContext, struct GraphNode *node)
-#endif
-{
-    s16 sp26;
-    struct Surface *sp20;
-    UNUSED struct Object *sp1C =
-        (struct Object *) gCurGraphNodeObject; // TODO: change global type to Object pointer
+Gfx *geo_switch_area(s32 callContext, struct GraphNode *node, UNUSED void *context) {
+    struct Surface *floor;
     struct GraphNodeSwitchCase *switchCase = (struct GraphNodeSwitchCase *) node;
 
     if (callContext == GEO_CONTEXT_RENDER) {
         if (gMarioObject == NULL) {
             switchCase->selectedCase = 0;
         } else {
-            gFindFloorIncludeSurfaceIntangible = TRUE;
+#if QOL_FEATURE_BETTER_ROOM_CHECKS
+            if (gCurrentArea->surfaceRooms != NULL) {
+                find_room_floor(gMarioObject->oPosX, gMarioObject->oPosY, gMarioObject->oPosZ, &floor);
+            } else {
+                floor = gMarioState->floor;
+            }
+#else
+                find_room_floor(gMarioObject->oPosX, gMarioObject->oPosY, gMarioObject->oPosZ, &floor);
+#endif
+            if (floor) {
+                gMarioCurrentRoom = floor->room;
+                s16 roomCase = floor->room - 1;
+                print_debug_top_down_objectinfo("areainfo %d", floor->room);
 
-            find_floor(gMarioObject->oPosX, gMarioObject->oPosY, gMarioObject->oPosZ, &sp20);
-
-            if (sp20) {
-                gMarioCurrentRoom = sp20->room;
-                sp26 = sp20->room - 1;
-                print_debug_top_down_objectinfo("areainfo %d", sp20->room);
-
-                if (sp26 >= 0) {
-                    switchCase->selectedCase = sp26;
+                if (roomCase >= 0) {
+                    switchCase->selectedCase = roomCase;
                 }
             }
         }
@@ -1256,11 +1249,7 @@ static s32 cur_obj_move_xz(f32 steepSlopeNormalY, s32 careAboutEdgesAndSteepSlop
         // - We are above the target floor (most likely in the air)
         o->oPosX = intendedX;
         o->oPosZ = intendedZ;
-        //! Returning FALSE but moving anyway (not exploitable; return value is
-        //  never used)
-        #ifdef AVOID_UB
         return TRUE;
-        #endif
     }
 
     // We are likely trying to move onto a steep upward slope
@@ -1843,6 +1832,7 @@ void cur_obj_move_standard(s16 steepSlopeAngleDegrees) {
 }
 
 static s32 cur_obj_within_12k_bounds(void) {
+#ifndef EXTENDED_BOUNDS // always return true if EXTENDED_BOUNDS is set
     if (o->oPosX < -12000.0f || 12000.0f < o->oPosX) {
         return FALSE;
     }
@@ -1854,6 +1844,7 @@ static s32 cur_obj_within_12k_bounds(void) {
     if (o->oPosZ < -12000.0f || 12000.0f < o->oPosZ) {
         return FALSE;
     }
+#endif
 
     return TRUE;
 }
@@ -2403,6 +2394,20 @@ s32 is_item_in_array(s8 item, s8 *array) {
 UNUSED static void stub_obj_helpers_5(void) {
 }
 
+#if QOL_FEATURE_BETTER_ROOM_CHECKS
+void bhv_init_room(void) {
+    struct Surface *floor = NULL;
+    if (gCurrentArea->surfaceRooms != NULL) {
+        find_room_floor(o->oPosX, o->oPosY, o->oPosZ, &floor);
+
+        if (floor != NULL) {
+            o->oRoom = floor->room;
+            return;
+        }
+    }
+    o->oRoom = -1;
+}
+#else
 void bhv_init_room(void) {
     struct Surface *floor;
     f32 floorHeight;
@@ -2427,6 +2432,7 @@ void bhv_init_room(void) {
         o->oRoom = -1;
     }
 }
+#endif
 
 void cur_obj_enable_rendering_if_mario_in_room(void) {
     register s32 marioInRoom;
@@ -2438,7 +2444,7 @@ void cur_obj_enable_rendering_if_mario_in_room(void) {
             marioInRoom = TRUE;
         } else if (gDoorAdjacentRooms[gMarioCurrentRoom][1] == o->oRoom) {
             marioInRoom = TRUE;
-#if QOL_FIX_MARIO_IS_IN_ROOM
+#if QOL_FEATURE_BETTER_ROOM_CHECKS
         } else if (gDoorAdjacentRooms[o->oRoom][0] == gMarioCurrentRoom) {
             marioInRoom = TRUE;
         } else if (gDoorAdjacentRooms[o->oRoom][1] == gMarioCurrentRoom) {

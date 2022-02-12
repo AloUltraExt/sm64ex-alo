@@ -620,6 +620,26 @@ void mtxf_mul_vec3s(Mat4 mtx, Vec3s b) {
     b[2] = x * mtx[0][2] + y * mtx[1][2] + z * mtx[2][2] + mtx[3][2];
 }
 
+#ifdef WORLD_SCALE
+/**
+ * Modified into a hybrid of the original function and the worldscale altered function.
+ * Will check if the worldscale is below what's considered safe in vanilla bounds and
+ * just run the faster vanilla function, otherwise it'll run the slower, but safer scale
+ * function, for extended boundaries.
+ */
+void mtxf_to_mtx_scale(Mtx *dest, Mat4 src) {
+    Mat4 temp;
+    register s32 i, j;
+    for(i = 0; i < 4; i++) {
+        for(j = 0; j < 3; j++) {
+            temp[i][j] = (src[i][j] / WORLD_SCALE);
+        }
+        temp[i][3] = src[i][3];
+    }
+    guMtxF2L(temp, dest);
+}
+#endif
+
 /**
  * Convert float matrix 'src' to fixed point matrix 'dest'.
  * The float matrix may not contain entries larger than 65536 or the console
@@ -630,22 +650,12 @@ void mtxf_mul_vec3s(Mat4 mtx, Vec3s b) {
  * and no crashes occur.
  */
 void mtxf_to_mtx(Mtx *dest, Mat4 src) {
-#ifdef AVOID_UB
+#ifdef WORLD_SCALE
+    mtxf_to_mtx_scale(dest, src);
+#else
     // Avoid type-casting which is technically UB by calling the equivalent
     // guMtxF2L function. This helps little-endian systems, as well.
     guMtxF2L(src, dest);
-#else
-    s32 asFixedPoint;
-    register s32 i;
-    register s16 *a3 = (s16 *) dest;      // all integer parts stored in first 16 bytes
-    register s16 *t0 = (s16 *) dest + 16; // all fraction parts stored in last 16 bytes
-    register f32 *t1 = (f32 *) src;
-
-    for (i = 0; i < 16; i++) {
-        asFixedPoint = *t1++ * (1 << 16); //! float-to-integer conversion responsible for PU crashes
-        *a3++ = GET_HIGH_S16_OF_32(asFixedPoint); // integer part
-        *t0++ = GET_LOW_S16_OF_32(asFixedPoint);  // fraction part
-    }
 #endif
 }
 
@@ -660,7 +670,7 @@ void mtxf_rotate_xy(Mtx *mtx, s16 angle) {
     temp[0][1] = sins(angle);
     temp[1][0] = -temp[0][1];
     temp[1][1] = temp[0][0];
-    mtxf_to_mtx(mtx, temp);
+    guMtxF2L(temp, mtx);
 }
 
 /**

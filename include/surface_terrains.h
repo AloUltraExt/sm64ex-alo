@@ -4,6 +4,8 @@
 // Surface Types
 #define SURFACE_DEFAULT                      0x0000 // Environment default
 #define SURFACE_BURNING                      0x0001 // Lava / Frostbite (in SL), but is used mostly for Lava
+#define SURFACE_NEW_WATER                    0x0002 // Custom water surface (Used when NEW_WATER_SURFACES is set)
+#define SURFACE_NEW_WATER_BOTTOM             0x0003 // Custom water surface bottom marker (Used when NEW_WATER_SURFACES is set)
 #define SURFACE_0004                         0x0004 // Unused, has no function and has parameters
 #define SURFACE_HANGABLE                     0x0005 // Ceiling that Mario can climb on
 #define SURFACE_SLOW                         0x0009 // Slow down Mario, unused
@@ -150,10 +152,13 @@
 #define SURFACE_WOBBLING_WARP                0x00FD // Pool warp (HMC & DDD)
 #define SURFACE_TRAPDOOR                     0x00FF // Bowser Left trapdoor, has no action defined
 
-#define SURFACE_IS_QUICKSAND(cmd)     (cmd >= 0x21 && cmd < 0x28)   // Doesn't include SURFACE_INSTANT_MOVING_QUICKSAND
-#define SURFACE_IS_NOT_HARD(cmd)      (cmd != SURFACE_HARD && \
-                                     !(cmd >= 0x35 && cmd <= 0x37))
-#define SURFACE_IS_PAINTING_WARP(cmd) (cmd >= 0xD3 && cmd < 0xFD)
+#define SURFACE_IS_QUICKSAND(cmd)               ((((cmd) >= SURFACE_SHALLOW_QUICKSAND) && ((cmd) <= SURFACE_MOVING_QUICKSAND)) || ((cmd) == SURFACE_INSTANT_MOVING_QUICKSAND))
+#define SURFACE_IS_NOT_HARD(cmd)                (((cmd) != SURFACE_HARD) && !((cmd) >= SURFACE_HARD_SLIPPERY && ((cmd) <= SURFACE_HARD_NOT_SLIPPERY)))
+#define SURFACE_IS_PAINTING_WARP(cmd)           (((cmd) >= SURFACE_PAINTING_WARP_D3) && ((cmd) < SURFACE_WOBBLING_WARP)) // skips SURFACE_WOBBLING_WARP
+#define SURFACE_IS_INSTANT_WARP(cmd)            (((cmd) >= SURFACE_INSTANT_WARP_1B) && ((cmd) <= SURFACE_INSTANT_WARP_1E))
+
+// Used when NEW_WATER_SURFACES is set
+#define SURFACE_IS_NEW_WATER(cmd)               (((cmd) == SURFACE_NEW_WATER) || ((cmd) == SURFACE_NEW_WATER_BOTTOM))
 
 #define SURFACE_CLASS_DEFAULT       0x0000
 #define SURFACE_CLASS_VERY_SLIPPERY 0x0013
