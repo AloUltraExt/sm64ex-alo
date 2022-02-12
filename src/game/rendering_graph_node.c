@@ -44,6 +44,10 @@ Mat4 gMatStackInterpolated[32];
 Mtx *gMatStackInterpolatedFixed[32];
 #endif
 
+// ex-alo change
+// Stores geo screen aspect ratio for obj_is_in_view
+f32 sGeoScreenAspectRatio;
+
 /**
  * Animation nodes have state in global variables, so this struct captures
  * the animation state so a 'context switch' can be made when rendering the
@@ -147,7 +151,7 @@ struct {
     Gfx *pos;
     void *mtx;
     void *displayList;
-} gMtxTbl[6400];
+} gMtxTbl[GFX_POOL_SIZE_STATIC];
 s32 gMtxTblSize;
 
 static Gfx *sViewportPos;
@@ -233,13 +237,14 @@ static void geo_process_master_list_sub(struct GraphNodeMasterList *node) {
 }
 
 #ifdef HIGH_FPS_PC
+// Replaces a function call to another, which is why is not in mayus, unlike extra
 #define geo_append_display_list(dl, layer) \
     geo_append_display_list_inter(dl, dl, layer);
 
-#define geo_append_display_list_extra(dl, layer) \
+#define GEO_APPEND_DISPLAY_LIST_EXTRA(dl, layer) \
     geo_append_display_list_inter((void *) VIRTUAL_TO_PHYSICAL(dl), (void *) VIRTUAL_TO_PHYSICAL(dl##Interpolated), layer)
 #else
-#define geo_append_display_list_extra(dl, layer) \
+#define GEO_APPEND_DISPLAY_LIST_EXTRA(dl, layer) \
     geo_append_display_list((void *) VIRTUAL_TO_PHYSICAL(dl), layer)
 #endif
 
@@ -280,7 +285,7 @@ static void geo_append_display_list(void *displayList, s16 layer)
 
 // ex-alo change
 // simplify matrix and dl usage into functions (From HackerSM64) 
-static void inc_mat_stack(void) {
+void inc_mat_stack(void) {
     Mtx *mtx = alloc_display_list(sizeof(*mtx));
 #ifdef HIGH_FPS_PC
     Mtx *mtxInterpolated = alloc_display_list(sizeof(*mtxInterpolated));
@@ -294,7 +299,7 @@ static void inc_mat_stack(void) {
 #endif
 }
 
-static void append_dl_and_return(struct GraphNodeDisplayList *node) {
+void append_dl_and_return(struct GraphNodeDisplayList *node) {
     if (node->displayList != NULL) {
         geo_append_display_list(node->displayList, node->node.flags >> 8);
     }
@@ -356,25 +361,24 @@ static void geo_process_perspective(struct GraphNodePerspective *node) {
         f32 fovInterpolated;
 #endif
 
+        sGeoScreenAspectRatio = (f32) gCurGraphNodeRoot->width / (f32) gCurGraphNodeRoot->height;
 #ifdef VERSION_EU
-        f32 aspect = ((f32) gCurGraphNodeRoot->width / (f32) gCurGraphNodeRoot->height) * 1.1f;
-#else
-        f32 aspect = (f32) gCurGraphNodeRoot->width / (f32) gCurGraphNodeRoot->height;
+        sGeoScreenAspectRatio *= 1.1f;
 #endif
 
         #ifdef WORLD_SCALE
-        guPerspective(mtx, &perspNorm, node->fov, aspect, node->near / (f32)WORLD_SCALE, node->far / (f32)WORLD_SCALE, 1.0f);
+        guPerspective(mtx, &perspNorm, node->fov, sGeoScreenAspectRatio, node->near / (f32)WORLD_SCALE, node->far / (f32)WORLD_SCALE, 1.0f);
         #else
-        guPerspective(mtx, &perspNorm, node->fov, aspect, node->near, node->far, 1.0f);
+        guPerspective(mtx, &perspNorm, node->fov, sGeoScreenAspectRatio, node->near, node->far, 1.0f);
         #endif
 
 #ifdef HIGH_FPS_PC
         if (gGlobalTimer == node->prevTimestamp + 1 && gGlobalTimer != gLakituState.skipCameraInterpolationTimestamp) {
             fovInterpolated = (node->prevFov + node->fov) / 2.0f;
             #ifdef WORLD_SCALE
-            guPerspective(mtxInterpolated, &perspNorm, fovInterpolated, aspect, node->near / (f32)WORLD_SCALE, node->far / (f32)WORLD_SCALE, 1.0f);
+            guPerspective(mtxInterpolated, &perspNorm, fovInterpolated, sGeoScreenAspectRatio, node->near / (f32)WORLD_SCALE, node->far / (f32)WORLD_SCALE, 1.0f);
             #else
-            guPerspective(mtxInterpolated, &perspNorm, fovInterpolated, aspect, node->near, node->far, 1.0f);
+            guPerspective(mtxInterpolated, &perspNorm, fovInterpolated, sGeoScreenAspectRatio, node->near, node->far, 1.0f);
             #endif
             gSPPerspNormalize(gDisplayListHead++, perspNorm);
 
@@ -406,22 +410,14 @@ static void geo_process_perspective(struct GraphNodePerspective *node) {
  * range of this node.
  */
 static void geo_process_level_of_detail(struct GraphNodeLevelOfDetail *node) {
-#ifdef GBI_FLOATS
-    Mtx *mtx = gMatStackFixed[gMatStackIndex];
-    s16 distanceFromCam = (s32) -mtx->m[3][2]; // z-component of the translation column
+#ifdef TARGET_N64
+    f32 distanceFromCam = -gMatStack[gMatStackIndex][3][2]; // z-component of the translation column
 #else
-    // The fixed point Mtx type is defined as 16 longs, but it's actually 16
-    // shorts for the integer parts followed by 16 shorts for the fraction parts
-    Mtx *mtx = gMatStackFixed[gMatStackIndex];
-    s16 distanceFromCam = -GET_HIGH_S16_OF_32(mtx->m[1][3]); // z-component of the translation column
-#endif
-
-#ifndef TARGET_N64
     // We assume modern hardware is powerful enough to draw the most detailed variant
-    distanceFromCam = 0;
+    f32 distanceFromCam = 0;
 #endif
 
-    if (node->minDistance <= distanceFromCam && distanceFromCam < node->maxDistance) {
+    if ((f32)node->minDistance <= distanceFromCam && distanceFromCam < (f32)node->maxDistance) {
         if (node->node.children != 0) {
             geo_process_node_and_siblings(node->node.children);
         }
@@ -737,7 +733,7 @@ static void geo_process_background(struct GraphNodeBackground *node) {
 #endif
     }
     if (list != NULL) {
-        geo_append_display_list_extra(list, node->fnNode.node.flags >> 8);
+        GEO_APPEND_DISPLAY_LIST_EXTRA(list, node->fnNode.node.flags >> 8);
     } else if (gCurGraphNodeMasterList != NULL) {
 #ifdef TARGET_N3DS // avoid crashes
         Gfx *gfxStart = alloc_display_list(sizeof(Gfx) * 12);
@@ -771,37 +767,29 @@ static void geo_process_background(struct GraphNodeBackground *node) {
 }
 
 static void anim_process(Vec3f translation, Vec3s rotation, u8 *animType, s16 animFrame, u16 **animAttribute) {
-    if (*animType == ANIM_TYPE_TRANSLATION) {
-        translation[0] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)]
-                          * gCurrAnimTranslationMultiplier;
-        translation[1] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)]
-                          * gCurrAnimTranslationMultiplier;
-        translation[2] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)]
-                          * gCurrAnimTranslationMultiplier;
-        *animType = ANIM_TYPE_ROTATION;
-    } else {
-        if (*animType == ANIM_TYPE_LATERAL_TRANSLATION) {
-            translation[0] +=
-                gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)]
-                * gCurrAnimTranslationMultiplier;
-            *animAttribute += 2;
-            translation[2] +=
-                gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)]
-                * gCurrAnimTranslationMultiplier;
+    switch (*animType) {
+        case ANIM_TYPE_TRANSLATION:
+            translation[0] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)] * gCurrAnimTranslationMultiplier;
+            translation[1] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)] * gCurrAnimTranslationMultiplier;
+            translation[2] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)] * gCurrAnimTranslationMultiplier;
             *animType = ANIM_TYPE_ROTATION;
-        } else {
-            if (*animType == ANIM_TYPE_VERTICAL_TRANSLATION) {
-                *animAttribute += 2;
-                translation[1] +=
-                    gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)]
-                    * gCurrAnimTranslationMultiplier;
-                *animAttribute += 2;
-                *animType = ANIM_TYPE_ROTATION;
-            } else if (*animType == ANIM_TYPE_NO_TRANSLATION) {
-                *animAttribute += 6;
-                *animType = ANIM_TYPE_ROTATION;
-            }
-        }
+            break;
+        case ANIM_TYPE_VERTICAL_TRANSLATION:
+            *animAttribute += 2;
+            translation[1] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)] * gCurrAnimTranslationMultiplier;
+            *animAttribute += 2;
+            *animType = ANIM_TYPE_ROTATION;
+            break;
+        case ANIM_TYPE_LATERAL_TRANSLATION:
+            translation[0] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)] * gCurrAnimTranslationMultiplier;
+            *animAttribute += 2;
+            translation[2] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)] * gCurrAnimTranslationMultiplier;
+            *animType = ANIM_TYPE_ROTATION;
+            break;
+        case ANIM_TYPE_NO_TRANSLATION:
+            *animAttribute += 6;
+            *animType = ANIM_TYPE_ROTATION;
+            break;
     }
 
     if (*animType == ANIM_TYPE_ROTATION) {
@@ -1000,15 +988,15 @@ static void geo_process_shadow(struct GraphNodeShadow *node) {
             inc_mat_stack();
 
             if (gShadowAboveWaterOrLava == TRUE) {
-                geo_append_display_list_extra(shadowList, LAYER_ALPHA);
+                GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_ALPHA);
             } else if (gMarioOnIceOrCarpet == TRUE) {                
-                geo_append_display_list_extra(shadowList, LAYER_TRANSPARENT);
+                GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT);
 #ifdef WATER_SURFACES
             } else if (gShadowAboveCustomWater == TRUE) {                
-                geo_append_display_list_extra(shadowList, LAYER_TRANSPARENT);
+                GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT);
 #endif
             } else {
-                geo_append_display_list_extra(shadowList, LAYER_TRANSPARENT_DECAL);
+                GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT_DECAL);
             }
             gMatStackIndex--;
         }
@@ -1073,11 +1061,14 @@ static s32 obj_is_in_view(struct GraphNodeObject *node, Mat4 matrix) {
 
     // This multiplication should really be performed on 4:3 as well,
     // but the issue will be more apparent on widescreen.
+#ifdef TARGET_N64
+    hScreenEdge *= sGeoScreenAspectRatio;
+#else
     hScreenEdge *= GFX_DIMENSIONS_ASPECT_RATIO;
+#endif
 
     if (geo != NULL && geo->type == GRAPH_NODE_TYPE_CULLING_RADIUS) {
-        cullingRadius =
-            (f32)((struct GraphNodeCullingRadius *) geo)->cullingRadius; //! Why is there a f32 cast?
+        cullingRadius = ((struct GraphNodeCullingRadius *) geo)->cullingRadius;
     } else {
         cullingRadius = 300;
     }

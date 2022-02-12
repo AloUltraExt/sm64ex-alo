@@ -926,6 +926,7 @@ f32 find_water_floor(s32 xPos, s32 yPos, s32 zPos, struct Surface **pfloor) {
 
 #ifdef WATER_SURFACES
 s32 find_water_level_and_floor(s32 x, s32 z, struct Surface **pfloor) {
+    s32 i;
     s32 val;
     s32 loX, hiX, loZ, hiZ;
     TerrainData *p = gEnvironmentRegions;
@@ -935,7 +936,7 @@ s32 find_water_level_and_floor(s32 x, s32 z, struct Surface **pfloor) {
     if (p != NULL && waterLevel == FLOOR_LOWER_LIMIT) {
         s32 numRegions = *p++;
 
-        for (s32 i = 0; i < numRegions; i++) {
+        for (i = 0; i < numRegions; i++) {
             val = *p++;
             loX = *p++;
             loZ = *p++;
@@ -1233,13 +1234,14 @@ void find_surface_on_ray_list(struct SurfaceNode *list, Vec3f orig, Vec3f dir, f
 }
 
 void find_surface_on_ray_cell(s32 cellX, s32 cellZ, Vec3f orig, Vec3f normalized_dir, f32 dir_length, struct Surface **hit_surface, Vec3f hit_pos, f32 *max_length, s32 flags) {
+    s32 i;
     // Skip if OOB
     if ((cellX >= 0) && (cellX <= (NUM_CELLS - 1)) && (cellZ >= 0) && (cellZ <= (NUM_CELLS - 1))) {
         f32 ny = normalized_dir[1];
         s32 rayUp   = (ny >  NEAR_ONE);
         s32 rayDown = (ny < -NEAR_ONE);
         
-        for (s32 i = 0; i < NUM_SPATIAL_PARTITIONS; i++) {
+        for (i = 0; i < NUM_SPATIAL_PARTITIONS; i++) {
             if ((rayDown && (i == SPATIAL_PARTITION_CEILS ))
              || (rayUp   && (i == SPATIAL_PARTITION_FLOORS))) {
                 continue;
