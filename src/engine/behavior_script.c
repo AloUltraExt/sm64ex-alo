@@ -23,7 +23,9 @@
 #define BHV_CMD_GET_1ST_S16(index) (s16)(gCurBhvCommand[index] >> 16)
 #define BHV_CMD_GET_2ND_S16(index) (s16)(gCurBhvCommand[index] & 0xFFFF)
 
+#define BHV_CMD_GET_S32(index)     (s32)(gCurBhvCommand[index])
 #define BHV_CMD_GET_U32(index)     (u32)(gCurBhvCommand[index])
+
 #define BHV_CMD_GET_VPTR(index)    (void *)(gCurBhvCommand[index])
 
 #define BHV_CMD_GET_ADDR_OF_CMD(index) (uintptr_t)(&gCurBhvCommand[index])
@@ -387,9 +389,9 @@ static s32 bhv_cmd_set_float(void) {
     return BHV_PROC_CONTINUE;
 }
 
-// Command 0x10: Sets the specified field to an integer.
-// Usage: SET_INT(field, value)
-static s32 bhv_cmd_set_int(void) {
+// Command 0x10: Sets the specified field to a short.
+// Usage: SET_SHORT(field, value)
+static s32 bhv_cmd_set_short(void) {
     u8 field = BHV_CMD_GET_2ND_U8(0);
     s16 value = BHV_CMD_GET_2ND_S16(0);
 
@@ -488,9 +490,9 @@ static s32 bhv_cmd_add_float(void) {
     return BHV_PROC_CONTINUE;
 }
 
-// Command 0x0F: Adds an integer to the specified field.
-// Usage: ADD_INT(field, value)
-static s32 bhv_cmd_add_int(void) {
+// Command 0x0F: Adds a short to the specified field.
+// Usage: ADD_SHORT(field, value)
+static s32 bhv_cmd_add_short(void) {
     u8 field = BHV_CMD_GET_2ND_U8(0);
     s16 value = BHV_CMD_GET_2ND_S16(0);
 
@@ -500,15 +502,15 @@ static s32 bhv_cmd_add_int(void) {
     return BHV_PROC_CONTINUE;
 }
 
-// Command 0x11: Performs a bitwise OR with the specified field and the given integer.
+// Command 0x11: Performs a bitwise OR with the specified field and the given short.
 // Usually used to set an object's flags.
-// Usage: OR_INT(field, value)
-static s32 bhv_cmd_or_int(void) {
-    u8 objectOffset = BHV_CMD_GET_2ND_U8(0);
+// Usage: OR_SHORT(field, value)
+static s32 bhv_cmd_or_short(void) {
+    u8 field = BHV_CMD_GET_2ND_U8(0);
     s32 value = BHV_CMD_GET_2ND_S16(0);
 
     value &= 0xFFFF;
-    cur_obj_or_int(objectOffset, value);
+    cur_obj_or_int(field, value);
 
     gCurBhvCommand++;
     return BHV_PROC_CONTINUE;
@@ -565,30 +567,39 @@ static s32 bhv_cmd_drop_to_floor(void) {
     return BHV_PROC_CONTINUE;
 }
 
-// Command 0x18: No operation. Unused.
-// Usage: CMD_NOP_1(field)
-static s32 bhv_cmd_nop_1(void) {
-    UNUSED u8 field = BHV_CMD_GET_2ND_U8(0);
+// Command 0x18: Adds an integer to the specified field.
+// Usage: ADD_INT(field)
+static s32 bhv_cmd_add_int(void) {
+    u8 field = BHV_CMD_GET_2ND_U8(0);
+    s32 value = BHV_CMD_GET_S32(1);
 
-    gCurBhvCommand++;
+    cur_obj_add_int(field, value);
+
+    gCurBhvCommand += 2;
     return BHV_PROC_CONTINUE;
 }
 
-// Command 0x1A: No operation. Unused.
-// Usage: CMD_NOP_3(field)
-static s32 bhv_cmd_nop_3(void) {
-    UNUSED u8 field = BHV_CMD_GET_2ND_U8(0);
+// Command 0x1A: Performs a bitwise OR with the specified field and the given integer.
+// Usage: OR_INT(field)
+static s32 bhv_cmd_or_int(void) {
+    u8 field = BHV_CMD_GET_2ND_U8(0);
+    s32 value = BHV_CMD_GET_S32(1);
 
-    gCurBhvCommand++;
+    cur_obj_or_int(field, value);
+
+    gCurBhvCommand += 2;
     return BHV_PROC_CONTINUE;
 }
 
-// Command 0x19: No operation. Unused.
-// Usage: CMD_NOP_2(field)
-static s32 bhv_cmd_nop_2(void) {
-    UNUSED u8 field = BHV_CMD_GET_2ND_U8(0);
+// Command 0x19: Sets the specified field to an integer.
+// Usage: SET_INT(field)
+static s32 bhv_cmd_set_int(void) {
+    u8 field = BHV_CMD_GET_2ND_U8(0);
+    s32 value = BHV_CMD_GET_S32(1);
 
-    gCurBhvCommand++;
+    cur_obj_set_int(field, value);
+
+    gCurBhvCommand += 2;
     return BHV_PROC_CONTINUE;
 }
 
@@ -867,18 +878,18 @@ static BhvCommandProc BehaviorCmdTable[] = {
     bhv_cmd_call_native, //0C
     bhv_cmd_add_float, //0D
     bhv_cmd_set_float, //0E
-    bhv_cmd_add_int, //0F
-    bhv_cmd_set_int, //10
-    bhv_cmd_or_int, //11
+    bhv_cmd_add_short, //0F
+    bhv_cmd_set_short, //10
+    bhv_cmd_or_short, //11
     bhv_cmd_bit_clear, //12
     bhv_cmd_set_int_rand_rshift, //13
     bhv_cmd_set_random_float, //14
     bhv_cmd_set_random_int, //15
     bhv_cmd_add_random_float, //16
     bhv_cmd_add_int_rand_rshift, //17
-    bhv_cmd_nop_1, //18
-    bhv_cmd_nop_2, //19
-    bhv_cmd_nop_3, //1A
+    bhv_cmd_add_int, //18
+    bhv_cmd_set_int, //19
+    bhv_cmd_or_int, //1A
     bhv_cmd_set_model, //1B
     bhv_cmd_spawn_child, //1C
     bhv_cmd_deactivate, //1D
@@ -913,9 +924,7 @@ static BhvCommandProc BehaviorCmdTable[] = {
 
 // Execute the behavior script of the current object, process the object flags, and other miscellaneous code for updating objects.
 void cur_obj_update(void) {
-    UNUSED u8 filler[4];
-
-    s16 objFlags = gCurrentObject->oFlags;
+    u32 objFlags = gCurrentObject->oFlags;
     f32 distanceFromMario;
     BhvCommandProc bhvCmdProc;
     s32 bhvProcResult;
@@ -961,7 +970,7 @@ void cur_obj_update(void) {
     }
 
     // Execute various code based on object flags.
-    objFlags = (s16) gCurrentObject->oFlags;
+    objFlags = gCurrentObject->oFlags;
 
     if (objFlags & OBJ_FLAG_SET_FACE_ANGLE_TO_MOVE_ANGLE) {
         obj_set_face_angle_to_move_angle(gCurrentObject);

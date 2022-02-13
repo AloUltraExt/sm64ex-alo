@@ -7,14 +7,14 @@
 #include "config.h"
 #include "config/config_world.h"
 
-#ifndef EXTENDED_BOUNDS
+#if !EXTENDED_BOUNDS
 #define SURFACE_POOL_SIZE       2300
 #define SURFACE_NODE_POOL_SIZE  7000
 
 #define NUM_CELLS   16
 #endif
 
-#ifndef CUSTOM_SURFACE_VALUES
+#if !CUSTOM_SURFACE_VALUES
 #define NORMAL_FLOOR_THRESHOLD 0.01f
 #define NORMAL_CEIL_THRESHOLD -NORMAL_FLOOR_THRESHOLD
 #endif

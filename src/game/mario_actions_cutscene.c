@@ -1604,7 +1604,7 @@ s32 act_squished(struct MarioState *m) {
             break;
     }
 
-#ifdef BETTER_CEILING_HANDLING
+#if BETTER_CEILING_HANDLING
     m->actionArg++;
     if ((m->floor != NULL) && (m->ceil != NULL) && ((m->actionArg > 8) || (m->floor->type == SURFACE_BURNING) || (m->ceil->type == SURFACE_BURNING))) {
 
@@ -1619,7 +1619,7 @@ s32 act_squished(struct MarioState *m) {
         underSteepSurf = TRUE;
     }
     // steep ceiling
-#ifdef BETTER_CEILING_HANDLING
+#if BETTER_CEILING_HANDLING
     if (-0.90630779f < m->ceil->normal.y)
 #else
     if (m->ceil != NULL && -0.5f < m->ceil->normal.y)
@@ -1642,7 +1642,7 @@ s32 act_squished(struct MarioState *m) {
             return FALSE;
         }
     }
-#ifdef BETTER_CEILING_HANDLING
+#if BETTER_CEILING_HANDLING
     }
 #endif
 

@@ -537,7 +537,7 @@ u32 mario_get_terrain_sound_addend(struct MarioState *m) {
 struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 radius) {
     struct WallCollisionData collisionData;
     struct Surface *wall = NULL;
-#ifdef BETTER_RESOLVE_WALL_COLLISION
+#if BETTER_RESOLVE_WALL_COLLISION
     u8 i = 0;
     s16 angleDiffStore = 0xFFFF;
     s16 angleDiff = 0;
@@ -553,7 +553,7 @@ struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 ra
         wall = collisionData.walls[collisionData.numWalls - 1];
     }
 
-#ifdef BETTER_RESOLVE_WALL_COLLISION
+#if BETTER_RESOLVE_WALL_COLLISION
     for (i = 0; i < collisionData.numWalls; i++) {
         angleDiff = abs_angle_diff(gCurrentObject->oMoveAngleYaw - 0x8000,
                 atan2s(collisionData.walls[i]->normal.z, collisionData.walls[i]->normal.x));
@@ -568,7 +568,7 @@ struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 ra
     pos[1] = collisionData.y;
     pos[2] = collisionData.z;
 
-#ifdef BETTER_RESOLVE_WALL_COLLISION
+#if BETTER_RESOLVE_WALL_COLLISION
     // Returns the wall the actor is closest to facing
 #else
     // This only returns the most recent wall and can also return NULL
@@ -577,7 +577,7 @@ struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 ra
     return wall;
 }
 
-#ifdef BETTER_RESOLVE_WALL_COLLISION
+#if BETTER_RESOLVE_WALL_COLLISION
 void resolve_and_return_wall_collisions_data(Vec3f pos, f32 offset, f32 radius, struct WallCollisionData *collisionData) {
     collisionData->x = pos[0];
     collisionData->y = pos[1];
@@ -598,7 +598,7 @@ void resolve_and_return_wall_collisions_data(Vec3f pos, f32 offset, f32 radius, 
  * (with 80 vertical buffer, 3 with exposed ceilings fix).
  */
 f32 vec3f_find_ceil(Vec3f pos, f32 height, struct Surface **ceil) {
-#ifdef EXPOSED_CEILINGS_FIX
+#if EXPOSED_CEILINGS_FIX
     return find_ceil(pos[0], MAX(height, pos[1]) + 3.0f, pos[2], ceil);
 #else
     return find_ceil(pos[0], height + 80.0f, pos[2], ceil);

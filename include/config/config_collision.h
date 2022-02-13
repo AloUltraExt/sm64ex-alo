@@ -3,7 +3,7 @@
 // Collision Settings
 
 // Sets extended bounds for larger levels.
-//#define EXTENDED_BOUNDS
+#define EXTENDED_BOUNDS FALSE
 
 // Sets custom and recommended vanilla surfaces.
 #define CUSTOM_SURFACE_VALUES (0 || EXTENDED_BOUNDS)
@@ -34,3 +34,9 @@
 
 // Adds water collision surfaces
 #define WATER_SURFACES (0 || EXTENDED_BOUNDS)
+
+// Automatically calculates the optimal collision distance for an object based on its vertices.
+#define AUTO_COLLISION_DISTANCE (0 || QOL_FEATURES)
+
+// Allows objects to use camera distance to determine whether to load collision if the camera is closer than Mario.
+#define LOAD_OBJECT_COLLISION_NEAR_CAMERA (0 || QOL_FEATURES)

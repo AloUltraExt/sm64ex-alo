@@ -44,7 +44,11 @@
 #define OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO           (1 << 13) // 0x00002000
 #define OBJ_FLAG_PERSISTENT_RESPAWN               (1 << 14) // 0x00004000
 #define OBJ_FLAG_8000                             (1 << 15) // 0x00008000
-#define OBJ_FLAG_DONT_CALC_COLL_DIST              (1 << 16) // 0x00010000 - Used in QOL_FEATURES
+#if AUTO_COLLISION_DISTANCE
+#define OBJ_FLAG_DONT_CALC_COLL_DIST              (1 << 16) // 0x00010000
+#else
+#define OBJ_FLAG_DONT_CALC_COLL_DIST              (0 << 0)
+#endif
 #define OBJ_FLAG_30                               (1 << 30) // 0x40000000
 
 /* oHeldState */

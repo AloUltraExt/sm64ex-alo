@@ -1832,7 +1832,7 @@ void cur_obj_move_standard(s16 steepSlopeAngleDegrees) {
 }
 
 static s32 cur_obj_within_12k_bounds(void) {
-#ifndef EXTENDED_BOUNDS // always return true if EXTENDED_BOUNDS is set
+#if !EXTENDED_BOUNDS // always return true if EXTENDED_BOUNDS is set
     if (o->oPosX < -12000.0f || 12000.0f < o->oPosX) {
         return FALSE;
     }

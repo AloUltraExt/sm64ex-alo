@@ -157,14 +157,14 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
         listIndex = SPATIAL_PARTITION_WALLS;
         sortDir = 0; // insertion order
 
-#ifndef BETTER_FIND_WALL_COLLISION
+#if !BETTER_FIND_WALL_COLLISION
         if (surface->normal.x < -0.707 || surface->normal.x > 0.707) {
             surface->flags |= SURFACE_FLAG_X_PROJECTION;
         }
 #endif
     }
 
-#ifdef COLLISION_IMPROVEMENTS
+#if COLLISION_IMPROVEMENTS
     surfacePriority = surface->upperY * sortDir;
 #else
     //! (Surface Cucking) Surfaces are sorted by the height of their first
@@ -186,7 +186,7 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
 
     // Loop until we find the appropriate place for the surface in the list.
     while (list->next != NULL) {
-#ifdef COLLISION_IMPROVEMENTS
+#if COLLISION_IMPROVEMENTS
         priority = list->next->surface->upperY * sortDir;
 #else
         priority = list->next->surface->vertex1[1] * sortDir;
@@ -250,7 +250,7 @@ static s32 lower_cell_index(s32 coord) {
     // [0, 16)
     index = coord / CELL_SIZE;
 
-#ifndef CELL_BUFFER_FIX
+#if !CELL_BUFFER_FIX
     // Include extra cell if close to boundary
     //! Some wall checks are larger than the buffer, meaning wall checks can
     //  miss walls that are near a cell border.
@@ -284,7 +284,7 @@ static s32 upper_cell_index(s32 coord) {
     // [0, 16)
     index = coord / CELL_SIZE;
 
-#ifndef CELL_BUFFER_FIX
+#if !CELL_BUFFER_FIX
     // Include extra cell if close to boundary
     //! Some wall checks are larger than the buffer, meaning wall checks can
     //  miss walls that are near a cell border.
@@ -819,27 +819,45 @@ void load_object_surfaces(TerrainData **data, TerrainData *vertexData) {
     }
 }
 
-#if QOL_FEATURE_AUTO_COLLISION_DISTANCE
+#if AUTO_COLLISION_DISTANCE
 // From Kaze
-static void get_optimal_coll_dist(struct Object *o) {
-    register f32 thisVertDist, maxDist = 0.0f;
-    Vec3f v;
-    TerrainData *collisionData = gCurrentObject->collisionData;
-    o->oFlags |= OBJ_FLAG_DONT_CALC_COLL_DIST;
+static f32 get_optimal_collision_distance(struct Object *obj) {
+    f32 thisVertDist, maxDist = 0.0f;
+    Vec3f thisVertPos, scale;
+    TerrainData *collisionData = obj->collisionData;
     collisionData++;
-    register u32 vertsLeft = *(collisionData);
-    collisionData++;
-    // vertices = *data;
+    u32 vertsLeft = *(collisionData)++;
+
+    scale[0] = obj->header.gfx.scale[0];
+    scale[1] = obj->header.gfx.scale[1];
+    scale[2] = obj->header.gfx.scale[2];
+
+    // Loop through the collision vertices to find the vertex
+    // with the furthest distance from the model's origin.
     while (vertsLeft) {
-        v[0] = *(collisionData + 0) * o->header.gfx.scale[0];
-        v[1] = *(collisionData + 1) * o->header.gfx.scale[1];
-        v[2] = *(collisionData + 2) * o->header.gfx.scale[2];
-        thisVertDist = ((v[0] * v[0]) + (v[1] * v[1]) + (v[2] * v[2]));
-        if (thisVertDist > maxDist) maxDist = thisVertDist;
+        // Apply scale to the position
+        thisVertPos[0] = *(collisionData + 0) * scale[0];
+        thisVertPos[1] = *(collisionData + 1) * scale[1];
+        thisVertPos[2] = *(collisionData + 2) * scale[2];
+
+        // Get the distance to the model's origin.
+        thisVertDist = ((thisVertPos[0] * thisVertPos[0]) + 
+                        (thisVertPos[1] * thisVertPos[1]) + 
+                        (thisVertPos[2] * thisVertPos[2]));
+
+        // Check if it's further than the previous furthest vertex.
+        if (thisVertDist > maxDist) {
+            maxDist = thisVertDist;
+        }
+        
+        // Move to the next vertex.
+        //! No bounds check on vertex data
         collisionData += 3;
         vertsLeft--;
     }
-    o->oCollisionDistance = (sqrtf(maxDist) + 100.0f);
+    
+    // Only run sqrtf once.
+    return (sqrtf(maxDist) + 100.0f);
 }
 #endif
 
@@ -847,12 +865,11 @@ static void get_optimal_coll_dist(struct Object *o) {
  * Transform an object's vertices, reload them, and render the object.
  */
 void load_object_collision_model(void) {
-    UNUSED s32 unused;
     TerrainData vertexData[600];
 
     TerrainData *collisionData = gCurrentObject->collisionData;
     f32 marioDist = gCurrentObject->oDistanceToMario;
-    f32 tangibleDist = gCurrentObject->oCollisionDistance;
+
 
     // On an object's first frame, the distance is set to 19000.0f.
     // If the distance hasn't been updated, update it now.
@@ -860,20 +877,38 @@ void load_object_collision_model(void) {
         marioDist = dist_between_objects(gCurrentObject, gMarioObject);
     }
 
-#if QOL_FEATURE_AUTO_COLLISION_DISTANCE
-    if (!(gCurrentObject->oFlags & OBJ_FLAG_DONT_CALC_COLL_DIST)) {
-        get_optimal_coll_dist(gCurrentObject);
-    }
+#if LOAD_OBJECT_COLLISION_NEAR_CAMERA
+    f32 camDist = absf(gCurrentObject->header.gfx.cameraToObject[2]);
+    marioDist = MIN(marioDist, camDist);
 #endif
 
+#if AUTO_COLLISION_DISTANCE
+    f32 colDist;
+    if (collisionData == NULL) {
+        // No collision data, so no collision distance.
+        colDist = 0.0f;
+    } else if (!(gCurrentObject->oFlags & OBJ_FLAG_DONT_CALC_COLL_DIST)) {
+        gCurrentObject->oFlags |= OBJ_FLAG_DONT_CALC_COLL_DIST;
+        // Calculate a new collision distance based on the collision data.
+        colDist = get_optimal_collision_distance(gCurrentObject);
+    } else {
+        // Use existing collision distance.
+        colDist = gCurrentObject->oCollisionDistance;
+    }
+#else
+    f32 colDist = gCurrentObject->oCollisionDistance;
+#endif
+
+    f32 drawDist = gCurrentObject->oDrawingDistance;
+
     // If the object collision is supposed to be loaded more than the
-    // drawing distance (changed), extend the drawing range.
-    if (gCurrentObject->oCollisionDistance > gCurrentObject->oDrawingDistance) {
-        gCurrentObject->oDrawingDistance = gCurrentObject->oCollisionDistance;
+    // drawing distance, extend the drawing range.
+    if (colDist > drawDist) {
+        drawDist = colDist;
     }
 
     // Update if no Time Stop, in range, and in the current room.
-    if (!(gTimeStopState & TIME_STOP_ACTIVE) && marioDist < tangibleDist
+    if (!(gTimeStopState & TIME_STOP_ACTIVE) && marioDist < colDist
         && !(gCurrentObject->activeFlags & ACTIVE_FLAG_IN_DIFFERENT_ROOM)) {
         collisionData++;
         transform_object_vertices(&collisionData, vertexData);

@@ -59,9 +59,6 @@
 /// Makes Mario grab hangable ceilings in any air actions
 /// Credits: (AloXado320)
 #define QOL_FEATURE_HANG_AIR_ANYWHERE (0 || QOL_FEATURES)
-/// Automatically calculate the optimal collision distance for an object based on its vertices.
-/// Credits: (Kaze)
-#define QOL_FEATURE_AUTO_COLLISION_DISTANCE (0 || QOL_FEATURES)
 /// Changes blue coin switch to respawn instead of disappearing
 /// Credits: (Arceveti)
 #define QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH (0 || QOL_FEATURES)

@@ -2,7 +2,7 @@
 
 #include "config/config_collision.h"
 
-#ifdef CUSTOM_SURFACE_VALUES
+#if CUSTOM_SURFACE_VALUES
 
 /*****************************
  * CUSTOM SURF VALUES CONFIG *
@@ -19,7 +19,7 @@
 
 #endif
 
-#ifdef EXTENDED_BOUNDS
+#if EXTENDED_BOUNDS
 
 /**************************
  * EXTENDED BOUNDS CONFIG *
