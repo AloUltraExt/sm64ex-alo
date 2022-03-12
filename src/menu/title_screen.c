@@ -26,7 +26,7 @@
 #define STUB_LEVEL(textname, _1, _2, _3, _4, _5, _6, _7, _8) textname,
 #define DEFINE_LEVEL(textname, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10) textname,
 
-static char sLevelSelectStageNames[64][16] = {
+char gLevelSelectStageNames[64][16] = {
     #include "levels/level_defines.h"
 };
 #undef STUB_LEVEL
@@ -128,7 +128,7 @@ s16 intro_level_select(void) {
     print_text_centered(160, 80, "SELECT STAGE");
     print_text_centered(160, 30, "PRESS START BUTTON");
     print_text_fmt_int(40, 60, "%2d", gCurrLevelNum);
-    print_text(80, 60, sLevelSelectStageNames[gCurrLevelNum - 1]); // print stage name
+    print_text(80, 60, gLevelSelectStageNames[gCurrLevelNum - 1]); // print stage name
 
 #define QUIT_LEVEL_SELECT_COMBO (Z_TRIG | START_BUTTON | L_CBUTTONS | R_CBUTTONS)
 
@@ -245,10 +245,18 @@ s32 lvl_intro_update(s16 arg, UNUSED s32 unusedArg) {
             break;
 #ifdef GODDARD_MFACE
         case LVL_INTRO_REGULAR:
-            retVar = intro_regular();
+            if (gGlobalGameSkips & GAME_SKIP_GODDARD) {
+                retVar = (100 + gDebugLevelSelect);
+            } else {
+                retVar = intro_regular();
+            }    
             break;
         case LVL_INTRO_GAME_OVER:
-            retVar = intro_game_over();
+            if (gGlobalGameSkips & GAME_SKIP_GODDARD) {
+                retVar = (100 + gDebugLevelSelect);
+            } else {
+                retVar = intro_game_over();
+            }
             break;
 #else
         case LVL_INTRO_REGULAR:

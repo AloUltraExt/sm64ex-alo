@@ -28,6 +28,10 @@
 #include "pc/configfile.h"
 #endif
 
+#ifdef COMMAND_LINE_OPTIONS
+#include "pc/cliopts.h"
+#endif
+
 #include "eu_translation.h"
 #ifdef VERSION_EU
 #undef LANGUAGE_FUNCTION
@@ -2983,10 +2987,6 @@ void file_select_fit_screen(void) {
 }
 #endif
 
-#ifdef SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
-extern s16 gSkipGameIntro;
-#endif
-
 /**
  * Prints file select strings depending on the menu selected.
  * Also checks if all saves exists and defines text and main menu timers.
@@ -3053,7 +3053,7 @@ static void print_file_select_strings(void) {
     // Adds key combo to skip peach intro cutscene, useful on Non-PC targets
     if (gPlayer1Controller->buttonDown == (Z_TRIG | START_BUTTON | L_CBUTTONS | R_CBUTTONS)) {
         play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
-        gSkipGameIntro = TRUE;
+        gGlobalGameSkips |= GAME_SKIP_INTRO_SCENE;
     }
 #endif
 }
@@ -3135,13 +3135,7 @@ s32 lvl_init_menu_values_and_cursor_pos(UNUSED s32 arg, UNUSED s32 unused) {
     }
 #endif
 
-#ifdef SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
-    gSkipGameIntro = FALSE;
-#endif
-    //! no return value
-#ifdef AVOID_UB
     return 0;
-#endif
 }
 
 /**

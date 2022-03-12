@@ -752,38 +752,44 @@ static void level_cmd_38(void) {
 static void level_cmd_get_or_set_var(void) {
     if (CMD_GET(u8, 2) == 0) {
         switch (CMD_GET(u8, 3)) {
-            case 0:
+            case VAR_CURR_SAVE_FILE_NUM:
                 gCurrSaveFileNum = sRegister;
                 break;
-            case 1:
+            case VAR_CURR_COURSE_NUM:
                 gCurrCourseNum = sRegister;
                 break;
-            case 2:
+            case VAR_CURR_ACT_NUM:
                 gCurrActNum = sRegister;
                 break;
-            case 3:
+            case VAR_CURR_LEVEL_NUM:
                 gCurrLevelNum = sRegister;
                 break;
-            case 4:
+            case VAR_CURR_AREA_INDEX:
                 gCurrAreaIndex = sRegister;
+                break;
+            case VAR_CURR_GAME_SKIPS:
+                gGlobalGameSkips = sRegister;
                 break;
         }
     } else {
         switch (CMD_GET(u8, 3)) {
-            case 0:
+            case VAR_CURR_SAVE_FILE_NUM:
                 sRegister = gCurrSaveFileNum;
                 break;
-            case 1:
+            case VAR_CURR_COURSE_NUM:
                 sRegister = gCurrCourseNum;
                 break;
-            case 2:
+            case VAR_CURR_ACT_NUM:
                 sRegister = gCurrActNum;
                 break;
-            case 3:
+            case VAR_CURR_LEVEL_NUM:
                 sRegister = gCurrLevelNum;
                 break;
-            case 4:
+            case VAR_CURR_AREA_INDEX:
                 sRegister = gCurrAreaIndex;
+                break;
+            case VAR_CURR_GAME_SKIPS:
+                sRegister = gGlobalGameSkips;
                 break;
         }
     }

@@ -133,6 +133,14 @@ enum MenuOption {
 #endif
 };
 
+#define GAME_SKIP_TITLE_SCREEN  (1 << 0)
+#define GAME_SKIP_GODDARD       (1 << 1)
+#define GAME_SKIP_FILE_SELECT   (1 << 2)
+#define GAME_SKIP_INTRO_SCENE   (1 << 3)
+#define GAME_SKIP_STAR_SELECT   (1 << 4)
+
+#define GAME_SKIP_GENERAL       (GAME_SKIP_TITLE_SCREEN | GAME_SKIP_GODDARD | GAME_SKIP_FILE_SELECT | GAME_SKIP_INTRO_SCENE)
+
 extern struct GraphNode **gLoadedGraphNodes;
 extern struct SpawnInfo gPlayerSpawnInfos[];
 extern struct GraphNode *D_8033A160[];
@@ -144,6 +152,7 @@ extern s16 gCurrAreaIndex;
 extern s16 gSavedCourseNum;
 extern s16 gMenuOptSelectIndex;
 extern s16 gSaveOptSelectIndex;
+extern s16 gGlobalGameSkips;
 
 extern struct SpawnInfo *gMarioSpawnInfo;
 

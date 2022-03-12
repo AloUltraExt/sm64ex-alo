@@ -5,6 +5,7 @@
 
 #include "macros.h"
 
+extern char gLevelSelectStageNames[64][16];
 enum LevelScriptIntroArgs {
     LVL_INTRO_PLAY_ITS_A_ME_MARIO,
     LVL_INTRO_REGULAR,

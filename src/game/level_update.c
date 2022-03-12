@@ -1172,12 +1172,10 @@ static s32 play_mode_unused(void) {
     return 0;
 }
 
-s16 gSkipGameIntro = FALSE;
-
 // ex-alo change
 // Checks for peach intro skip
 u8 should_intro_be_skipped(void) {
-    return save_file_exists(gCurrSaveFileNum - 1) || gSkipGameIntro == TRUE
+    return save_file_exists(gCurrSaveFileNum - 1) || (gGlobalGameSkips & GAME_SKIP_INTRO_SCENE)
 #ifndef TARGET_N64
     || configSkipIntro == TRUE
 #endif
@@ -1233,7 +1231,7 @@ s32 update_level(void) {
 }
 
 s32 init_level(void) {
-    s32 val4 = FALSE;
+    s32 fadeFromColor = FALSE;
 
     set_play_mode(PLAY_MODE_NORMAL);
 
@@ -1248,6 +1246,17 @@ s32 init_level(void) {
     sDelayedWarpOp = WARP_OP_NONE;
     sTransitionTimer = 0;
     D_80339EE0 = 0;
+
+#ifdef COMMAND_LINE_OPTIONS
+    if (gCLIOpts.LevelNumOverride) {
+        gGlobalGameSkips &= ~GAME_SKIP_GENERAL;
+        gCLIOpts.LevelNumOverride = 0;
+        if (gCLIOpts.LevelActOverride) {
+            gGlobalGameSkips &= ~GAME_SKIP_STAR_SELECT;
+            gCLIOpts.LevelActOverride = 0;
+        }
+    }
+#endif
 
     if (gCurrCreditsEntry == NULL) {
         gHudDisplay.flags = HUD_DISPLAY_DEFAULT;
@@ -1282,14 +1291,14 @@ s32 init_level(void) {
                         set_mario_action(gMarioState, ACT_IDLE, 0);
                     } else {
                         set_mario_action(gMarioState, ACT_INTRO_CUTSCENE, 0);
-                        val4 = TRUE;
+                        fadeFromColor = TRUE;
                     }
                 }
             }
         }
 
 
-        if (val4) {
+        if (fadeFromColor) {
             play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 0x5A, 0xFF, 0xFF, 0xFF);
         } else {
             play_transition(WARP_TRANSITION_FADE_FROM_STAR, 0x10, 0xFF, 0xFF, 0xFF);
@@ -1364,6 +1373,15 @@ s32 lvl_init_from_save_file(UNUSED s16 arg0, s32 levelNum) {
     save_file_move_cap_to_default_location();
     select_mario_cam_mode();
     set_yoshi_as_not_dead();
+
+#ifdef COMMAND_LINE_OPTIONS
+    if (gCLIOpts.LevelNumOverride) {
+        levelNum = gCLIOpts.LevelNumOverride;
+        if (gCLIOpts.LevelActOverride) {
+            gCurrActNum = gCLIOpts.LevelActOverride;
+        }
+    }
+#endif
 
     return levelNum;
 }

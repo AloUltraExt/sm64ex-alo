@@ -9,6 +9,8 @@ struct PCCLIOptions  {
     unsigned int SkipIntro;
     unsigned int FullScreen;
     unsigned int LevelSelect;
+    unsigned int LevelNumOverride;
+    unsigned int LevelActOverride;
     unsigned int Profiler;
     unsigned int Debug;
     unsigned int PoolSize;

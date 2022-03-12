@@ -17,11 +17,14 @@
 #define OP_SET   0
 #define OP_GET   1
 
-#define VAR_CURR_SAVE_FILE_NUM  0
-#define VAR_CURR_COURSE_NUM     1
-#define VAR_CURR_ACT_NUM        2
-#define VAR_CURR_LEVEL_NUM      3
-#define VAR_CURR_AREA_INDEX     4
+enum LevelCmdGetOrSetValIds {
+    VAR_CURR_SAVE_FILE_NUM,
+    VAR_CURR_COURSE_NUM,
+    VAR_CURR_ACT_NUM,
+    VAR_CURR_LEVEL_NUM,
+    VAR_CURR_AREA_INDEX,
+    VAR_CURR_GAME_SKIPS,
+};
 
 #define WARP_CHECKPOINT 0x80
 #define WARP_NO_CHECKPOINT 0x00
@@ -36,8 +39,7 @@
 
 // List of commands as enum for ifdefs
 // Vanilla ones are left unnamed, custom ones are named
-enum LevelCommandsIDList
-{
+enum LevelCommandsIDList {
     LVL_SCRIPT_CMD_00,
     LVL_SCRIPT_CMD_01,
     LVL_SCRIPT_CMD_02,
