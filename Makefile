@@ -27,9 +27,9 @@ DEFINES :=
 COMPILER_N64 ?= gcc
 $(eval $(call validate-option,COMPILER_N64,ido gcc))
 
-# Build debug version
-DEBUG ?= 0
-# Build for original N64 (no pc code)
+# Manual target defines
+
+# Build for original N64
 TARGET_N64 = 0
 # Build and optimize for Raspberry Pi(s)
 TARGET_RPI ?= 0
@@ -41,61 +41,32 @@ TARGET_WII_U ?= 0
 TARGET_N3DS ?= 0
 # Build for Nintendo Switch
 TARGET_SWITCH ?= 0
+
+# Automatic target defines
+
+# Build for Windows
+WINDOWS_BUILD ?= 0
+# Build for Android
+TARGET_ANDROID ?= 0
 # Makeflag to enable OSX fixes
 OSX_BUILD ?= 0
 # Specify the target you are building for, TARGET_BITS=0 means native
 TARGET_ARCH ?= native
 TARGET_BITS ?= 0
 
-# Enable extended options menu by default
-EXT_OPTIONS_MENU ?= 1
-# Enable debug options menu (Enabled if DEBUG=1)
-EXT_DEBUG_MENU ?= 0
-# Enable better camera (Puppycam)
-BETTERCAMERA ?= 1
-# Enable cheats
-CHEATS_ACTIONS ?= 1
-# Disable no drawing distance by default
-NODRAWINGDISTANCE ?= 0
-# Disable text-based save-files by default
-TEXTSAVES ?= 0
-# Load resources from external files
-EXTERNAL_DATA ?= 0
-# Enable Discord Rich Presence
-DISCORDRPC ?= 0
-# Enable rumble functions (Originally in Shindou)
-RUMBLE_FEEDBACK ?= 0
-# Enable Goddard (Mario Face)
-GODDARD_MFACE ?= 1
-# Enable Command Line Options
-COMMAND_LINE_OPTIONS ?= 1
-# Kaze MOP Objects Port, disabled by default
-PORT_MOP_OBJS ?= 0
-# Enable 60 fps interpolation (PC Port only)
-HIGH_FPS_PC ?= 0
-# Enable PC Port defines
+# PC Port defines
 PC_PORT_DEFINES ?= 0
+# PC Port defines from a ported console device
+TARGET_PORT_CONSOLE ?= 0
 
-# Quality of life features
-QOL_FEATURES ?= 1
-# Quality of life fixes
-QOL_FIXES ?= 1
-
-# Various workarounds for weird toolchains
+# Various workarounds for weird and/or old toolchains
 NO_BZERO_BCOPY ?= 0
 NO_LDIV ?= 0
-
-# Enable -no-pie linker option (PC Only)
-# Doesn't apply to TARGET_PORT_CONSOLE because we assume
-# it doesn't use an old version to compile
 NO_PIE ?= 1
-
-# Check if is compiling on a console (N64 doesn't count)
-TARGET_PORT_CONSOLE ?= 0
 
 # Backend selection
 
-# Renderers: GL, GL_LEGACY, D3D11, D3D12, WHB (forced if the target is Wii U), C3D (forced if the target is 3DS)
+# Renders: GL, GL_LEGACY, D3D11, D3D12, WHB (forced if the target is Wii U), C3D (forced if the target is 3DS)
 RENDER_API ?= GL
 # Window managers: SDL1, SDL2, DXGI (forced if D3D11 or D3D12 in RENDER_API), WHB (forced if the target is Wii U), 3DS (forced if the target is 3DS)
 WINDOW_API ?= SDL2
@@ -104,6 +75,16 @@ AUDIO_API ?= SDL2
 # Controller backends (can have multiple, space separated): SDL1, SDL2
 # WII_U (forced if the target is Wii U), 3DS (forced if the target is 3DS), SWITCH (forced if the target is SWITCH)
 CONTROLLER_API ?= SDL2
+
+# Automatic settings for target devices
+
+ifeq ($(TARGET_N64),0)
+  GRUCODE := f3dex2e
+  PC_PORT_DEFINES := 1
+else
+  GRUCODE := f3dzex
+  NO_LDIV := 1
+endif
 
 ifeq ($(TARGET_WII_U),1)
   RENDER_API := WHB
@@ -132,8 +113,19 @@ ifeq ($(TARGET_SWITCH),1)
   TARGET_PORT_CONSOLE := 1
 endif
 
-# Misc settings for EXTERNAL_DATA
+ifeq ($(TARGET_ANDROID),1)
+  RENDER_API := GL
+  WINDOW_API := SDL2
+  AUDIO_API := SDL2
+  CONTROLLER_API := SDL2
+  
+  TOUCH_CONTROLS := 1
+endif
 
+# Custom Defines
+include defines.mk
+
+# Misc settings for EXTERNAL_DATA
 ifeq ($(TARGET_PORT_CONSOLE),1)
   BASEDIR ?= sm64ex_res
 else
@@ -142,21 +134,7 @@ endif
 
 BASEPACK ?= base.zip
 
-# Automatic settings for PC port(s)
-
-WINDOWS_BUILD ?= 0
-TARGET_ANDROID ?= 0
-
-ifeq ($(TARGET_N64),0)
-  GRUCODE := f3dex2e
-  PC_PORT_DEFINES := 1
-else
-  GRUCODE := f3dzex
-  NO_LDIV := 1
-endif
-
 # Attempt to detect OS
-
 ifeq ($(OS),Windows_NT)
   HOST_OS ?= Windows
 else
@@ -183,16 +161,6 @@ ifeq ($(TARGET_WEB),0)
 endif
 
 # MXE overrides
-
-ifeq ($(TARGET_ANDROID),1)
-  RENDER_API := GL
-  WINDOW_API := SDL2
-  AUDIO_API := SDL2
-  CONTROLLER_API := SDL2
-  
-  TOUCH_CONTROLS := 1
-endif
-
 ifeq ($(WINDOWS_BUILD),1)
   ifeq ($(CROSS),i686-w64-mingw32.static-)
     TARGET_ARCH = i386pe
@@ -340,9 +308,20 @@ else ifeq ($(TARGET_SWITCH),1)
   DEFINES += TARGET_SWITCH=1 USE_GLES=1
 endif
 
-# IMPORTANT DEFINES TO ENSURE CORRECT FILE COMPILING
-# AND AVOIDS UNDEFINED BEHAVIOR (PC Port and N64)
+# Important defines
+
+# Mandatory defines to ensture correct compilation
 DEFINES += NON_MATCHING=1 AVOID_UB=1 _LANGUAGE_C=1
+
+# Check for no bzero/bcopy workaround option
+ifeq ($(NO_BZERO_BCOPY),1)
+  DEFINES += NO_BZERO_BCOPY=1
+endif
+
+# Use internal ldiv()/lldiv()
+ifeq ($(NO_LDIV),1)
+  DEFINES += NO_LDIV=1
+endif
 
 # Check backends
 
@@ -671,138 +650,6 @@ ifeq ($(NON_MATCHING),0)
 GLOBAL_ASM_C_FILES != grep -rl 'GLOBAL_ASM(' $(wildcard src/**/*.c)
 GLOBAL_ASM_O_FILES = $(foreach file,$(GLOBAL_ASM_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
 GLOBAL_ASM_DEP = $(BUILD_DIR)/src/audio/non_matching_dep
-endif
-
-###################### Custom Defines ########################
-CUSTOM_C_DEFINES :=
-
-ifeq ($(TARGET_N64),0)
-
-# Check for PC Port Defines
-ifeq ($(PC_PORT_DEFINES),1)
-  CUSTOM_C_DEFINES += -DNO_SEGMENTED_MEMORY -DWIDESCREEN -DUSE_SYSTEM_MALLOC
-endif
-
-# Use Console exclusive defines
-ifeq ($(TARGET_PORT_CONSOLE),1)
-  CUSTOM_C_DEFINES += -DTARGET_PORT_CONSOLE
-endif
-
-ifeq ($(HIGH_FPS_PC),1)
-  CUSTOM_C_DEFINES += -DHIGH_FPS_PC
-endif
-
-# Check for text save format
-ifeq ($(TEXTSAVES),1)
-  CUSTOM_C_DEFINES += -DTEXTSAVES
-endif
-
-# Check for external data
-ifeq ($(EXTERNAL_DATA),1)
-  CUSTOM_C_DEFINES += -DEXTERNAL_DATA
-endif
-
-# Use PC-only exclusive defines
-ifeq ($(TARGET_PORT_CONSOLE),0)
-
-  ifeq ($(WINDOW_API),SDL2)
-    # Check for SDL2 touch controls
-    ifeq ($(TOUCH_CONTROLS),1)
-      CUSTOM_C_DEFINES += -DTOUCH_CONTROLS
-    endif
-  endif
-
-ifeq ($(TARGET_ANDROID),0)
-
-  # Check for Discord Rich Presence option
-  ifeq ($(DISCORDRPC),1)
-    CUSTOM_C_DEFINES += -DDISCORDRPC
-  endif
-  
-  # Check for Mouse Option
-  ifeq ($(EXT_OPTIONS_MENU),1)
-    CUSTOM_C_DEFINES += -DMOUSE_ACTIONS
-  endif
-
-  # Check for Command Line Options
-  ifeq ($(COMMAND_LINE_OPTIONS),1)
-    CUSTOM_C_DEFINES += -DCOMMAND_LINE_OPTIONS
-  endif
-
-endif # !TARGET_ANDROID
-endif # !TARGET_PORT_CONSOLE
-
-endif # !TARGET_N64
-
-# Check for Debug option
-ifeq ($(DEBUG),1)
-  CUSTOM_C_DEFINES += -DDEBUG
-  EXT_DEBUG_MENU := 1
-endif
-
-# Check for Debug Menu option
-ifeq ($(EXT_DEBUG_MENU),1)
-  CUSTOM_C_DEFINES += -DEXT_DEBUG_MENU
-  EXT_OPTIONS_MENU := 1
-endif
-
-# Check for Puppycam option
-ifeq ($(BETTERCAMERA),1)
-  CUSTOM_C_DEFINES += -DBETTERCAMERA
-  EXT_OPTIONS_MENU := 1
-endif
-
-# Check for Cheats option
-ifeq ($(CHEATS_ACTIONS),1)
-  CUSTOM_C_DEFINES += -DCHEATS_ACTIONS
-  EXT_OPTIONS_MENU := 1
-endif
-
-# Check for extended options menu option
-ifeq ($(EXT_OPTIONS_MENU),1)
-  CUSTOM_C_DEFINES += -DEXT_OPTIONS_MENU
-endif
-
-# Check for Rumble option
-ifeq ($(TARGET_N3DS)$(TARGET_WII_U),00)
-ifeq ($(RUMBLE_FEEDBACK),1)
-  CUSTOM_C_DEFINES += -DRUMBLE_FEEDBACK
-endif
-endif
-
-# Check for no drawing distance option
-ifeq ($(NODRAWINGDISTANCE),1)
-  CUSTOM_C_DEFINES += -DNODRAWINGDISTANCE
-endif
-
-# Check for Goddard option
-ifeq ($(GODDARD_MFACE),1)
-  CUSTOM_C_DEFINES += -DGODDARD_MFACE
-endif
-
-# Check for MOP option
-ifeq ($(PORT_MOP_OBJS),1)
-  CUSTOM_C_DEFINES += -DPORT_MOP_OBJS
-endif
-
-# Check for QoL fixes option
-ifeq ($(QOL_FIXES),1)
-  CUSTOM_C_DEFINES += -DQOL_FIXES
-endif
-
-# Check for QoL features option
-ifeq ($(QOL_FEATURES),1)
-  CUSTOM_C_DEFINES += -DQOL_FEATURES
-endif
-
-# Check for no bzero/bcopy workaround option
-ifeq ($(NO_BZERO_BCOPY),1)
-  CUSTOM_C_DEFINES += -DNO_BZERO_BCOPY
-endif
-
-# Use internal ldiv()/lldiv()
-ifeq ($(NO_LDIV),1)
-  CUSTOM_C_DEFINES += -DNO_LDIV
 endif
 
 ##################### Compiler Options #######################
