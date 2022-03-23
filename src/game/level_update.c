@@ -58,16 +58,6 @@
 #define WARP_TYPE_CHANGE_AREA 2
 #define WARP_TYPE_SAME_AREA 3
 
-#define WARP_NODE_F0 0xF0
-#define WARP_NODE_DEATH 0xF1
-#define WARP_NODE_F2 0xF2
-#define WARP_NODE_WARP_FLOOR 0xF3
-#define WARP_NODE_CREDITS_START 0xF8
-#define WARP_NODE_CREDITS_NEXT 0xF9
-#define WARP_NODE_CREDITS_END 0xFA
-
-#define WARP_NODE_CREDITS_MIN 0xF8
-
 // TODO: Make these ifdefs better
 const char *credits01[] = { "1GAME DIRECTOR", "SHIGERU MIYAMOTO" };
 const char *credits02[] = { "2ASSISTANT DIRECTORS", "YOSHIAKI KOIZUMI", "TAKASHI TEZUKA" };
@@ -756,7 +746,7 @@ s16 level_trigger_warp(struct MarioState *m, s32 warpOp) {
         switch (warpOp) {
             case WARP_OP_DEMO_NEXT:
             case WARP_OP_DEMO_END: sDelayedWarpTimer = 20; // Must be one line to match on -O2
-                sSourceWarpNodeId = WARP_NODE_F0;
+                sSourceWarpNodeId = WARP_NODE_SUCCESS;
                 gSavedCourseNum = COURSE_NONE;
                 val04 = FALSE;
                 play_transition(WARP_TRANSITION_FADE_INTO_STAR, 0x14, 0x00, 0x00, 0x00);
@@ -764,7 +754,7 @@ s16 level_trigger_warp(struct MarioState *m, s32 warpOp) {
 
             case WARP_OP_CREDITS_END:
                 sDelayedWarpTimer = 60;
-                sSourceWarpNodeId = WARP_NODE_F0;
+                sSourceWarpNodeId = WARP_NODE_SUCCESS;
                 val04 = FALSE;
                 gSavedCourseNum = COURSE_NONE;
                 play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 0x3C, 0x00, 0x00, 0x00);
@@ -772,7 +762,7 @@ s16 level_trigger_warp(struct MarioState *m, s32 warpOp) {
 
             case WARP_OP_STAR_EXIT:
                 sDelayedWarpTimer = 32;
-                sSourceWarpNodeId = WARP_NODE_F0;
+                sSourceWarpNodeId = WARP_NODE_SUCCESS;
                 gSavedCourseNum = COURSE_NONE;
                 play_transition(WARP_TRANSITION_FADE_INTO_MARIO, 0x20, 0x00, 0x00, 0x00);
                 break;
@@ -802,7 +792,7 @@ s16 level_trigger_warp(struct MarioState *m, s32 warpOp) {
 
             case WARP_OP_UNKNOWN_01: // enter totwc
                 sDelayedWarpTimer = 30;
-                sSourceWarpNodeId = WARP_NODE_F2;
+                sSourceWarpNodeId = WARP_NODE_TOTWC;
                 play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 0x1E, 0xFF, 0xFF, 0xFF);
 #ifndef VERSION_JP
                 play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);

@@ -56,10 +56,10 @@ const LevelScript level_bowser_3_entry[] = {
     LOAD_MODEL_FROM_GEO(MODEL_LEVEL_GEOMETRY_03,            bowser_3_geo_000380),
 
     AREA(/*index*/ 1, bowser_3_geo_000398),
-        OBJECT(/*model*/ MODEL_NONE, /*pos*/ 0, 1307, 0, /*angle*/ 0, 183, 0, /*behParam*/ 0x000A0000, /*beh*/ bhvSpinAirborneCircleWarp),
-        WARP_NODE(/*id*/ 0x0A, /*destLevel*/ LEVEL_BOWSER_3, /*destArea*/ 0x01, /*destNode*/ 0x0A, /*flags*/ WARP_NO_CHECKPOINT),
+        OBJECT(/*model*/ MODEL_NONE, /*pos*/ 0, 1307, 0, /*angle*/ 0, 183, 0, /*behParam*/ BHV_PARAM_2(WARP_NODE_0A), /*beh*/ bhvSpinAirborneCircleWarp),
+        WARP_NODE(/*id*/ WARP_NODE_0A,    /*destLevel*/ LEVEL_BOWSER_3, /*destArea*/ 0x01, /*destNode*/ WARP_NODE_0A, /*flags*/ WARP_NO_CHECKPOINT),
         JUMP_LINK(script_func_local_1),
-        WARP_NODE(/*id*/ 0xF1, /*destLevel*/ LEVEL_BITS, /*destArea*/ 0x01, /*destNode*/ 0x0C, /*flags*/ WARP_NO_CHECKPOINT),
+        WARP_NODE(/*id*/ WARP_NODE_DEATH, /*destLevel*/ LEVEL_BITS,     /*destArea*/ 0x01, /*destNode*/ WARP_NODE_0C, /*flags*/ WARP_NO_CHECKPOINT),
         TERRAIN(/*terrainData*/ bowser_3_seg7_collision_level),
         SET_BACKGROUND_MUSIC(/*settingsPreset*/ 0x0002, /*seq*/ SEQ_LEVEL_BOSS_KOOPA_FINAL),
         TERRAIN_TYPE(/*terrainType*/ TERRAIN_STONE),

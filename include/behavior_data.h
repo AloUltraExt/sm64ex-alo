@@ -3,6 +3,11 @@
 
 #include "types.h"
 
+#define BHV_PARAM_1(param) ((param & 0xFF) << 24)
+#define BHV_PARAM_2(param) ((param & 0xFF) << 16)
+#define BHV_PARAM_3(param) ((param & 0xFF) << 8)
+#define BHV_PARAM_4(param) ((param & 0xFF) << 0)
+
 extern const BehaviorScript bhvStarDoor[];
 extern const BehaviorScript bhvMrI[];
 extern const BehaviorScript bhvMrIBody[];
