@@ -789,9 +789,9 @@ SECTIONS
 #ifdef VERSION_EU
         BUILD_DIR/libultra.a:osLeoDiskInit.o(.bss*);
 #endif
-      BUILD_DIR/libultra.a:_Printf.o(.bss*);
-      BUILD_DIR/libultra.a:osAiSetNextBuffer.o(.bss*);
-      BUILD_DIR/libultra.a:__osSetHWintrRoutine.o(.bss*);
+        BUILD_DIR/libultra.a:_Printf.o(.bss*);
+        BUILD_DIR/libultra.a:osAiSetNextBuffer.o(.bss*);
+        BUILD_DIR/libultra.a:__osSetHWintrRoutine.o(.bss*);
 #else
         BUILD_DIR/libultra.a:osSetEventMesg.o(.bss*);
         BUILD_DIR/libultra.a:osSpTaskLoadGo.o(.bss*);

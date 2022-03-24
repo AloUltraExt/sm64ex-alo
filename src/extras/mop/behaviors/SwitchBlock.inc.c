@@ -1,5 +1,5 @@
 void bhv_Switchblock_Switch_loop(void){
-	u8 BP2 = o->oBehParams2ndByte;
+	u8 BP2 = o->oBhvParams2ndByte;
 	load_object_collision_model();
 	o->oAnimState = BP2;
 	if ((cur_obj_is_mario_on_platform())&& (gMOPSwitchBlockState!=BP2)){
@@ -11,7 +11,7 @@ void bhv_Switchblock_Switch_loop(void){
 
 
 void bhv_Switchblock_loop(void){
-	u8 BP2 = o->oBehParams2ndByte;
+	u8 BP2 = o->oBhvParams2ndByte;
 	o->oAnimState = BP2+o->oAction;
 	if (gMOPSwitchBlockState==(BP2>>1)){
 		load_object_collision_model();

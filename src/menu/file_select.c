@@ -3085,7 +3085,7 @@ Gfx *geo_file_select_strings_and_menu_cursor(s32 callContext, UNUSED struct Grap
  */
 s32 lvl_init_menu_values_and_cursor_pos(UNUSED s32 arg, UNUSED s32 unused) {
 #ifdef VERSION_EU
-    s8 fileNum;
+    s8 fileIndex;
 #endif
     sSelectedButtonID = MENU_BUTTON_NONE;
     sCurrentMenuLevel = MENU_LAYER_MAIN;
@@ -3125,8 +3125,8 @@ s32 lvl_init_menu_values_and_cursor_pos(UNUSED s32 arg, UNUSED s32 unused) {
 #ifdef VERSION_EU
     sLanguageMode = eu_get_language();
 
-    for (fileNum = 0; fileNum < 4; fileNum++) {
-        if (save_file_exists(fileNum) == TRUE) {
+    for (fileIndex = 0; fileIndex <= 3; fileIndex++) {
+        if (save_file_exists(fileIndex) == TRUE) {
             sOpenLangSettings = FALSE;
             break;
         } else {

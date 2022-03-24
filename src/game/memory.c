@@ -767,7 +767,7 @@ void *alloc_display_list(u32 size) {
 static struct DmaTable *load_dma_table_address(u8 *srcAddr) {
     struct DmaTable *table = dynamic_dma_read(srcAddr, srcAddr + sizeof(u32),
                                                              MEMORY_POOL_LEFT);
-    u32 size = table->count * sizeof(struct OffsetSizePair) + 
+    u32 size = table->count * sizeof(struct OffsetSizePair) +
         sizeof(struct DmaTable) - sizeof(struct OffsetSizePair);
     main_pool_free(table);
 

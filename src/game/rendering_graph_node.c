@@ -303,9 +303,11 @@ void append_dl_and_return(struct GraphNodeDisplayList *node) {
     if (node->displayList != NULL) {
         geo_append_display_list(node->displayList, node->node.flags >> 8);
     }
+
     if (node->node.children != NULL) {
         geo_process_node_and_siblings(node->node.children);
     }
+
     gMatStackIndex--;
 }
 
@@ -1001,6 +1003,7 @@ static void geo_process_shadow(struct GraphNodeShadow *node) {
             gMatStackIndex--;
         }
     }
+
     if (node->node.children != NULL) {
         geo_process_node_and_siblings(node->node.children);
     }

@@ -143,7 +143,7 @@ const BehaviorScript bhvFlipswap_Platform_MOP[] = {
 //bhvYellowCoin gets converted
 const BehaviorScript bhvPSwitch_MOP[] = {
     BEGIN(OBJ_LIST_SURFACE),
-    SET_INT(oBehParams2ndByte, 3),
+    SET_INT(oBhvParams2ndByte, 3),
     GOTO(bhvFloorSwitchHardcodedModel + 1),
 };
 

@@ -519,8 +519,7 @@ static void load_static_surfaces(TerrainData **data, TerrainData *vertexData, Te
  */
 static TerrainData *read_vertex_data(TerrainData **data) {
     s32 numVertices;
-    UNUSED s16 unused1[3];
-    UNUSED s16 unused2[3];
+    UNUSED u8 filler[16];
     TerrainData *vertexData;
 
     numVertices = *(*data);
@@ -634,7 +633,7 @@ u32 get_area_terrain_size(TerrainData *data) {
 void load_area_terrain(s16 index, TerrainData *data, RoomData *surfaceRooms, s16 *macroObjects) {
     TerrainData terrainLoadType;
     TerrainData *vertexData;
-    UNUSED s32 unused;
+    UNUSED u8 filler[4];
 
     // Initialize the data for this.
     gEnvironmentRegions = NULL;
@@ -787,7 +786,7 @@ void load_object_surfaces(TerrainData **data, TerrainData *vertexData) {
 
     // The DDD warp is initially loaded at the origin and moved to the proper
     // position in paintings.c and doesn't update its room, so set it here.
-    if (gCurrentObject->behavior == segmented_to_virtual(bhvDddWarp)) {
+    if (gCurrentObject->behavior == segmented_to_virtual(bhvDDDWarp)) {
         room = 5;
     } else {
         room = 0;

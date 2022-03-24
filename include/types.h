@@ -244,8 +244,7 @@ struct Waypoint {
     Vec3s pos;
 };
 
-struct Surface
-{
+struct Surface {
     /*0x00*/ TerrainData type;
     /*0x02*/ TerrainData force;
     /*0x04*/ s8 flags;

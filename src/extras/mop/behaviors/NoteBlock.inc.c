@@ -8,7 +8,7 @@ void bhv_noteblock_loop(void) {
 		}
 		set_mario_action(gMarioState,ACT_DOUBLE_JUMP,0);
 		CarmackMeme = * (u32 *) &Yspd;
-		CarmackMeme+=(o->oBehParams2ndByte<<16);
+		CarmackMeme+=(o->oBhvParams2ndByte<<16);
 		Yspd = *(f32 *) &CarmackMeme;
 		gMarioStates[0].vel[1]=Yspd;
 		o->oAction=1;

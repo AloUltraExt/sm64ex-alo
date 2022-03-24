@@ -291,19 +291,19 @@ enum LevelCommandsIDList {
     CMD_PTR(unk4), \
     CMD_W(unk8)
 
-#define OBJECT_WITH_ACTS(model, posX, posY, posZ, angleX, angleY, angleZ, behParam, beh, acts) \
+#define OBJECT_WITH_ACTS(model, posX, posY, posZ, angleX, angleY, angleZ, bhvParam, bhv, acts) \
     CMD_BBBB(LVL_SCRIPT_CMD_24, 0x18, acts, model), \
     CMD_HHHHHH(posX, posY, posZ, angleX, angleY, angleZ), \
-    CMD_W(behParam), \
-    CMD_PTR(beh)
+    CMD_W(bhvParam), \
+    CMD_PTR(bhv)
 
-#define OBJECT(model, posX, posY, posZ, angleX, angleY, angleZ, behParam, beh) \
-    OBJECT_WITH_ACTS(model, posX, posY, posZ, angleX, angleY, angleZ, behParam, beh, 0x1F)
+#define OBJECT(model, posX, posY, posZ, angleX, angleY, angleZ, bhvParam, bhv) \
+    OBJECT_WITH_ACTS(model, posX, posY, posZ, angleX, angleY, angleZ, bhvParam, bhv, 0x1F)
 
-#define MARIO(unk3, behArg, beh) \
-    CMD_BBBB(LVL_SCRIPT_CMD_25, 0x0C, 0x00, unk3), \
-    CMD_W(behArg), \
-    CMD_PTR(beh)
+#define MARIO(model, bhvArg, bhv) \
+    CMD_BBBB(LVL_SCRIPT_CMD_25, 0x0C, 0x00, model), \
+    CMD_W(bhvArg), \
+    CMD_PTR(bhv)
 
 #define WARP_NODE(id, destLevel, destArea, destNode, flags) \
     CMD_BBBB(LVL_SCRIPT_CMD_26, 0x08, id, destLevel), \
@@ -345,8 +345,8 @@ enum LevelCommandsIDList {
     CMD_BBH(LVL_SCRIPT_CMD_2F, 0x08, 0x0000), \
     CMD_PTR(surfaceRooms)
 
-#define SHOW_DIALOG(index, dialogId) \
-    CMD_BBBB(LVL_SCRIPT_CMD_30, 0x04, index, dialogId)
+#define SHOW_DIALOG(index, dialogID) \
+    CMD_BBBB(LVL_SCRIPT_CMD_30, 0x04, index, dialogID)
 
 #define TERRAIN_TYPE(terrainType) \
     CMD_BBH(LVL_SCRIPT_CMD_31, 0x04, terrainType)

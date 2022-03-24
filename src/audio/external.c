@@ -167,18 +167,18 @@ u8 sSoundRequestCount = 0;
 #define DYN3(cond1, val1, cond2, val2, cond3, val3, res)                                               \
     (s16)(1 << (15 - cond1) | 1 << (15 - cond2) | 1 << (15 - cond3) | res), val1, val2, val3
 
-s16 sDynBbh[] = {
+s16 sDynBBH[] = {
     SEQ_LEVEL_SPOOKY, DYN1(MARIO_IS_IN_ROOM, BBH_OUTSIDE_ROOM, 6),
     DYN1(MARIO_IS_IN_ROOM, BBH_NEAR_MERRY_GO_ROUND_ROOM, 6), 5,
 };
-s16 sDynDdd[] = {
+s16 sDynDDD[] = {
     SEQ_LEVEL_WATER,
     DYN2(MARIO_X_LT, -800, MARIO_IS_IN_AREA, AREA_DDD_WHIRLPOOL & 0xf, 0),
     DYN3(MARIO_Y_GE, -2000, MARIO_X_LT, 470, MARIO_IS_IN_AREA, AREA_DDD_WHIRLPOOL & 0xf, 0),
     DYN2(MARIO_Y_GE, 100, MARIO_IS_IN_AREA, AREA_DDD_SUB & 0xf, 2),
     1,
 };
-s16 sDynJrb[] = {
+s16 sDynJRB[] = {
     SEQ_LEVEL_WATER,
     DYN2(MARIO_Y_GE, 945, MARIO_X_LT, -5260, 0),
     DYN1(MARIO_IS_IN_AREA, AREA_JRB_SHIP & 0xf, 0),
@@ -187,11 +187,11 @@ s16 sDynJrb[] = {
     1,
     5, // bogus entry, ignored (was JRB originally intended to have spooky music?)
 };
-s16 sDynWdw[] = {
+s16 sDynWDW[] = {
     SEQ_LEVEL_UNDERGROUND, DYN2(MARIO_Y_LT, -670, MARIO_IS_IN_AREA, AREA_WDW_MAIN & 0xf, 4),
     DYN1(MARIO_IS_IN_AREA, AREA_WDW_TOWN & 0xf, 4), 3,
 };
-s16 sDynHmc[] = {
+s16 sDynHMC[] = {
     SEQ_LEVEL_UNDERGROUND, DYN2(MARIO_X_GE, 0, MARIO_Y_LT, -203, 4),
     DYN2(MARIO_X_LT, 0, MARIO_Y_LT, -2400, 4), 3,
 };

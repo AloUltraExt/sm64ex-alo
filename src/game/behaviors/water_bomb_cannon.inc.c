@@ -55,9 +55,9 @@ void water_bomb_cannon_act_1(void) {
 #ifndef NODRAWINGDISTANCE
     if (o->oDistanceToMario > 2500.0f) {
         o->oAction = 2;
-    } else if (o->oBehParams2ndByte == 0) {
+    } else if (o->oBhvParams2ndByte == 0) {
 #else
-    if (o->oBehParams2ndByte == 0) {
+    if (o->oBhvParams2ndByte == 0) {
 #endif
         if (o->oWaterCannonUnkF4 != 0) {
             o->oWaterCannonUnkF4--;

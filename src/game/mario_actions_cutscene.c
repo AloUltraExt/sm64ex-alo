@@ -530,7 +530,7 @@ s32 act_reading_sign(struct MarioState *m) {
             m->pos[2] += marioObj->oMarioReadingSignDPosZ / 11.0f;
             // create the text box
             if (m->actionTimer++ == 10) {
-                create_dialog_inverted_box(m->usedObj->oBehParams2ndByte);
+                create_dialog_inverted_box(m->usedObj->oBhvParams2ndByte);
                 m->actionState = 2;
             }
             break;
@@ -843,7 +843,7 @@ s32 act_unlocking_key_door(struct MarioState *m) {
     stop_and_set_height_to_floor(m);
 
     if (is_anim_at_end(m)) {
-        if (m->usedObj->oBehParams >> 24 == 1) {
+        if (m->usedObj->oBhvParams >> 24 == 1) {
             save_file_set_flags(SAVE_FLAG_UNLOCKED_UPSTAIRS_DOOR);
             save_file_clear_flags(SAVE_FLAG_HAVE_KEY_2);
         } else {
@@ -2284,7 +2284,7 @@ static void end_peach_cutscene_dialog_1(struct MarioState *m) {
 #endif
             sEndPeachAnimation = 6;
             break;
-            
+
 #ifdef VERSION_SH
         case 111:
 #else
@@ -2384,7 +2384,7 @@ static void end_peach_cutscene_dialog_2(struct MarioState *m) {
 
 #ifdef VERSION_SH
         case 65:
-#else        
+#else
         case 45:
 #endif
             D_8032CBE8 = 1;

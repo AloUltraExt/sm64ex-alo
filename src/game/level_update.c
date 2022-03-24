@@ -101,13 +101,13 @@ const char *credits08[] = { "3COURSE DESIGNERS", "YOSHIKI HARUHANA", "MAKOTO MIY
 #ifdef VERSION_US
 const char *credits09[] = { "1SOUND COMPOSER", "KOJI KONDO" };
 // ...as well as sound effects and sound programmer in order to make room for screen text writer, Mario voice, and Peach voice
-const char *credits10[] = { "4SOUND EFFECTS", "SOUND PROGRAMMER", "YOJI INAGAKI", "HIDEAKI SHIMIZU" }; 
+const char *credits10[] = { "4SOUND EFFECTS", "SOUND PROGRAMMER", "YOJI INAGAKI", "HIDEAKI SHIMIZU" };
 const char *credits11[] = { "23-D ANIMATORS", "YOSHIAKI KOIZUMI", "SATORU TAKIZAWA" };
 const char *credits12[] = { "1ADDITIONAL GRAPHICS", "MASANAO ARIMOTO" };
 const char *credits13[] = { "3TECHNICAL SUPPORT", "TAKAO SAWANO", "HIROHITO YOSHIMOTO", "HIROTO YADA" };
 const char *credits14[] = { "1TECHNICAL SUPPORT", "SGI N64 PROJECT STAFF" };
 const char *credits15[] = { "2PROGRESS MANAGEMENT", "KIMIYOSHI FUKUI", "KEIZO KATO" };
-const char *credits16[] = { "5SCREEN TEXT WRITER", "TRANSLATION", "LESLIE SWAN", "MINA AKINO", "HIRO YAMADA" }; 
+const char *credits16[] = { "5SCREEN TEXT WRITER", "TRANSLATION", "LESLIE SWAN", "MINA AKINO", "HIRO YAMADA" };
 #else // VERSION_EU
 // ...as well as sound composer, sound effects, and sound programmer, and...
 const char *credits09[] = { "7SOUND COMPOSER", "SOUND EFFECTS", "SOUND PROGRAMMER", "KOJI KONDO", "YOJI INAGAKI", "HIDEAKI SHIMIZU" };
@@ -790,7 +790,7 @@ s16 level_trigger_warp(struct MarioState *m, s32 warpOp) {
                 play_transition(WARP_TRANSITION_FADE_INTO_CIRCLE, 0x14, 0x00, 0x00, 0x00);
                 break;
 
-            case WARP_OP_UNKNOWN_01: // enter totwc
+            case WARP_OP_UNKNOWN_01: // enter TotWC
                 sDelayedWarpTimer = 30;
                 sSourceWarpNodeId = WARP_NODE_TOTWC;
                 play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 0x1E, 0xFF, 0xFF, 0xFF);
@@ -799,15 +799,15 @@ s16 level_trigger_warp(struct MarioState *m, s32 warpOp) {
 #endif
                 break;
 
-            case WARP_OP_UNKNOWN_02: // bbh enter
+            case WARP_OP_UNKNOWN_02: // enter BBH
                 sDelayedWarpTimer = 30;
-                sSourceWarpNodeId = (m->usedObj->oBehParams & 0x00FF0000) >> 16;
+                sSourceWarpNodeId = (m->usedObj->oBhvParams & 0x00FF0000) >> 16;
                 play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 0x1E, 0xFF, 0xFF, 0xFF);
                 break;
 
             case WARP_OP_TELEPORT:
                 sDelayedWarpTimer = 20;
-                sSourceWarpNodeId = (m->usedObj->oBehParams & 0x00FF0000) >> 16;
+                sSourceWarpNodeId = (m->usedObj->oBhvParams & 0x00FF0000) >> 16;
                 val04 = !music_changed_through_warp(sSourceWarpNodeId);
                 play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 0x14, 0xFF, 0xFF, 0xFF);
                 break;
@@ -815,14 +815,14 @@ s16 level_trigger_warp(struct MarioState *m, s32 warpOp) {
             case WARP_OP_WARP_DOOR:
                 sDelayedWarpTimer = 20;
                 sDelayedWarpArg = m->actionArg;
-                sSourceWarpNodeId = (m->usedObj->oBehParams & 0x00FF0000) >> 16;
+                sSourceWarpNodeId = (m->usedObj->oBhvParams & 0x00FF0000) >> 16;
                 val04 = !music_changed_through_warp(sSourceWarpNodeId);
                 play_transition(WARP_TRANSITION_FADE_INTO_CIRCLE, 0x14, 0x00, 0x00, 0x00);
                 break;
 
             case WARP_OP_WARP_OBJECT:
                 sDelayedWarpTimer = 20;
-                sSourceWarpNodeId = (m->usedObj->oBehParams & 0x00FF0000) >> 16;
+                sSourceWarpNodeId = (m->usedObj->oBhvParams & 0x00FF0000) >> 16;
                 val04 = !music_changed_through_warp(sSourceWarpNodeId);
                 play_transition(WARP_TRANSITION_FADE_INTO_STAR, 0x14, 0x00, 0x00, 0x00);
                 break;
@@ -1178,7 +1178,7 @@ void reset_misc_level_object_values(void) {
     gCCMEnteredSlide = 0;
     reset_red_coins_collected();
 #if QOL_FIX_RESET_PSS_SLIDE_STARTED
-    gPssSlideStarted = FALSE;
+    gPSSSlideStarted = FALSE;
 #endif
 #ifdef PORT_MOP_OBJS
     gMOPSwitchBlockState = 1;

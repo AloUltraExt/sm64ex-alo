@@ -527,11 +527,11 @@ static Gfx gd_dl_sparkle[] = {
     gsSPClearGeometryMode(G_TEXTURE_GEN | G_TEXTURE_GEN_LINEAR),
     gsDPSetRenderMode(G_RM_AA_ZB_TEX_EDGE, G_RM_NOOP2),
     gsSPTexture(0x8000, 0x8000, 0, G_TX_RENDERTILE, G_ON),
-    gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 0, 0, G_TX_LOADTILE, 0, G_TX_WRAP | G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD, 
+    gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 0, 0, G_TX_LOADTILE, 0, G_TX_WRAP | G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD,
                 G_TX_WRAP | G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD),
     gsDPLoadSync(),
     gsDPLoadBlock(G_TX_LOADTILE, 0, 0, 32 * 32 - 1, CALC_DXT(32, G_IM_SIZ_16b_BYTES)),
-    gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 8, 0, G_TX_RENDERTILE, 0, G_TX_WRAP | G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD, 
+    gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 8, 0, G_TX_RENDERTILE, 0, G_TX_WRAP | G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD,
                 G_TX_WRAP | G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD),
     gsDPSetTileSize(0, 0, 0, (32 - 1) << G_TEXTURE_IMAGE_FRAC, (32 - 1) << G_TEXTURE_IMAGE_FRAC),
     gsSPVertex(gd_vertex_sparkle, 4, 0),
@@ -708,7 +708,7 @@ static Gfx gd_dl_mario_face_shine[] = {
     gsDPSetTexturePersp(G_TP_PERSP),
     gsDPSetTextureFilter(G_TF_BILERP),
     gsDPSetCombineMode(G_CC_HILITERGBA, G_CC_HILITERGBA),
-    gsDPLoadTextureBlock(gd_texture_mario_face_shine, G_IM_FMT_IA, G_IM_SIZ_8b, 32, 32, 0, 
+    gsDPLoadTextureBlock(gd_texture_mario_face_shine, G_IM_FMT_IA, G_IM_SIZ_8b, 32, 32, 0,
                         G_TX_WRAP | G_TX_NOMIRROR, G_TX_WRAP | G_TX_NOMIRROR, 5, 5, G_TX_NOLOD, G_TX_NOLOD),
     gsDPPipeSync(),
     gsSPEndDisplayList(),
@@ -1353,7 +1353,7 @@ void gd_vblank(void) {
 }
 
 /**
- * Copies the player1 controller data from p1cont to sGdContPads[0]. 
+ * Copies the player1 controller data from p1cont to sGdContPads[0].
  */
 void gd_copy_p1_contpad(OSContPad *p1cont) {
     u32 i;                                    // 24
@@ -3433,7 +3433,7 @@ void stub_renderer_14(UNUSED s8 *arg0) {
  * functions from IRIS GL.
  * @param buf  pointer to an array of 16-bit values
  * @param len  maximum number of values to store
- */ 
+ */
 void init_pick_buf(s16 *buf, s32 len) {
     buf[0] = 0;
     buf[1] = 0;
@@ -3905,7 +3905,7 @@ struct GdObj *load_dynlist(struct DynList *dynlist) {
             fatal_printf("load_dynlist() unkown bank");
     }
 
-#define PAGE_SIZE 65536  // size of a 64K TLB page 
+#define PAGE_SIZE 65536  // size of a 64K TLB page
 
     segSize = dynlistSegEnd - dynlistSegStart;
     allocSegSpace = gd_malloc_temp(segSize + PAGE_SIZE);

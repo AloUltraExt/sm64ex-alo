@@ -45,8 +45,8 @@ static u8 *Paths[] = {
 //advanced forward a direction every 0x3C frames
 
 void bhv_move_rotate_init(void) {
-	o->oTimer+=0x80*(o->oBehParams>>24);
-	o->oAnimState=(o->oBehParams>>24);
+	o->oTimer+=0x80*(o->oBhvParams>>24);
+	o->oAnimState=(o->oBhvParams>>24);
 }
 
 #define PLAT_SPEED 8
@@ -59,7 +59,7 @@ void bhv_move_rotate_loop(void) {
 		o->oAngleVelPitch=0;
 		o->oTimer=0;
 	}
-	Direction = Paths[o->oBehParams2ndByte][o->oMopMovingRotatingPath];
+	Direction = Paths[o->oBhvParams2ndByte][o->oMopMovingRotatingPath];
 	switch(Direction){
 		case ZPLUS:
 			o->oMopMovingRotatingTimer++;

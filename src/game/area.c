@@ -162,9 +162,9 @@ struct ObjectWarpNode *area_get_warp_node(u8 id) {
 }
 
 struct ObjectWarpNode *area_get_warp_node_from_params(struct Object *o) {
-    u8 sp1F = (o->oBehParams & 0x00FF0000) >> 16;
+    u8 id = (o->oBhvParams & 0x00FF0000) >> 16;
 
-    return area_get_warp_node(sp1F);
+    return area_get_warp_node(id);
 }
 
 void load_obj_warp_nodes(void) {

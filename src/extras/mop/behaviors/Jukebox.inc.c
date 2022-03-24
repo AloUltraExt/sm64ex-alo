@@ -7,7 +7,7 @@ void bhv_jukebox_loop(void) {
 
     if (obj_check_if_collided_with_object(o, gMarioObject)) {
         if (o->oAction == 0) {
-            currMusic = ((o->oBehParams >> 24) & 0xFF); // bp1
+            currMusic = ((o->oBhvParams >> 24) & 0xFF); // bp1
             o->oAction = (s32) currMusic;
             set_background_music(0, currMusic, 0);
         }
@@ -24,13 +24,13 @@ void bhv_jukebox_loop(void) {
             o->oMopJukeboxChangeMusic = TRUE;
         }
 
-        if (o->oMopJukeboxIndexMusic > o->oBehParams2ndByte) {
-            o->oMopJukeboxIndexMusic = o->oBehParams2ndByte;
+        if (o->oMopJukeboxIndexMusic > o->oBhvParams2ndByte) {
+            o->oMopJukeboxIndexMusic = o->oBhvParams2ndByte;
             o->oMopJukeboxChangeMusic = FALSE;
         }
 
-        if (o->oMopJukeboxIndexMusic < ((o->oBehParams >> 24) & 0xFF)) { // bp1
-            o->oMopJukeboxIndexMusic = ((o->oBehParams >> 24) & 0xFF);
+        if (o->oMopJukeboxIndexMusic < ((o->oBhvParams >> 24) & 0xFF)) { // bp1
+            o->oMopJukeboxIndexMusic = ((o->oBhvParams >> 24) & 0xFF);
             o->oMopJukeboxChangeMusic = FALSE;
         }
 

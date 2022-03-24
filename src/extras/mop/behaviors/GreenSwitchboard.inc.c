@@ -21,17 +21,17 @@ void bhv_green_switchboard_loop(void) {
 		// print_text(32,32,buf);
 		// sprintf(buf,"dot %f",dot);
 		// print_text(32,64,buf);
-		// sprintf(buf,"bp1 %d",(((o->oBehParams>>24)&0xFF)*16));
+		// sprintf(buf,"bp1 %d",(((o->oBhvParams>>24)&0xFF)*16));
 		// print_text(32,96,buf);
 		if((dot)>0){
-			if(dotH<(((o->oBehParams>>24)&0xFF)*16)){
+			if(dotH<(((o->oBhvParams>>24)&0xFF)*16)){
 				o->oForwardVel = approach_by_increment(MAX_SPEED, o->oForwardVel, SPEED_INC);
 			}else{
 				o->oForwardVel=0;
 			}
 			o->oFaceAnglePitch = (u32)approach_by_increment(2048.0f, o->oFaceAnglePitch, 128.0f);
 		}else{
-			if (dotH>(o->oBehParams2ndByte*-16)){
+			if (dotH>(o->oBhvParams2ndByte*-16)){
 				o->oForwardVel = approach_by_increment(-MAX_SPEED, o->oForwardVel, SPEED_INC);
 			}else{
 				o->oForwardVel=0;

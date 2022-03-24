@@ -70,7 +70,6 @@ extern struct Object *sMasterTreadmill;
  */
 struct Object *sMasterTreadmill;
 
-
 f32 sObjSavedPosX;
 f32 sObjSavedPosY;
 f32 sObjSavedPosZ;
@@ -163,7 +162,7 @@ static void platform_on_track_update_pos_or_spawn_ball(s32 ballIndex, f32 x, f32
 #if QOL_FIX_PLATFORM_TRACK_CHECKERED
     (!o->oPlatformOnTrackIsNotHMC)
 #else
-    ((u16)(o->oBehParams >> 16) & 0x0080)
+    ((u16)(o->oBhvParams >> 16) & 0x0080)
 #endif
     ) {
         initialPrevWaypoint = o->oPlatformOnTrackPrevWaypoint;
@@ -186,7 +185,7 @@ static void platform_on_track_update_pos_or_spawn_ball(s32 ballIndex, f32 x, f32
                     o->oPlatformOnTrackPrevWaypointFlags = WAYPOINT_FLAGS_END;
                 }
 
-                if (((u16)(o->oBehParams >> 16) & PLATFORM_ON_TRACK_BP_RETURN_TO_START)) {
+                if (((u16)(o->oBhvParams >> 16) & PLATFORM_ON_TRACK_BP_RETURN_TO_START)) {
                     nextWaypoint = o->oPlatformOnTrackStartWaypoint;
                 } else {
                     return;
@@ -660,8 +659,8 @@ static void obj_die_if_health_non_positive(void) {
             spawn_mist_particles();
         }
 
-        if ((s32)o->oNumLootCoins < 0) {
-            spawn_object(o, MODEL_BLUE_COIN, bhvMrIBlueCoin);
+        if (o->oNumLootCoins < 0) {
+            spawn_object(o, MODEL_BLUE_COIN, bhvSpawnedBlueCoin);
         } else {
             obj_spawn_loot_yellow_coins(o, o->oNumLootCoins, 20.0f);
         }
@@ -822,7 +821,7 @@ static void obj_act_squished(f32 baseScale) {
     if (approach_f32_ptr(&o->header.gfx.scale[1], targetScaleY, baseScale * 0.14f)) {
         o->header.gfx.scale[0] = o->header.gfx.scale[2] = baseScale * 2.0f - o->header.gfx.scale[1];
 
-        if (o->oTimer >= 16) {
+        if (o->oTimer > 15) {
             obj_die_if_health_non_positive();
         }
     }

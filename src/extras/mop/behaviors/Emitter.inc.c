@@ -11,9 +11,9 @@ Gfx *geo_emitter_coloring(s32 callContext, struct GraphNode *node, UNUSED s32 co
 
         gfx = gfxHead = alloc_display_list(2 * sizeof(Gfx));
 
-        u8 bp1half2 = (obj->parentObj->oBehParams >> 24) & 0x0F; // Red
-        u8 bp2half1 =  obj->parentObj->oBehParams2ndByte >> 4; // Green
-        u8 bp2half2 =  obj->parentObj->oBehParams2ndByte & 0x0F; // Blue
+        u8 bp1half2 = (obj->parentObj->oBhvParams >> 24) & 0x0F; // Red
+        u8 bp2half1 =  obj->parentObj->oBhvParams2ndByte >> 4; // Green
+        u8 bp2half2 =  obj->parentObj->oBhvParams2ndByte & 0x0F; // Blue
 
         // Color sparkles
         gDPSetEnvColor(gfx++, (bp1half2 << 4), (bp2half1 << 4), (bp2half2 << 4), 255);
@@ -27,7 +27,7 @@ Gfx *geo_emitter_coloring(s32 callContext, struct GraphNode *node, UNUSED s32 co
 void bhv_emitter_loop(void) {
     s16 i;
     struct Object *sparkle;
-    u8 bp1half1 = (o->oBehParams >> 24) >> 4; // Scale
+    u8 bp1half1 = (o->oBhvParams >> 24) >> 4; // Scale
     f32 scalePos = (f32) ((bp1half1 << 1));
 
     for (i = 0; i < 4; i++) {

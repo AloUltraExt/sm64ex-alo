@@ -89,7 +89,7 @@ chan_dyncall
 .poll_023589:
 chan_delay1
 chan_ioreadval 0
-chan_bltz .skip_023589 // if we have a signal: 
+chan_bltz .skip_023589 // if we have a signal:
   chan_beqz .force_stop_023589 // told to stop
   chan_jump .start_playing_023589 // told to play something else
 .skip_023589:

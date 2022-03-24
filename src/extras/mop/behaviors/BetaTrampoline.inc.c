@@ -69,8 +69,8 @@ void bhv_beta_trampoline_top_loop(void) {
         o->oVelY -= 4.f;
 
         o->oBetaTrampolineAdditiveYVel =
-            ((o->oBehParams2ndByte >> 4) / 2.0f)
-            + ((o->oHomeY - o->oPosY) / ((o->oBehParams2ndByte & 0x0F) / 2.0f));
+            ((o->oBhvParams2ndByte >> 4) / 2.0f)
+            + ((o->oHomeY - o->oPosY) / ((o->oBhvParams2ndByte & 0x0F) / 2.0f));
     } else {
         if (o->oBetaTrampolineMarioOnTrampoline) {
             gMarioStates[0].vel[1] += o->oBetaTrampolineAdditiveYVel;

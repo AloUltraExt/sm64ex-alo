@@ -1052,7 +1052,7 @@ f32 find_water_level(f32 x, f32 z) {
 f32 find_poison_gas_level(f32 x, f32 z) {
     s32 i;
     s32 numRegions;
-    UNUSED s32 unused;
+    UNUSED u8 filler[4];
     TerrainData val;
     f32 loX, hiX, loZ, hiZ;
     f32 gasLevel = FLOOR_LOWER_LIMIT;

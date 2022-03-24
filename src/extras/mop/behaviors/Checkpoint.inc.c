@@ -1,7 +1,7 @@
 extern struct WarpCheckpoint gWarpCheckpoint;
 
 void bhv_checkpoint_flag_init(void){
-	if(gWarpCheckpoint.actNum==64 && o->oBehParams==0){
+	if(gWarpCheckpoint.actNum==64 && o->oBhvParams==0){
 		gMarioStates[0].pos[0]=o->oPosX;
 		gMarioStates[0].pos[1]=o->oPosY;
 		gMarioStates[0].pos[2]=o->oPosZ;
@@ -10,7 +10,7 @@ void bhv_checkpoint_flag_init(void){
 }
 //0 reg, 1 reset
 void bhv_checkpoint_flag_loop(void){
-	if (o->oBehParams>0){
+	if (o->oBhvParams>0){
 		if (o->oDistanceToMario<150.0f){
 			gWarpCheckpoint.actNum=0;
 			gWarpCheckpoint.courseNum=COURSE_NONE;
