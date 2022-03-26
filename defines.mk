@@ -13,7 +13,7 @@ BETTERCAMERA ?= 1
 # Enable cheats
 CHEATS_ACTIONS ?= 1
 # Enable rumble functions (Originally in Shindou)
-RUMBLE_FEEDBACK ?= 0
+RUMBLE_FEEDBACK ?= 1
 # Disable no drawing distance by default
 NODRAWINGDISTANCE ?= 0
 # Enable Goddard (Mario Face)
@@ -92,8 +92,8 @@ ifeq ($(TARGET_PORT_CONSOLE),0)
 
 ifeq ($(TARGET_ANDROID),0)
 
-  # Check for Mouse Option
-  ifeq (,$(findstring SDL,$(WINDOW_API)))
+  # Check for Mouse Option (no DirectX yet)
+  ifneq ($(WINDOW_API),DXGI)
     CUSTOM_C_DEFINES += -DMOUSE_ACTIONS
   endif
 

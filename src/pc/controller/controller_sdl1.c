@@ -71,22 +71,17 @@ static int num_joy_hats = 0;
 static inline void controller_add_binds(const u32 mask, const u32 *btns) {
     for (u32 i = 0; i < MAX_BINDS; ++i) {
         if (btns[i] >= VK_BASE_SDL_GAMEPAD && btns[i] <= VK_BASE_SDL_GAMEPAD + VK_SIZE) {
-            #ifdef MOUSE_ACTIONS
-            if (btns[i] >= VK_BASE_SDL_MOUSE && num_joy_binds < MAX_JOYBINDS && configMouse) {
-                mouse_binds[num_mouse_binds][0] = btns[i] - VK_BASE_SDL_MOUSE;
-                mouse_binds[num_mouse_binds][1] = mask;
-                ++num_mouse_binds;
-            } else if (num_mouse_binds < MAX_JOYBINDS) {
-                joy_binds[num_joy_binds][0] = btns[i] - VK_BASE_SDL_GAMEPAD;
-                joy_binds[num_joy_binds][1] = mask;
-                ++num_joy_binds;
-            }
-            #else
-                joy_binds[num_joy_binds][0] = btns[i] - VK_BASE_SDL_GAMEPAD;
-                joy_binds[num_joy_binds][1] = mask;
-                ++num_joy_binds;
-            #endif
+            joy_binds[num_joy_binds][0] = btns[i] - VK_BASE_SDL_GAMEPAD;
+            joy_binds[num_joy_binds][1] = mask;
+            ++num_joy_binds;
         }
+#ifdef MOUSE_ACTIONS
+        if (btns[i] >= VK_BASE_SDL_MOUSE && num_joy_binds < MAX_JOYBINDS && configMouse) {
+            mouse_binds[num_mouse_binds][0] = btns[i] - VK_BASE_SDL_MOUSE;
+            mouse_binds[num_mouse_binds][1] = mask;
+            ++num_mouse_binds;
+        }
+#endif
     }
 }
 
@@ -152,10 +147,9 @@ static inline int16_t get_axis(const int i) {
 }
 
 #ifdef MOUSE_ACTIONS
-
-void set_cursor_visibility(bool newVisibility ){
-    if(last_cursor_status != newVisibility){
-        SDL_ShowCursor( newVisibility ? SDL_DISABLE : SDL_ENABLE );
+void set_cursor_visibility(bool newVisibility) {
+    if (last_cursor_status != newVisibility) {
+        SDL_ShowCursor(newVisibility ? SDL_DISABLE : SDL_ENABLE);
         last_cursor_status = newVisibility;
     }
 }
@@ -256,16 +250,10 @@ static void controller_sdl_read(OSContPad *pad) {
     uint32_t magnitude_sq = (uint32_t)(leftx * leftx) + (uint32_t)(lefty * lefty);
     uint32_t stickDeadzoneActual = configStickDeadzone * DEADZONE_STEP;
     if (magnitude_sq > (uint32_t)(stickDeadzoneActual * stickDeadzoneActual)) {
-        #if 0 // not used but leaving just in case
-        pad->stick_x = leftx / 0x100;
-        int stick_y = -lefty / 0x100;
-        pad->stick_y = stick_y == 128 ? 127 : stick_y;
-        #else
         // Game expects stick coordinates within -80..80
         // 32768 / 409 = ~80
         pad->stick_x = leftx / 409;
         pad->stick_y = -lefty / 409;
-        #endif
     }
 
     magnitude_sq = (uint32_t)(rightx * rightx) + (uint32_t)(righty * righty);

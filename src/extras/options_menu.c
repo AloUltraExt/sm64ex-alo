@@ -180,7 +180,9 @@ static struct Option optsControls[] = {
     // max deadzone is 31000; this is less than the max range of ~32768, but this
     // way, the player can't accidentally lock themselves out of using the stick
     DEF_OPT_SCROLL( optBindStr[20], &configStickDeadzone, 0, 100, 1 ),
-    DEF_OPT_SCROLL( optBindStr[21], &configRumbleStrength, 0, 100, 1)
+#ifdef RUMBLE_FEEDBACK
+    DEF_OPT_SCROLL( optBindStr[21], &configRumbleStrength, 0, 100, 1),
+#endif
 };
 #endif
 
@@ -207,7 +209,7 @@ static struct Option optsAudio[] = {
 
 static struct Option optsSettings[] = {
     DEF_OPT_TOGGLE( optsSettingsStr[0], &configHUD ),
-#if !defined(TARGET_N64) && defined(MOUSE_ACTIONS)
+#ifdef MOUSE_ACTIONS
     DEF_OPT_TOGGLE( optsSettingsStr[1], &configMouse ),
 #endif
 };

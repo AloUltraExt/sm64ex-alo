@@ -368,7 +368,6 @@ void main_func(void) {
     wm_api->set_touchscreen_callbacks((void *)touch_down, (void *)touch_motion, (void *)touch_up);
     #endif
     
-    // TESTING!!!!!!!!!!
     #if defined(AAPI_SDL1) || defined(AAPI_SDL2)
     if (audio_api == NULL && audio_sdl.init()) 
         audio_api = &audio_sdl;
