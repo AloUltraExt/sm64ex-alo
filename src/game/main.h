@@ -3,24 +3,6 @@
 
 #include "config.h"
 
-struct RumbleData {
-    u8 comm;
-    u8 level;
-    s16 time;
-    s16 decay;
-};
-
-struct RumbleSettings {
-    s16 event;
-    s16 level;
-    s16 timer;
-    s16 count;
-    s16 start;
-    s16 slip;
-    s16 viblate;
-    s16 decay;
-};
-
 extern OSThread D_80339210;
 extern OSThread gIdleThread;
 extern OSThread gMainThread;
@@ -40,18 +22,6 @@ extern OSIoMesg gDmaIoMesg;
 extern OSMesg gMainReceivedMesg;
 extern OSMesgQueue gDmaMesgQueue;
 extern OSMesgQueue gSIEventMesgQueue;
-
-#ifdef RUMBLE_FEEDBACK
-extern OSThread gRumblePakThread;
-extern OSMesg gRumblePakSchedulerMesgBuf[1];
-extern OSMesg gRumbleThreadVIMesgBuf[1];
-extern OSMesgQueue gRumblePakSchedulerMesgQueue;
-extern OSMesgQueue gRumbleThreadVIMesgQueue;
-
-extern s32 gRumblePakPfs; // Actually an OSPfs but we don't have that header yet
-extern struct RumbleData gRumbleDataQueue[3];
-extern struct RumbleSettings gCurrRumbleSettings;
-#endif
 
 extern struct VblankHandler *gVblankHandler1;
 extern struct VblankHandler *gVblankHandler2;

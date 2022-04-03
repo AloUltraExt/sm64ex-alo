@@ -1,10 +1,39 @@
 #ifndef RUMBLE_INIT_H
 #define RUMBLE_INIT_H
 
-#include <PR/ultratypes.h>
 #include "config.h"
 
 #ifdef RUMBLE_FEEDBACK
+
+struct RumbleData {
+    u8 comm;
+    u8 level;
+    s16 time;
+    s16 decay;
+};
+
+struct RumbleSettings {
+    s16 event;
+    s16 level;
+    s16 timer;
+    s16 count;
+    s16 start;
+    s16 slip;
+    s16 viblate;
+    s16 decay;
+};
+
+extern OSThread gRumblePakThread;
+
+extern OSPfs gRumblePakPfs;
+
+extern OSMesg gRumblePakSchedulerMesgBuf[1];
+extern OSMesgQueue gRumblePakSchedulerMesgQueue;
+extern OSMesg gRumbleThreadVIMesgBuf[1];
+extern OSMesgQueue gRumbleThreadVIMesgQueue;
+
+extern struct RumbleData gRumbleDataQueue[3];
+extern struct RumbleSettings gCurrRumbleSettings;
 
 extern s32 gRumblePakTimer;
 

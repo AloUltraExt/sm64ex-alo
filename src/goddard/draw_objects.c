@@ -1,6 +1,10 @@
 #include <PR/ultratypes.h>
 #include <stdio.h>
 
+#if defined(VERSION_JP) || defined(VERSION_US)
+#include "prevent_bss_reordering.h"
+#endif
+
 #include "debug_utils.h"
 #include "dynlist_proc.h"
 #include "gd_macros.h"

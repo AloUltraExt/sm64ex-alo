@@ -41,7 +41,7 @@ s32 osContInit(UNUSED OSMesgQueue *mq, u8 *controllerBits, UNUSED OSContStatus *
     return 0;
 }
 
-s32 osMotorStart(UNUSED void *pfs) {
+s32 osMotorStart(UNUSED OSPfs *pfs) {
     // Since rumble stops by osMotorStop, its duration is not nessecary.
     // Set it to 5 seconds and hope osMotorStop() is called in time.
     if (configRumbleStrength)
@@ -49,13 +49,13 @@ s32 osMotorStart(UNUSED void *pfs) {
     return 0;
 }
 
-s32 osMotorStop(UNUSED void *pfs) {
+s32 osMotorStop(UNUSED OSPfs *pfs) {
     if (configRumbleStrength)
         controller_rumble_stop();
     return 0;
 }
 
-u32 osMotorInit(UNUSED OSMesgQueue *mq, UNUSED void *pfs, UNUSED s32 port) {
+s32 osMotorInit(UNUSED OSMesgQueue *mq, UNUSED OSPfs *pfs, UNUSED int port) {
     return 0; // rumble is initialized in the specific backend's init function
 }
 

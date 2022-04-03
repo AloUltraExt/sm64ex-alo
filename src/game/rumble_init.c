@@ -10,9 +10,7 @@
 
 OSThread gRumblePakThread;
 
-s32 gRumblePakPfs; // Actually an OSPfs but we don't have that header yet
-
-s8 D_SH_8031D8F8[0x60];
+OSPfs gRumblePakPfs;
 
 OSMesg gRumblePakSchedulerMesgBuf[1];
 OSMesgQueue gRumblePakSchedulerMesgQueue;
@@ -26,11 +24,6 @@ s32 sRumblePakThreadActive = FALSE;
 s32 sRumblePakActive = FALSE;
 s32 sRumblePakErrorCount = 0;
 s32 gRumblePakTimer = 0;
-
-// These void* are OSPfs* but we don't have that header
-extern s32 osMotorStop(void *);
-extern s32 osMotorStart(void *);
-extern u32 osMotorInit(OSMesgQueue *, void *, s32);
 
 #define	RUMBLE_EVENT_NOMESG	    0
 #define	RUMBLE_EVENT_CONSTON	1
@@ -277,7 +270,7 @@ void thread6_rumble_loop(UNUSED void *a0) {
         } 
 
         else if (gGlobalTimer % 60 == 0) {
-            sRumblePakActive = osMotorInit(&gSIEventMesgQueue, &gRumblePakPfs, gPlayer1Controller->port) < 1;
+            sRumblePakActive = osMotorInit(&gSIEventMesgQueue, &gRumblePakPfs, gPlayer1Controller->port) == 0;
             sRumblePakErrorCount = 0;
         }
 
@@ -291,7 +284,7 @@ void thread6_rumble_loop(UNUSED void *a0) {
 }
 
 void cancel_rumble(void) {
-    sRumblePakActive = osMotorInit(&gSIEventMesgQueue, &gRumblePakPfs, gPlayer1Controller->port) < 1;
+    sRumblePakActive = osMotorInit(&gSIEventMesgQueue, &gRumblePakPfs, gPlayer1Controller->port) == 0;
 
     if (sRumblePakActive) {
         osMotorStop(&gRumblePakPfs);
@@ -321,8 +314,10 @@ void rumble_thread_update_vi(void) {
     }
 
 #ifdef TARGET_N64
-    // 0x56525443 = 'VRTC'
-    osSendMesg(&gRumbleThreadVIMesgQueue, (OSMesg) 0x56525443, OS_MESG_NOBLOCK);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmultichar"
+    osSendMesg(&gRumbleThreadVIMesgQueue, (OSMesg) 'VRTC', OS_MESG_NOBLOCK);
+#pragma GCC diagnostic pop
 #endif
 }
 
