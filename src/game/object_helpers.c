@@ -28,10 +28,6 @@
 #include "spawn_sound.h"
 
 static s8 sBBHStairJiggleOffsets[] = { -8, 8, -4, 4 };
-static s16 sPowersOfTwo[] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
-#if !QOL_FEATURE_BETTER_ROOM_CHECKS
-static s8 sLevelsWithRooms[] = { LEVEL_BBH, LEVEL_CASTLE, LEVEL_HMC, -1 };
-#endif
 
 static s32 clear_move_flag(u32 *, s32);
 
@@ -162,23 +158,38 @@ Gfx *geo_switch_anim_state(s32 callContext, struct GraphNode *node, UNUSED void 
     return NULL;
 }
 
+#if QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS
+void get_camera_focus_room_area_position(Vec3f pos) {
+    if (gCamera && gCamera->cutscene && gCutsceneFocus) {
+        vec3f_copy(pos, gLakituState.pos);
+    } else {
+        vec3f_copy(pos, gMarioState->pos);
+    }
+}
+#endif
+
 Gfx *geo_switch_area(s32 callContext, struct GraphNode *node, UNUSED void *context) {
     struct Surface *floor;
     struct GraphNodeSwitchCase *switchCase = (struct GraphNodeSwitchCase *) node;
+#if QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS
+    Vec3f focusPos;
+    get_camera_focus_room_area_position(focusPos);
+#else
+    Vec3f focusPos = { gMarioObject->oPosX, gMarioObject->oPosY, gMarioObject->oPosZ };
+#endif
 
     if (callContext == GEO_CONTEXT_RENDER) {
         if (gMarioObject == NULL) {
             switchCase->selectedCase = 0;
         } else {
-#if QOL_FEATURE_BETTER_ROOM_CHECKS
+            // ex-alo change
+            // Better room area check (with objects if QOL features is enabled)
             if (gCurrentArea->surfaceRooms != NULL) {
-                find_room_floor(gMarioObject->oPosX, gMarioObject->oPosY, gMarioObject->oPosZ, &floor);
+                find_room_floor(focusPos[0], focusPos[1], focusPos[2], &floor);
             } else {
                 floor = gMarioState->floor;
             }
-#else
-                find_room_floor(gMarioObject->oPosX, gMarioObject->oPosY, gMarioObject->oPosZ, &floor);
-#endif
+
             if (floor) {
                 gMarioCurrentRoom = floor->room;
                 s16 roomCase = floor->room - 1;
@@ -1736,21 +1747,20 @@ static void cur_obj_update_floor(void) {
     o->oFloor = floor;
 
     if (floor != NULL) {
-        if (floor->type == SURFACE_BURNING) {
-            o->oMoveFlags |= OBJ_MOVE_ABOVE_LAVA;
-        }
+        switch (floor->type) {
+            case SURFACE_BURNING:
+                o->oMoveFlags |= OBJ_MOVE_ABOVE_LAVA;
+                break;
 #ifndef VERSION_JP
-        else if (floor->type == SURFACE_DEATH_PLANE) {
+            case SURFACE_DEATH_PLANE:
             //! This misses SURFACE_VERTICAL_WIND (and maybe SURFACE_WARP)
-            o->oMoveFlags |= OBJ_MOVE_ABOVE_DEATH_BARRIER;
+            #if QOL_FIX_OBJ_FLOOR_WIND_DEATH
+            case SURFACE_VERTICAL_WIND:
+            #endif
+                o->oMoveFlags |= OBJ_MOVE_ABOVE_DEATH_BARRIER;
+                break;
         }
 #endif
-
-        o->oFloorType = floor->type;
-        o->oFloorRoom = floor->room;
-    } else {
-        o->oFloorType = 0;
-        o->oFloorRoom = 0;
     }
 }
 
@@ -2349,10 +2359,6 @@ void spawn_base_star_with_no_lvl_exit(void) {
     spawn_star_with_no_lvl_exit(0, 0);
 }
 
-s32 bit_shift_left(s32 a0) {
-    return sPowersOfTwo[a0];
-}
-
 s32 cur_obj_mario_far_away(void) {
     f32 dx = o->oHomeX - gMarioObject->oPosX;
     f32 dy = o->oHomeY - gMarioObject->oPosY;
@@ -2411,7 +2417,7 @@ void bhv_init_room(void) {
     struct Surface *floor;
     f32 floorHeight;
 
-    if (is_item_in_array(gCurrLevelNum, sLevelsWithRooms)) {
+    if (gCurrentArea->surfaceRooms != NULL) {
         floorHeight = find_floor(o->oPosX, o->oPosY, o->oPosZ, &floor);
 
         if (floor != NULL) {
@@ -2942,7 +2948,7 @@ void cur_obj_spawn_star_at_y_offset(f32 targetX, f32 targetY, f32 targetZ, f32 o
 #endif
 
 // Extra functions
-void obj_set_model(struct Object *obj, s32 modelID) {
+void obj_set_model(struct Object *obj, u16 modelID) {
     obj->header.gfx.sharedChild = gLoadedGraphNodes[modelID];
 }
 
@@ -2954,13 +2960,12 @@ s32 obj_get_model(struct Object *obj) {
     s32 i;
 
     if (!obj->header.gfx.sharedChild) {
-        return MODEL_NONE;
-    }
- 
-    for (i = 0; i < 256; i++) {
-        if (obj->header.gfx.sharedChild == gLoadedGraphNodes[i]) {
-            return i;
+        for (i = MODEL_NONE; i < 256; i++) {
+            if (obj->header.gfx.sharedChild == gLoadedGraphNodes[i]) {
+                return i;
+            }
         }
     }
+
     return MODEL_NONE;
 }

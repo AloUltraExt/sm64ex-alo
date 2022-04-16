@@ -13,16 +13,13 @@ struct ObjectHitbox sSparkleSpawnStarHitbox = {
 };
 
 void bhv_spawned_star_init(void) {
-    s32 starIndex;
+    s32 starIndex = (o->oBhvParams >> 24) & 0xFF;
 
     if (!(o->oInteractionSubtype & INT_SUBTYPE_NO_EXIT)) {
         o->oBhvParams = o->parentObj->oBhvParams;
     }
 
-    starIndex = (o->oBhvParams >> 24) & 0xFF;
-
-    if (bit_shift_left(starIndex)
-        & save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum))) {
+    if ((1 << starIndex) & save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum))) {
         cur_obj_set_model(MODEL_TRANSPARENT_STAR);
     }
 
@@ -63,6 +60,12 @@ void slow_star_rotation(void) {
         o->oAngleVelYaw -= 0x40;
     }
 }
+
+#if QOL_FIX_SPAWNED_STAR_SOFTLOCK
+#define CHECK(cond, set)    { set }
+#else
+#define CHECK(cond, set)    if (cond) { set }
+#endif
 
 void bhv_spawned_star_loop(void) {
     if (o->oAction == 0) {
@@ -110,15 +113,11 @@ void bhv_spawned_star_loop(void) {
         }
         spawn_object(o, MODEL_NONE, bhvSparkleSpawn);
     } else if (o->oAction == 2) {
-        #if !QOL_FIX_SPAWNED_STAR_SOFTLOCK
-        if (gCamera->cutscene == 0 && gRecentCutscene == 0) {
-        #endif
+        CHECK(gCamera->cutscene == 0 && gRecentCutscene == 0,
             clear_time_stop_flags(TIME_STOP_ENABLED | TIME_STOP_MARIO_AND_DOORS);
             o->activeFlags &= ~ACTIVE_FLAG_INITIATED_TIME_STOP;
             o->oAction++;
-        #if !QOL_FIX_SPAWNED_STAR_SOFTLOCK
-        }
-        #endif
+        )
     } else {
         set_sparkle_spawn_star_hitbox();
         slow_star_rotation();
@@ -128,6 +127,8 @@ void bhv_spawned_star_loop(void) {
     o->oFaceAngleYaw += o->oAngleVelYaw;
     o->oInteractStatus = 0;
 }
+
+#undef CHECK
 
 void bhv_spawn_star_no_level_exit(u32 starIndex) {
     struct Object *star = spawn_object(o, MODEL_STAR, bhvSpawnedStarNoLevelExit);

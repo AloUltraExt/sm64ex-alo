@@ -158,7 +158,7 @@ void bhv_coin_formation_spawn_loop(void) {
         }
     } else {
         if (bhv_coin_sparkles_init()) {
-            o->parentObj->oCoinCollectedFlags |= bit_shift_left(o->oBhvParams2ndByte);
+            o->parentObj->oCoinCollectedFlags |= (1 << o->oBhvParams2ndByte);
         }
         o->oAnimState++;
     }

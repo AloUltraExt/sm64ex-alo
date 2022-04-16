@@ -68,7 +68,6 @@ void play_climbing_sounds(struct MarioState *m, s32 b) {
 }
 
 s32 set_pole_position(struct MarioState *m, f32 offsetY) {
-    UNUSED u8 filler[12];
     struct Surface *floor;
     struct Surface *ceil;
     f32 floorHeight;
@@ -76,6 +75,11 @@ s32 set_pole_position(struct MarioState *m, f32 offsetY) {
     s32 collided;
     s32 result = POLE_NONE;
     f32 poleTop = m->usedObj->hitboxHeight - 100.0f;
+#if QOL_FIX_POLE_BOTTOM_GRAB
+    f32 poleBottom = -m->usedObj->hitboxDownOffset - 100.0f;
+#else
+    f32 poleBottom = -m->usedObj->hitboxDownOffset;
+#endif
     struct Object *marioObj = m->marioObj;
 
     if (marioObj->oMarioPolePos > poleTop) {
@@ -86,8 +90,8 @@ s32 set_pole_position(struct MarioState *m, f32 offsetY) {
     m->pos[2] = m->usedObj->oPosZ;
     m->pos[1] = m->usedObj->oPosY + marioObj->oMarioPolePos + offsetY;
 
-    collided = f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 60.0f, 50.0f);
-    collided |= f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 30.0f, 24.0f);
+    collided = f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 60.0f, 50.0f)
+             + f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 30.0f, 24.0f);
 
     ceilHeight = vec3f_find_ceil(m->pos, m->pos[1], &ceil);
     if (m->pos[1] > ceilHeight - 160.0f) {
@@ -100,11 +104,11 @@ s32 set_pole_position(struct MarioState *m, f32 offsetY) {
         m->pos[1] = floorHeight;
         set_mario_action(m, ACT_IDLE, 0);
         result = POLE_TOUCHED_FLOOR;
-    } else if (marioObj->oMarioPolePos < -m->usedObj->hitboxDownOffset) {
-        m->pos[1] = m->usedObj->oPosY - m->usedObj->hitboxDownOffset;
+    } else if (marioObj->oMarioPolePos < poleBottom) {
+        m->pos[1] = m->usedObj->oPosY + poleBottom;
         set_mario_action(m, ACT_FREEFALL, 0);
         result = POLE_FELL_OFF;
-    } else if (collided) {
+    } else if (collided > 0) {
         if (m->pos[1] > floorHeight + 20.0f) {
             m->forwardVel = -2.0f;
             set_mario_action(m, ACT_SOFT_BONK, 0);

@@ -370,6 +370,12 @@ s32 apply_landing_accel(struct MarioState *m, f32 frictionFactor) {
     return stopped;
 }
 
+#if QOL_FIX_SHELL_SPEED_NEGATIVE_OFFSET
+#define NEGATIVE(val) -val
+#else
+#define NEGATIVE(val) val
+#endif
+
 void update_shell_speed(struct MarioState *m) {
     f32 maxTargetSpeed;
     f32 targetSpeed;
@@ -377,11 +383,7 @@ void update_shell_speed(struct MarioState *m) {
     if (m->floorHeight < m->waterLevel) {
         m->floorHeight = m->waterLevel;
         m->floor = &gWaterSurfacePseudoFloor;
-#if QOL_FIX_SHELL_SPEED_NEGATIVE_OFFSET
-        m->floor->originOffset = -m->waterLevel;
-#else
-        m->floor->originOffset = m->waterLevel; //! Negative origin offset
-#endif
+        m->floor->originOffset = NEGATIVE(m->waterLevel);
     }
 
     if (m->floor != NULL && m->floor->type == SURFACE_SLOW) {
@@ -416,6 +418,8 @@ void update_shell_speed(struct MarioState *m) {
 
     apply_slope_accel(m);
 }
+
+#undef NEGATIVE
 
 s32 apply_slope_decel(struct MarioState *m, f32 decelCoef) {
     f32 decel;
@@ -491,7 +495,7 @@ void update_walking_speed(struct MarioState *m) {
         m->faceAngle[1] = m->intendedYaw;
     } else {
 #endif
-    #if QOL_FIX_GROUND_TURN_RADIUS
+    #if QOL_FEATURE_VELOCITY_BASED_TURN_SPEED
     if ((m->heldObj == NULL) && !(m->action & ACT_FLAG_SHORT_HITBOX)) {
         if (m->forwardVel >= 16.0f) {
             s16 turnRange = abs_angle_diff(m->faceAngle[1], m->intendedYaw);
@@ -504,6 +508,7 @@ void update_walking_speed(struct MarioState *m) {
 
             turnRange *= (1.0f - fac);
             turnRange = MAX(turnRange, 0x800);
+
             m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, turnRange, turnRange);
         } else {
             m->faceAngle[1] = m->intendedYaw;

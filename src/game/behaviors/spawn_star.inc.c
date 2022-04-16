@@ -34,6 +34,12 @@ void bhv_collect_star_loop(void) {
     }
 }
 
+#if QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS
+#define CHECK(cond, set)    set
+#else
+#define CHECK(cond, set)    if (cond) { set }
+#endif
+
 void bhv_star_spawn_init(void) {
     o->oMoveAngleYaw = atan2s(o->oHomeZ - o->oPosZ, o->oHomeX - o->oPosX);
     o->oStarSpawnDisFromHome = sqrtf(sqr(o->oHomeX - o->oPosX) + sqr(o->oHomeZ - o->oPosZ));
@@ -41,8 +47,8 @@ void bhv_star_spawn_init(void) {
     o->oForwardVel = o->oStarSpawnDisFromHome / 30.0f;
     o->oStarSpawnUnkFC = o->oPosY;
 
-    if (o->oBhvParams2ndByte == 0 || gCurrCourseNum == COURSE_BBH) {
-        cutscene_object(CUTSCENE_STAR_SPAWN, o);
+    if (o->oBhvParams2ndByte == 0) {
+        CHECK(gCurrCourseNum == COURSE_BBH, cutscene_object(CUTSCENE_STAR_SPAWN, o));
     } else {
         cutscene_object(CUTSCENE_RED_COIN_STAR_SPAWN, o);
     }
@@ -51,6 +57,8 @@ void bhv_star_spawn_init(void) {
     o->activeFlags |= ACTIVE_FLAG_INITIATED_TIME_STOP;
     cur_obj_become_intangible();
 }
+
+#undef CHECK
 
 void bhv_star_spawn_loop(void) {
     switch (o->oAction) {
@@ -139,16 +147,16 @@ void spawn_no_exit_star(f32 homeX, f32 homeY, f32 homeZ) {
     star->oInteractionSubtype |= INT_SUBTYPE_NO_EXIT;
 }
 
+#if QOL_FEATURE_BETTER_REDS_STAR_MARKER
+#define CHECK(cond, set)    set
+#else
+#define CHECK(cond, set)    if (cond) { set }
+#endif
+
 void bhv_hidden_red_coin_star_init(void) {
     s16 count;
 
-#if !QOL_FIX_RED_COIN_STAR_MARKER_POSITION
-    if (gCurrCourseNum != COURSE_JRB) {
-        spawn_object(o, MODEL_TRANSPARENT_STAR, bhvRedCoinStarMarker);
-    }
-#else
-    spawn_object(o, MODEL_TRANSPARENT_STAR, bhvRedCoinStarMarker);
-#endif
+    CHECK(gCurrCourseNum != COURSE_JRB, spawn_object(o, MODEL_TRANSPARENT_STAR, bhvRedCoinStarMarker));
 
     count = count_objects_with_behavior(bhvRedCoin);
     if (count == 0) {
@@ -161,15 +169,11 @@ void bhv_hidden_red_coin_star_init(void) {
     o->oHiddenStarTriggerCounter = 8 - count;
 }
 
-void bhv_hidden_red_coin_star_loop(void) {
-#if QOL_FIX_RED_COIN_STAR_MARKER_POSITION
-    struct Object *starMarker = cur_obj_nearest_object_with_behavior(bhvRedCoinStarMarker);
-    if (starMarker != NULL && ((o->oPosY - starMarker->oPosY) > 2000.0f)) {
-        obj_mark_for_deletion(starMarker);
-    }
-#endif
+#undef CHECK
 
+void bhv_hidden_red_coin_star_loop(void) {
     gRedCoinsCollected = o->oHiddenStarTriggerCounter;
+
     switch (o->oAction) {
         case 0:
             if (o->oHiddenStarTriggerCounter == 8) {

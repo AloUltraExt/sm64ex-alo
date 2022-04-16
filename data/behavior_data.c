@@ -416,8 +416,10 @@ const BehaviorScript bhvStarDoor[] = {
     SET_INT(oIntangibleTimer, 0),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_star_door_loop),
+#if !QOL_FIX_STAR_DOOR_ROOM_RENDER
         CALL_NATIVE(bhv_star_door_loop_2),
         CALL_NATIVE(load_object_collision_model),
+#endif
     END_LOOP(),
 };
 
@@ -1615,8 +1617,14 @@ const BehaviorScript bhvBlackSmokeMario[] = {
     BEGIN(OBJ_LIST_UNIMPORTANT),
     OR_INT(oFlags, (OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_MOVE_XZ_USING_FVEL | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
     BILLBOARD(),
-    SET_INT(oAnimState, 4),
     SET_FLOAT(oGraphYOffset, 50),
+#if QOL_FIX_ASSET_BURN_SMOKE
+    SET_INT(oOpacity, 255),
+    BEGIN_LOOP(),
+        CALL_NATIVE(bhv_black_smoke_mario_loop),
+    END_LOOP(),
+#else
+    SET_INT(oAnimState, 4),
     BEGIN_REPEAT(8),
         CALL_NATIVE(bhv_black_smoke_mario_loop),
         DELAY(1),
@@ -1625,6 +1633,7 @@ const BehaviorScript bhvBlackSmokeMario[] = {
         CALL_NATIVE(bhv_black_smoke_mario_loop),
     END_REPEAT(),
     DEACTIVATE(),
+#endif
 };
 
 const BehaviorScript bhvBlackSmokeBowser[] = {
@@ -6101,13 +6110,20 @@ const BehaviorScript bhvDDDPole[] = {
 const BehaviorScript bhvRedCoinStarMarker[] = {
     BEGIN(OBJ_LIST_DEFAULT),
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
-    DROP_TO_FLOOR(),
     SCALE(/*Unused*/ 0, /*Field*/ 150),
     SET_INT(oFaceAnglePitch, 0x4000),
+#if QOL_FEATURE_BETTER_REDS_STAR_MARKER
+    SET_HOME(),
+#else
+    DROP_TO_FLOOR(),
     ADD_FLOAT(oPosY, 60),
+#endif
     CALL_NATIVE(bhv_red_coin_star_marker_init),
     BEGIN_LOOP(),
         ADD_INT(oFaceAngleYaw, 0x100),
+        #if QOL_FEATURE_BETTER_REDS_STAR_MARKER
+        CALL_NATIVE(bhv_red_coin_star_marker_loop),
+        #endif
     END_LOOP(),
 };
 

@@ -59,6 +59,12 @@
 /// Makes Mario grab hangable ceilings in any air actions
 /// Credits: (AloXado320)
 #define QOL_FEATURE_HANG_AIR_ANYWHERE (0 || QOL_FEATURES)
+/// Makes cutscene object camera correctly focus an object in a room
+/// Credits: (AloXado320)
+#define QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS (0 || QOL_FEATURES || !VANILLA_CHECKS)
+/// Makes red coin star marker correctly be in dynamic floors and water
+/// Credits: (AloXado320)
+#define QOL_FEATURE_BETTER_REDS_STAR_MARKER (0 || QOL_FEATURES || !VANILLA_CHECKS)
 /// Changes blue coin switch to respawn instead of disappearing
 /// Credits: (Arceveti)
 #define QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH (0 || QOL_FEATURES)
@@ -104,9 +110,12 @@
 /// Makes Koopa Shell boxes respawn
 /// Credits: (Arceveti)
 #define QOL_FEATURE_KOOPA_SHELL_BOXES_RESPAWN (0 || QOL_FEATURES)
-/// Makes rooms code use find_room_floor, removes harcoding and adds extra calls
+/// Makes rooms code use find_room_floor, and improves bhv_init_room
 /// Credits: (Arceveti)
 #define QOL_FEATURE_BETTER_ROOM_CHECKS (0 || QOL_FEATURES)
+/// Makes turning walking speed based of velocity
+/// Credits: (Arceveti)
+#define QOL_FEATURE_VELOCITY_BASED_TURN_SPEED (0 || QOL_FEATURES)
 
 // --| Quality of life fixes
 // --| Code Fixes
@@ -116,15 +125,9 @@
 /// Fixes manta's water rings to match where it looks
 /// Credits: (Kaze Emanuar)
 #define QOL_FIX_WATER_RING (0 || QOL_FIXES)
-/// Fixes object counter so it correctly gets proper value when updating objects
-/// Credits: (Easy Fix)
-#define QOL_FIX_OBJ_COUNT_LIST (0 || QOL_FIXES)
 /// Fixes missing sounds in key exit cutscene caused by missing "breaks" in code
 /// Credits: (Easy Fix)
 #define QOL_FIX_MISSING_SOUNDS_KEY_EXIT (0 || QOL_FIXES)
-/// Fixes fake pole grab on the bottom of it, allowing to be properly grabbed
-/// Credits: (Reonu, Arceveti)
-#define QOL_FIX_POLE_BOTTOM_GRAB (0 || QOL_FIXES)
 /// Fixes an oddly defined interaction sub type in penguin mother behavior
 /// Credits: (Easy Fix)
 #define QOL_FIX_TUXIE_HELD_STATE (0 || QOL_FIXES)
@@ -187,16 +190,10 @@
 #define QOL_FIX_OBJ_FLOOR_WIND_DEATH (0 || QOL_FIXES)
 /// Fixes hardcoded snow tree leaf particles
 /// Credits: (Easy Fix)
-#define QOL_FIX_HARDCODED_TREE_PARTICLES (0 || QOL_FIXES)
-/// Fixes red coin star marker floor position if more than 2000 units
-/// Credits: (AloXado320)
-#define QOL_FIX_RED_COIN_STAR_MARKER_POSITION (0 || QOL_FIXES)
+#define QOL_FIX_HARDCODED_TREE_PARTICLES (0 || QOL_FIXES || !VANILLA_CHECKS)
 /// Fixes monty mole hide in hole check
 /// Credits: (Easy Fix)
 #define QOL_FIX_HIDE_IN_HOLE_NULL_CHECK (0 || QOL_FIXES)
-/// Fixes cutscene door Mario action check
-/// Credits: (Easy Fix)
-#define QOL_FIX_CUTSCENE_DOOR_CHECK (0 || QOL_FIXES)
 /// Credits: (Easy Fix)
 /// Fixes Z rotation when spawning an object with rotation
 #define QOL_FIX_SPAWN_OBJECT_ANGLE_ROLL (0 || QOL_FIXES)
@@ -245,6 +242,9 @@
 /// Fixes lower horizontal wind speed value
 /// Credits: (Easy Fix)
 #define QOL_FIX_HORIZONTAL_WIND_SPEED (0 || QOL_FIXES)
+/// Fixes fake pole grab on the bottom of it, allowing to be properly grabbed
+/// Credits: (Arceveti)
+#define QOL_FIX_POLE_BOTTOM_GRAB (0 || QOL_FIXES)
 /// Fixes undefined anim return in the hit wall code, more info in the fix itself
 /// Credits: (Arceveti)
 #define QOL_FIX_HIT_WALL_ACTION (0 || QOL_FIXES)
@@ -272,9 +272,6 @@
 /// Fixes missing not grabbable check in water
 /// Credits: (Arceveti)
 #define QOL_FIX_WATER_GRAB_NOT_GRABBABLE (0 || QOL_FIXES)
-/// Fixes turning around on the ground
-/// Credits: (Arceveti)
-#define QOL_FIX_GROUND_TURN_RADIUS (0 || QOL_FIXES)
 /// Fixes several stationary bugs by perform ground steps while standing still
 /// Credits: (Arceveti)
 #define QOL_FIX_STATIONARY_GROUND_STEPS (0 || QOL_FIXES)
@@ -283,7 +280,7 @@
 #define QOL_FIX_LAVA_INTERACTION (0 || QOL_FIXES)
 /// Fixes palm height hardcoded course check and height when climbing up/down
 /// Credits: (Arceveti)
-#define QOL_FIX_PALM_TREE_LEAF_HEIGHT (0 || QOL_FIXES)
+#define QOL_FIX_PALM_TREE_LEAF_HEIGHT (0 || QOL_FIXES || !VANILLA_CHECKS)
 /// Fixes crash if there's no referenced ceiling
 /// Credits: (Arceveti)
 #define QOL_FIX_CEILING_NULL_CRASH (0 || QOL_FIXES)
@@ -308,10 +305,14 @@
 /// Fixes Mr L iris parent object when it deactivates
 /// Credits: (Arceveti)
 #define QOL_FIX_MR_I_DELETED_PARENT (0 || QOL_FIXES)
+/// Fixes find_floor_slope so it handles OOB slopes
+/// Credits: (Arceveti)
+#define QOL_FIX_FLOOR_SLOPE_OOB (0 || QOL_FIXES)
+/// Fixes star door room rendering
+/// Credits: (Arceveti)
+#define QOL_FIX_STAR_DOOR_ROOM_RENDER (0 || QOL_FIXES)
+
 // --| Unused Code Fixes (for convenience)
-/// Fixes code error in func_eu_802e27e4_unused
-/// Credits: (Easy Fix)
-#define QOL_FIX_UNUSED_LOOP_AUDIO_EU_SH (0 || QOL_FIXES)
 /// Fixes (or rather removes) 0 yaw code in Beta Chest object
 /// Credits: (Easy Fix)
 #define QOL_FIX_UNUSED_BETA_CHEST_YAW (0 || QOL_FIXES)
@@ -325,9 +326,6 @@
 /// Fixes duplicated red/white display list in Goddard and properly uses the next ones
 /// Credits: (Easy Fix)
 #define QOL_FIX_ASSET_DUP_STAR_GD (0 || (QOL_FIXES && GODDARD_MFACE))
-/// Fixes Burn Smoke texture so it properly displays it
-/// Credits: (Easy Fix)
-#define QOL_FIX_ASSET_BURN_SMOKE (0 || QOL_FIXES)
 /// Fixes Koopa's pink shorts caused by a miscalled light color value
 /// Credits: (Easy Fix)
 #define QOL_FIX_ASSET_KOOPA_SHORTS (0 || QOL_FIXES)
@@ -337,6 +335,9 @@
 /// Fixes impossible coins (also fixes impossible Goomba since it's related)
 /// Credits: (AloXado320)
 #define QOL_FIX_ASSET_IMPOSSIBLE_COINS (0 || QOL_FIXES)
+/// Fixes Burn Smoke texture so it properly displays it
+/// Credits: (Kaze, Arceveti)
+#define QOL_FIX_ASSET_BURN_SMOKE (0 || QOL_FIXES)
 /// Fixes 1up locations in CCM slide
 /// Credits: (Arceveti)
 #define QOL_FIX_ASSET_CCM_SLIDE_1UPS (0 || QOL_FIXES)

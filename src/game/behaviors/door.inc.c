@@ -59,6 +59,9 @@ void bhv_door_loop(void) {
     switch (o->oAction) {
         case 0:
             cur_obj_init_animation_with_sound(0);
+#if QOL_FIX_STAR_DOOR_ROOM_RENDER
+            load_object_collision_model();
+#endif
             break;
         case 1:
             door_animation_and_reset(1);
@@ -78,9 +81,11 @@ void bhv_door_loop(void) {
             break;
     }
 
+#if !QOL_FIX_STAR_DOOR_ROOM_RENDER
     if (o->oAction == 0) {
         load_object_collision_model();
     }
+#endif
 
     bhv_star_door_loop_2();
 }

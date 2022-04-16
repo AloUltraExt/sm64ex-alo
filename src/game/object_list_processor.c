@@ -498,7 +498,7 @@ void spawn_objects_from_info(UNUSED s32 unused, struct SpawnInfo *spawnInfo) {
             object->respawnInfo = &spawnInfo->behaviorArg;
             
             // ex-alo change
-            // Checks for Mario behavior so beh param 4 can be freely used
+            // Checks for Mario behavior so bparam4 can be used by any object
             if (object->behavior == segmented_to_virtual(bhvMario)) {
                 gMarioObject = object;
                 geo_make_first_child(&object->header.gfx.node);
@@ -517,6 +517,10 @@ void spawn_objects_from_info(UNUSED s32 unused, struct SpawnInfo *spawnInfo) {
             object->oMoveAnglePitch = spawnInfo->startAngle[0];
             object->oMoveAngleYaw = spawnInfo->startAngle[1];
             object->oMoveAngleRoll = spawnInfo->startAngle[2];
+            
+            // ex-alo change
+            // also set object floor height
+            object->oFloorHeight = find_floor(object->oPosX, object->oPosY, object->oPosZ, &object->oFloor);
         }
 
         spawnInfo = spawnInfo->next;
@@ -569,13 +573,10 @@ void clear_objects(void) {
  * Update spawner and surface objects.
  */
 void update_terrain_objects(void) {
+    // ex-alo change
+    // Fixes object counter list
     gObjectCounter = update_objects_in_list(&gObjectLists[OBJ_LIST_SPAWNER]);
-    //! This was meant to be +=
-    #if QOL_FIX_OBJ_COUNT_LIST
-    gObjectCounter += update_objects_in_list(&gObjectLists[OBJ_LIST_SURFACE]);
-    #else
-    gObjectCounter = update_objects_in_list(&gObjectLists[OBJ_LIST_SURFACE]);
-    #endif
+                   + update_objects_in_list(&gObjectLists[OBJ_LIST_SURFACE]);
 }
 
 /**

@@ -285,6 +285,11 @@ s32 stationary_ground_step(struct MarioState *m) {
 }
 
 extern s32 analog_stick_held_back(struct MarioState *m);
+#if QOL_FIX_SHELL_SPEED_NEGATIVE_OFFSET
+#define NEGATIVE(val) -val
+#else
+#define NEGATIVE(val) val
+#endif
 
 static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
 #if BETTER_RESOLVE_WALL_COLLISION
@@ -326,11 +331,7 @@ static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
     if ((m->action & ACT_FLAG_RIDING_SHELL) && floorHeight < waterLevel) {
         floorHeight = waterLevel;
         floor = &gWaterSurfacePseudoFloor;
-#if QOL_FIX_SHELL_SPEED_NEGATIVE_OFFSET
-        floor->originOffset = -floorHeight;
-#else
-        floor->originOffset = floorHeight; //! Wrong origin offset (no effect)
-#endif
+        floor->originOffset = NEGATIVE(floorHeight);
     }
 
     if (nextPos[1] > floorHeight + 100.0f) {
@@ -643,11 +644,7 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
     if ((m->action & ACT_FLAG_RIDING_SHELL) && floorHeight < waterLevel) {
         floorHeight = waterLevel;
         floor = &gWaterSurfacePseudoFloor;
-#if QOL_FIX_SHELL_SPEED_NEGATIVE_OFFSET
-        floor->originOffset = -floorHeight;
-#else
-        floor->originOffset = floorHeight; //! Incorrect origin offset (no effect)
-#endif
+        floor->originOffset = NEGATIVE(floorHeight);
     }
 
     if (nextPos[1] <= floorHeight) {
@@ -823,6 +820,8 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
     return AIR_STEP_NONE;
 #endif
 }
+
+#undef NEGATIVE
 
 void apply_twirl_gravity(struct MarioState *m) {
     f32 terminalVelocity;

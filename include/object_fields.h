@@ -129,8 +129,7 @@
 #define /*0x1A8*/ oUnusedBhvParams            OBJECT_FIELD_U32(0x48)
 // 0x1AC-0x1B2 (0x48-0x4A) are object specific and defined below the common fields.
 #define /*0x1B4*/ oWallAngle                  OBJECT_FIELD_S32(0x4B)
-#define /*0x1B8*/ oFloorType                  OBJECT_FIELD_S16(0x4C, 0)
-#define /*0x1BA*/ oFloorRoom                  OBJECT_FIELD_S16(0x4C, 1)
+// 0x1B8-0x1BA (0x4C) were oFloorType and oFloorRoom, but their use was redundant so it was freed
 #define /*0x1BC*/ oAngleToHome                OBJECT_FIELD_S32(0x4D)
 #define /*0x1C0*/ oFloor                      OBJECT_FIELD_SURFACE(0x4E)
 #define /*0x1C4*/ oDeathSound                 OBJECT_FIELD_S32(0x4F)

@@ -236,7 +236,6 @@ s32 cur_obj_is_mario_on_platform(void);
 s32 jiggle_bbh_stair(s32 a0);
 void cur_obj_call_action_function(void (*actionFunctions[])(void));
 void spawn_base_star_with_no_lvl_exit(void);
-s32 bit_shift_left(s32 a0);
 s32 cur_obj_mario_far_away(void);
 s32 is_mario_moving_fast_or_in_air(s32 speedThreshold);
 s32 is_item_in_array(s8 item, s8 *array);
@@ -280,7 +279,7 @@ void cur_obj_spawn_star_at_y_offset(f32 targetX, f32 targetY, f32 targetZ, f32 o
 #endif
 
 // Extra functions
-void obj_set_model(struct Object *obj, s32 modelID);
+void obj_set_model(struct Object *obj, u16 modelID);
 s32 obj_has_model(struct Object *obj, u16 modelID);
 s32 obj_get_model(struct Object *obj);
 

@@ -1113,6 +1113,12 @@ s32 act_falling_exit_airborne(struct MarioState *m) {
     return FALSE;
 }
 
+#if QOL_FIX_MISSING_SOUNDS_KEY_EXIT
+#define BREAK break
+#else
+#define BREAK //! fallthrough
+#endif
+
 s32 act_exit_land_save_dialog(struct MarioState *m) {
     s32 animFrame;
     stationary_ground_step(m);
@@ -1147,28 +1153,16 @@ s32 act_exit_land_save_dialog(struct MarioState *m) {
             switch (animFrame) {
                 case -1:
                     spawn_obj_at_mario_rel_yaw(m, MODEL_BOWSER_KEY_CUTSCENE, bhvBowserKeyCourseExit, -32768);
-                    //! fallthrough
-                    #if QOL_FIX_MISSING_SOUNDS_KEY_EXIT
-                    break;
-                    #endif
+                    BREAK;
                 case 67:
                     play_sound(SOUND_ACTION_KEY_SWISH, m->marioObj->header.gfx.cameraToObject);
-                    //! fallthrough
-                    #if QOL_FIX_MISSING_SOUNDS_KEY_EXIT
-                    break;
-                    #endif
+                    BREAK;
                 case 83:
                     play_sound(SOUND_ACTION_PAT_BACK, m->marioObj->header.gfx.cameraToObject);
-                    //! fallthrough
-                    #if QOL_FIX_MISSING_SOUNDS_KEY_EXIT
-                    break;
-                    #endif
+                    BREAK;
                 case 111:
                     play_sound(SOUND_ACTION_UNKNOWN45C, m->marioObj->header.gfx.cameraToObject);
-                    // no break
-                    #if QOL_FIX_MISSING_SOUNDS_KEY_EXIT
-                    break;
-                    #endif
+                    BREAK;
             }
             handle_save_menu(m);
             break;
@@ -1207,6 +1201,8 @@ s32 act_exit_land_save_dialog(struct MarioState *m) {
     m->marioObj->header.gfx.angle[1] += 0x8000;
     return FALSE;
 }
+
+#undef BREAK
 
 s32 act_death_exit(struct MarioState *m) {
     if (15 < m->actionTimer++

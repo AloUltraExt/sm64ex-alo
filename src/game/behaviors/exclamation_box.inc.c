@@ -148,7 +148,7 @@ void exclamation_box_act_4(void) {
     spawn_triangle_break_particles(20, MODEL_CARTOON_STAR, 0.3f, o->oAnimState);
     create_sound_spawner(SOUND_GENERAL_BREAK_BOX);
 
-    if (o->oBhvParams2ndByte <= EXCLAMATION_BOX_BP_SPECIAL_CAP_END) {
+    if (o->oBhvParams2ndByte <= EXCLAMATION_BOX_BP_RESPAWN_END) {
         o->oAction = 5;
         cur_obj_hide();
     } else {

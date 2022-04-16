@@ -7,6 +7,8 @@
 #include "ingame_menu.h"
 #include "envfx_snow.h"
 #include "envfx_bubbles.h"
+#include "camera.h"
+#include "level_update.h"
 #include "engine/surface_collision.h"
 #include "engine/math_util.h"
 #include "engine/behavior_script.h"
@@ -77,11 +79,20 @@ void patch_interpolated_snow_particles(void) {
 }
 #endif
 
+#if QOL_FEATURE_NO_SNOW_CEILING
+// Stores snow particles count so it spawns quicky after exiting a ceiling
+s16 gSavedSnowParticleCount;
+#endif
+
 /**
  * Initialize snow particles by allocating a buffer for storing their state
  * and setting a start amount.
  */
 s32 envfx_init_snow(s32 mode) {
+#if QOL_FEATURE_NO_SNOW_CEILING
+    gSavedSnowParticleCount = 0;
+#endif
+
     switch (mode) {
         case ENVFX_MODE_NONE:
             return FALSE;
@@ -428,6 +439,38 @@ void append_snowflake_vertex_buffer(Gfx *gfx, s32 index, Vec3s vertex1, Vec3s ve
 
 }
 
+#if QOL_FEATURE_NO_SNOW_CEILING
+/**
+ * Makes snow particles disappear if there's a ceiling 
+ * on top of Mario and the camera
+ */
+void envfx_update_ceiling_count(void) {
+    struct Surface *ceil;
+
+    // Find ceil camera position
+    find_ceil(gLakituState.pos[0], gLakituState.pos[1], gLakituState.pos[2], &ceil);
+
+    // Store particle count while not in a ceiling
+    if (ceil == NULL && gSnowParticleCount > gSavedSnowParticleCount) {
+        gSavedSnowParticleCount = gSnowParticleCount;
+    }
+
+    if (ceil != NULL) {
+        // We're entering a ceiling, quickly reduce snow particle 
+        // count down to 0
+        if (gSnowParticleCount > 0) {
+            gSnowParticleCount -= 5;
+        }
+    } else {
+        // We're exiting a ceiling, quickly increase snow particle 
+        // count up to last saved value
+        if (gSavedSnowParticleCount > gSnowParticleCount) {
+            gSnowParticleCount += 5;
+        }
+    }
+}
+#endif
+
 /**
  * Updates positions of snow particles and returns a pointer to a display list
  * drawing all snowflakes.
@@ -450,6 +493,10 @@ Gfx *envfx_update_snow(s32 snowMode, Vec3s marioPos, Vec3s camFrom, Vec3s camTo)
     if (gfxStart == NULL) {
         return NULL;
     }
+
+#if QOL_FEATURE_NO_SNOW_CEILING
+    envfx_update_ceiling_count();
+#endif
 
     envfx_update_snowflake_count(snowMode, marioPos);
 

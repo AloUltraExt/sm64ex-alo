@@ -771,6 +771,9 @@ void set_camera_height(struct Camera *c, f32 goalHeight) {
     UNUSED s16 action = sMarioCamState->action;
     f32 baseOff = 125.f;
     f32 camCeilHeight = find_ceil(c->pos[0], gLakituState.goalPos[1] - 50.f, c->pos[2], &surface);
+#if QOL_FIX_CAMERA_VERTICAL_MOVEMENT
+    f32 approachRate = 20.0f;
+#endif
 
     if (sMarioCamState->action & ACT_FLAG_HANGING) {
         marioCeilHeight = sMarioGeometry.currCeilHeight;
@@ -806,7 +809,14 @@ void set_camera_height(struct Camera *c, f32 goalHeight) {
                 c->pos[1] = goalHeight;
             }
         }
+
+#if QOL_FIX_CAMERA_VERTICAL_MOVEMENT
+        approachRate += absf(c->pos[1] - goalHeight) / 20;
+        approach_camera_height(c, goalHeight, approachRate);
+#else
         approach_camera_height(c, goalHeight, 20.f);
+#endif
+
         if (camCeilHeight != CELL_HEIGHT_LIMIT) {
             camCeilHeight -= baseOff;
             if ((c->pos[1] > camCeilHeight && sMarioGeometry.currFloorHeight + baseOff < camCeilHeight)
@@ -5401,19 +5411,9 @@ void warp_camera(f32 displacementX, f32 displacementY, f32 displacementZ) {
  */
 void approach_camera_height(struct Camera *c, f32 goal, f32 inc) {
     if (sStatusFlags & CAM_FLAG_SMOOTH_MOVEMENT) {
-#if QOL_FIX_CAMERA_VERTICAL_MOVEMENT
-        approach_f32_asymptotic_bool(&c->pos[1], goal, inc);
-#else
-        if (c->pos[1] < goal) {
-            if ((c->pos[1] += inc) > goal) {
-                c->pos[1] = goal;
-            }
-        } else {
-            if ((c->pos[1] -= inc) < goal) {
-                c->pos[1] = goal;
-            }
-        }
-#endif
+        // ex-alo change
+        // Reuse symmetric bool function
+        camera_approach_f32_symmetric_bool(&c->pos[1], goal, inc);
     } else {
         c->pos[1] = goal;
     }
@@ -10412,13 +10412,9 @@ BAD_RETURN(s32) cutscene_door_fix_cam(struct Camera *c) {
  * Loop until Mario is no longer using the door.
  */
 BAD_RETURN(s32) cutscene_door_loop(struct Camera *c) {
-#if QOL_FIX_CUTSCENE_DOOR_CHECK
-    if ((sMarioCamState->action != ACT_PULLING_DOOR) && (sMarioCamState->action != ACT_PUSHING_DOOR))
-#else
-    //! bitwise AND instead of boolean
-    if ((sMarioCamState->action != ACT_PULLING_DOOR) & (sMarioCamState->action != ACT_PUSHING_DOOR))
-#endif
-    {
+    // ex-alo change
+    // Fixes && symbol (originally &)
+    if ((sMarioCamState->action != ACT_PULLING_DOOR) && (sMarioCamState->action != ACT_PUSHING_DOOR)) {
         gCutsceneTimer = CUTSCENE_STOP;
         c->cutscene = 0;
     }

@@ -746,15 +746,17 @@ f32 find_floor_height_relative_polar(struct MarioState *m, s16 angleFromMario, f
     return floorY;
 }
 
+#if QOL_FIX_FLOOR_SLOPE_OOB
+#define CHECK(set)    set
+#else
+#define CHECK(set)
+#endif
+
 /**
  * Returns the slope of the floor based off points around Mario.
  */
 s16 find_floor_slope(struct MarioState *m, s16 yawOffset) {
-#if QOL_FEATURE_FAST_FLOOR_ALIGN
     struct Surface *floor = m->floor;
-#else
-    struct Surface *floor;
-#endif
     f32 forwardFloorY, backwardFloorY;
     f32 forwardYDelta, backwardYDelta;
     s16 result;
@@ -767,18 +769,18 @@ s16 find_floor_slope(struct MarioState *m, s16 yawOffset) {
         forwardFloorY  = get_surface_height_at_pos((m->pos[0] + x), (m->pos[2] + z), floor);
         backwardFloorY = get_surface_height_at_pos((m->pos[0] - x), (m->pos[2] - z), floor);
     } else {
-        forwardFloorY  = find_floor((m->pos[0] + x), (m->pos[1] + 100.0f), (m->pos[2] + z), &floor);
-        if (floor == NULL)  forwardFloorY = m->floorHeight; // handle OOB slopes
-        backwardFloorY = find_floor((m->pos[0] - x), (m->pos[1] + 100.0f), (m->pos[2] - z), &floor);
-        if (floor == NULL) backwardFloorY = m->floorHeight; // handle OOB slopes
-    }
-#else
+#endif    
     forwardFloorY = find_floor(m->pos[0] + x, m->pos[1] + 100.0f, m->pos[2] + z, &floor);
+    CHECK(if (floor == NULL) forwardFloorY = m->floorHeight); // handle OOB slopes
     backwardFloorY = find_floor(m->pos[0] - x, m->pos[1] + 100.0f, m->pos[2] - z, &floor);
+    CHECK(if (floor == NULL) backwardFloorY = m->floorHeight); // handle OOB slopes
+#if QOL_FEATURE_FAST_FLOOR_ALIGN
+    }
 #endif
 
     //! If Mario is near OOB, these floorY's can sometimes be -11000.
     //  This will cause these to be off and give improper slopes.
+    //  QOL_FIX_FLOOR_SLOPE_OOB fixes it
     forwardYDelta = forwardFloorY - m->pos[1];
     backwardYDelta = m->pos[1] - backwardFloorY;
 
@@ -790,6 +792,8 @@ s16 find_floor_slope(struct MarioState *m, s16 yawOffset) {
 
     return result;
 }
+
+#undef CHECK
 
 /**
  * Adjusts Mario's camera and sound based on his action status.

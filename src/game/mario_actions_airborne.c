@@ -959,12 +959,8 @@ s32 act_ground_pound(struct MarioState *m) {
             }
         }
 
-#if QOL_FIX_GROUND_POUND_WALL
-        mario_set_forward_vel(m, -0.1f);
-#else
         m->vel[1] = -50.0f;
         mario_set_forward_vel(m, 0.0f);
-#endif
 
         set_mario_animation(m, m->actionArg == 0 ? MARIO_ANIM_START_GROUND_POUND
                                                  : MARIO_ANIM_TRIPLE_JUMP_GROUND_POUND);
@@ -974,9 +970,6 @@ s32 act_ground_pound(struct MarioState *m) {
 
         m->actionTimer++;
         if (m->actionTimer >= m->marioObj->header.gfx.animInfo.curAnim->loopEnd + 4) {
-#if QOL_FIX_GROUND_POUND_WALL
-            m->vel[1] = -50.0f;
-#endif
             play_sound(SOUND_MARIO_GROUND_POUND_WAH, m->marioObj->header.gfx.cameraToObject);
             m->actionState = 1;
         }
@@ -1004,7 +997,9 @@ s32 act_ground_pound(struct MarioState *m) {
                 }
             }
             set_camera_shake_from_hit(SHAKE_GROUND_POUND);
-        } else if (stepResult == AIR_STEP_HIT_WALL) {
+        }
+#if !QOL_FIX_GROUND_POUND_WALL
+        else if (stepResult == AIR_STEP_HIT_WALL) {
             mario_set_forward_vel(m, -16.0f);
             if (m->vel[1] > 0.0f) {
                 m->vel[1] = 0.0f;
@@ -1013,6 +1008,7 @@ s32 act_ground_pound(struct MarioState *m) {
             m->particleFlags |= PARTICLE_VERTICAL_STAR;
             set_mario_action(m, ACT_BACKWARD_AIR_KB, 0);
         }
+#endif
     }
 
     return FALSE;

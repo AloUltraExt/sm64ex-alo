@@ -20,6 +20,8 @@ NODRAWINGDISTANCE ?= 0
 GODDARD_MFACE ?= 1
 # Kaze MOP Objects Port, disabled by default
 PORT_MOP_OBJS ?= 0
+# Enable level vanilla checks
+VANILLA_CHECKS ?= 1
 
 # --------------------------------------
 # General QoL Defines (see include/qol_defines.h)
@@ -161,6 +163,11 @@ endif
 # Check for MOP option
 ifeq ($(PORT_MOP_OBJS),1)
   CUSTOM_C_DEFINES += -DPORT_MOP_OBJS
+endif
+
+# Check for Vanilla checks
+ifeq ($(VANILLA_CHECKS),1)
+  CUSTOM_C_DEFINES += -DVANILLA_CHECKS
 endif
 
 # Check for QoL fixes option
