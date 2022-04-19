@@ -63,10 +63,6 @@ unsigned int configCameraOpacity = PUPPYCAM_OPACITY_TYPE_FADE;
 bool configDebugCamera   = 0;
 #endif
 
-//Some macros for the sake of basic human sanity.
-#define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
-#define ABS(x) ((x) > 0.f ? (x) : -(x))
-
 s16 LENSIN(s16 length, s16 direction)
 {
     return (length * sins(direction));
@@ -202,22 +198,11 @@ void puppycam_activate_cutscene(s32 (*scene)(), s32 lockinput)
 //If you've read camera.c this will look familiar.
 //It takes the next 4 spline points and extrapolates a curvature based positioning of the camera vector that's passed through.
 //It's a standard B spline
-static void puppycam_evaluate_spline(f32 progress, Vec3s cameraPos, Vec3f spline1, Vec3f spline2, Vec3f spline3, Vec3f spline4)
-{
-    f32 tempP[4];
-
-    if (progress > 1.0f) {
-        progress = 1.0f;
-    }
-
-    tempP[0] = (1.0f - progress) * (1.0f - progress) * (1.0f - progress) / 6.0f;
-    tempP[1] = progress * progress * progress / 2.0f - progress * progress + 0.6666667f;
-    tempP[2] = -progress * progress * progress / 2.0f + progress * progress / 2.0f + progress / 2.0f + 0.16666667f;
-    tempP[3] = progress * progress * progress / 6.0f;
-
-    cameraPos[0] = tempP[0] * spline1[0] + tempP[1] * spline2[0] + tempP[2] * spline3[0] + tempP[3] * spline4[0];
-    cameraPos[1] = tempP[0] * spline1[1] + tempP[1] * spline2[1] + tempP[2] * spline3[1] + tempP[3] * spline4[1];
-    cameraPos[2] = tempP[0] * spline1[2] + tempP[1] * spline2[2] + tempP[2] * spline3[2] + tempP[3] * spline4[2];
+static void puppycam_evaluate_spline(f32 progress, Vec3s pos, Vec3f spline1, Vec3f spline2, Vec3f spline3, Vec3f spline4) {
+    Vec3f posf;
+    vec3s_to_vec3f(posf, pos);
+    evaluate_cubic_spline(progress, posf, spline1, spline2, spline3, spline4);
+    vec3f_to_vec3s(pos, posf);
 }
 
 s32 puppycam_move_spline(struct sPuppySpline splinePos[], struct sPuppySpline splineFocus[], s32 mode, s32 index)

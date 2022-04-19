@@ -3,6 +3,7 @@
 #include "sm64.h"
 #include "area.h"
 #include "engine/graph_node.h"
+#include "engine/math_util.h"
 #include "engine/surface_collision.h"
 #include "game_init.h"
 #include "geo_misc.h"

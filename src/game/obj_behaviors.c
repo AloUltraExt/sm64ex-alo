@@ -118,16 +118,6 @@ Gfx UNUSED *geo_obj_transparency_something(s32 callContext, struct GraphNode *no
 }
 
 /**
- * An absolute value function.
- */
-f32 absf_2(f32 f) {
-    if (f < 0) {
-        f *= -1.0f;
-    }
-    return f;
-}
-
-/**
  * Turns an object away from floors/walls that it runs into.
  */
 void turn_obj_away_from_surface(f32 velX, f32 velZ, f32 nX, UNUSED f32 nY, f32 nZ, f32 *objYawX,

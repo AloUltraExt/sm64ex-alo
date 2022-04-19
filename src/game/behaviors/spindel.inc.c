@@ -66,7 +66,7 @@ void bhv_spindel_loop(void) {
         o->oPosZ += o->oVelZ;
         o->oMoveAnglePitch += o->oAngleVelPitch;
 
-        if (absf_2(o->oMoveAnglePitch & 0x1fff) < 800.0f && o->oAngleVelPitch != 0) {
+        if (absf(o->oMoveAnglePitch & 0x1fff) < 800.0f && o->oAngleVelPitch != 0) {
             cur_obj_play_sound_2(SOUND_GENERAL2_SPINDEL_ROLL);
         }
 

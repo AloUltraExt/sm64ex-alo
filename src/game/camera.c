@@ -117,8 +117,6 @@ extern struct PlayerGeometry sMarioGeometry;
 extern s16 unusedFreeRoamWallYaw;
 extern s16 sAvoidYawVel;
 extern s16 sCameraYawAfterDoorCutscene;
-extern s16 unusedSplinePitch;
-extern s16 unusedSplineYaw;
 extern struct HandheldShakePoint sHandheldShakeSpline[4];
 extern s16 sHandheldShakeMag;
 extern f32 sHandheldShakeTimer;
@@ -194,9 +192,6 @@ struct CutsceneSplinePoint sCurCreditsSplinePos[32];
  * The current spline that controls the camera's focus during the credits.
  */
 struct CutsceneSplinePoint sCurCreditsSplineFocus[32];
-
-s16 unusedSplinePitch;
-s16 unusedSplineYaw;
 
 /**
  * The progress (from 0 to 1) through the current spline segment.
@@ -3663,12 +3658,6 @@ void stub_camera_2(UNUSED struct Camera *c) {
 void stub_camera_3(UNUSED struct Camera *c) {
 }
 
-void vec3f_sub(Vec3f dst, Vec3f src) {
-    dst[0] -= src[0];
-    dst[1] -= src[1];
-    dst[2] -= src[2];
-}
-
 void object_pos_to_vec3f(Vec3f dst, struct Object *o) {
     dst[0] = o->oPosX;
     dst[1] = o->oPosY;
@@ -3685,47 +3674,6 @@ void unused_object_angle_to_vec3s(Vec3s dst, struct Object *o) {
     dst[0] = o->oMoveAnglePitch;
     dst[1] = o->oMoveAngleYaw;
     dst[2] = o->oMoveAngleRoll;
-}
-
-/**
- * Produces values using a cubic b-spline curve. Basically Q is the used output,
- * u is a value between 0 and 1 that represents the position along the spline,
- * and a0-a3 are parameters that define the spline.
- *
- * The spline is described at www2.cs.uregina.ca/~anima/408/Notes/Interpolation/UniformBSpline.htm
- */
-void evaluate_cubic_spline(f32 u, Vec3f Q, Vec3f a0, Vec3f a1, Vec3f a2, Vec3f a3) {
-    f32 B[4];
-    f32 x;
-    f32 y;
-    f32 z;
-    UNUSED u8 filler[16];
-
-    if (u > 1.f) {
-        u = 1.f;
-    }
-
-    B[0] = (1.f - u) * (1.f - u) * (1.f - u) / 6.f;
-    B[1] = u * u * u / 2.f - u * u + 0.6666667f;
-    B[2] = -u * u * u / 2.f + u * u / 2.f + u / 2.f + 0.16666667f;
-    B[3] = u * u * u / 6.f;
-
-    Q[0] = B[0] * a0[0] + B[1] * a1[0] + B[2] * a2[0] + B[3] * a3[0];
-    Q[1] = B[0] * a0[1] + B[1] * a1[1] + B[2] * a2[1] + B[3] * a3[1];
-    Q[2] = B[0] * a0[2] + B[1] * a1[2] + B[2] * a2[2] + B[3] * a3[2];
-
-    // Unused code
-    B[0] = -0.5f * u * u + u - 0.33333333f;
-    B[1] = 1.5f * u * u - 2.f * u - 0.5f;
-    B[2] = -1.5f * u * u + u + 1.f;
-    B[3] = 0.5f * u * u - 0.16666667f;
-
-    x = B[0] * a0[0] + B[1] * a1[0] + B[2] * a2[0] + B[3] * a3[0];
-    y = B[0] * a0[1] + B[1] * a1[1] + B[2] * a2[1] + B[3] * a3[1];
-    z = B[0] * a0[2] + B[1] * a1[2] + B[2] * a2[2] + B[3] * a3[2];
-
-    unusedSplinePitch = atan2s(sqrtf(x * x + z * z), y);
-    unusedSplineYaw = atan2s(z, x);
 }
 
 /**
@@ -3749,8 +3697,8 @@ void evaluate_cubic_spline(f32 u, Vec3f Q, Vec3f a0, Vec3f a1, Vec3f a2, Vec3f a
  * @return 1 if the point has reached the end of the spline, when `progress` reaches 1.0 or greater, and
  * the 4th CutsceneSplinePoint in the current segment away from spline[splineSegment] has an index of -1.
  */
-s32 move_point_along_spline(Vec3f p, struct CutsceneSplinePoint spline[], s16 *splineSegment, f32 *progress) {
-    s32 finished = 0;
+s32 move_point_along_spline(Vec3f pos, struct CutsceneSplinePoint spline[], s16 *splineSegment, f32 *progress) {
+    s32 finished = FALSE;
     Vec3f controlPoints[4];
     s32 i = 0;
     f32 u = *progress;
@@ -3763,8 +3711,10 @@ s32 move_point_along_spline(Vec3f p, struct CutsceneSplinePoint spline[], s16 *s
         segment = 0;
         u = 0;
     }
-    if (spline[segment].index == -1 || spline[segment + 1].index == -1 || spline[segment + 2].index == -1) {
-        return 1;
+    if (spline[segment + 0].index == -1
+     || spline[segment + 1].index == -1
+     || spline[segment + 2].index == -1) {
+        return TRUE;
     }
 
     for (i = 0; i < 4; i++) {
@@ -3772,7 +3722,7 @@ s32 move_point_along_spline(Vec3f p, struct CutsceneSplinePoint spline[], s16 *s
         controlPoints[i][1] = spline[segment + i].point[1];
         controlPoints[i][2] = spline[segment + i].point[2];
     }
-    evaluate_cubic_spline(u, p, controlPoints[0], controlPoints[1], controlPoints[2], controlPoints[3]);
+    evaluate_cubic_spline(u, pos, controlPoints[0], controlPoints[1], controlPoints[2], controlPoints[3]);
 
     if (spline[*splineSegment + 1].speed != 0) {
         firstSpeed = 1.0f / spline[*splineSegment + 1].speed;
@@ -3798,7 +3748,7 @@ s32 move_point_along_spline(Vec3f p, struct CutsceneSplinePoint spline[], s16 *s
         (*splineSegment)++;
         if (spline[*splineSegment + 3].index == -1) {
             *splineSegment = 0;
-            finished = 1;
+            finished = TRUE;
         }
         (*progress)--;
     }
@@ -4073,7 +4023,7 @@ s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius) {
             normZ = wall->normal.z;
             originOffset = wall->originOffset;
             offset = normX * newPos[i][0] + normY * newPos[i][1] + normZ * newPos[i][2] + originOffset;
-            offsetAbsolute = ABS2(offset);
+            offsetAbsolute = ABS(offset);
             if (offsetAbsolute < radius) {
                 newPos[i][0] += normX * (radius - offset);
                 newPos[i][2] += normZ * (radius - offset);
@@ -4082,18 +4032,6 @@ s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius) {
         }
     }
     return numCollisions;
-}
-
-/**
- * Compare a vector to a position, return TRUE if they match.
- */
-s32 vec3f_compare(Vec3f pos, f32 posX, f32 posY, f32 posZ) {
-    s32 equal = FALSE;
-
-    if (pos[0] == posX && pos[1] == posY && pos[2] == posZ) {
-        equal = TRUE;
-    }
-    return equal;
 }
 
 s32 clamp_pitch(Vec3f from, Vec3f to, s16 maxPitch, s16 minPitch) {
@@ -4140,72 +4078,6 @@ s32 set_or_approach_f32_asymptotic(f32 *dst, f32 goal, f32 scale) {
 }
 
 /**
- * Approaches an f32 value by taking the difference between the target and current value
- * and adding a fraction of that to the current value.
- * Edits the current value directly, returns TRUE if the target has been reached, FALSE otherwise.
- */
-s32 approach_f32_asymptotic_bool(f32 *current, f32 target, f32 multiplier) {
-    if (multiplier > 1.f) {
-        multiplier = 1.f;
-    }
-    *current = *current + (target - *current) * multiplier;
-    if (*current == target) {
-        return FALSE;
-    } else {
-        return TRUE;
-    }
-}
-
-/**
- * Nearly the same as the above function, returns new value instead.
- */
-f32 approach_f32_asymptotic(f32 current, f32 target, f32 multiplier) {
-    current = current + (target - current) * multiplier;
-    return current;
-}
-
-/**
- * Approaches an s16 value in the same fashion as approach_f32_asymptotic_bool, returns TRUE if target
- * is reached. Note: Since this function takes integers as parameters, the last argument is the
- * reciprocal of what it would be in the previous two functions.
- */
-s32 approach_s16_asymptotic_bool(s16 *current, s16 target, s16 divisor) {
-    s16 temp = *current;
-
-    if (divisor == 0) {
-        *current = target;
-    } else {
-        temp -= target;
-        temp -= temp / divisor;
-        temp += target;
-        *current = temp;
-    }
-    if (*current == target) {
-        return FALSE;
-    } else {
-        return TRUE;
-    }
-}
-
-/**
- * Approaches an s16 value in the same fashion as approach_f32_asymptotic, returns the new value.
- * Note: last parameter is the reciprocal of what it would be in the f32 functions
- */
-s32 approach_s16_asymptotic(s16 current, s16 target, s16 divisor) {
-    s16 temp = current;
-
-    if (divisor == 0) {
-        current = target;
-    } else {
-        temp -= target;
-        temp -= temp / divisor;
-        temp += target;
-        current = temp;
-    }
-    return current;
-}
-
-/**
  * Applies the approach_f32_asymptotic_bool function to each of the X, Y, & Z components of the given
  * vector.
  */
@@ -4236,55 +4108,13 @@ void approach_vec3s_asymptotic(Vec3s current, Vec3s target, s16 xMul, s16 yMul, 
 }
 
 s32 camera_approach_s16_symmetric_bool(s16 *current, s16 target, s16 increment) {
-    s16 dist = target - *current;
-
-    if (increment < 0) {
-        increment = -1 * increment;
-    }
-    if (dist > 0) {
-        dist -= increment;
-        if (dist >= 0) {
-            *current = target - dist;
-        } else {
-            *current = target;
-        }
-    } else {
-        dist += increment;
-        if (dist <= 0) {
-            *current = target - dist;
-        } else {
-            *current = target;
-        }
-    }
-    if (*current == target) {
-        return FALSE;
-    } else {
-        return TRUE;
-    }
+    increment = abss(increment);
+    return approach_s16_symmetric_bool(current, target, increment);
 }
 
 s32 camera_approach_s16_symmetric(s16 current, s16 target, s16 increment) {
-    s16 dist = target - current;
-
-    if (increment < 0) {
-        increment = -1 * increment;
-    }
-    if (dist > 0) {
-        dist -= increment;
-        if (dist >= 0) {
-            current = target - dist;
-        } else {
-            current = target;
-        }
-    } else {
-        dist += increment;
-        if (dist <= 0) {
-            current = target - dist;
-        } else {
-            current = target;
-        }
-    }
-    return current;
+    increment = abss(increment);
+    return approach_s16_symmetric(current, target, increment);
 }
 
 s32 set_or_approach_s16_symmetric(s16 *current, s16 target, s16 increment) {
@@ -4306,58 +4136,16 @@ s32 set_or_approach_s16_symmetric(s16 *current, s16 target, s16 increment) {
  * It could possibly be an older version of the function
  */
 s32 camera_approach_f32_symmetric_bool(f32 *current, f32 target, f32 increment) {
-    f32 dist = target - *current;
-
-    if (increment < 0) {
-        increment = -1 * increment;
-    }
-    if (dist > 0) {
-        dist -= increment;
-        if (dist > 0) {
-            *current = target - dist;
-        } else {
-            *current = target;
-        }
-    } else {
-        dist += increment;
-        if (dist < 0) {
-            *current = target - dist;
-        } else {
-            *current = target;
-        }
-    }
-    if (*current == target) {
-        return FALSE;
-    } else {
-        return TRUE;
-    }
+    increment = absf(increment);
+    return approach_f32_symmetric_bool(current, target, increment);
 }
 
 /**
  * Nearly the same as the above function, this one returns the new value in place of a bool.
  */
 f32 camera_approach_f32_symmetric(f32 current, f32 target, f32 increment) {
-    f32 dist = target - current;
-
-    if (increment < 0) {
-        increment = -1 * increment;
-    }
-    if (dist > 0) {
-        dist -= increment;
-        if (dist > 0) {
-            current = target - dist;
-        } else {
-            current = target;
-        }
-    } else {
-        dist += increment;
-        if (dist < 0) {
-            current = target - dist;
-        } else {
-            current = target;
-        }
-    }
-    return current;
+    increment = absf(increment);
+    return approach_f32_symmetric(current, target, increment);
 }
 
 /**
@@ -6718,7 +6506,7 @@ s16 camera_course_processing(struct Camera *c) {
 
             case AREA_BBH:
                 // if camera is fixed at bbh_room_13_balcony_camera (but as floats)
-                if (vec3f_compare(sFixedModeBasePosition, 210.f, 420.f, 3109.f) == TRUE) {
+                if (vec3f_compare_f32(sFixedModeBasePosition, 210.f, 420.f, 3109.f)) {
                     if (sMarioCamState->pos[1] < 1800.f) {
                         transition_to_camera_mode(c, CAMERA_MODE_CLOSE, 30);
                     }

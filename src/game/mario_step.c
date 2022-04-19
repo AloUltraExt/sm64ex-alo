@@ -537,8 +537,7 @@ s32 bonk_or_hit_lava_wall(struct MarioState *m, struct WallCollisionData *wallDa
                 oldWallDYaw = wallDYaw;
                 m->wall     = wallData->walls[i];
 
-                // DEGREES(180 - 45)
-                if (wallDYaw > 0x6000) {
+                if (wallDYaw > DEGREES(180 - 45)) {
                     m->flags |= MARIO_UNKNOWN_30;
                     result = AIR_STEP_HIT_WALL;
                 }

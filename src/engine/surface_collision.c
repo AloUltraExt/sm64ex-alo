@@ -206,25 +206,19 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
         }
 
 #if BETTER_FIND_WALL_COLLISION
-        // Edge 1 vector
-        v0[0] = (f32)(surf->vertex2[0] -      surf->vertex1[0]);
-        v0[1] = (f32)(surf->vertex2[1] -      surf->vertex1[1]);
-        v0[2] = (f32)(surf->vertex2[2] -      surf->vertex1[2]);
-        // Edge 2 vector
-        v1[0] = (f32)(surf->vertex3[0] -      surf->vertex1[0]);
-        v1[1] = (f32)(surf->vertex3[1] -      surf->vertex1[1]);
-        v1[2] = (f32)(surf->vertex3[2] -      surf->vertex1[2]);
-        // Vector from vertex 1 to pos
-        v2[0] =                      x - (f32)surf->vertex1[0];
-        v2[1] =                      y - (f32)surf->vertex1[1];
-        v2[2] =                      z - (f32)surf->vertex1[2];
+        // Edge 1 vector.
+        vec3_diff(v0, surf->vertex2, surf->vertex1);
+        // Edge 2 vector.
+        vec3_diff(v1, surf->vertex3, surf->vertex1);
+        // Vector from vertex 1 to pos.
+        vec3_diff(v2, pos, surf->vertex1);
 
         // Face dot products.
-        d00 = (   sqr(v0[0]) +    sqr(v0[1]) +    sqr(v0[2]));
-        d01 = ((v0[0] * v1[0]) + (v0[1] * v1[1]) + (v0[2] * v1[2]));
-        d11 = (   sqr(v1[0]) +    sqr(v1[1]) +    sqr(v1[2]));
-        d20 = ((v2[0] * v0[0]) + (v2[1] * v0[1]) + (v2[2] * v0[2]));
-        d21 = ((v2[0] * v1[0]) + (v2[1] * v1[1]) + (v2[2] * v1[2]));
+        d00 = vec3_dot(v0, v0);
+        d01 = vec3_dot(v0, v1);
+        d11 = vec3_dot(v1, v1);
+        d20 = vec3_dot(v2, v0);
+        d21 = vec3_dot(v2, v1);
 
         // Inverse denom.
         invDenom = (d00 * d11) - (d01 * d01);
@@ -243,14 +237,10 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
                 // Edge 1-3
                 if (check_wall_edge(v1, v2, &d00, &d01, &invDenom, &offset, margin_radius)) {
                     // Edge 3 vector.
-                    v1[0] = (f32)(surf->vertex3[0] -      surf->vertex2[0]);
-                    v1[1] = (f32)(surf->vertex3[1] -      surf->vertex2[1]);
-                    v1[2] = (f32)(surf->vertex3[2] -      surf->vertex2[2]);
+                    vec3_diff(v1, surf->vertex3, surf->vertex2);
                     // Vector from vertex 2 to pos.
-                    v2[0] =                      x - (f32)surf->vertex2[0];
-                    v2[1] =                      y - (f32)surf->vertex2[1];
-                    v2[2] =                      z - (f32)surf->vertex2[2];
-                    // Edge 2-3
+                    vec3_diff(v2, pos, surf->vertex2);
+                    // Edge 2-3.
                     if (check_wall_edge(v1, v2, &d00, &d01, &invDenom, &offset, margin_radius)) {
                         continue;
                     }
@@ -1189,7 +1179,7 @@ s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface 
     norm[0] = surface->normal.x;
     norm[1] = surface->normal.y;
     norm[2] = surface->normal.z;
-    vec3f_mul(norm,RAY_OFFSET);
+    vec3_mul_val(norm, RAY_OFFSET);
 
     // Move the face forward by RAY_OFFSET.
     vec3f_add(v0, norm);
@@ -1198,10 +1188,10 @@ s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface 
 
     // Make 'e1' (edge 1) the vector from vertex 0 to vertex 1.
     Vec3f e1;
-    vec3f_dif(e1, v1, v0);
+    vec3f_diff(e1, v1, v0);
     // Make 'e2' (edge 2) the vector from vertex 0 to vertex 2.
     Vec3f e2;
-    vec3f_dif(e2, v2, v0);
+    vec3f_diff(e2, v2, v0);
     // Make 'h' the cross product of 'dir' and edge 2.
     Vec3f h;
     vec3f_cross(h, dir, e2);
@@ -1215,7 +1205,7 @@ s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface 
     f32 f = 1.0f / det; // invDet
     // Make 's' the vector from vertex 0 to 'orig'.
     Vec3f s;
-    vec3f_dif(s, orig, v0);
+    vec3f_diff(s, orig, v0);
     // Make 'u' the cos(angle) between vectors 's' and normals, divided by 'det'.
     f32 u = f * vec3f_dot(s, h);
     // Check if 'u' is within bounds.
@@ -1238,8 +1228,7 @@ s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface 
     // Successful contact
     // Make 'add_dir' into 'dir' scaled by 'length'.
     Vec3f add_dir;
-    vec3f_copy(add_dir, dir);
-    vec3f_mul(add_dir, *length);
+    vec3_prod_val(add_dir, dir, *length);
     // Make 'hit_pos' into the sum of 'orig' and 'add_dir'.
     vec3f_sum(hit_pos, orig, add_dir);
 
@@ -1311,7 +1300,7 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
     vec3f_sum(hit_pos, orig, dir);
 
     // Get normalized direction
-    f32 dir_length = vec3f_length(dir);
+    f32 dir_length = vec3_mag(dir);
     f32 max_length = dir_length;
     vec3f_copy(normalized_dir, dir);
     vec3f_normalize(normalized_dir);
@@ -1362,7 +1351,7 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
 
 void find_surface_on_ray_between_points(Vec3f pos1, Vec3f pos2, struct Surface **hit_surface, Vec3f hit_pos, s32 flags) {
     Vec3f dir;
-    vec3f_dif(dir, pos2, pos1);
+    vec3f_diff(dir, pos2, pos1);
     find_surface_on_ray(pos1, dir, hit_surface, hit_pos, flags);
 }
 
@@ -1375,7 +1364,7 @@ void raycast_collision_walls(Vec3f pos, Vec3f intendedPos, f32 yOffset) {
     Vec3f dir;
 
     // Get the vector from pos to the original intendedPos.
-    vec3f_dif(dir, intendedPos, pos);
+    vec3f_diff(dir, intendedPos, pos);
 
     // Shift the source pos upward by yOffset.
     pos[1] += yOffset;

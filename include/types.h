@@ -38,23 +38,53 @@ struct Controller {
 #endif
 };
 
+// -- Booleans --
+typedef u8  Bool8;
+typedef u16 Bool16;
+typedef u32 Bool32;
+
+// -- Vectors --
+typedef u8 Vec2uc[2];
+typedef s8  Vec2c[2];
+typedef s16 Vec2s[2];
+typedef s32 Vec2i[2];
 typedef f32 Vec2f[2];
-typedef f32 Vec3f[3]; // X, Y, Z, where Y is up
+typedef f64 Vec2d[2];
+
+typedef u8 Vec3uc[3];
+typedef s8  Vec3c[3];
 typedef s16 Vec3s[3];
 typedef s32 Vec3i[3];
-typedef f32 Vec4f[4];
-typedef s16 Vec4s[4];
+typedef f32 Vec3f[3]; // X, Y, Z, where Y is up
+typedef f64 Vec3d[3];
 
+typedef u8 Vec4uc[4];
+typedef s8  Vec4c[4];
+typedef s16 Vec4s[4];
+typedef s32 Vec4i[4];
+typedef f32 Vec4f[4];
+typedef f64 Vec4d[4];
+
+typedef f32 Mat2[2][2];
+typedef f32 Mat3[3][3];
 typedef f32 Mat4[4][4];
 
+// -- Scripts --
 typedef uintptr_t GeoLayout;
 typedef uintptr_t LevelScript;
+typedef uintptr_t BehaviorScript;
+
+// -- Angle --
+typedef s16 Angle;
+typedef u16 UAngle;
+typedef s32 Angle32;
+typedef Angle Vec3a[3];
+
 typedef s16 Movtex;
 typedef s16 MacroObject;
 typedef s16 Collision; // Collision data is limited to -32768 to 32767. Change this if you want to increase it.
 typedef s16 Trajectory;
 typedef s16 PaintingData;
-typedef uintptr_t BehaviorScript;
 typedef u8 Texture;
 typedef s8 RoomData; // Rooms are limited to -128 to 127. Change the type if you wish to have more rooms.
 typedef Collision TerrainData;

@@ -197,9 +197,6 @@
 /// Credits: (Easy Fix)
 /// Fixes Z rotation when spawning an object with rotation
 #define QOL_FIX_SPAWN_OBJECT_ANGLE_ROLL (0 || QOL_FIXES)
-/// Fixes math util bogus return values
-/// Credits: (Easy Fix)
-#define QOL_FIX_MATH_UTIL_RETURN_VALUES (0 || QOL_FIXES)
 /// Fixes boo hit velocity so they actually oscillate up then down
 /// Credits: (nim)
 #define QOL_FIX_BOO_MOVE_HIT_VELOCITY (0 || QOL_FIXES)

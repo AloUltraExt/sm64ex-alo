@@ -239,35 +239,6 @@ void obj_apply_scale_to_matrix(struct Object *obj, Mat4 dst, Mat4 src) {
     dst[3][3] = src[3][3];
 }
 
-void create_transformation_from_matrices(Mat4 a0, Mat4 a1, Mat4 a2) {
-    f32 spC, sp8, sp4;
-
-    spC = a2[3][0] * a2[0][0] + a2[3][1] * a2[0][1] + a2[3][2] * a2[0][2];
-    sp8 = a2[3][0] * a2[1][0] + a2[3][1] * a2[1][1] + a2[3][2] * a2[1][2];
-    sp4 = a2[3][0] * a2[2][0] + a2[3][1] * a2[2][1] + a2[3][2] * a2[2][2];
-
-    a0[0][0] = a1[0][0] * a2[0][0] + a1[0][1] * a2[0][1] + a1[0][2] * a2[0][2];
-    a0[0][1] = a1[0][0] * a2[1][0] + a1[0][1] * a2[1][1] + a1[0][2] * a2[1][2];
-    a0[0][2] = a1[0][0] * a2[2][0] + a1[0][1] * a2[2][1] + a1[0][2] * a2[2][2];
-
-    a0[1][0] = a1[1][0] * a2[0][0] + a1[1][1] * a2[0][1] + a1[1][2] * a2[0][2];
-    a0[1][1] = a1[1][0] * a2[1][0] + a1[1][1] * a2[1][1] + a1[1][2] * a2[1][2];
-    a0[1][2] = a1[1][0] * a2[2][0] + a1[1][1] * a2[2][1] + a1[1][2] * a2[2][2];
-
-    a0[2][0] = a1[2][0] * a2[0][0] + a1[2][1] * a2[0][1] + a1[2][2] * a2[0][2];
-    a0[2][1] = a1[2][0] * a2[1][0] + a1[2][1] * a2[1][1] + a1[2][2] * a2[1][2];
-    a0[2][2] = a1[2][0] * a2[2][0] + a1[2][1] * a2[2][1] + a1[2][2] * a2[2][2];
-
-    a0[3][0] = a1[3][0] * a2[0][0] + a1[3][1] * a2[0][1] + a1[3][2] * a2[0][2] - spC;
-    a0[3][1] = a1[3][0] * a2[1][0] + a1[3][1] * a2[1][1] + a1[3][2] * a2[1][2] - sp8;
-    a0[3][2] = a1[3][0] * a2[2][0] + a1[3][1] * a2[2][1] + a1[3][2] * a2[2][2] - sp4;
-
-    a0[0][3] = 0.0f;
-    a0[1][3] = 0.0f;
-    a0[2][3] = 0.0f;
-    a0[3][3] = 1.0f;
-}
-
 void obj_set_held_state(struct Object *obj, const BehaviorScript *heldBehavior) {
     obj->parentObj = o;
 
@@ -310,66 +281,6 @@ void cur_obj_forward_vel_approach_upward(f32 target, f32 increment) {
     } else {
         o->oForwardVel += increment;
     }
-}
-
-s32 approach_f32_signed(f32 *value, f32 target, f32 increment) {
-    s32 reachedTarget = FALSE;
-
-    *value += increment;
-
-    if (increment >= 0.0f) {
-        if (*value > target) {
-            *value = target;
-            reachedTarget = TRUE;
-        }
-    } else {
-        if (*value < target) {
-            *value = target;
-            reachedTarget = TRUE;
-        }
-    }
-
-    return reachedTarget;
-}
-
-f32 approach_f32_symmetric(f32 value, f32 target, f32 increment) {
-    f32 dist;
-
-    if ((dist = target - value) >= 0.0f) {
-        if (dist > increment) {
-            value += increment;
-        } else {
-            value = target;
-        }
-    } else {
-        if (dist < -increment) {
-            value -= increment;
-        } else {
-            value = target;
-        }
-    }
-
-    return value;
-}
-
-s16 approach_s16_symmetric(s16 value, s16 target, s16 increment) {
-    s16 dist = target - value;
-
-    if (dist >= 0) {
-        if (dist > increment) {
-            value += increment;
-        } else {
-            value = target;
-        }
-    } else {
-        if (dist < -increment) {
-            value -= increment;
-        } else {
-            value = target;
-        }
-    }
-
-    return value;
 }
 
 s32 cur_obj_rotate_yaw_toward(s16 target, s16 increment) {
@@ -654,36 +565,6 @@ void obj_set_gfx_pos_from_pos(struct Object *obj) {
 void obj_init_animation(struct Object *obj, s32 animIndex) {
     struct Animation **anims = o->oAnimations;
     geo_obj_init_animation(&obj->header.gfx, &anims[animIndex]);
-}
-
-/**
- * Multiply a vector by a matrix of the form
- * | ? ? ? 0 |
- * | ? ? ? 0 |
- * | ? ? ? 0 |
- * | 0 0 0 1 |
- * i.e. a matrix representing a linear transformation over 3 space.
- */
-void linear_mtxf_mul_vec3f(Mat4 m, Vec3f dst, Vec3f v) {
-    s32 i;
-    for (i = 0; i < 3; i++) {
-        dst[i] = m[0][i] * v[0] + m[1][i] * v[1] + m[2][i] * v[2];
-    }
-}
-
-/**
- * Multiply a vector by the transpose of a matrix of the form
- * | ? ? ? 0 |
- * | ? ? ? 0 |
- * | ? ? ? 0 |
- * | 0 0 0 1 |
- * i.e. a matrix representing a linear transformation over 3 space.
- */
-void linear_mtxf_transpose_mul_vec3f(Mat4 m, Vec3f dst, Vec3f v) {
-    s32 i;
-    for (i = 0; i < 3; i++) {
-        dst[i] = m[i][0] * v[0] + m[i][1] * v[1] + m[i][2] * v[2];
-    }
 }
 
 void obj_apply_scale_to_transform(struct Object *obj) {
@@ -1402,20 +1283,6 @@ void cur_obj_unused_resolve_wall_collisions(f32 offsetY, f32 radius) {
     if (radius > 0.1L) {
         f32_find_wall_collision(&o->oPosX, &o->oPosY, &o->oPosZ, offsetY, radius);
     }
-}
-
-s16 abs_angle_diff(s16 x0, s16 x1) {
-    s16 diff = x1 - x0;
-
-    if (diff == -0x8000) {
-        diff = -0x7FFF;
-    }
-
-    if (diff < 0) {
-        diff = -diff;
-    }
-
-    return diff;
 }
 
 void cur_obj_move_xz_using_fvel_and_yaw(void) {
@@ -2152,30 +2019,6 @@ void obj_set_hitbox(struct Object *obj, struct ObjectHitbox *hitbox) {
     obj->hurtboxRadius = obj->header.gfx.scale[0] * hitbox->hurtboxRadius;
     obj->hurtboxHeight = obj->header.gfx.scale[1] * hitbox->hurtboxHeight;
     obj->hitboxDownOffset = obj->header.gfx.scale[1] * hitbox->downOffset;
-}
-
-s32 signum_positive(s32 x) {
-    if (x >= 0) {
-        return 1;
-    } else {
-        return -1;
-    }
-}
-
-f32 absf(f32 x) {
-    if (x >= 0) {
-        return x;
-    } else {
-        return -x;
-    }
-}
-
-s32 absi(s32 x) {
-    if (x >= 0) {
-        return x;
-    } else {
-        return -x;
-    }
 }
 
 s32 cur_obj_wait_then_blink(s32 timeUntilBlinking, s32 numBlinks) {

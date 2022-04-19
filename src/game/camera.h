@@ -16,15 +16,6 @@
  * @see camera.c
  */
 
-#define ABS(x) ((x) > 0.f ? (x) : -(x))
-#define ABS2(x) ((x) >= 0.f ? (x) : -(x))
-
-/**
- * Converts an angle in degrees to sm64's s16 angle units. For example, DEGREES(90) == 0x4000
- * This should be used mainly to make camera code clearer at first glance.
- */
-#define DEGREES(x) ((x) * 0x10000 / 360)
-
 #define LEVEL_AREA_INDEX(levelNum, areaNum) (((levelNum) << 4) + (areaNum))
 
 /**
@@ -677,10 +668,9 @@ void select_mario_cam_mode(void);
 Gfx *geo_camera_main(s32 callContext, struct GraphNode *g, void *context);
 void stub_camera_2(UNUSED struct Camera *c);
 void stub_camera_3(UNUSED struct Camera *c);
-void vec3f_sub(Vec3f dst, Vec3f src);
 void object_pos_to_vec3f(Vec3f dst, struct Object *o);
 void vec3f_to_object_pos(struct Object *o, Vec3f src);
-s32 move_point_along_spline(Vec3f p, struct CutsceneSplinePoint spline[], s16 *splineSegment, f32 *progress);
+s32 move_point_along_spline(Vec3f pos, struct CutsceneSplinePoint spline[], s16 *splineSegment, f32 *progress);
 s32 cam_select_alt_mode(s32 angle);
 s32 set_cam_angle(s32 mode);
 void set_handheld_shake(u8 mode);
@@ -691,10 +681,6 @@ s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius);
 s32 clamp_pitch(Vec3f from, Vec3f to, s16 maxPitch, s16 minPitch);
 s32 is_within_100_units_of_mario(f32 posX, f32 posY, f32 posZ);
 s32 set_or_approach_f32_asymptotic(f32 *dst, f32 goal, f32 scale);
-s32 approach_f32_asymptotic_bool(f32 *current, f32 target, f32 multiplier);
-f32 approach_f32_asymptotic(f32 current, f32 target, f32 multiplier);
-s32 approach_s16_asymptotic_bool(s16 *current, s16 target, s16 divisor);
-s32 approach_s16_asymptotic(s16 current, s16 target, s16 divisor);
 void approach_vec3f_asymptotic(Vec3f current, Vec3f target, f32 xMul, f32 yMul, f32 zMul);
 void set_or_approach_vec3f_asymptotic(Vec3f dst, Vec3f goal, f32 xMul, f32 yMul, f32 zMul);
 s32 camera_approach_s16_symmetric_bool(s16 *current, s16 target, s16 increment);

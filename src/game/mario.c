@@ -979,7 +979,7 @@ static u32 set_mario_action_airborne(struct MarioState *m, u32 action, u32 actio
 static u32 set_mario_action_moving(struct MarioState *m, u32 action, UNUSED u32 actionArg) {
     s16 floorClass = mario_get_floor_class(m);
     f32 forwardVel = m->forwardVel;
-    f32 mag = min(m->intendedMag, 8.0f);
+    f32 mag = MIN(m->intendedMag, 8.0f);
 
     switch (action) {
         case ACT_WALKING:

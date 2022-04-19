@@ -500,13 +500,7 @@ void update_walking_speed(struct MarioState *m) {
         if (m->forwardVel >= 16.0f) {
             s16 turnRange = abs_angle_diff(m->faceAngle[1], m->intendedYaw);
             f32 fac = (m->forwardVel + m->intendedMag);
-            //turnRange *= (1.0f - (CLAMP(fac, 0.0f, 32.0f) / 32.0f));
-
-            if (fac > 32.0f) fac = 32.0f;
-            if (fac < 0.0f) fac = 0.0f;
-            fac /= 32.0f;
-
-            turnRange *= (1.0f - fac);
+            turnRange *= (1.0f - (CLAMP(fac, 0.0f, 32.0f) / 32.0f));
             turnRange = MAX(turnRange, 0x800);
 
             m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, turnRange, turnRange);

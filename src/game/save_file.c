@@ -604,7 +604,7 @@ u32 save_file_get_max_coin_score(s32 courseIndex) {
             }
         }
     }
-    return (maxScoreFileNum << 16) + max(maxCoinScore, 0);
+    return (maxScoreFileNum << 16) + MAX(maxCoinScore, 0);
 }
 
 s32 save_file_get_course_star_count(s32 fileIndex, s32 courseIndex) {

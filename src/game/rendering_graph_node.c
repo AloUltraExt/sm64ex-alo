@@ -509,7 +509,7 @@ static void geo_process_camera(struct GraphNodeCamera *node) {
         int i;
         for (i = 0; i < 3; i++) {
             float diff = node->pos[i] - node->prevPos[i];
-            magnitude += diff * diff;
+            magnitude += sqr(diff);
         }
         if (magnitude > 500000) {
             // Observed ~479000 in BBH when toggling R camera
@@ -634,29 +634,22 @@ static void geo_process_scale(struct GraphNodeScale *node) {
  */
 static void geo_process_billboard(struct GraphNodeBillboard *node) {
     Vec3f translation;
+    Vec3f scale;
 
     vec3s_to_vec3f(translation, node->translation);
-    mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], translation,
-                   gCurGraphNodeCamera->roll);
-#ifdef HIGH_FPS_PC
-    mtxf_billboard(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex], translation,
-                   gCurGraphNodeCamera->roll);
-#endif
+
     if (gCurGraphNodeHeldObject != NULL) {
-        mtxf_scale_vec3f(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex + 1],
-                         gCurGraphNodeHeldObject->objNode->header.gfx.scale);
-#ifdef HIGH_FPS_PC
-        mtxf_scale_vec3f(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex + 1],
-                         gCurGraphNodeHeldObject->objNode->header.gfx.scale);
-#endif
+        vec3f_copy(scale, gCurGraphNodeHeldObject->objNode->header.gfx.scale);
     } else if (gCurGraphNodeObject != NULL) {
-        mtxf_scale_vec3f(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex + 1],
-                         gCurGraphNodeObject->scale);
-#ifdef HIGH_FPS_PC
-        mtxf_scale_vec3f(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex + 1],
-                         gCurGraphNodeObject->scale);
-#endif
+        vec3f_copy(scale, gCurGraphNodeObject->scale);
+    } else {
+        vec3_same(scale, 1.0f);
     }
+
+    mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], translation, scale, gCurGraphNodeCamera->roll);
+#ifdef HIGH_FPS_PC
+    mtxf_billboard(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex], translation, scale, gCurGraphNodeCamera->roll);
+#endif
 
     inc_mat_stack();
     append_dl_and_return((struct GraphNodeDisplayList *)node);
@@ -768,7 +761,7 @@ static void geo_process_background(struct GraphNodeBackground *node) {
     }
 }
 
-static void anim_process(Vec3f translation, Vec3s rotation, u8 *animType, s16 animFrame, u16 **animAttribute) {
+void process_animated_part_type(Vec3f translation, Vec3s rotation, u8 *animType, s16 animFrame, u16 **animAttribute) {
     switch (*animType) {
         case ANIM_TYPE_TRANSLATION:
             translation[0] += gCurrAnimData[retrieve_animation_index(animFrame, animAttribute)] * gCurrAnimTranslationMultiplier;
@@ -824,9 +817,9 @@ static void geo_process_animated_part(struct GraphNodeAnimatedPart *node) {
 #endif
 
 #ifdef HIGH_FPS_PC
-    anim_process(translationInterpolated, rotationInterpolated, &animType, gPrevAnimFrame, &animAttribute);
+    process_animated_part_type(translationInterpolated, rotationInterpolated, &animType, gPrevAnimFrame, &animAttribute);
 #endif
-    anim_process(translation, rotation, &gCurrAnimType, gCurrAnimFrame, &gCurrAnimAttribute);
+    process_animated_part_type(translation, rotation, &gCurrAnimType, gCurrAnimFrame, &gCurrAnimAttribute);
 #ifdef HIGH_FPS_PC
     interpolate_vectors(translationInterpolated, translationInterpolated, translation);
     interpolate_angles(rotationInterpolated, rotationInterpolated, rotation);
@@ -1108,37 +1101,53 @@ static void interpolate_matrix(Mat4 result, Mat4 a, Mat4 b) {
         }
     }
 }
+
+void process_object_scale_interpolated(struct Object *node, Vec3f scaleInterpolated) {
+    if (gGlobalTimer == node->header.gfx.prevScaleTimestamp + 1 &&
+        gGlobalTimer != node->header.gfx.skipInterpolationTimestamp) {
+        interpolate_vectors(scaleInterpolated, node->header.gfx.prevScale, node->header.gfx.scale);
+    } else {
+        vec3f_copy(scaleInterpolated, node->header.gfx.scale);
+    }
+    vec3f_copy(node->header.gfx.prevScale, node->header.gfx.scale);
+    node->header.gfx.prevScaleTimestamp = gGlobalTimer;
+}
 #endif
 
 /**
  * Process an object node.
  */
 static void geo_process_object(struct Object *node) {
-    Mat4 mtxf;
-    s32 hasAnimation = (node->header.gfx.node.flags & GRAPH_RENDER_HAS_ANIMATION) != 0;
 #ifdef HIGH_FPS_PC
     Vec3f scaleInterpolated;
 #endif
 
     if (node->header.gfx.areaIndex == gCurGraphNodeRoot->areaIndex) {
         if (node->header.gfx.throwMatrix != NULL) {
-            mtxf_mul(gMatStack[gMatStackIndex + 1], *node->header.gfx.throwMatrix,
-                     gMatStack[gMatStackIndex]);
 #ifdef HIGH_FPS_PC
+            // Interpolate throwMatrix
+            Mat4 mtxfInterpolated;
             if (gGlobalTimer == node->header.gfx.prevThrowMatrixTimestamp + 1 &&
                 gGlobalTimer != node->header.gfx.skipInterpolationTimestamp) {
-                interpolate_matrix(mtxf, *node->header.gfx.throwMatrix, node->header.gfx.prevThrowMatrix);
-                mtxf_mul(gMatStackInterpolated[gMatStackIndex + 1], mtxf,
-                     gMatStackInterpolated[gMatStackIndex]);
+                interpolate_matrix(mtxfInterpolated, *node->header.gfx.throwMatrix, node->header.gfx.prevThrowMatrix);
             } else {
-                mtxf_mul(gMatStackInterpolated[gMatStackIndex + 1], (void *) node->header.gfx.throwMatrix,
-                         gMatStackInterpolated[gMatStackIndex]);
+                mtxf_copy(mtxfInterpolated, *node->header.gfx.throwMatrix);
             }
             mtxf_copy(node->header.gfx.prevThrowMatrix, *node->header.gfx.throwMatrix);
             node->header.gfx.prevThrowMatrixTimestamp = gGlobalTimer;
+
+            // Interpolate scale
+            process_object_scale_interpolated(node, scaleInterpolated);
 #endif
-        } else if (node->header.gfx.node.flags & GRAPH_RENDER_CYLBOARD) {
+            mtxf_mul(gMatStack[gMatStackIndex + 1], *node->header.gfx.throwMatrix, gMatStack[gMatStackIndex]);
+            mtxf_scale_vec3f(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex + 1], node->header.gfx.scale);
 #ifdef HIGH_FPS_PC
+            mtxf_mul(gMatStackInterpolated[gMatStackIndex + 1], mtxfInterpolated, gMatStackInterpolated[gMatStackIndex]);
+            mtxf_scale_vec3f(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex + 1], scaleInterpolated);
+#endif
+        } else if (node->header.gfx.node.flags & (GRAPH_RENDER_BILLBOARD | GRAPH_RENDER_CYLBOARD)) {
+#ifdef HIGH_FPS_PC
+            // Interpolate position
             Vec3f posInterpolated;
             if (gGlobalTimer == node->header.gfx.prevTimestamp + 1 &&
                 gGlobalTimer != node->header.gfx.skipInterpolationTimestamp) {
@@ -1148,33 +1157,28 @@ static void geo_process_object(struct Object *node) {
             }
             vec3f_copy(node->header.gfx.prevPos, node->header.gfx.pos);
             node->header.gfx.prevTimestamp = gGlobalTimer;
+            
+            // Interpolate scale
+            process_object_scale_interpolated(node, scaleInterpolated);
 #endif
-            mtxf_cylboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex],
-                           node->header.gfx.pos, gCurGraphNodeCamera->roll);
+            if (node->header.gfx.node.flags & GRAPH_RENDER_CYLBOARD) {
+                mtxf_cylboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], 
+                               node->header.gfx.pos, node->header.gfx.scale, gCurGraphNodeCamera->roll);
 #ifdef HIGH_FPS_PC
-            mtxf_cylboard(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex],
-                           posInterpolated, gCurGraphNodeCamera->roll);
+                mtxf_cylboard(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex],
+                               posInterpolated, scaleInterpolated, gCurGraphNodeCamera->roll);
 #endif
-        } else if (node->header.gfx.node.flags & GRAPH_RENDER_BILLBOARD) {
+            } else { // GRAPH_RENDER_BILLBOARD
+                mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], 
+                               node->header.gfx.pos, node->header.gfx.scale, gCurGraphNodeCamera->roll);
 #ifdef HIGH_FPS_PC
-            Vec3f posInterpolated;
-            if (gGlobalTimer == node->header.gfx.prevTimestamp + 1 &&
-                gGlobalTimer != node->header.gfx.skipInterpolationTimestamp) {
-                interpolate_vectors(posInterpolated, node->header.gfx.prevPos, node->header.gfx.pos);
-            } else {
-                vec3f_copy(posInterpolated, node->header.gfx.pos);
+                mtxf_billboard(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex],
+                               posInterpolated, scaleInterpolated, gCurGraphNodeCamera->roll);
+#endif
             }
-            vec3f_copy(node->header.gfx.prevPos, node->header.gfx.pos);
-            node->header.gfx.prevTimestamp = gGlobalTimer;
-#endif
-            mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex],
-                           node->header.gfx.pos, gCurGraphNodeCamera->roll);
-#ifdef HIGH_FPS_PC
-            mtxf_billboard(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex],
-                           posInterpolated, gCurGraphNodeCamera->roll);
-#endif
         } else {
 #ifdef HIGH_FPS_PC
+            // Interpolate position and angle
             Vec3f posInterpolated;
             Vec3s angleInterpolated;
             if (gGlobalTimer == node->header.gfx.prevTimestamp + 1 &&
@@ -1189,43 +1193,32 @@ static void geo_process_object(struct Object *node) {
             vec3s_copy(node->header.gfx.prevAngle, node->header.gfx.angle);
             node->header.gfx.prevTimestamp = gGlobalTimer;
 #endif
-            mtxf_rotate_zxy_and_translate(mtxf, node->header.gfx.pos, node->header.gfx.angle);
-            mtxf_mul(gMatStack[gMatStackIndex + 1], mtxf, gMatStack[gMatStackIndex]);
+            mtxf_rotate_zxy_and_translate_and_mul(node->header.gfx.angle, node->header.gfx.pos, gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex]);
 #ifdef HIGH_FPS_PC
-            mtxf_rotate_zxy_and_translate(mtxf, posInterpolated, angleInterpolated);
-            mtxf_mul(gMatStackInterpolated[gMatStackIndex + 1], mtxf, gMatStackInterpolated[gMatStackIndex]);
-#endif
-        }
-
-#ifdef HIGH_FPS_PC
-        if (gGlobalTimer == node->header.gfx.prevScaleTimestamp + 1 &&
-            gGlobalTimer != node->header.gfx.skipInterpolationTimestamp) {
-            interpolate_vectors(scaleInterpolated, node->header.gfx.prevScale, node->header.gfx.scale);
-        } else {
-            vec3f_copy(scaleInterpolated, node->header.gfx.scale);
-        }
-        vec3f_copy(node->header.gfx.prevScale, node->header.gfx.scale);
-        node->header.gfx.prevScaleTimestamp = gGlobalTimer;
+            mtxf_rotate_zxy_and_translate_and_mul(angleInterpolated, posInterpolated, gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex]);
 #endif
 
-        mtxf_scale_vec3f(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex + 1],
-                         node->header.gfx.scale);
+#ifdef HIGH_FPS_PC
+            // Interpolate scale
+            process_object_scale_interpolated(node, scaleInterpolated);
+#endif
+            mtxf_scale_vec3f(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex + 1], node->header.gfx.scale);
 #ifdef HIGH_FPS_PC 
-        mtxf_scale_vec3f(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex + 1],
-                         scaleInterpolated);
+            mtxf_scale_vec3f(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex + 1], scaleInterpolated);
 #endif
+        }
+
         node->header.gfx.throwMatrix = &gMatStack[++gMatStackIndex];
 #ifdef HIGH_FPS_PC
         node->header.gfx.throwMatrixInterpolated = &gMatStackInterpolated[gMatStackIndex];
-#endif        
-        node->header.gfx.cameraToObject[0] = gMatStack[gMatStackIndex][3][0];
-        node->header.gfx.cameraToObject[1] = gMatStack[gMatStackIndex][3][1];
-        node->header.gfx.cameraToObject[2] = gMatStack[gMatStackIndex][3][2];
+#endif
+        vec3f_copy(node->header.gfx.cameraToObject, gMatStack[gMatStackIndex][3]);
 
         // FIXME: correct types
         if (node->header.gfx.animInfo.curAnim != NULL) {
-            geo_set_animation_globals(&node->header.gfx.animInfo, hasAnimation);
+            geo_set_animation_globals(&node->header.gfx.animInfo, (node->header.gfx.node.flags & GRAPH_RENDER_HAS_ANIMATION) != 0);
         }
+
         if (obj_is_in_view(&node->header.gfx, gMatStack[gMatStackIndex])) {
             gMatStackIndex--;
             inc_mat_stack();
@@ -1278,11 +1271,7 @@ static void geo_process_object_parent(struct GraphNodeObjectParent *node) {
  * Process a held object node.
  */
 void geo_process_held_object(struct GraphNodeHeldObject *node) {
-    Mat4 mat;
     Vec3f translation;
-#ifdef HIGH_FPS_PC
-    Vec3f scaleInterpolated;
-#endif
 
 #ifdef F3DEX_GBI_2
     gSPLookAt(gDisplayListHead++, &lookAt);
@@ -1292,13 +1281,10 @@ void geo_process_held_object(struct GraphNodeHeldObject *node) {
         node->fnNode.func(GEO_CONTEXT_RENDER, &node->fnNode.node, gMatStack[gMatStackIndex]);
     }
     if (node->objNode != NULL && node->objNode->header.gfx.sharedChild != NULL) {
-        s32 hasAnimation = (node->objNode->header.gfx.node.flags & GRAPH_RENDER_HAS_ANIMATION) != 0;
-
-        translation[0] = node->translation[0] / 4.0f;
-        translation[1] = node->translation[1] / 4.0f;
-        translation[2] = node->translation[2] / 4.0f;
+        vec3_prod_val(translation, node->translation, 0.25f);
 
 #ifdef HIGH_FPS_PC
+        Vec3f scaleInterpolated;
         if (gGlobalTimer == node->objNode->header.gfx.prevScaleTimestamp + 1) {
             interpolate_vectors(scaleInterpolated, node->objNode->header.gfx.prevScale, node->objNode->header.gfx.scale);
         } else {
@@ -1308,26 +1294,15 @@ void geo_process_held_object(struct GraphNodeHeldObject *node) {
         node->objNode->header.gfx.prevScaleTimestamp = gGlobalTimer;
 #endif
 
-        mtxf_translate(mat, translation);
-        mtxf_copy(gMatStack[gMatStackIndex + 1], *gCurGraphNodeObject->throwMatrix);
-        gMatStack[gMatStackIndex + 1][3][0] = gMatStack[gMatStackIndex][3][0];
-        gMatStack[gMatStackIndex + 1][3][1] = gMatStack[gMatStackIndex][3][1];
-        gMatStack[gMatStackIndex + 1][3][2] = gMatStack[gMatStackIndex][3][2];
-        mtxf_mul(gMatStack[gMatStackIndex + 1], mat, gMatStack[gMatStackIndex + 1]);
-        mtxf_scale_vec3f(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex + 1],
-                         node->objNode->header.gfx.scale);
+        mtxf_held_object(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], 
+                         *gCurGraphNodeObject->throwMatrix, translation, node->objNode->header.gfx.scale);
 #ifdef HIGH_FPS_PC
-        mtxf_copy(gMatStackInterpolated[gMatStackIndex + 1], (void *) gCurGraphNodeObject->throwMatrixInterpolated);
-        gMatStackInterpolated[gMatStackIndex + 1][3][0] = gMatStackInterpolated[gMatStackIndex][3][0];
-        gMatStackInterpolated[gMatStackIndex + 1][3][1] = gMatStackInterpolated[gMatStackIndex][3][1];
-        gMatStackInterpolated[gMatStackIndex + 1][3][2] = gMatStackInterpolated[gMatStackIndex][3][2];
-        mtxf_mul(gMatStackInterpolated[gMatStackIndex + 1], mat, gMatStackInterpolated[gMatStackIndex + 1]);
-        mtxf_scale_vec3f(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex + 1],
-                         scaleInterpolated);
+        mtxf_held_object(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex],
+                         *gCurGraphNodeObject->throwMatrixInterpolated, translation, scaleInterpolated);
 #endif
+
         if (node->fnNode.func != NULL) {
-            node->fnNode.func(GEO_CONTEXT_HELD_OBJ, &node->fnNode.node,
-                              (struct AllocOnlyPool *) gMatStack[gMatStackIndex + 1]);
+            node->fnNode.func(GEO_CONTEXT_HELD_OBJ, &node->fnNode.node, (struct AllocOnlyPool *) gMatStack[gMatStackIndex + 1]);
         }
 
         inc_mat_stack();
@@ -1343,7 +1318,7 @@ void geo_process_held_object(struct GraphNodeHeldObject *node) {
         gCurrAnimType = 0;
         gCurGraphNodeHeldObject = (void *) node;
         if (node->objNode->header.gfx.animInfo.curAnim != NULL) {
-            geo_set_animation_globals(&node->objNode->header.gfx.animInfo, hasAnimation);
+            geo_set_animation_globals(&node->objNode->header.gfx.animInfo, (node->objNode->header.gfx.node.flags & GRAPH_RENDER_HAS_ANIMATION) != 0);
         }
 
         geo_process_node_and_siblings(node->objNode->header.gfx.sharedChild);

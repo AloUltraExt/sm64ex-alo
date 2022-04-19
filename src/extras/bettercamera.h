@@ -206,7 +206,6 @@ extern void puppycam_boot(void);
 extern void puppycam_init(void);
 extern void puppycam_loop(void);
 //extern void puppycam_shake(s16 x, s16 y, s16 z);
-extern f32 approach_f32_asymptotic(f32 current, f32 target, f32 multiplier);
 extern void puppycam_default_config(void);
 extern s16 LENCOS(s16 length, s16 direction);
 extern s16 LENSIN(s16 length, s16 direction);
