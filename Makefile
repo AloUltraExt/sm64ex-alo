@@ -217,8 +217,8 @@ ifeq ($(HOST_OS),Darwin)
     CPP := cpp-$(OSX_GCC_VER) -P
 
     ifeq ($(shell arch),arm64)
-    PLATFORM_CFLAGS := -I /usr/local/include -I /opt/homebrew/include
-    PLATFORM_LDFLAGS := -L /usr/local/lib -L /opt/homebrew/lib `pkg-config --cflags --libs sdl2` -lSDL2
+    PLATFORM_CFLAGS := -I /opt/homebrew/include
+    PLATFORM_LDFLAGS := -L /opt/homebrew/lib `pkg-config --cflags --libs sdl2` -lSDL2
     else
     PLATFORM_CFLAGS := -I /usr/local/include
     PLATFORM_LDFLAGS := -L /usr/local/lib
