@@ -216,6 +216,7 @@ ifeq ($(HOST_OS),Darwin)
     CPP := cpp-11 -P
     PLATFORM_CFLAGS := -I /opt/local/include -I /opt/homebrew/include
     PLATFORM_LDFLAGS := -L /opt/local/lib -L /opt/homebrew/lib `pkg-config --cflags --libs sdl2` -lSDL2
+    RENDER_API := GL_LEGACY
   else
     # Using Homebrew?
     ifeq ($(shell which brew >/dev/null 2>&1 && echo y),y)
