@@ -103,10 +103,18 @@ s8 gAudioUpdatesPerFrame;
 extern u64 gAudioGlobalsStartMarker;
 extern u64 gAudioGlobalsEndMarker;
 
+#ifdef __APPLE__
+//Todo: Fix audio output
+u8 gSoundDataADSR[]; // sound_data.ctl
+u8 gSoundDataRaw[];  // sound_data.tbl
+u8 gMusicData[];     // sequences.s
+u8 gBankSetsData[];  // bank_sets.s
+#else
 extern u8 gSoundDataADSR[]; // sound_data.ctl
 extern u8 gSoundDataRaw[];  // sound_data.tbl
 extern u8 gMusicData[];     // sequences.s
 extern u8 gBankSetsData[];  // bank_sets.s
+#endif
 
 ALSeqFile *get_audio_file_header(s32 arg0);
 
