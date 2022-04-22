@@ -143,8 +143,12 @@ void move_segment_table_to_dmem(void) {
 }
 #endif
 #ifdef USE_SYSTEM_MALLOC
+#ifdef __APPLE__
+#include <stdlib.h>
+#else
 #include <stdlib.h>
 #include <malloc.h>
+#endif
 #endif
 
 #ifdef USE_SYSTEM_MALLOC
