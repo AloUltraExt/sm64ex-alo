@@ -94,8 +94,12 @@ void load_engine_code_segment(void);
 #endif
 
 #ifdef USE_SYSTEM_MALLOC
+#ifdef __APPLE__
+#include <stdlib.h>
+#else
 #include <stdlib.h>
 #include <malloc.h>
+#endif
 
 struct AllocOnlyPool *alloc_only_pool_init(void);
 void alloc_only_pool_clear(struct AllocOnlyPool *pool);
