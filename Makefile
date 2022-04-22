@@ -208,29 +208,45 @@ endif
 # macOS overrides
 ifeq ($(HOST_OS),Darwin)
   OSX_BUILD := 1
+
+# Using Homebrew?
+  ifeq ($(shell which brew >/dev/null 2>&1 && echo y),y)
+    OSX_GCC_VER = $(shell find `brew --prefix`/bin/gcc* | grep -oE '[[:digit:]]+' | sort -n | uniq | tail -1)
+    CC := gcc-$(OSX_GCC_VER)
+    CXX := g++-$(OSX_GCC_VER)
+    CPP := cpp-$(OSX_GCC_VER) -P
+
+    ifeq ($(shell arch),arm64)
+    PLATFORM_CFLAGS := -I /usr/local/include -I /opt/homebrew/include
+    PLATFORM_LDFLAGS := -L /usr/local/lib -L /opt/homebrew/lib `pkg-config --cflags --libs sdl2` -lSDL2
+    else
+    PLATFORM_CFLAGS := -I /usr/local/include
+    PLATFORM_LDFLAGS := -L /usr/local/lib
+    endif
+
+    RENDER_API := GL_LEGACY
+  else
+
   # Using MacPorts?
   ifeq ($(shell test -d /opt/local/lib && echo y),y)
     OSX_GCC_VER = $(shell find /opt/local/bin/gcc* | grep -oE '[[:digit:]]+' | sort -n | uniq | tail -1)
-    CC := gcc-11
-    CXX := g++-11
-    CPP := cpp-11 -P
+    CC := gcc-mp-$(OSX_GCC_VER)
+    CXX := g++-mp-$(OSX_GCC_VER)
+    CPP := cpp-mp-$(OSX_GCC_VER) -P
+    ifeq ($(shell arch),arm64)
     PLATFORM_CFLAGS := -I /opt/local/include -I /opt/homebrew/include
     PLATFORM_LDFLAGS := -L /opt/local/lib -L /opt/homebrew/lib `pkg-config --cflags --libs sdl2` -lSDL2
+    else
+    PLATFORM_CFLAGS := -I /opt/local/include
+    PLATFORM_LDFLAGS := -L /opt/local/lib
+    endif
     RENDER_API := GL_LEGACY
   else
-    # Using Homebrew?
-    ifeq ($(shell which brew >/dev/null 2>&1 && echo y),y)
-      OSX_GCC_VER = $(shell find `brew --prefix`/bin/gcc* | grep -oE '[[:digit:]]+' | sort -n | uniq | tail -1)
-      CC := gcc-11
-      CXX := g++-11
-      CPP := cpp-11 -P
-      PLATFORM_CFLAGS := -I /usr/local/include -I /opt/homebrew/include
-      PLATFORM_LDFLAGS := -L /usr/local/lib -L /opt/homebrew/lib `pkg-config --cflags --libs sdl2` -lSDL2
-    else
-      $(error No suitable macOS toolchain found, have you installed Homebrew?)
-    endif
+    $(error No suitable macOS toolchain found, have you installed Homebrew?)
+  endif
   endif
 endif
+
 
 ifneq ($(TARGET_BITS),0)
   BITS := -m$(TARGET_BITS)

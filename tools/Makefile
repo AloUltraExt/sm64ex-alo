@@ -18,7 +18,9 @@ else
 endif
 
 ifeq ($(HOST_OS),Darwin)
+ifeq ($(shell arch),arm64)
   CFLAGS += -I /opt/homebrew/include -I .
+endif
 endif
 
 default: all-except-recomp
