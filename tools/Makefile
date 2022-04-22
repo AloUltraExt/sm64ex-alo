@@ -17,6 +17,10 @@ else
   BUILD_PROGRAMS := $(filter-out armips,$(ALL_PROGRAMS))
 endif
 
+ifeq ($(HOST_OS),Darwin)
+  CFLAGS += -I /opt/homebrew/include -I .
+endif
+
 default: all-except-recomp
 
 n64graphics_SOURCES := n64graphics.c utils.c
