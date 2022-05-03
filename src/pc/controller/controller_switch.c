@@ -8,8 +8,6 @@
 
 #include "controller_api.h"
 
-#define ABS(x) ((x) > 0 ? (x) : -(x))
-
 static bool isSixAxis = false;
 static HidVibrationDeviceHandle VibrationDeviceHandles[2][2];
 static HidSixAxisSensorHandle sixAxisHandles[4];
@@ -92,7 +90,7 @@ static void controller_switch_nx_read(OSContPad *pad) {
     s32 rightX = sticks[1].x / 409;
     s32 rightY = sticks[1].y / 409;
 
-    if(isSixAxis && ABS(leftX) < 20 && ABS(leftY) < 20) {
+    if(isSixAxis && abs(leftX) < 20 && abs(leftY) < 20) {
         HidSixAxisSensorState sixAxis;
 
         u64 style_set = padGetStyleSet(&padState);

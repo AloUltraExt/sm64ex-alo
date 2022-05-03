@@ -15,17 +15,18 @@ DEFINES :=
 # These options can either be set by building with 'make SETTING=value'.
 # 'make clean' may be required first.
 
-# Makefile Refactor from Refresh 13 is half included but not fully 
-# due to changes that are in this Makefile edited in sm64ex.
-# However, the build clean output is there in it's own way.
+# Makefile Refactor from Refresh 13 is somewhat adapted but 
+# has to be carefully to make sure sm64ex and other ports still work.
+# There's also some HackerSM64 N64 specific Makefile changes.
 
-# Compiler to use for N64 (ido or gcc)
-# IDO will get dropped soon
-#   ido - uses the SGI IRIS Development Option compiler, which is used to build
-#         an original matching N64 ROM
+# Compiler to use for N64 (and other targets if required)
 #   gcc - uses the GNU C Compiler
-COMPILER_N64 ?= gcc
-$(eval $(call validate-option,COMPILER_N64,ido gcc))
+#   clang - uses clang C/C++ frontend for LLVM
+COMPILER_TYPE ?= gcc
+$(eval $(call validate-option,COMPILER_TYPE,gcc clang))
+
+COMPILER_OPT ?= default
+$(eval $(call validate-option,COMPILER_OPT,debug default fast))
 
 # Manual target defines
 
@@ -76,7 +77,9 @@ AUDIO_API ?= SDL2
 # WII_U (forced if the target is Wii U), 3DS (forced if the target is 3DS), SWITCH (forced if the target is SWITCH)
 CONTROLLER_API ?= SDL2
 
-# Automatic settings for target devices
+#==============================================================================#
+# Automatic settings for target devices                                        #
+#==============================================================================#
 
 ifeq ($(TARGET_N64),0)
   GRUCODE := f3dex2e
@@ -152,6 +155,7 @@ ifeq ($(TARGET_WEB),0)
     else
       ifneq ($(shell which termux-setup-storage),)
         TARGET_ANDROID := 1
+        COMPILER_TYPE := clang
         ifeq ($(shell dpkg -s apksigner | grep Version | sed "s/Version: //"),0.7-2)
           OLD_APKSIGNER := 1
         endif
@@ -170,6 +174,20 @@ ifeq ($(WINDOWS_BUILD),1)
     TARGET_ARCH = i386pep
     TARGET_BITS = 64
     NO_BZERO_BCOPY := 1
+  endif
+endif
+
+ifneq (,$(filter $(RENDER_API),D3D11 D3D12))
+  ifneq ($(WINDOWS_BUILD),1)
+    $(error DirectX is only supported on Windows)
+  endif
+  ifneq ($(WINDOW_API),DXGI)
+    $(warning DirectX renderers require DXGI, forcing WINDOW_API value)
+    WINDOW_API := DXGI
+  endif
+else
+  ifeq ($(WINDOW_API),DXGI)
+    $(error DXGI can only be used with DirectX renderers)
   endif
 endif
 
@@ -230,6 +248,10 @@ ifeq ($(TARGET_WII_U),1)
   INCLUDE	    := $(foreach dir,$(LIBDIRS),-I$(dir)/include)
   LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 endif
+
+#==============================================================================#
+# Main defines                                                                 #
+#==============================================================================#
 
 # VERSION - selects the version of the game to build
 #   jp - builds the 1996 Japanese version
@@ -323,58 +345,126 @@ ifeq ($(NO_LDIV),1)
   DEFINES += NO_LDIV=1
 endif
 
+#==============================================================================#
+# Optimization flags                                                           #
+#==============================================================================#
+
+# Default non-gcc opt flags
+DEFAULT_OPT_FLAGS = -Ofast
+
+# Main opt flags (Only for N64)
+# From HackerSM64, -ffunction-sections and -fdata-sections are commented out
+# as they need sm64.ld to be rewritten
+GCC_MAIN_OPT_FLAGS_N64 = \
+  -Ofast \
+  --param case-values-threshold=20 \
+  --param max-completely-peeled-insns=10 \
+  --param max-unrolled-insns=10 \
+  -finline-limit=1 \
+  -freorder-blocks-algorithm=simple
+#  -ffunction-sections \
+#  -fdata-sections
+
+# Surface Collision
+GCC_COLLISION_OPT_FLAGS_N64 = \
+  -Ofast \
+  --param case-values-threshold=20 \
+  --param max-completely-peeled-insns=100 \
+  --param max-unrolled-insns=100 \
+  -finline-limit=0 \
+  -fno-inline \
+  -freorder-blocks-algorithm=simple  \
+#  -ffunction-sections \
+#  -fdata-sections \
+  -falign-functions=32
+
+# Math Util
+GCC_MATH_UTIL_OPT_FLAGS_N64 = \
+  -Ofast \
+  -fno-unroll-loops \
+  -fno-peel-loops \
+  --param case-values-threshold=20  \
+#  -ffunction-sections \
+#  -fdata-sections \
+  -falign-functions=32
+#   - setting any sort of -finline-limit has shown to worsen performance with math_util.c,
+#     lower values were the worst, the higher you go - the closer performance gets to not setting it at all
+
+# Rendering graph node
+GCC_GRAPH_NODE_OPT_FLAGS_N64 = \
+  -Ofast \
+  --param case-values-threshold=20 \
+  --param max-completely-peeled-insns=100 \
+  --param max-unrolled-insns=100 \
+  -finline-limit=0 \
+  -freorder-blocks-algorithm=simple  \
+#  -ffunction-sections \
+#  -fdata-sections \
+  -falign-functions=32
+  
 # Check backends
 
-ifneq (,$(filter $(RENDER_API),D3D11 D3D12))
-  ifneq ($(WINDOWS_BUILD),1)
-    $(error DirectX is only supported on Windows)
-  endif
-  ifneq ($(WINDOW_API),DXGI)
-    $(warning DirectX renderers require DXGI, forcing WINDOW_API value)
-    WINDOW_API := DXGI
-  endif
-else
-  ifeq ($(WINDOW_API),DXGI)
-    $(error DXGI can only be used with DirectX renderers)
-  endif
-endif
+#==============================================================================#
+# Universal Dependencies                                                       #
+#==============================================================================#
 
-################### Universal Dependencies ###################
+PYTHON := python3
+TOOLS_DIR = tools
 
 # (This is a bit hacky, but a lot of rules implicitly depend
 # on tools and assets, and we use directory globs further down
 # in the makefile that we want should cover assets.)
 
-PYTHON := python3
-
 ifeq (,$(findstring clean,$(MAKECMDGOALS)))
 
-# Make sure assets exist
-NOEXTRACT ?= 0
-ifeq ($(NOEXTRACT),0)
- DUMMY != $(PYTHON) extract_assets.py $(VERSION) >&2 || echo FAIL
-ifeq ($(DUMMY),FAIL)
-  $(error Failed to extract assets)
-endif
+  # Make sure assets exist
+  NOEXTRACT ?= 0
+  ifeq ($(NOEXTRACT),0)
+    DUMMY != $(PYTHON) extract_assets.py $(VERSION) >&2 || echo FAIL
+    ifeq ($(DUMMY),FAIL)
+      $(error Failed to extract assets from US ROM)
+    endif
+    ifneq (,$(wildcard baserom.jp.z64))
+      DUMMY != $(PYTHON) extract_assets.py jp >&2 || echo FAIL
+      ifeq ($(DUMMY),FAIL)
+        $(error Failed to extract assets from JP ROM)
+      endif
+    endif
+    ifneq (,$(wildcard baserom.eu.z64))
+      DUMMY != $(PYTHON) extract_assets.py eu >&2 || echo FAIL
+      ifeq ($(DUMMY),FAIL)
+        $(error Failed to extract assets from EU ROM)
+      endif
+    endif
+    ifneq (,$(wildcard baserom.sh.z64))
+      DUMMY != $(PYTHON) extract_assets.py sh >&2 || echo FAIL
+      ifeq ($(DUMMY),FAIL)
+        $(error Failed to extract assets from SH ROM)
+      endif
+    endif
+  endif
+
+  # Make tools if out of date
+  $(info Building tools...)
+  DUMMY != CC=$(CC) CXX=$(CXX) $(MAKE) -C $(TOOLS_DIR) >&2 || echo FAIL
+    ifeq ($(DUMMY),FAIL)
+      $(error Failed to build tools)
+    endif
+  $(info Building ROM...)
+
 endif
 
-# Make tools if out of date
-DUMMY != CC=$(CC) CXX=$(CXX) $(MAKE) -C tools >&2 || echo FAIL
-ifeq ($(DUMMY),FAIL)
-  $(error Failed to build tools)
-endif
-
-endif
-
-################ Target Executable and Sources ###############
+#==============================================================================#
+# Target Executable and Sources                                                #
+#==============================================================================#
 
 # BUILD_DIR is location where all build artifacts are placed
 BUILD_DIR_BASE := build
 
-ifeq ($(TARGET_WEB),1)
-  BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_web
-else ifeq ($(TARGET_N64),1)
+ifeq ($(TARGET_N64),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)
+else ifeq ($(TARGET_WEB),1)
+  BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_web
 else ifeq ($(TARGET_WII_U),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_wiiu
 else ifeq ($(TARGET_N3DS),1)
@@ -391,14 +481,15 @@ LIBULTRA := $(BUILD_DIR)/libultra.a
 
 ifeq ($(TARGET_N64),0)
 
+# EXE in this context is the executable is generated for a specific targed
 ifeq ($(TARGET_WEB),1)
   EXE := $(BUILD_DIR)/$(TARGET).html
 else ifeq ($(TARGET_WII_U),1)
   EXE := $(BUILD_DIR)/$(TARGET).rpx
 else ifeq ($(TARGET_N3DS),1)
- EXE := $(BUILD_DIR)/$(TARGET).3dsx
- ELF := $(BUILD_DIR)/$(TARGET).elf
- CIA := $(BUILD_DIR)/$(TARGET).cia
+  EXE := $(BUILD_DIR)/$(TARGET).3dsx
+  ELF := $(BUILD_DIR)/$(TARGET).elf
+  CIA := $(BUILD_DIR)/$(TARGET).cia
 else ifeq ($(WINDOWS_BUILD),1)
   EXE := $(BUILD_DIR)/$(TARGET).exe
 else ifeq ($(TARGET_ANDROID),1)
@@ -468,26 +559,34 @@ ifeq ($(GODDARD_MFACE),1)
   GODDARD_SRC_DIRS := src/goddard src/goddard/dynlists
 endif
 
-MIPSISET := -mips2
-MIPSBIT := -32
-
 ifeq ($(TARGET_N64),1)
-  ifeq ($(COMPILER_N64),gcc)
+  ifeq ($(COMPILER_TYPE),gcc)
     MIPSISET := -mips3
-    ifeq ($(DEBUG),1)
-      OPT_FLAGS := -O2 -g3
-    else
-      OPT_FLAGS := -O2
-    endif
+    OPT_FLAGS           := $(GCC_MAIN_OPT_FLAGS_N64)
+    COLLISION_OPT_FLAGS  = $(GCC_COLLISION_OPT_FLAGS_N64)
+    MATH_UTIL_OPT_FLAGS  = $(GCC_MATH_UTIL_OPT_FLAGS_N64)
+    GRAPH_NODE_OPT_FLAGS = $(GCC_GRAPH_NODE_OPT_FLAGS_N64)
+  else ifeq ($(COMPILER_TYPE),clang)
+    # clang doesn't support ABI 'o32' for 'mips3'
+    MIPSISET     := -mips2
+    OPT_FLAGS    := $(DEFAULT_OPT_FLAGS)
+    COLLISION_OPT_FLAGS  = $(DEFAULT_OPT_FLAGS)
+    MATH_UTIL_OPT_FLAGS  = $(DEFAULT_OPT_FLAGS)
+    GRAPH_NODE_OPT_FLAGS = $(DEFAULT_OPT_FLAGS)
   endif
-
 else
 
-  ifeq ($(DEBUG),1)
-    OPT_FLAGS := -g
-  else
+  ifeq ($(COMPILER_OPT),default)
     OPT_FLAGS := -O2
+  else ifeq ($(COMPILER_OPT),debug)
+    OPT_FLAGS := -g
+  else ifeq ($(COMPILER_OPT),fast)
+    OPT_FLAGS := -Ofast
   endif
+
+  COLLISION_OPT_FLAGS  = $(OPT_FLAGS)
+  MATH_UTIL_OPT_FLAGS  = $(OPT_FLAGS)
+  GRAPH_NODE_OPT_FLAGS = $(OPT_FLAGS)
 
 endif
 
@@ -652,7 +751,10 @@ GLOBAL_ASM_O_FILES = $(foreach file,$(GLOBAL_ASM_C_FILES),$(BUILD_DIR)/$(file:.c
 GLOBAL_ASM_DEP = $(BUILD_DIR)/src/audio/non_matching_dep
 endif
 
-##################### Compiler Options #######################
+#==============================================================================#
+# Compiler Options                                                             #
+#==============================================================================#
+
 INCLUDE_DIRS := include $(BUILD_DIR) $(BUILD_DIR)/include src .
 ifeq ($(TARGET_N64),1)
   INCLUDE_DIRS += include/libc
@@ -690,10 +792,8 @@ DEF_INC_CFLAGS := $(foreach i,$(INCLUDE_DIRS),-I $(i)) $(C_DEFINES)
 # Set C Preprocessor flags
 CPPFLAGS := -P -Wno-trigraphs $(DEF_INC_CFLAGS) $(CUSTOM_C_DEFINES)
   
-ifeq ($(TARGET_ANDROID),1)
-  ifneq ($(shell which termux-setup-storage),) # Termux has clang
-    CPPFLAGS := -E -P -x c -Wno-trigraphs $(DEF_INC_CFLAGS) $(CUSTOM_C_DEFINES)
-  endif
+ifeq ($(COMPILER_TYPE),clang)
+  CPPFLAGS := -E -P -x c -Wno-trigraphs $(DEF_INC_CFLAGS) $(CUSTOM_C_DEFINES)
 endif
 
 # 3DS Minimap flags
@@ -712,73 +812,66 @@ MINIMAP_T3X_HEADERS := $(foreach file,$(MINIMAP_PNG),$(BUILD_DIR)/$(file:.png=_t
 endif
 
 ifeq ($(TARGET_N64),1)
-IRIX_ROOT := tools/ido5.3_compiler
-
-ifeq ($(shell type mips-linux-gnu-ld >/dev/null 2>/dev/null; echo $$?), 0)
-  CROSS := mips-linux-gnu-
-else ifeq ($(shell type mips64-linux-gnu-ld >/dev/null 2>/dev/null; echo $$?), 0)
-  CROSS := mips64-linux-gnu-
-else
+# detect prefix for MIPS toolchain
+ifneq ($(call find-command,mips64-elf-ld),)
   CROSS := mips64-elf-
+# else ifneq ($(call find-command,mips-n64-ld),)
+#   CROSS := mips-n64-
+else ifneq ($(call find-command,mips64-ld),)
+  CROSS := mips64-
+else ifneq ($(call find-command,mips-linux-gnu-ld),)
+  CROSS := mips-linux-gnu-
+else ifneq ($(call find-command,mips64-linux-gnu-ld),)
+  CROSS := mips64-linux-gnu-
+else ifneq ($(call find-command,mips-ld),)
+  CROSS := mips-
+else
+  $(error Unable to detect a suitable MIPS toolchain installed)
 endif
 
-# check that either QEMU_IRIX is set or qemu-irix package installed
-ifeq ($(COMPILER_N64),ido)
-  ifndef QEMU_IRIX
-    QEMU_IRIX := $(shell which qemu-irix 2>/dev/null)
-    ifeq (, $(QEMU_IRIX))
-      $(error Please install qemu-irix package or set QEMU_IRIX env var to the full qemu-irix binary path)
-    endif
-  endif
-endif
+# change the compiler to gcc, to use the default, install the gcc-mips-linux-gnu package
 
 AS        := $(CROSS)as
-CC        := $(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/bin/cc
+ifeq ($(COMPILER_TYPE),gcc)
+  CC      := $(CROSS)gcc
+  $(BUILD_DIR)/actors/%.o:           OPT_FLAGS := -Ofast -mlong-calls
+  $(BUILD_DIR)/levels/%.o:           OPT_FLAGS := -Ofast -mlong-calls
+else ifeq ($(COMPILER_TYPE),clang)
+  CC      := clang
+endif
 CPP       := cpp
 LD        := $(CROSS)ld
 AR        := $(CROSS)ar
 OBJDUMP   := $(CROSS)objdump
 OBJCOPY   := $(CROSS)objcopy
 
-# change the compiler to gcc, to use the default, install the gcc-mips-linux-gnu package
-ifeq ($(COMPILER_N64),gcc)
-  CC        := $(CROSS)gcc
-endif
-
 N64_CFLAGS := -nostdinc -DTARGET_N64
 CC_CFLAGS := -fno-builtin
 
 # Check code syntax with host compiler
 CC_CHECK := gcc
-CC_CHECK_CFLAGS := -fsyntax-only -fsigned-char $(CC_CFLAGS) $(N64_CFLAGS) $(DEF_INC_CFLAGS) -std=gnu90 -Wall -Wextra -Wno-format-security -Wno-main -DNON_MATCHING -DAVOID_UB
+CC_CHECK_CFLAGS := -fsyntax-only -fsigned-char $(CC_CFLAGS) $(N64_CFLAGS) $(DEF_INC_CFLAGS) -std=gnu90 -Wall -Wextra -Wno-format-security -Wno-main -DNON_MATCHING -DAVOID_UB -m32
 
-COMMON_CFLAGS = $(OPT_FLAGS) $(N64_CFLAGS) $(MIPSISET) $(DEF_INC_CFLAGS)
+COMMON_CFLAGS = -G 0 $(OPT_FLAGS) $(N64_CFLAGS) $(MIPSISET) $(DEF_INC_CFLAGS)
 
+ifeq ($(COMPILER_TYPE),gcc)
+  CFLAGS := -mno-shared -march=vr4300 -mfix4300 -mabi=32 $(COMMON_CFLAGS) -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra
+  CFLAGS += -Wno-missing-braces
+else ifeq ($(COMPILER_TYPE),clang)
+  CFLAGS := -mfpxx -target mips -mabi=32 -G 0 -mhard-float -fomit-frame-pointer -fno-stack-protector -fno-common -I include -I src/ -I $(BUILD_DIR)/include -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra
+  CFLAGS += -Wno-missing-braces
+else
+  CFLAGS += -non_shared -Wab,-r4300_mul -Xcpluscomm -Xfullwarn -signed -32
+endif
 ASFLAGS := -march=vr4300 -mabi=32 $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(DEFINES),--defsym $(d))
-CFLAGS = -Wab,-r4300_mul -non_shared -G 0 -Xcpluscomm -Xfullwarn -signed $(COMMON_CFLAGS) $(MIPSBIT)
 RSPASMFLAGS := $(foreach d,$(DEFINES),-definelabel $(subst =, ,$(d)))
 
 OBJCOPYFLAGS := --pad-to=0x800000 --gap-fill=0xFF
 SYMBOL_LINKING_FLAGS := $(addprefix -R ,$(SEG_FILES))
 LDFLAGS := -T undefined_syms.txt -T $(BUILD_DIR)/$(LD_SCRIPT) -Map $(BUILD_DIR)/sm64.$(VERSION).map --no-check-sections $(SYMBOL_LINKING_FLAGS)
 
-# Includes extra compiler flags for workaround for n64 emus
-# -mdivide-breaks:  Uses IDO compiler like behavior for dividing by zero (Old emus such as Project64 1.6)
-# -fno-jump-tables: Disables jump function tables (Wii/Wii U virtual console)
-ifeq ($(COMPILER_N64),gcc)
-  CFLAGS := -march=vr4300 -mfix4300 -mabi=32 -mno-shared -G 0 $(COMMON_CFLAGS) -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I . -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -fno-jump-tables -ffreestanding -fwrapv -Wall -Wextra
-endif
-
 CC_CHECK += $(CUSTOM_C_DEFINES)
 CFLAGS += $(CUSTOM_C_DEFINES)
-
-ifeq ($(shell getconf LONG_BIT), 32)
-  # Work around memory allocation bug in QEMU
-  export QEMU_GUEST_BASE := 1
-else
-  # Ensure that gcc treats the code as 32-bit
-  CC_CHECK_CFLAGS += -m32
-endif
 
 # Prevent a crash with -sopt
 export LANG := C
@@ -843,7 +936,7 @@ else ifeq ($(OSX_BUILD),1)
   OBJCOPY := i686-w64-mingw32-objcopy
   OBJDUMP := i686-w64-mingw32-objdump
 else ifeq ($(TARGET_ANDROID),1) # Termux has clang
-  ifneq ($(shell which termux-setup-storage),)
+  ifeq ($(COMPILER_TYPE),clang)
     CPP      := clang
   else
     CPP      := cpp
@@ -1010,7 +1103,7 @@ else ifeq ($(WINDOWS_BUILD),1)
   ifeq ($(CROSS),)
     LDFLAGS += -no-pie
   endif
-  ifeq ($(DEBUG),1)
+  ifeq ($(COMPILER_OPT),debug)
     LDFLAGS += -mconsole
   endif
 
@@ -1052,7 +1145,9 @@ export LANG := C
 
 endif
 
-####################### Other Tools #########################
+#==============================================================================#
+# Miscellaneous Tools                                                          #
+#==============================================================================#
 
 ifeq ($(HOST_OS),Windows)
 EXT_PREFIX := .exe
@@ -1061,7 +1156,6 @@ EXT_PREFIX :=
 endif
 
 # N64 conversion tools
-TOOLS_DIR = tools
 MIO0TOOL = $(TOOLS_DIR)/mio0$(EXT_PREFIX)
 N64CKSUM = $(TOOLS_DIR)/n64cksum$(EXT_PREFIX)
 N64GRAPHICS = $(TOOLS_DIR)/n64graphics$(EXT_PREFIX)
@@ -1092,11 +1186,9 @@ else
   RSPASM = armips
 endif
 
-###################### Dependency Check #####################
-
-# Stubbed
-
-######################## Targets #############################
+#==============================================================================#
+# Main Targets                                                                 #
+#==============================================================================#
 
 ifeq ($(TARGET_N64),1)
 all: $(ROM)
@@ -1312,9 +1404,9 @@ ifeq ($(TARGET_PORT_CONSOLE),0)
   endif
 endif
 
-################################################################
-# Texture Generation                                           #
-################################################################
+#==============================================================================#
+# Texture Generation                                                           #
+#==============================================================================#
 
 # Convert PNGs to RGBA32, RGBA16, IA16, IA8, IA4, IA1, I8, I4 binary files
 
@@ -1350,9 +1442,9 @@ $(BUILD_DIR)/%.ci4: %.ci4.png
 
 endif
 
-################################################################
-
-# compressed segment generation
+#==============================================================================#
+# Compressed Segment Generation                                                #
+#==============================================================================#
 
 ifeq ($(TARGET_N64),1)
 # TODO: ideally this would be `-Trodata-segment=0x07000000` but that doesn't set the address
@@ -1463,60 +1555,13 @@ $(BUILD_DIR)/assets/demo_data.c: assets/demo_data.json $(wildcard assets/demos/*
 	@$(PRINT) "$(GREEN)Generating demo data $(NO_COL)\n"
 	$(V)$(PYTHON) tools/demo_data_converter.py assets/demo_data.json $(DEF_INC_CFLAGS) > $@
 
-# Alternate compiler flags needed for matching
-ifeq ($(COMPILER),ido)
-  $(BUILD_DIR)/levels/%/leveldata.o: OPT_FLAGS := -g
-  $(BUILD_DIR)/actors/%.o:           OPT_FLAGS := -g
-  $(BUILD_DIR)/bin/%.o:              OPT_FLAGS := -g
-  $(BUILD_DIR)/src/goddard/%.o:      OPT_FLAGS := -g
-  $(BUILD_DIR)/src/goddard/%.o:      MIPSISET := -mips1
-  $(BUILD_DIR)/lib/src/%.o:          OPT_FLAGS :=
-  $(BUILD_DIR)/lib/src/math/%.o:     OPT_FLAGS := -O2
-  $(BUILD_DIR)/lib/src/math/ll%.o:   OPT_FLAGS :=
-  $(BUILD_DIR)/lib/src/math/ll%.o:   MIPSISET := -mips3 -32
-  $(BUILD_DIR)/lib/src/ldiv.o:       OPT_FLAGS := -O2
-  $(BUILD_DIR)/lib/src/string.o:     OPT_FLAGS := -O2
-  $(BUILD_DIR)/lib/src/gu%.o:        OPT_FLAGS := -O3
-  $(BUILD_DIR)/lib/src/al%.o:        OPT_FLAGS := -O3
+# File specific opt flags
+$(BUILD_DIR)/src/audio/heap.o:          OPT_FLAGS := -Os -fno-jump-tables
+$(BUILD_DIR)/src/audio/synthesis.o:     OPT_FLAGS := -Os -fno-jump-tables
 
-  ifeq ($(VERSION),sh)
-    $(BUILD_DIR)/lib/src/_Ldtob.o:   OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/_Litob.o:   OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/_Printf.o:  OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/sprintf.o:  OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/osDriveRomInit.o: OPT_FLAGS := -g
-  endif
-  ifeq ($(VERSION),eu)
-    $(BUILD_DIR)/lib/src/_Ldtob.o:   OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/_Litob.o:   OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/_Printf.o:  OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/sprintf.o:  OPT_FLAGS := -O3
-
-    # For all audio files other than external.c and port_eu.c, put string literals
-    # in .data. (In Shindou, the port_eu.c string literals also moved to .data.)
-    $(BUILD_DIR)/src/audio/%.o:        OPT_FLAGS := -O2 -use_readwrite_const
-    $(BUILD_DIR)/src/audio/port_eu.o:  OPT_FLAGS := -O2
-  endif
-  ifeq ($(VERSION_JP_US),true)
-    $(BUILD_DIR)/src/audio/%.o:        OPT_FLAGS := -O2 -Wo,-loopunroll,0
-    $(BUILD_DIR)/src/audio/load.o:     OPT_FLAGS := -O2 -Wo,-loopunroll,0 -framepointer
-    # The source-to-source optimizer copt is enabled for audio. This makes it use
-    # acpp, which needs -Wp,-+ to handle C++-style comments.
-    # All other files than external.c should really use copt, but only a few have
-    # been matched so far.
-    $(BUILD_DIR)/src/audio/effects.o:   OPT_FLAGS := -O2 -Wo,-loopunroll,0 -sopt,-inline=sequence_channel_process_sound,-scalaroptimize=1 -Wp,-+
-    $(BUILD_DIR)/src/audio/synthesis.o: OPT_FLAGS := -O2 -Wo,-loopunroll,0 -sopt,-scalaroptimize=1 -Wp,-+
-  endif
-  $(BUILD_DIR)/src/audio/external.o: OPT_FLAGS := -O2 -Wo,-loopunroll,0
-
-# Add a target for build/eu/src/audio/*.copt to make it easier to see debug
-$(BUILD_DIR)/src/audio/%.acpp: src/audio/%.c
-	$(ACPP) $(TARGET_CFLAGS) $(DEF_INC_CFLAGS) -D__sgi -+ $< > $@
-$(BUILD_DIR)/src/audio/%.copt: $(BUILD_DIR)/src/audio/%.acpp
-	$(COPT) -signed -I=$< -CMP=$@ -cp=i -scalaroptimize=1 $(COPTFLAGS)
-$(BUILD_DIR)/src/audio/seqplayer.copt: COPTFLAGS := -inline_manual
-
-endif
+$(BUILD_DIR)/src/engine/surface_collision.o:  OPT_FLAGS := $(COLLISION_OPT_FLAGS)
+$(BUILD_DIR)/src/engine/math_util.o:          OPT_FLAGS := $(MATH_UTIL_OPT_FLAGS)
+$(BUILD_DIR)/src/game/rendering_graph_node.o: OPT_FLAGS := $(GRAPH_NODE_OPT_FLAGS)
 
 # Rebuild files with 'GLOBAL_ASM' if the NON_MATCHING flag changes.
 $(GLOBAL_ASM_O_FILES): $(GLOBAL_ASM_DEP).$(NON_MATCHING)

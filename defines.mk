@@ -117,6 +117,7 @@ endif # !TARGET_N64
 # Check for Debug option
 ifeq ($(DEBUG),1)
   CUSTOM_C_DEFINES += -DDEBUG
+  COMPILER_OPT := debug
   EXT_DEBUG_MENU := 1
 endif
 

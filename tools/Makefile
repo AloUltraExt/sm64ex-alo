@@ -5,7 +5,7 @@ HOST_ENV := $(patsubst MINGW%,MinGW,$(HOST_ENV))
 
 CC           ?= gcc
 CXX          ?= g++
-CFLAGS       := -I . -Wall -Wextra -Wno-unused-parameter -pedantic -O2 -s
+CFLAGS       := -I. -O2 -s
 LDFLAGS      := -lm
 ALL_PROGRAMS := armips n64graphics n64graphics_ci mio0 n64cksum textconv patch_elf_32bit aifc_decode aiff_extract_codebook vadpcm_enc tabledesign extract_data_for_mio skyconv
 LIBAUDIOFILE := audiofile/libaudiofile.a
@@ -17,7 +17,7 @@ else
   BUILD_PROGRAMS := $(filter-out armips,$(ALL_PROGRAMS))
 endif
 
-default: all-except-recomp
+default: all
 
 n64graphics_SOURCES := n64graphics.c utils.c
 n64graphics_CFLAGS  := -DN64GRAPHICS_STANDALONE
@@ -60,24 +60,20 @@ endif
 
 all-except-recomp: $(LIBAUDIOFILE) $(BUILD_PROGRAMS)
 
-all: all-except-recomp ido5.3_recomp
+all: all-except-recomp
 
 clean:
 	$(RM) $(ALL_PROGRAMS)
 	$(MAKE) -C audiofile clean
-	$(MAKE) -C ido5.3_recomp clean
 
 define COMPILE
 $(1): $($1_SOURCES)
 	$$(CC) $(CFLAGS) $($1_CFLAGS) $$^ -o $$@ $($1_LDFLAGS) $(LDFLAGS)
 endef
 
-ido5.3_recomp:
-	$(MAKE) -C ido5.3_recomp
-
 $(foreach p,$(BUILD_PROGRAMS),$(eval $(call COMPILE,$(p))))
 
 $(LIBAUDIOFILE):
 	@CC=$(CC) CXX=$(CXX) $(MAKE) -C audiofile
 
-.PHONY: all all-except-recomp clean default ido5.3_recomp
+.PHONY: all all-except-recomp clean default

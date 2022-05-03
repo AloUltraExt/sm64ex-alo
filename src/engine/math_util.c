@@ -63,61 +63,6 @@ s32 random_sign(void) {
     return ((random_u16() >= 0x7FFF) ? 1 : -1);
 }
 
-// Inline asm functions:
-
-#ifdef TARGET_N64 // These don't exist in N64 originally
-/// Rounds towards infinity
-inline s32 ceilf(f32 in) {
-    f32 tmp;
-    s32 out;
-    __asm__("ceil.w.s  %0,%1" : "=f" (tmp) : "f" (in ));
-    __asm__("mfc1      %0,%1" : "=r" (out) : "f" (tmp));
-    return out;
-}
-/// Rounds towards negative infinity
-inline s32 floorf(f32 in) {
-    f32 tmp;
-    s32 out;
-    __asm__("floor.w.s %0,%1" : "=f" (tmp) : "f" (in ));
-    __asm__("mfc1      %0,%1" : "=r" (out) : "f" (tmp));
-    return out;
-}
-/// Rounds towards the nearest integer
-inline s32 roundf(f32 in) {
-    f32 tmp;
-    s32 out;
-    __asm__("round.w.s %0,%1" : "=f" (tmp) : "f" (in ));
-    __asm__("mfc1      %0,%1" : "=r" (out) : "f" (tmp));
-    return out;
-}
-#endif
-
-#ifdef TARGET_N64 // MIPS optimized
-inline f32 absf(f32 in) {
-    f32 out;
-    __asm__("abs.s %0,%1" : "=f" (out) : "f" (in));
-    return out;
-}
-#else // Portable
-inline f32 absf(f32 in) {
-    if (in < 0) {
-        in *= -1.0f;
-    }
-    return in;
-}
-#endif
-
-/// Absolute value of an integer value
-inline s32 absi(s32 in) {
-    register s32 t0 = (in >> 31);
-    return ((in ^ t0) - t0);
-}
-/// Absolute value of a short value
-inline s32 abss(s16 in) {
-    register s32 t0 = (in >> 31);
-    return ((in ^ t0) - t0);
-}
-
 /// Returns the lowest of three values.
 #define min_3_func(a0, a1, a2) {\
     if (a1 < a0) a0 = a1;       \
@@ -126,7 +71,7 @@ inline s32 abss(s16 in) {
 }
 f32 min_3f(f32 a, f32 b, f32 c) { min_3_func(a, b, c); }
 s32 min_3i(s32 a, s32 b, s32 c) { min_3_func(a, b, c); }
-s32 min_3s(s16 a, s16 b, s16 c) { min_3_func(a, b, c); }
+s16 min_3s(s16 a, s16 b, s16 c) { min_3_func(a, b, c); }
 
 /// Returns the highest of three values.
 #define max_3_func(a0, a1, a2) {\
@@ -136,7 +81,7 @@ s32 min_3s(s16 a, s16 b, s16 c) { min_3_func(a, b, c); }
 }
 f32 max_3f(f32 a, f32 b, f32 c) { max_3_func(a, b, c); }
 s32 max_3i(s32 a, s32 b, s32 c) { max_3_func(a, b, c); }
-s32 max_3s(s16 a, s16 b, s16 c) { max_3_func(a, b, c); }
+s16 max_3s(s16 a, s16 b, s16 c) { max_3_func(a, b, c); }
 
 /// A combination of the above.
 #define min_max_3_func(a, b, c, min, max) { \
@@ -792,7 +737,7 @@ void mtxf_held_object(Mat4 dest, Mat4 src, Mat4 throwMatrix, Vec3f translation, 
  * Creates 'colX' and 'colZ' perpendicular to 'colY' input;
  */
 static void vec3f_create_axis_normals_from_up_dir(Vec3f colX, Vec3f colY, Vec3f colZ) {
-    vec3f_normalize(colY);
+    // Skip normalizing colY since it is already normalized in the places this function is used.
     vec3f_cross(colX, colY, colZ);
     vec3f_normalize(colX);
     vec3f_cross(colZ, colX, colY);
@@ -811,9 +756,18 @@ void mtxf_shadow(Mat4 dest, Vec3f upDir, Vec3f pos, Vec3f scale, s32 yaw) {
     Vec3f forwardDir;
     vec3f_set(forwardDir, sins(yaw), 0.0f, coss(yaw));
     vec3f_create_axis_normals_from_up_dir(leftDir, upDir, forwardDir);
-    vec3f_prod(dest[0], leftDir, scale);
-    vec3f_prod(dest[1], upDir, scale);
-    vec3f_prod(dest[2], forwardDir, scale);
+    f32 scaleX = scale[0];
+    f32 scaleY = scale[1];
+    f32 scaleZ = scale[2];
+    dest[0][0] =    leftDir[0] * scaleX;
+    dest[0][1] =    leftDir[1] * scaleY;
+    dest[0][2] =    leftDir[2] * scaleZ;
+    dest[1][0] =      upDir[0] * scaleX;
+    dest[1][1] =      upDir[1] * scaleY;
+    dest[1][2] =      upDir[2] * scaleZ;
+    dest[2][0] = forwardDir[0] * scaleX;
+    dest[2][1] = forwardDir[1] * scaleY;
+    dest[2][2] = forwardDir[2] * scaleZ;
     vec3f_copy(dest[3], pos);
     MTXF_END(dest);
 }
@@ -865,6 +819,7 @@ void mtxf_align_terrain_triangle(Mat4 mtx, Vec3f pos, s32 yaw, f32 radius) {
 
     vec3f_set(zColumn, sins(yaw), 0.0f, coss(yaw));
     find_vector_perpendicular_to_plane(yColumn, point0, point1, point2);
+    vec3f_normalize(yColumn);
     vec3f_create_axis_normals_from_up_dir(xColumn, yColumn, zColumn);
     vec3f_copy(mtx[0], xColumn);
     vec3f_copy(mtx[1], yColumn);
@@ -907,7 +862,89 @@ void mtxf_mul(Mat4 dest, Mat4 a, Mat4 b) {
     ((u32 *) dest)[15] = FLOAT_ONE;
 }
 
-#ifdef WORLD_SCALE
+#ifdef TARGET_N64 // Only compatible with N64 due to endian casting
+/**
+ * Returns a float value from an index in a fixed point matrix.
+ */
+f32 mtx_get_float(Mtx *mtx, u32 index) {
+    f32 ret = 0.0f;
+    if (index < 16) {
+        s16 *src = (s16 *)mtx;
+        s32 fixed_val = (src[index +  0] << 16)
+                    | (src[index + 16] & 0xFFFF);
+        f32 scale = (1.0f / (float)0x00010000);
+        ret = mul_without_nop((f32)fixed_val, scale);
+    }
+    return ret;
+}
+
+/**
+ * Writes a float value to a fixed point matrix.
+ */
+void mtx_set_float(Mtx *mtx, u32 index, f32 val) {
+    if (index < 16) {
+        f32 scale = ((float)0x00010000);
+        s32 fixed_val = mul_without_nop(val, scale);
+        s16 *dst = (s16 *)mtx;
+        dst[index +  0] = (fixed_val >> 16);
+        dst[index + 16] = (fixed_val & 0xFFFF);
+    }
+}
+#endif
+
+#ifdef TARGET_N64 // Optimized function using MIPS optimized calls
+// Converts a floating point matrix to a fixed point matrix
+// Makes some assumptions about certain fields in the matrix, which will always be true for valid matrices.
+__attribute__((optimize("Os"))) __attribute__((aligned(32)))
+void mtxf_to_mtx_fast_n64(s16* dst, float* src) {
+    int i;
+#if WORLD_SCALE > 1
+    float scale = ((float)0x00010000 / WORLD_SCALE);
+#else
+    float scale = ((float)0x00010000);
+#endif
+    // Iterate over rows of values in the input matrix
+    for (i = 0; i < 4; i++) {
+        // Read the three input in the current row (assume the fourth is zero)
+        float a = src[(4 * i) + 0];
+        float b = src[(4 * i) + 1];
+        float c = src[(4 * i) + 2];
+        float a_scaled = mul_without_nop(a, scale);
+        float b_scaled = mul_without_nop(b, scale);
+        float c_scaled = mul_without_nop(c, scale);
+
+        // Convert the three inputs to fixed
+        s32 a_int = (s32)a_scaled;
+        s32 b_int = (s32)b_scaled;
+        s32 c_int = (s32)c_scaled;
+
+        s32 c_high = (c_int & 0xFFFF0000);
+        s32 c_low = (c_int << 16);
+
+        // Write the integer part of a, as well as garbage into the next two bytes.
+        // Those two bytes will get overwritten by the integer part of b.
+        // This prevents needing to shift or mask the integer value of a.
+        *(s32*)(&dst[(4 * i) +  0]) = a_int;
+        // Write the fractional part of a
+        dst[(4 * i) + 16] = (s16)a_int;
+
+        // Write the integer part of b using swl to avoid needing to shift.
+        swl(dst + (4 * i), b_int, 2);
+        // Write the fractional part of b.
+        dst[(4 * i) + 16 + 1] = (s16)b_int;
+
+        // Write the integer part of c and two zeroes for the 4th column.
+        *(s32*)(&dst[(4 * i) + 2]) = c_high;
+        // Write the fractional part of c and two zeroes for the 4th column
+        *(s32*)(&dst[(4 * i) + 16 + 2]) = c_low;
+    }
+    // Write 1.0 to the bottom right entry in the output matrix
+    // The low half was already set to zero in the loop, so we only need
+    //  to set the top half.
+    dst[15] = 1;
+}
+#else // Portable, any endianness
+#if WORLD_SCALE > 1
 /**
  * Modified into a hybrid of the original function and the worldscale altered function.
  * Will check if the worldscale is below what's considered safe in vanilla bounds and
@@ -928,6 +965,7 @@ void mtxf_to_mtx_scale(Mtx *dest, Mat4 src) {
 }
 #endif
 
+#endif
 /**
  * Convert float matrix 'src' to fixed point matrix 'dest'.
  * The float matrix may not contain entries larger than 65536 or the console
@@ -938,19 +976,43 @@ void mtxf_to_mtx_scale(Mtx *dest, Mat4 src) {
  * and no crashes occur.
  */
 void mtxf_to_mtx(Mtx *dest, Mat4 src) {
-#ifdef WORLD_SCALE
+#ifdef TARGET_N64 // Optimized N64 function
+    mtxf_to_mtx_fast_n64((s16*)dest, (float*)src);
+#else // Portable
+#if WORLD_SCALE > 1
     mtxf_to_mtx_scale(dest, src);
 #else
     // Avoid type-casting which is technically UB by calling the equivalent
     // guMtxF2L function. This helps little-endian systems, as well.
     guMtxF2L(src, dest);
-#endif             
+#endif
+#endif
 }
 
 /**
  * Set 'mtx' to a transformation matrix that rotates around the z axis.
  */
-void mtxf_rotate_xy(Mtx *mtx, s16 angle) {
+#ifdef TARGET_N64 // Matrix optimized
+#define MATENTRY(a, b)                          \
+    ((s16 *) mtx)[a     ] = (((s32) b) >> 16);  \
+    ((s16 *) mtx)[a + 16] = (((s32) b) & 0xFFFF);
+void mtxf_rotate_xy(Mtx *mtx, s32 angle) {
+    s32 c = (coss(angle) * 0x10000);
+    s32 s = (sins(angle) * 0x10000);
+    f32 *mtxp = (f32 *)mtx;
+    s32 i;
+    for (i = 0; i < 16; i++) {
+        *mtxp++ = 0;
+    }
+    MATENTRY(0,  c)
+    MATENTRY(1,  s)
+    MATENTRY(4, -s)
+    MATENTRY(5,  c)
+    ((s16 *) mtx)[10] = 1;
+    ((s16 *) mtx)[15] = 1;
+}
+#else // Portable
+void mtxf_rotate_xy(Mtx *mtx, s32 angle) {
     Mat4 temp;
 
     mtxf_identity(temp);
@@ -960,26 +1022,28 @@ void mtxf_rotate_xy(Mtx *mtx, s16 angle) {
     temp[1][1] = temp[0][0];
     guMtxF2L(temp, mtx);
 }
+#endif
 
 void create_transformation_from_matrices(Mat4 dst, Mat4 a1, Mat4 a2) {
-    f32 *dstp = (f32 *)dst;
-    f32 tx = a2[3][0];
-    f32 ty = a2[3][1];
-    f32 tz = a2[3][2];
-    f32 rx, ry, rz;
-    s32 i;
+    Vec3f medium;
+    s32 i, j;
     for (i = 0; i < 3; i++) {
-        rx = a2[i][0];
-        ry = a2[i][1];
-        rz = a2[i][2];
-        dstp[ 0] = (a1[0][0] * rx + a1[0][1] * ry + a1[0][2] * rz); //   dot(a1[0], a2[i])
-        dstp[ 4] = (a1[1][0] * rx + a1[1][1] * ry + a1[1][2] * rz); //   dot(a1[1], a2[i])
-        dstp[ 8] = (a1[2][0] * rx + a1[2][1] * ry + a1[2][2] * rz); //   dot(a1[2], a2[i])
-        dstp[12] = (a1[3][0] * rx + a1[3][1] * ry + a1[3][2] * rz)  //   dot(a1[3], a2[i])
-                 - (      tx * rx +       ty * ry +       tz * rz); // - dot(a2[3], a2[i])
-        dstp++;
+        medium[i] = (a2[3][0] * a2[i][0])
+                  + (a2[3][1] * a2[i][1])
+                  + (a2[3][2] * a2[i][2]);
+        dst[i][3] = 0;
     }
-    MTXF_END(dst);
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 3; j++) {
+            dst[i][j] = (a1[i][0] * a2[j][0]) 
+                      + (a1[i][1] * a2[j][1]) 
+                      + (a1[i][2] * a2[j][2]);
+        }
+    }
+    dst[3][0] -= medium[0];
+    dst[3][1] -= medium[1];
+    dst[3][2] -= medium[2];
+    *((u32 *) &dst[3][3]) = FLOAT_ONE;
 }
 
 /**
@@ -1202,14 +1266,14 @@ Bool32 approach_angle_bool(s16 *current, s32 target, s32 inc) {
     return (*current != target);
 }
 
-s32 approach_s16(s32 current, s32 target, s32 inc, s32 dec) {
+s16 approach_s16(s32 current, s32 target, s32 inc, s32 dec) {
     s16 dist = (target - current);
     if (dist >= 0) { // target >= current
         current = ((dist >  inc) ? (current + inc) : target);
     } else { // target < current
         current = ((dist < -dec) ? (current - dec) : target);
     }
-    return (s16)current;
+    return current;
 }
 Bool32 approach_s16_bool(s16 *current, s32 target, s32 inc, s32 dec) {
     *current = approach_s16(*current, target, inc, dec);
@@ -1311,7 +1375,7 @@ Bool32 approach_s16_asymptotic_bool(s16 *current, s16 target, s16 divisor) {
  * Approaches an s16 value in the same fashion as approach_f32_asymptotic, returns the new value.
  * Note: last parameter is the reciprocal of what it would be in the f32 functions
  */
-s32 approach_s16_asymptotic(s16 current, s16 target, s16 divisor) {
+s16 approach_s16_asymptotic(s16 current, s16 target, s16 divisor) {
     s16 temp = current;
     if (divisor == 0) {
         current = target;
@@ -1324,7 +1388,7 @@ s32 approach_s16_asymptotic(s16 current, s16 target, s16 divisor) {
     return current;
 }
 
-s32 abs_angle_diff(s16 a0, s16 a1) {
+s16 abs_angle_diff(s16 a0, s16 a1) {
     s16 diff = (a1 - a0);
     if (diff == -0x8000) {
         return 0x7FFF;
@@ -1336,7 +1400,7 @@ s32 abs_angle_diff(s16 a0, s16 a1) {
  * Helper function for atan2s. Does a look up of the arctangent of y/x assuming
  * the resulting angle is in range [0, 0x2000] (1/8 of a circle).
  */
-static u32 atan2_lookup(f32 y, f32 x) {
+static u16 atan2_lookup(f32 y, f32 x) {
     return (x == 0)
         ? 0x0
         : atans(y / x);
@@ -1346,7 +1410,7 @@ static u32 atan2_lookup(f32 y, f32 x) {
  * Compute the angle from (0, 0) to (x, y) as a s16. Given that terrain is in
  * the xz-plane, this is commonly called with (z, x) to get a yaw angle.
  */
-s32 atan2s(f32 y, f32 x) {
+s16 atan2s(f32 y, f32 x) {
     u16 ret;
     if (x >= 0) {
         if (y >= 0) {

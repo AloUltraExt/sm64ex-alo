@@ -40,11 +40,18 @@
 #include "src/pc/controller/controller_keyboard.h"
 #include "src/pc/controller/controller_touchscreen.h"
 
-// TODO: figure out if this shit even works
+// PAL framerate things
 #ifdef VERSION_EU
-# define FRAMERATE 25
+#define FRAMERATE 25
 #else
-# define FRAMERATE 30
+#define FRAMERATE 30
+#endif
+
+// Only used on console targets
+#ifdef HIGH_FPS_PC
+#define SWAP_FRAME 1
+#else
+#define SWAP_FRAME 2
 #endif
 
 static SDL_Window *wnd;
@@ -117,6 +124,14 @@ const SDL_Scancode scancode_rmapping_nonextended[][2] = {
     {SDL_SCANCODE_KP_MULTIPLY, SDL_SCANCODE_PRINTSCREEN}
 };
 
+static void gfx_sdl_set_framerate(void) {
+#ifdef TARGET_PORT_CONSOLE
+    SDL_GL_SetSwapInterval(SWAP_FRAME);
+#else
+    SDL_GL_SetSwapInterval(configWindow.vsync);
+#endif
+}
+
 #define IS_FULLSCREEN() ((SDL_GetWindowFlags(wnd) & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0)
 
 static void gfx_sdl_set_fullscreen(void) {
@@ -154,7 +169,7 @@ static void gfx_sdl_reset_dimension_and_pos(void) {
     SDL_SetWindowSize(wnd, configWindow.w, configWindow.h);
     SDL_SetWindowPosition(wnd, xpos, ypos);
     // in case vsync changed
-    SDL_GL_SetSwapInterval(configWindow.vsync);
+    gfx_sdl_set_framerate();
 }
 
 static void gfx_sdl_init(const char *window_title) {
@@ -205,7 +220,7 @@ static void gfx_sdl_init(const char *window_title) {
     );
     ctx = SDL_GL_CreateContext(wnd);
 
-    SDL_GL_SetSwapInterval(configWindow.vsync);
+    gfx_sdl_set_framerate();
 
     gfx_sdl_set_fullscreen();
 

@@ -454,22 +454,89 @@ extern f32 gSineTable[];
 
 
 // Inline asm functions:
+// Inline asm functions:
 
-#ifdef TARGET_N64 // These don't exist in N64 originally
-s32 ceilf(f32 in);   
-s32 floorf(f32 in);
-s32 roundf(f32 in);
+#ifdef TARGET_N64 // MIPS optimized functions
+/// Multiply two floats without a nop.
+ALWAYS_INLINE float mul_without_nop(float a, float b) {
+    float ret;
+    __asm__ ("mul.s %0, %1, %2"
+                         : "=f"(ret)
+                         : "f"(a), "f"(b));
+    return ret;
+}
+
+/// Write a 32 bit value into the low order bytes of a register.
+ALWAYS_INLINE void swr(void* addr, s32 val, const int offset) {
+    __asm__ ("swr %1, %2(%0)"
+                        :
+                        : "g"(addr), "g"(val), "I"(offset));
+}
+
+/// Write a 32 bit value into the high order bytes of a register.
+ALWAYS_INLINE void swl(void* addr, s32 val, const int offset) {
+    __asm__ ("swl %1, %2(%0)"
+                        :
+                        : "g"(addr), "g"(val), "I"(offset));
+}
+
+/// Rounds towards infinity
+ALWAYS_INLINE s32 ceilf(f32 in) {
+    f32 tmp;
+    s32 out;
+    __asm__("ceil.w.s  %0,%1" : "=f" (tmp) : "f" (in ));
+    __asm__("mfc1      %0,%1" : "=r" (out) : "f" (tmp));
+    return out;
+}
+/// Rounds towards negative infinity
+ALWAYS_INLINE s32 floorf(f32 in) {
+    f32 tmp;
+    s32 out;
+    __asm__("floor.w.s %0,%1" : "=f" (tmp) : "f" (in ));
+    __asm__("mfc1      %0,%1" : "=r" (out) : "f" (tmp));
+    return out;
+}
+/// Rounds towards the nearest integer
+ALWAYS_INLINE s32 roundf(f32 in) {
+    f32 tmp;
+    s32 out;
+    __asm__("round.w.s %0,%1" : "=f" (tmp) : "f" (in ));
+    __asm__("mfc1      %0,%1" : "=r" (out) : "f" (tmp));
+    return out;
+}
 #endif
+
+#ifdef TARGET_N64 // MIPS optimized
+ALWAYS_INLINE f32 absf(f32 in) {
+    f32 out;
+    __asm__("abs.s %0,%1" : "=f" (out) : "f" (in));
+    return out;
+}
+#else // Portable
+ALWAYS_INLINE f32 absf(f32 in) {
+    if (in < 0) {
+        in *= -1.0f;
+    }
+    return in;
+}
+#endif
+
+/// Absolute value of an integer value
+ALWAYS_INLINE s32 absi(s32 in) {
+    s32 t0 = (in >> 31);
+    return ((in ^ t0) - t0);
+}
+/// Absolute value of a short value
+ALWAYS_INLINE s16 abss(s16 in) {
+    s16 t0 = (in >> 31);
+    return ((in ^ t0) - t0);
+}
 
 /// Backwards compatibility
 #define round_float(in) roundf(in)
 
 /// Type-agnostic ternary for absolute value
 #define ABS(x)  (((x) > 0) ? (x) : -(x))
-
-f32 absf(f32 in);
-s32 absi(s32 in);
-s32 abss(s16 in);
 
 // On console, (x != 0) still returns true for denormalized floats,
 // which will count as a division by zero when divided and crash.
@@ -483,10 +550,10 @@ s32 random_sign(void);
 // Min/Max
 f32  min_3f(    f32 a, f32 b, f32 c);
 s32  min_3i(    s32 a, s32 b, s32 c);
-s32  min_3s(    s16 a, s16 b, s16 c);
+s16  min_3s(    s16 a, s16 b, s16 c);
 f32  max_3f(    f32 a, f32 b, f32 c);
 s32  max_3i(    s32 a, s32 b, s32 c);
-s32  max_3s(    s16 a, s16 b, s16 c);
+s16  max_3s(    s16 a, s16 b, s16 c);
 void min_max_3f(f32 a, f32 b, f32 c, f32 *min, f32 *max);
 void min_max_3i(s32 a, s32 b, s32 c, s32 *min, s32 *max);
 void min_max_3s(s16 a, s16 b, s16 c, s16 *min, s16 *max);
@@ -553,7 +620,7 @@ void mtxf_align_terrain_normal(Mat4 dest, Vec3f normal, Vec3f pos, s32 yaw);
 void mtxf_align_terrain_triangle(Mat4 mtx, Vec3f pos, s32 yaw, f32 radius);
 void create_transformation_from_matrices(Mat4 dst, Mat4 a1, Mat4 a2);
 // Translation & rotation
-void mtxf_rotate_xy(Mtx *mtx, s16 angle);
+void mtxf_rotate_xy(Mtx *mtx, s32 angle);
 void mtxf_translate(Mat4 dest, Vec3f b);
 void mtxf_rotate_zxy_and_translate(Mat4 dest, Vec3f trans, Vec3s rot);
 void mtxf_rotate_xyz_and_translate(Mat4 dest, Vec3f trans, Vec3s rot);
@@ -567,6 +634,11 @@ void mtxf_mul_vec3s(Mat4 mtx, Vec3s b);
 void linear_mtxf_mul_vec3f(Mat4 mtx, Vec3f dest, Vec3f src);
 void linear_mtxf_mul_vec3f_and_translate(Mat4 mtx, Vec3f dest, Vec3f src);
 void linear_mtxf_transpose_mul_vec3f(Mat4 mtx, Vec3f dest, Vec3f src);
+// Fixed point matrix conversions:
+#ifdef TARGET_N64
+f32 mtx_get_float(Mtx *mtx, u32 index);
+void mtx_set_float(Mtx *mtx, u32 index, f32 val);
+#endif
 
 void mtxf_to_mtx(Mtx *dest, Mat4 src);
 
@@ -598,7 +670,7 @@ void vec3f_set_dist_and_angle(                 Vec3f from, Vec3f to, f32  dist, 
 
 // Approach value functions
 s32 approach_angle(s32 current, s32 target, s32 inc);
-s32 approach_s16(s32 current, s32 target, s32 inc, s32 dec);
+s16 approach_s16(s32 current, s32 target, s32 inc, s32 dec);
 s32 approach_s32(s32 current, s32 target, s32 inc, s32 dec);
 f32 approach_f32(f32 current, f32 target, f32 inc, f32 dec);
 Bool32 approach_angle_bool(s16 *current, s32 target, s32 inc);
@@ -615,10 +687,10 @@ Bool32 approach_f32_signed(f32 *current, f32 target, f32 inc);
 Bool32 approach_f32_asymptotic_bool(f32 *current, f32 target, f32 multiplier);
 f32    approach_f32_asymptotic(f32 current, f32 target, f32 multiplier);
 Bool32 approach_s16_asymptotic_bool(s16 *current, s16 target, s16 divisor);
-s32    approach_s16_asymptotic(s16 current, s16 target, s16 divisor);
+s16    approach_s16_asymptotic(s16 current, s16 target, s16 divisor);
 // Angles
-s32 abs_angle_diff(s16 a0, s16 a1);
-s32 atan2s(f32 y, f32 x);
+s16 abs_angle_diff(s16 a0, s16 a1);
+s16 atan2s(f32 y, f32 x);
 f32 atan2f(f32 a, f32 b);
 // Splines
 void evaluate_cubic_spline(f32 progress, Vec3f pos, Vec3f spline1, Vec3f spline2, Vec3f spline3, Vec3f spline4);

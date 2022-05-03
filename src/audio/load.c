@@ -103,17 +103,17 @@ s8 gAudioUpdatesPerFrame;
 extern u64 gAudioGlobalsStartMarker;
 extern u64 gAudioGlobalsEndMarker;
 
-// Hack: MINGW32 doesn't properly detect these defines in sound_data.s
-#if !IS_64_BIT && defined(__MINGW32__)
-extern u8 gSoundDataADSR[] asm("gSoundDataADSR"); // sound_data.ctl
-extern u8 gSoundDataRaw[] asm("gSoundDataRaw");  // sound_data.tbl
-extern u8 gMusicData[] asm("gMusicData");     // sequences.s
-extern u8 gBankSetsData[] asm("gBankSetsData");  // bank_sets.s
-#else
+// Make sure to tell non N64 compilers they are in an asm file
+#ifdef TARGET_N64
 extern u8 gSoundDataADSR[]; // sound_data.ctl
 extern u8 gSoundDataRaw[];  // sound_data.tbl
 extern u8 gMusicData[];     // sequences.s
 extern u8 gBankSetsData[];  // bank_sets.s
+#else
+extern u8 gSoundDataADSR[] asm("gSoundDataADSR"); // sound_data.ctl
+extern u8 gSoundDataRaw[] asm("gSoundDataRaw");  // sound_data.tbl
+extern u8 gMusicData[] asm("gMusicData");     // sequences.s
+extern u8 gBankSetsData[] asm("gBankSetsData");  // bank_sets.s
 #endif
 
 ALSeqFile *get_audio_file_header(s32 arg0);

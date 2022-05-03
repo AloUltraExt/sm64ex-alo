@@ -316,6 +316,7 @@ SECTIONS
         BUILD_DIR/libultra.a:guNormalize.o(.text);
         BUILD_DIR/libultra.a:__osAiDeviceBusy.o(.text);
         BUILD_DIR/libultra.a:ldiv.o(.text);
+        BUILD_DIR/libultra.a:guLookAtRef.o(.text); /* Fast3DEX2 only */
         BUILD_DIR/libultra.a:__osSiDeviceBusy.o(.text);
 #ifdef VERSION_SH
         BUILD_DIR/libultra.a:leointerrupt.o(.text);
@@ -679,9 +680,8 @@ SECTIONS
 
         BUILD_DIR/libultra.a:osSetIntMask.o(.rodata*);
         BUILD_DIR/libultra.a:guLookAtRef.o(.rodata*); /* Fast3DEX2 only */
-#ifndef VERSION_EU
         BUILD_DIR/libultra.a:*.o(.rodata*);
-#endif
+
         /* audio blobs, should really be moved into a separate file */
 #ifdef VERSION_SH
         BUILD_DIR/src/audio/load_sh.o(.data*);
