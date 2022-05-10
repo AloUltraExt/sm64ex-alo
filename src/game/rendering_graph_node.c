@@ -1,5 +1,6 @@
 #include <PR/ultratypes.h>
 
+#include "sm64.h"
 #include "area.h"
 #include "engine/math_util.h"
 #include "game_init.h"
@@ -9,7 +10,9 @@
 #include "print.h"
 #include "rendering_graph_node.h"
 #include "shadow.h"
-#include "sm64.h"
+
+#include "config.h"
+#include "config/config_world.h"
 
 /**
  * This file contains the code that processes the scene graph for rendering.
@@ -46,7 +49,7 @@ Mtx *gMatStackInterpolatedFixed[32];
 
 // ex-alo change
 // Stores geo screen aspect ratio for obj_is_in_view
-f32 sGeoScreenAspectRatio;
+f32 sGeoAspectRatio;
 
 /**
  * Animation nodes have state in global variables, so this struct captures
@@ -348,6 +351,12 @@ static void geo_process_ortho_projection(struct GraphNodeOrthoProjection *node) 
     }
 }
 
+#if WORLD_SCALE > 1
+#define SCALE_WORLD_NODE(node) (node / (f32)WORLD_SCALE)
+#else
+#define SCALE_WORLD_NODE(node) node
+#endif
+
 /**
  * Process a perspective projection node.
  */
@@ -358,30 +367,18 @@ static void geo_process_perspective(struct GraphNodePerspective *node) {
     if (node->fnNode.node.children != NULL) {
         u16 perspNorm;
         Mtx *mtx = alloc_display_list(sizeof(*mtx));
-#ifdef HIGH_FPS_PC
-        Mtx *mtxInterpolated = alloc_display_list(sizeof(*mtxInterpolated));
-        f32 fovInterpolated;
-#endif
 
-        sGeoScreenAspectRatio = (f32) gCurGraphNodeRoot->width / (f32) gCurGraphNodeRoot->height;
+        sGeoAspectRatio = (f32) gCurGraphNodeRoot->width / (f32) gCurGraphNodeRoot->height;
 #ifdef VERSION_EU
-        sGeoScreenAspectRatio *= 1.1f;
+        sGeoAspectRatio *= 1.1f;
 #endif
 
-        #ifdef WORLD_SCALE
-        guPerspective(mtx, &perspNorm, node->fov, sGeoScreenAspectRatio, node->near / (f32)WORLD_SCALE, node->far / (f32)WORLD_SCALE, 1.0f);
-        #else
-        guPerspective(mtx, &perspNorm, node->fov, sGeoScreenAspectRatio, node->near, node->far, 1.0f);
-        #endif
-
+        guPerspective(mtx, &perspNorm, node->fov, sGeoAspectRatio, SCALE_WORLD_NODE(node->near), SCALE_WORLD_NODE(node->far), 1.0f);
 #ifdef HIGH_FPS_PC
         if (gGlobalTimer == node->prevTimestamp + 1 && gGlobalTimer != gLakituState.skipCameraInterpolationTimestamp) {
-            fovInterpolated = (node->prevFov + node->fov) / 2.0f;
-            #ifdef WORLD_SCALE
-            guPerspective(mtxInterpolated, &perspNorm, fovInterpolated, sGeoScreenAspectRatio, node->near / (f32)WORLD_SCALE, node->far / (f32)WORLD_SCALE, 1.0f);
-            #else
-            guPerspective(mtxInterpolated, &perspNorm, fovInterpolated, sGeoScreenAspectRatio, node->near, node->far, 1.0f);
-            #endif
+            f32 fovInterpolated = (node->prevFov + node->fov) / 2.0f;
+            Mtx *mtxInterpolated = alloc_display_list(sizeof(*mtxInterpolated));
+            guPerspective(mtxInterpolated, &perspNorm, fovInterpolated, sGeoAspectRatio, SCALE_WORLD_NODE(node->near), SCALE_WORLD_NODE(node->far), 1.0f);
             gSPPerspNormalize(gDisplayListHead++, perspNorm);
 
             sPerspectivePos = gDisplayListHead;
@@ -1058,7 +1055,7 @@ static s32 obj_is_in_view(struct GraphNodeObject *node, Mat4 matrix) {
     // This multiplication should really be performed on 4:3 as well,
     // but the issue will be more apparent on widescreen.
 #ifdef TARGET_N64
-    hScreenEdge *= sGeoScreenAspectRatio;
+    hScreenEdge *= sGeoAspectRatio;
 #else
     hScreenEdge *= GFX_DIMENSIONS_ASPECT_RATIO;
 #endif

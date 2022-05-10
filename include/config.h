@@ -64,7 +64,8 @@
 /// Removes vibrato restriction set in JP and US, EU and SH already has it removed
 #define AUDIO_NO_VIBRATO_LIMIT
 
-// Collision Settings
+// Other Settings
+#include "config/config_camera.h"
 #include "config/config_collision.h"
 
 // Screen Size Defines

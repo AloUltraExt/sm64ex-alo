@@ -676,16 +676,12 @@ BAD_RETURN(f32) calc_y_to_curr_floor(f32 *posOff, f32 posMul, f32 posBound, f32 
 #if QOL_FIX_CAMERA_WATER_HEIGHT
     f32 waterHeight = sMarioGeometry.waterHeight;
 #else
-    f32 waterHeight;
+    //! @bug this should use sMarioGeometry.waterHeight
+    f32 waterHeight = find_water_level(sMarioCamState->pos[0], sMarioCamState->pos[2]);
 #endif
-    UNUSED u8 filler[4];
 
     if (!(sMarioCamState->action & ACT_FLAG_METAL_WATER)) {
-        #if !QOL_FIX_CAMERA_WATER_HEIGHT
-        //! @bug this should use sMarioGeometry.waterHeight
-        #endif
-        if (floorHeight < (waterHeight = find_water_level(sMarioCamState->pos[0], sMarioCamState->pos[2])))
-        {
+        if (floorHeight < waterHeight) {
             floorHeight = waterHeight;
         }
     }
@@ -766,7 +762,7 @@ void set_camera_height(struct Camera *c, f32 goalHeight) {
     UNUSED s16 action = sMarioCamState->action;
     f32 baseOff = 125.f;
     f32 camCeilHeight = find_ceil(c->pos[0], gLakituState.goalPos[1] - 50.f, c->pos[2], &surface);
-#if QOL_FIX_CAMERA_VERTICAL_MOVEMENT
+#if FAST_VERTICAL_CAMERA_MOVEMENT
     f32 approachRate = 20.0f;
 #endif
 
@@ -805,7 +801,7 @@ void set_camera_height(struct Camera *c, f32 goalHeight) {
             }
         }
 
-#if QOL_FIX_CAMERA_VERTICAL_MOVEMENT
+#if FAST_VERTICAL_CAMERA_MOVEMENT
         approachRate += absf(c->pos[1] - goalHeight) / 20;
         approach_camera_height(c, goalHeight, approachRate);
 #else
@@ -2679,12 +2675,6 @@ s32 update_c_up(UNUSED struct Camera *c, Vec3f focus, Vec3f pos) {
  * Make Mario's head move in C-Up mode.
  */
 void move_mario_head_c_up(UNUSED struct Camera *c) {
-    UNUSED s16 pitch = sCUpCameraPitch;
-    UNUSED s16 yaw = sModeOffsetYaw;
-#if QOL_FEATURE_C_UP_DS
-    s16 tempYaw;
-#endif
-
     sCUpCameraPitch += (s16)(gPlayer1Controller->stickY * 10.f);
     sModeOffsetYaw -= (s16)(gPlayer1Controller->stickX * 10.f);
 
@@ -2697,7 +2687,8 @@ void move_mario_head_c_up(UNUSED struct Camera *c) {
         sCUpCameraPitch = -0x2000;
     }
 
-#if QOL_FEATURE_C_UP_DS
+#if DS_CAM_MOVEMENT_C_UP
+    s16 tempYaw;
     // Bound the camera yaw to...
     if (gCameraMovementFlags & CAM_MOVE_C_UP_MODE) {
         tempYaw = 0x2000; // +-45 degrees
@@ -4003,8 +3994,12 @@ s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius) {
     f32 normZ;
     f32 originOffset;
     f32 offset;
+#if CORRECT_COLLIDE_WITH_WALLS
+    f32 displacement;
+#else
     f32 offsetAbsolute;
     Vec3f newPos[MAX_REFERENCED_WALLS];
+#endif
     s32 i;
     s32 numCollisions = 0;
 
@@ -4017,18 +4012,33 @@ s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius) {
     if (numCollisions != 0) {
         for (i = 0; i < collisionData.numWalls; i++) {
             wall = collisionData.walls[collisionData.numWalls - 1];
+#if !CORRECT_COLLIDE_WITH_WALLS
             vec3f_copy(newPos[i], pos);
+#endif
+            // Read surface data:
             normX = wall->normal.x;
             normY = wall->normal.y;
             normZ = wall->normal.z;
             originOffset = wall->originOffset;
+#if !CORRECT_COLLIDE_WITH_WALLS
             offset = normX * newPos[i][0] + normY * newPos[i][1] + normZ * newPos[i][2] + originOffset;
-            offsetAbsolute = ABS(offset);
+            offsetAbsolute = absf(offset);
             if (offsetAbsolute < radius) {
                 newPos[i][0] += normX * (radius - offset);
                 newPos[i][2] += normZ * (radius - offset);
                 vec3f_copy(pos, newPos[i]);
             }
+#else
+            // offset = how much pos is moved by the surface (dot(normal, pos)).
+            offset = (normX * pos[0]) + (normY * pos[1]) + (normZ * pos[2]) + originOffset;
+            if (absf(offset) < radius) {
+                // displacement = how much to move pos in the surface normal's direction.
+                displacement = (radius - offset);
+                pos[0] += normX * displacement;
+                pos[1] += normY * displacement;
+                pos[2] += normZ * displacement;
+            }
+#endif
         }
     }
     return numCollisions;
@@ -4244,25 +4254,16 @@ s32 clamp_positions_and_find_yaw(Vec3f pos, Vec3f origin, f32 xMax, f32 xMin, f3
  * wallYaw always has 90 degrees added to it before this is called -- it's parallel to the wall.
  *
  * @return the new yaw from Mario to rotate towards.
- *
- * @warning this is jank. It actually returns the yaw that will rotate further INTO the wall. So, the
- *          developers just add 180 degrees to the result.
  */
 s32 calc_avoid_yaw(s16 yawFromMario, s16 wallYaw) {
-    s16 yawDiff;
-    UNUSED u8 filler[34]; // Debug print buffer? ;)
-    UNUSED s32 unused1 = 0;
-    UNUSED s32 unused2 = 0;
+    s16 yawIntoWall = wallYaw + DEGREES(180);
 
-    yawDiff = wallYaw - yawFromMario + DEGREES(90);
-
-    if (yawDiff < 0) {
+    if (yawFromMario < yawIntoWall) {
         // Deflect to the right
-        yawFromMario = wallYaw;
-    } else {
-        // Note: this favors the left side if the wall is exactly perpendicular to the camera.
+        yawFromMario = yawIntoWall - DEGREES(90);
+    } else if (yawFromMario > yawIntoWall) {
         // Deflect to the left
-        yawFromMario = wallYaw + DEGREES(180);
+        yawFromMario = yawIntoWall + DEGREES(90);
     }
     return yawFromMario;
 }
@@ -6647,89 +6648,104 @@ void resolve_geometry_collisions(Vec3f pos, UNUSED Vec3f lastGood) {
  * @return 3 if a wall is covering Mario, 1 if a wall is only near the camera.
  */
 s32 rotate_camera_around_walls(struct Camera *c, Vec3f cPos, s16 *avoidYaw, s16 yawRange) {
-    UNUSED u8 filler1[4];
     struct WallCollisionData colData;
     struct Surface *wall;
-    UNUSED u8 filler2[12];
-    f32 dummyDist, checkDist;
-    UNUSED u8 filler3[4];
-    f32 coarseRadius;
-    f32 fineRadius;
-    s16 wallYaw, horWallNorm;
-    UNUSED s16 unused;
-    s16 dummyPitch;
+    s16 wallYaw;
     // The yaw of the vector from Mario to the camera.
     s16 yawFromMario;
-    UNUSED u8 filler4[2];
     s32 status = 0;
-    /// The current iteration. The algorithm takes 8 equal steps from Mario back to the camera.
+    /// The current iteration. The algorithm takes CAMERA_NUM_OBSTRUCTION_CHECKS equal steps from Mario back to the camera.
     s32 step = 0;
-    UNUSED u8 filler5[4];
 
-    vec3f_get_dist_and_angle(sMarioCamState->pos, cPos, &dummyDist, &dummyPitch, &yawFromMario);
     sStatusFlags &= ~CAM_FLAG_CAM_NEAR_WALL;
     colData.offsetY = 100.0f;
-    // The distance from Mario to Lakitu
-    checkDist = 0.0f;
+    /// The distance from Mario to Lakitu.
+    f32 checkDist = 0.0f;
+    
+    Vec3f marioToCamera;
+    vec3f_diff(marioToCamera, cPos, sMarioCamState->pos);
+#if !CORRECT_ROTATE_CAMERA_AROUND_WALLS
     /// The radius used to find potential walls to avoid.
-    /// @bug Increases to 250.f, but the max collision radius is 200.f
-    coarseRadius = 150.0f;
+    f32 radius = 150.0f;
     /// This only increases when there is a wall collision found in the coarse pass
-    fineRadius = 100.0f;
+    f32 fineRadius = 100.0f;
+    
+    vec3f_get_yaw(sMarioCamState->pos, cPos, &yawFromMario);
+#else
+    f32 radius = 100.0f;
+    // The yaw of the vector from Mario to the camera.
+    yawFromMario = atan2s(marioToCamera[2], marioToCamera[0]);
+#endif
 
-    for (step = 0; step < 8; step++) {
+    for (step = 0; step < CAMERA_NUM_OBSTRUCTION_CHECKS; step++) {
         // Start at Mario, move backwards to Lakitu's position
-        colData.x = sMarioCamState->pos[0] + ((cPos[0] - sMarioCamState->pos[0]) * checkDist);
-        colData.y = sMarioCamState->pos[1] + ((cPos[1] - sMarioCamState->pos[1]) * checkDist);
-        colData.z = sMarioCamState->pos[2] + ((cPos[2] - sMarioCamState->pos[2]) * checkDist);
-        colData.radius = coarseRadius;
-        // Increase the coarse check radius
-        camera_approach_f32_symmetric_bool(&coarseRadius, 250.f, 30.f);
-
+        colData.x = sMarioCamState->pos[0] + (marioToCamera[0] * checkDist);
+        colData.y = sMarioCamState->pos[1] + (marioToCamera[1] * checkDist);
+        colData.z = sMarioCamState->pos[2] + (marioToCamera[2] * checkDist);
+        colData.radius = radius;
+#if !CORRECT_ROTATE_CAMERA_AROUND_WALLS
+        //  Increase the coarse check radius
+        //! @bug Increases to 250.f, but the max collision radius is 200.f
+        camera_approach_f32_symmetric_bool(&radius, MAX_COLLISION_RADIUS + 50.0f, 30.0f);
+#else
+        // Increase the check radius the closer we get to the camera.
+        radius += (100.0f / CAMERA_NUM_OBSTRUCTION_CHECKS);
+        if (radius > MAX_COLLISION_RADIUS) {
+            radius = MAX_COLLISION_RADIUS;
+        }
+#endif
+        // Coarse check found a wall
         if (find_wall_collisions(&colData) != 0) {
             wall = colData.walls[colData.numWalls - 1];
-
+#if CORRECT_ROTATE_CAMERA_AROUND_WALLS
+            wallYaw = atan2s(wall->normal.z, wall->normal.x);
+#endif
             // If we're over halfway from Mario to Lakitu, then there's a wall near the camera, but
-            // not necessarily obstructing Mario
-            if (step >= 5) {
+            // not necessarily obstructing Mario.
+            if (step > (CAMERA_NUM_OBSTRUCTION_CHECKS / 2)) {
                 sStatusFlags |= CAM_FLAG_CAM_NEAR_WALL;
                 if (status <= 0) {
                     status = 1;
                     wall = colData.walls[colData.numWalls - 1];
+#if !CORRECT_ROTATE_CAMERA_AROUND_WALLS
                     // wallYaw is parallel to the wall, not perpendicular
-                    wallYaw = atan2s(wall->normal.z, wall->normal.x) + DEGREES(90);
+                    wallYaw = atan2s(wall->normal.z, wall->normal.x);
+#endif
                     // Calculate the avoid direction. The function returns the opposite direction so add 180
                     // degrees.
-                    *avoidYaw = calc_avoid_yaw(yawFromMario, wallYaw) + DEGREES(180);
+                    *avoidYaw = calc_avoid_yaw(yawFromMario, wallYaw);
                 }
             }
-
-            colData.x = sMarioCamState->pos[0] + ((cPos[0] - sMarioCamState->pos[0]) * checkDist);
-            colData.y = sMarioCamState->pos[1] + ((cPos[1] - sMarioCamState->pos[1]) * checkDist);
-            colData.z = sMarioCamState->pos[2] + ((cPos[2] - sMarioCamState->pos[2]) * checkDist);
+#if !CORRECT_ROTATE_CAMERA_AROUND_WALLS
+            colData.x = sMarioCamState->pos[0] + (marioToCamera[0] * checkDist);
+            colData.y = sMarioCamState->pos[1] + (marioToCamera[1] * checkDist);
+            colData.z = sMarioCamState->pos[2] + (marioToCamera[2] * checkDist);
             colData.radius = fineRadius;
             // Increase the fine check radius
-            camera_approach_f32_symmetric_bool(&fineRadius, 200.f, 20.f);
+            camera_approach_f32_symmetric_bool(&fineRadius, MAX_COLLISION_RADIUS, 20.0f);
+#endif
 
-            if (find_wall_collisions(&colData) != 0) {
+#if !CORRECT_ROTATE_CAMERA_AROUND_WALLS
+            if (find_wall_collisions(&colData) != 0) {  
                 wall = colData.walls[colData.numWalls - 1];
-                horWallNorm = atan2s(wall->normal.z, wall->normal.x);
-                wallYaw = horWallNorm + DEGREES(90);
+                wallYaw = atan2s(wall->normal.z, wall->normal.x);
+#endif         
                 // If Mario would be blocked by the surface, then avoid it
-                if ((is_range_behind_surface(sMarioCamState->pos, cPos, wall, yawRange, SURFACE_WALL_MISC) == 0)
-                    && (is_mario_behind_surface(c, wall) == TRUE)
+                if (!is_range_behind_surface(sMarioCamState->pos, cPos, wall, yawRange, SURFACE_WALL_MISC)
+                    && is_mario_behind_surface(c, wall)
                     // Also check if the wall is tall enough to cover Mario
-                    && (is_surf_within_bounding_box(wall, -1.f, 150.f, -1.f) == FALSE)) {
-                    // Calculate the avoid direction. The function returns the opposite direction so add 180
-                    // degrees.
-                    *avoidYaw = calc_avoid_yaw(yawFromMario, wallYaw) + DEGREES(180);
-                    camera_approach_s16_symmetric_bool(avoidYaw, horWallNorm, yawRange);
+                    && !is_surf_within_bounding_box(wall, -1.f, 150.f, -1.f)) {
+                    // Calculate the avoid direction. The function returns the opposite direction so add 180 degrees.
+                    *avoidYaw = calc_avoid_yaw(yawFromMario, wallYaw);
+                    camera_approach_s16_symmetric_bool(avoidYaw, wallYaw, yawRange);
                     status = 3;
-                    step = 8;
+                    step = CAMERA_NUM_OBSTRUCTION_CHECKS;
                 }
+#if !CORRECT_ROTATE_CAMERA_AROUND_WALLS 
             }
+#endif  
         }
-        checkDist += 0.125f;
+        checkDist += (1.0f / CAMERA_NUM_OBSTRUCTION_CHECKS);
     }
 
     return status;

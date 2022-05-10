@@ -22,6 +22,8 @@ GODDARD_MFACE ?= 1
 PORT_MOP_OBJS ?= 0
 # Enable level vanilla checks
 VANILLA_CHECKS ?= 1
+# Enable extended bounds
+EXTENDED_BOUNDS ?= 0
 
 # --------------------------------------
 # General QoL Defines (see include/qol_defines.h)
@@ -169,6 +171,11 @@ endif
 # Check for Vanilla checks
 ifeq ($(VANILLA_CHECKS),1)
   CUSTOM_C_DEFINES += -DVANILLA_CHECKS
+endif
+
+# Check for Extended bounds
+ifneq ($(EXTENDED_BOUNDS),0)
+  CUSTOM_C_DEFINES += -DEXTENDED_BOUNDS=$(EXTENDED_BOUNDS) -DCOLLISION_FIXES
 endif
 
 # Check for QoL fixes option

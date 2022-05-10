@@ -90,13 +90,13 @@ void play_step_sound(struct MarioState *m, s16 frame1, s16 frame2) {
     }
 }
 
-#if QOL_FEATURE_FAST_FLOOR_ALIGN
+#if FAST_FLOOR_ALIGN
 void align_with_floor(struct MarioState *m) {
     struct Surface *floor = m->floor;
     if ((floor != NULL) && (m->pos[1] < (m->floorHeight + 80.0f))) {
         m->pos[1] = m->floorHeight;  
 
-        if (ABS(m->forwardVel) > 10) { // FAST_FLOOR_ALIGN = 10
+        if (absf(m->forwardVel) > FAST_FLOOR_ALIGN_VALUE) {
             Vec3f floorNormal = { floor->normal.x, floor->normal.y, floor->normal.z };
             mtxf_align_terrain_normal(sFloorAlignMatrix[m->unk00], floorNormal, m->pos, m->faceAngle[1]);
         } else {

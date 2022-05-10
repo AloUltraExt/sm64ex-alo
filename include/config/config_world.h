@@ -33,7 +33,7 @@
  * Values lower than vanilla are not recommended.
  * Vanilla: 0x2000 (8192)
  */
-#define LEVEL_BOUNDARY_MAX 8192
+#define LEVEL_BOUNDARY_MAX (8192 * EXTENDED_BOUNDS)
 
 /**
  * The number of cells along each axis in an area.
@@ -58,7 +58,7 @@
  * Values above 4 should not be necessary.
  * Vanilla: 1
  */
-#define WORLD_SCALE (LEVEL_BOUNDARY_MAX / 8192.0f)
+#define WORLD_SCALE (LEVEL_BOUNDARY_MAX / 8192)
 
 /**
  * The size of one collision cell.

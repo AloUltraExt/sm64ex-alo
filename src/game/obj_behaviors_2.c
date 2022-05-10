@@ -553,8 +553,7 @@ static void obj_update_blinking(s32 *blinkTimer, s16 baseCycleLength, s16 cycleL
 }
 
 #if QOL_FEATURE_BETTER_OBJ_COLLISIONS
-// #define INTERACT_MASK_NO_OBJ_COLLISIONS (INTERACT_COIN | INTERACT_CAP | INTERACT_STRONG_WIND | INTERACT_STAR_OR_KEY | INTERACT_WARP | INTERACT_WATER_RING | INTERACT_FLAME)
-#define INTERACT_MASK_NO_OBJ_COLLISIONS 0x00053430
+#define INTERACT_MASK_NO_OBJ_COLLISIONS (INTERACT_COIN | INTERACT_CAP | INTERACT_STRONG_WIND | INTERACT_STAR_OR_KEY | INTERACT_WARP | INTERACT_WATER_RING | INTERACT_FLAME)
 #endif
 
 static s32 obj_resolve_object_collisions(s32 *targetYaw) {
@@ -573,7 +572,7 @@ static s32 obj_resolve_object_collisions(s32 *targetYaw) {
         for (i = 0; i < o->numCollidedObjs; i++) {
             otherObject = o->collidedObjs[i];
             if (otherObject == gMarioObject) continue;
-            if (otherObject->oInteractType & INTERACT_MASK_NO_OBJ_COLLISIONS) continue; // 0x00053430
+            if (otherObject->oInteractType & INTERACT_MASK_NO_OBJ_COLLISIONS) continue;
             dx             = (o->oPosX - otherObject->oPosX);
             dz             = (o->oPosZ - otherObject->oPosZ);
             distance       = sqrtf(sqr(dx) + sqr(dz));

@@ -50,9 +50,6 @@
 /// Changes WF breakable wall by no taking damage and returning safely if the proper wall is broken
 /// Credits: (AloXado320)
 #define QOL_FEATURE_BETTER_WF_BREAKEABLE_WALL (0 || QOL_FEATURES)
-/// Changes C-Up vanilla camera similar to the DS version
-/// Credits: (AloXado320)
-#define QOL_FEATURE_C_UP_DS (0 || QOL_FEATURES)
 /// Adds "new" star grab action that uses floating star dance if on a lethal floor
 /// Credits: (AloXado320)
 #define QOL_FEATURE_STAR_GRAB_NO_FALL_DEATH (0 || QOL_FEATURES)
@@ -77,9 +74,6 @@
 /// Changes obj_resolve_object_collisions to work consistently
 /// Credits: (Arceveti)
 #define QOL_FEATURE_BETTER_OBJ_COLLISIONS (0 || QOL_FEATURES)
-/// Use the floor's normal instead of a triangle of find_floor if the floor isn't steep
-/// Credits: (Arceveti)
-#define QOL_FEATURE_FAST_FLOOR_ALIGN (0 || QOL_FEATURES)
 /// Makes Mario's squish scale smooth rather than being instantly set
 /// Credits: (Arceveti)
 #define QOL_FEATURE_SMOOTH_SQUISH (0 || QOL_FEATURES)
@@ -206,9 +200,6 @@
 /// Fixes input off check order in common_landing_cancels
 /// Credits: (Easy Fix)
 #define QOL_FIX_LANDING_CANCEL_OFF_FLOOR (0 || QOL_FIXES)
-/// Fixes vanilla camera vertical height so it follows Mario faster
-/// Credits: (Reonu)
-#define QOL_FIX_CAMERA_VERTICAL_MOVEMENT (0 || QOL_FIXES)
 /// Fixes non slippery surfaces, so Mario can jump kick them, instead of being forced to dive
 /// Credits: (Reonu)
 #define QOL_FIX_JUMP_KICK_NOT_SLIPPERY (0 || QOL_FIXES)

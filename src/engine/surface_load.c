@@ -827,34 +827,28 @@ static f32 get_optimal_collision_distance(struct Object *obj) {
     collisionData++;
     u32 vertsLeft = *(collisionData)++;
 
-    scale[0] = obj->header.gfx.scale[0];
-    scale[1] = obj->header.gfx.scale[1];
-    scale[2] = obj->header.gfx.scale[2];
+    vec3_copy(scale, obj->header.gfx.scale);
 
     // Loop through the collision vertices to find the vertex
     // with the furthest distance from the model's origin.
     while (vertsLeft) {
         // Apply scale to the position
-        thisVertPos[0] = *(collisionData + 0) * scale[0];
-        thisVertPos[1] = *(collisionData + 1) * scale[1];
-        thisVertPos[2] = *(collisionData + 2) * scale[2];
+        vec3_prod(thisVertPos, collisionData, scale);
 
         // Get the distance to the model's origin.
-        thisVertDist = ((thisVertPos[0] * thisVertPos[0]) + 
-                        (thisVertPos[1] * thisVertPos[1]) + 
-                        (thisVertPos[2] * thisVertPos[2]));
+        thisVertDist = vec3_sumsq(thisVertPos);
 
         // Check if it's further than the previous furthest vertex.
-        if (thisVertDist > maxDist) {
+        if (maxDist < thisVertDist) {
             maxDist = thisVertDist;
         }
-        
+
         // Move to the next vertex.
         //! No bounds check on vertex data
         collisionData += 3;
         vertsLeft--;
     }
-    
+
     // Only run sqrtf once.
     return (sqrtf(maxDist) + 100.0f);
 }

@@ -550,19 +550,19 @@ struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 ra
     collisionData.offsetY = offset;
 
     if (find_wall_collisions(&collisionData)) {
-        wall = collisionData.walls[collisionData.numWalls - 1];
-    }
-
 #if BETTER_RESOLVE_WALL_COLLISION
-    for (i = 0; i < collisionData.numWalls; i++) {
-        angleDiff = abs_angle_diff(gCurrentObject->oMoveAngleYaw - 0x8000,
-                atan2s(collisionData.walls[i]->normal.z, collisionData.walls[i]->normal.x));
-        if (angleDiff < angleDiffStore) {
-            wall = collisionData.walls[i];
-            angleDiffStore = angleDiff;
+        for (i = 0; i < collisionData.numWalls; i++) {
+            angleDiff = abs_angle_diff(gCurrentObject->oMoveAngleYaw - 0x8000,
+                    atan2s(collisionData.walls[i]->normal.z, collisionData.walls[i]->normal.x));
+            if (angleDiff < angleDiffStore) {
+                wall = collisionData.walls[i];
+                angleDiffStore = angleDiff;
+            }
         }
-    }
+#else
+        wall = collisionData.walls[collisionData.numWalls - 1];
 #endif
+    }
 
     pos[0] = collisionData.x;
     pos[1] = collisionData.y;
@@ -764,8 +764,8 @@ s16 find_floor_slope(struct MarioState *m, s16 yawOffset) {
     f32 x = sins(m->faceAngle[1] + yawOffset) * 5.0f;
     f32 z = coss(m->faceAngle[1] + yawOffset) * 5.0f;
 
-#if QOL_FEATURE_FAST_FLOOR_ALIGN
-    if (ABS(m->forwardVel) > 10) { // FAST_FLOOR_ALIGN = 10
+#if FAST_FLOOR_ALIGN
+    if (absf(m->forwardVel) > FAST_FLOOR_ALIGN_VALUE) {
         forwardFloorY  = get_surface_height_at_pos((m->pos[0] + x), (m->pos[2] + z), floor);
         backwardFloorY = get_surface_height_at_pos((m->pos[0] - x), (m->pos[2] - z), floor);
     } else {
@@ -774,7 +774,7 @@ s16 find_floor_slope(struct MarioState *m, s16 yawOffset) {
     CHECK(if (floor == NULL) forwardFloorY = m->floorHeight); // handle OOB slopes
     backwardFloorY = find_floor(m->pos[0] - x, m->pos[1] + 100.0f, m->pos[2] - z, &floor);
     CHECK(if (floor == NULL) backwardFloorY = m->floorHeight); // handle OOB slopes
-#if QOL_FEATURE_FAST_FLOOR_ALIGN
+#if FAST_FLOOR_ALIGN
     }
 #endif
 
