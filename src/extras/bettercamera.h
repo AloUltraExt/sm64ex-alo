@@ -8,19 +8,13 @@
 //How many times to store the terrain pitch. This stores it over 10 frames to help smooth over changes in curvature.
 #define NUM_PITCH_ITERATIONS 10
 
-#define PUPPYCAM_FLAGS_CUTSCENE    0x0001
-#define PUPPYCAM_FLAGS_SMOOTH      0x0002
-
-#define PUPPY_ERROR_POOL_FULL 0x1
-
 #define PUPPY_NULL 15151
 #define MAX_PUPPYCAM_VOLUMES 128
 
-#define PUPPYCAM_BEHAVIOUR_TEMPORARY 0x0
-#define PUPPYCAM_BEHAVIOUR_PERMANENT 0x1
+#define PUPPYCAM_FLAGS_CUTSCENE    (1 << 0)
+#define PUPPYCAM_FLAGS_SMOOTH      (1 << 1)
 
-#define PUPPYVOLUME_SHAPE_BOX 0x0
-#define PUPPYVOLUME_SHAPE_CYLINDER 0x1
+#define PUPPY_ERROR_POOL_FULL               (1 << 0)
 
 #define PUPPYCAM_MODE3_ZOOMED_IN            (1 << 0) // 0x0001
 #define PUPPYCAM_MODE3_ZOOMED_MED           (1 << 1) // 0x0002
@@ -28,20 +22,30 @@
 #define PUPPYCAM_MODE3_ENTER_FIRST_PERSON   (1 << 3) // 0x0008
 #define PUPPYCAM_MODE3_GROUP                (PUPPYCAM_MODE3_ZOOMED_IN | PUPPYCAM_MODE3_ZOOMED_MED | PUPPYCAM_MODE3_ZOOMED_OUT)
 
-#define PUPPYSPLINE_NONE 1 //Will not write to focus at all.
-#define PUPPYSPLINE_FOLLOW 2 //Focus will follow a separate spline, but will mirror the speed and progress of the pos.
+#define PUPPYSPLINE_NONE            (1 << 0) // Will not write to focus at all.
+#define PUPPYSPLINE_FOLLOW          (1 << 1) // Focus will follow a separate spline, but will mirror the speed and progress of the pos.
 
-#define PUPPYDEBUG_LOCK_CONTROLS (1 << 0) // 0x0001
-#define PUPPYDEBUG_TRACK_MARIO   (1 << 1) // 0x0002
+#define PUPPYDEBUG_LOCK_CONTROLS    (1 << 0) // 0x0001
+#define PUPPYDEBUG_TRACK_MARIO      (1 << 1) // 0x0002
 
-enum gPuppyCamInputType
+enum PuppyCamBehaviors {
+    PUPPYCAM_BEHAVIOUR_TEMPORARY,
+    PUPPYCAM_BEHAVIOUR_PERMANENT,
+};
+
+enum PuppyVolumeShapes {
+    PUPPYVOLUME_SHAPE_BOX,
+    PUPPYVOLUME_SHAPE_CYLINDER,
+};
+
+enum PuppyCamInputTypes
 {
-    PUPPYCAM_INPUT_TYPE_DOUBLE_TAB,
-    PUPPYCAM_INPUT_TYPE_SINGLE_TAB,
+    PUPPYCAM_INPUT_TYPE_DOUBLE_TAP,
+    PUPPYCAM_INPUT_TYPE_SINGLE_PRESS,
     PUPPYCAM_INPUT_TYPE_CLASSIC
 };
 
-enum gPuppyCamOpacityType
+enum PuppyCamOpacityTypes
 {
     PUPPYCAM_OPACITY_TYPE_OFF,
     PUPPYCAM_OPACITY_TYPE_FADE,
@@ -55,14 +59,15 @@ extern const u8 optsCameraStr[][32];
 
 extern struct SubMenu menuCamera;
 
-#define PUPPYVOLUME(x, y, z, length, height, width, yaw, functionptr, anglesptr, addflags, removeflags, flagpersistance, room, shape) \
-    CMD_BBH(LVL_SCRIPT_CMD_PUPPYVOLUME, 0x24, x), \
+#define PUPPYVOLUME(x, y, z, length, height, width, yaw, functionptr, anglesptr, addflags, removeflags, flagpersistance, room, shape, fov) \
+    CMD_BBH(LVL_SCRIPT_CMD_PUPPYVOLUME, 0x28, x), \
     CMD_HHHHHH(y, z, length, height, width, yaw), \
     CMD_PTR(functionptr), \
     CMD_PTR(anglesptr), \
     CMD_W(addflags), \
     CMD_W(removeflags), \
-    CMD_BBH(flagpersistance, shape, room)
+    CMD_BBH(flagpersistance, shape, room), \
+    CMD_BBH(fov, 0x0, 0x0)
 
 struct gPuppyOptions
 {
@@ -79,63 +84,63 @@ struct gPuppyOptions
 
 struct gPuppyStruct
 {
-    s16 yaw; //Horizontal Direction the game reads as the active value.
-    s16 yawTarget; //Horizontal Direction that yaw tries to be.
-    f32 yawAcceleration; //Horizontal Direction that sets yawTarget.
-    s16 pitch; //Vertical Direction the game reads as the active value.
-    s16 pitchTarget; //Vertical Direction that pitch tries to be.
-    f32 pitchAcceleration; //Vertical Direction that sets pitchTarget.
-    s16 zoom; //How far the camera is currently zoomed out
-    u8 zoomSet; //The current setting of which zoompoint to set the target to.
-    s16 zoomTarget; //The value that zoom tries to be.
-    s16 zoomPoints[3]; //An array containing distances.
-    s16 targetFloorHeight; //Mario's current floor height
-    s16 lastTargetFloorHeight; //Mirror's mario's floor height when his velocity is not above 0.
-    Vec3s pos; //Where the camera is
-    Vec3s focus; //Where the camera's looking
-    Vec3s pan; //An offset of the camera's focus
-    s32 intendedFlags; //The flagset the camera tries to be when it's not held hostage.
-    s32 flags; //Behaviour flags that affect different properties of the camera's behaviour
-    Vec3s shake; //How much the camera's shaking
-    u8 shakeFrames; //How long the camera's shaking for
-    f32 shakeForce; //How violently the camera's shaking
-    s32 framesSinceC[2]; //Counts the number of frames since the last C left or right press, to track double presses.
-    s16 collisionDistance; //Tries to be zoom, but will be overwritten by collision detection
-    struct Object *targetObj; //The object that the focus will base its positioning off. Usually Mario.
-    struct Object *targetObj2; //This is the second focus point that the camera will focus on. It'll focus between them.
-    s16 povHeight; //An offset of the focus object's Y value.
-    s16 floorY[2]; //Floor offsets, to allow a grace period before following Mario into the air.
-    u8 opacity; //A value set by collision distance, to fade Mario out if you're too close.
-    s8 stick2[2];//The value that's set and read for analogue stick.
-    u8 stickN[2]; //This is set when the stick is neutral. It's to prevent rapidfire input.
-    u8 enabled; //A boolean that decides whether to use vanilla camera or puppy camera.
-    s16 swimPitch; //Pitch adjustment that's applied when swimming. All pitch adjustment is clamped.
-    s16 edgePitch; //Pitch adjustment that's applied when stood near an edge. All pitch adjustment is clamped.
-    s16 moveZoom; //A small zoom value that's added on top of the regular zoom when moving. It's pretty subtle, but gives the feeling of a bit of speed.
-    u8 mode3Flags; //A flagset for classic mode.
-    u8 moveFlagAdd; //A bit that multiplies movement rate of axes when moving, to centre them faster.
-    s16 targetDist[2]; //Used with secondary view targets to smooth out the between status.
-    s16 intendedTerrainPitch; //The pitch that the game wants the game to tilt towards, following the terrain.
-    s16 terrainPitch; //The pitch the game tilts towards, when following terrain inclines.
-    u8 debugFlags; //Behaviour flags during free view.
+    s16 yaw;                    // Horizontal Direction the game reads as the active value.
+    s16 yawTarget;              // Horizontal Direction that yaw tries to be.
+    f32 yawAcceleration;        // Horizontal Direction that sets yawTarget.
+    s16 pitch;                  // Vertical Direction the game reads as the active value.
+    s16 pitchTarget;            // Vertical Direction that pitch tries to be.
+    f32 pitchAcceleration;      // Vertical Direction that sets pitchTarget.
+    s16 zoom;                   // How far the camera is currently zoomed out
+    u8  zoomSet;                // The current setting of which zoompoint to set the target to.
+    s16 zoomTarget;             // The value that zoom tries to be.
+    s16 zoomPoints[3];          // An array containing distances.
+    s16 targetFloorHeight;      // Mario's current floor height
+    s16 lastTargetFloorHeight;  // Mirror's mario's floor height when his velocity is not above 0.
+    Vec3s pos;                  // Where the camera is
+    Vec3s focus;                // Where the camera's looking
+    Vec3s pan;                  // An offset of the camera's focus
+    s32 intendedFlags;          // The flagset the camera tries to be when it's not held hostage.
+    s32 flags;                  // Behaviour flags that affect different properties of the camera's behaviour
+    Vec3s shake;                // How much the camera's shaking
+    u8  shakeFrames;            // How long the camera's shaking for
+    f32 shakeForce;             // How violently the camera's shaking
+    s32 framesSinceC[2];        // Counts the number of frames since the last C left or right press, to track double presses.
+    s16 collisionDistance;      // Tries to be zoom, but will be overwritten by collision detection
+    struct Object *targetObj;   // The object that the focus will base its positioning off. Usually Mario.
+    struct Object *targetObj2;  // This is the second focus point that the camera will focus on. It'll focus between them.
+    s16 povHeight;              // An offset of the focus object's Y value.
+    s16 floorY[2];              // Floor offsets, to allow a grace period before following Mario into the air.
+    u8  opacity;                // A value set by collision distance, to fade Mario out if you're too close.
+    s8  stick2[2];              // The value that's set and read for analogue stick.
+    u8  stickN[2];              // This is set when the stick is neutral. It's to prevent rapidfire input.
+    u8  enabled;                // A boolean that decides whether to use vanilla camera or puppy camera.
+    s16 swimPitch;              // Pitch adjustment that's applied when swimming. All pitch adjustment is clamped.
+    s16 edgePitch;              // Pitch adjustment that's applied when stood near an edge. All pitch adjustment is clamped.
+    s16 moveZoom;               // A small zoom value that's added on top of the regular zoom when moving. It's pretty subtle, but gives the feeling of a bit of speed.
+    u8  mode3Flags;             // A flagset for classic mode.
+    u8  moveFlagAdd;            // A bit that multiplies movement rate of axes when moving, to centre them faster.
+    s16 targetDist[2];          // Used with secondary view targets to smooth out the between status.
+    s16 intendedTerrainPitch;   // The pitch that the game wants the game to tilt towards, following the terrain.
+    s16 terrainPitch;           // The pitch the game tilts towards, when following terrain inclines.
+    u8  debugFlags;             // Behaviour flags during free view.
 
-    u8 cutscene; //A boolean that decides whether a cutscene is active
+    u8  cutscene;               // A boolean that decides whether a cutscene is active
     s32 (*sceneFunc)();
-    u8 sceneInput; //A boolean that decides whether the controller updates during the scene.
-    s32 sceneTimer; //The cutscene timer that goes up during a cutscene.
-    Vec3s scenePos; //Where the camera is during a cutscene
-    Vec3s sceneFocus; //Where the camera looks during a cutscene
-    u16 splineIndex; //Determines which point of the spline it's at.
-    f32 splineProgress; //Determines how far along the index the spline is.
+    u8  sceneInput;             // A boolean that decides whether the controller updates during the scene.
+    s32 sceneTimer;             // The cutscene timer that goes up during a cutscene.
+    Vec3s scenePos;             // Where the camera is during a cutscene
+    Vec3s sceneFocus;           // Where the camera looks during a cutscene
+    u16 splineIndex;            // Determines which point of the spline it's at.
+    f32 splineProgress;         // Determines how far along the index the spline is.
 
 #ifdef MOUSE_ACTIONS
-    u8 mouse; //A boolean that decides whenever mouse should be used if the port target supports it.
+    u8  mouse;                  // A boolean that decides whenever mouse should be used if the port target supports it.
 #endif
     struct gPuppyOptions options;
 
 };
 
-//A second container for bounds that have 2 pairs of coordinates. Optional.
+// A second container for bounds that have 2 pairs of coordinates. Optional.
 struct sPuppyAngles
 {
     Vec3s pos;
@@ -145,27 +150,29 @@ struct sPuppyAngles
     s16 zoom;
 };
 
-//Structurally, it's exactly the same as CutsceneSplinePoint
+// Structurally, it's exactly the same as CutsceneSplinePoint
 struct sPuppySpline
 {
-    s8 index; //The index of the spline. Ends with -1
-    u8 speed; //The amount of frames it takes to get through this index.
-    Vec3s pos; //The vector pos of the spline index itself.
+    Vec3s pos; // The vector pos of the spline index itself.
+    s8 index;  // The index of the spline. Ends with -1
+    u8 speed;  // The amount of frames it takes to get through this index.
 };
 
-//A bounding volume for activating puppycamera scripts and angles.
+// A bounding volume for activating puppycamera scripts and angles.
 struct sPuppyVolume
 {
-    Vec3s pos; //The set position of the volume
-    Vec3s radius; //Where it extends.
-    s16 rot; //The rotational angle of the volume.
-    void *func; //a pointer to a function. Optional.
-    struct sPuppyAngles *angles; //A pointer to a gPuppyAngles struct. Optional
-    s32 flagsAdd; //Adds behaviour flags.
-    s32 flagsRemove; //Removes behaviour flags.
-    u8 flagPersistance; //Decides if adding or removing the flags is temporary or permanent.
-    u8 shape;
+    s32 (*func)();               // a pointer to a function. Optional.
+    struct sPuppyAngles *angles; // A pointer to a gPuppyAngles struct. Optional
+    s32 flagsAdd;                // Adds behaviour flags.
+    s32 flagsRemove;             // Removes behaviour flags.
+    Vec3s pos;                   // The set position of the volume
+    Vec3s radius;                // Where it extends.
+    s16 rot;                     // The rotational angle of the volume.
     s16 room;
+    u8 flagPersistance;          // Decides if adding or removing the flags is temporary or permanent.
+    u8 shape;
+    u8 area;
+    u8 fov;
 };
 
 enum gPuppyCamBeh

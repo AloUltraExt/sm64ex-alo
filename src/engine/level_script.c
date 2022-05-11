@@ -799,32 +799,36 @@ static void level_cmd_get_or_set_var(void) {
 
 #ifdef BETTERCAMERA
 static void level_cmd_puppyvolume(void) {
-    if ((sPuppyVolumeStack[gPuppyVolumeCount] = mem_pool_alloc(gPuppyMemoryPool,sizeof(struct sPuppyVolume))) == NULL) {
+    sPuppyVolumeStack[gPuppyVolumeCount] = mem_pool_alloc(gPuppyMemoryPool, sizeof(struct sPuppyVolume));
+
+    if (sPuppyVolumeStack[gPuppyVolumeCount] == NULL) {
         sCurrentCmd = CMD_NEXT;
         gPuppyError |= PUPPY_ERROR_POOL_FULL;
         return;
     }
 
-    sPuppyVolumeStack[gPuppyVolumeCount]->pos[0] = CMD_GET(s16, 2);
-    sPuppyVolumeStack[gPuppyVolumeCount]->pos[1] = CMD_GET(s16, 4);
-    sPuppyVolumeStack[gPuppyVolumeCount]->pos[2] = CMD_GET(s16, 6);
+    vec3s_set(sPuppyVolumeStack[gPuppyVolumeCount]->pos, CMD_GET(s16, 2),
+                                                         CMD_GET(s16, 4),
+                                                         CMD_GET(s16, 6));
 
-    sPuppyVolumeStack[gPuppyVolumeCount]->radius[0] = CMD_GET(s16, 8);
-    sPuppyVolumeStack[gPuppyVolumeCount]->radius[1] = CMD_GET(s16, 10);
-    sPuppyVolumeStack[gPuppyVolumeCount]->radius[2] = CMD_GET(s16, 12);
+    vec3s_set(sPuppyVolumeStack[gPuppyVolumeCount]->radius, CMD_GET(s16,  8),
+                                                            CMD_GET(s16, 10),
+                                                            CMD_GET(s16, 12));
 
     sPuppyVolumeStack[gPuppyVolumeCount]->rot = CMD_GET(s16, 14);
 
-    sPuppyVolumeStack[gPuppyVolumeCount]->func = CMD_GET(void *, 16);
+    sPuppyVolumeStack[gPuppyVolumeCount]->func   = CMD_GET(void *, 16);
     sPuppyVolumeStack[gPuppyVolumeCount]->angles = segmented_to_virtual(CMD_GET(void *, 20));
 
-    sPuppyVolumeStack[gPuppyVolumeCount]->flagsAdd = CMD_GET(s32, 24);
+    sPuppyVolumeStack[gPuppyVolumeCount]->flagsAdd    = CMD_GET(s32, 24);
     sPuppyVolumeStack[gPuppyVolumeCount]->flagsRemove = CMD_GET(s32, 28);
 
     sPuppyVolumeStack[gPuppyVolumeCount]->flagPersistance = CMD_GET(u8, 32);
 
-    sPuppyVolumeStack[gPuppyVolumeCount]->shape = CMD_GET(u8, 33);
-    sPuppyVolumeStack[gPuppyVolumeCount]->room = CMD_GET(s16, 34);
+    sPuppyVolumeStack[gPuppyVolumeCount]->shape = CMD_GET(u8,  33);
+    sPuppyVolumeStack[gPuppyVolumeCount]->room  = CMD_GET(s16, 34);
+    sPuppyVolumeStack[gPuppyVolumeCount]->fov  = CMD_GET(u8, 36);
+    sPuppyVolumeStack[gPuppyVolumeCount]->area  = sCurrAreaIndex;
 
     gPuppyVolumeCount++;
     sCurrentCmd = CMD_NEXT;

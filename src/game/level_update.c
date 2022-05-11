@@ -662,7 +662,7 @@ void initiate_warp(s16 destLevel, s16 destArea, s16 destWarpNode, s32 arg3) {
     sWarpDest.arg = arg3;
     
 #ifdef BETTERCAMERA
-    if (sWarpDest.type != WARP_TYPE_SAME_AREA) {
+    if (sWarpDest.type == WARP_TYPE_CHANGE_LEVEL) {
         puppycam_script_clear();
     }
 #endif
