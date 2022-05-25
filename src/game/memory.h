@@ -97,7 +97,11 @@ void load_engine_code_segment(void);
 
 #ifdef USE_SYSTEM_MALLOC
 #include <stdlib.h>
+#ifdef __APPLE__
+// No malloc on mac
+#else
 #include <malloc.h>
+#endif
 
 struct AllocOnlyPool *alloc_only_pool_init(void);
 void alloc_only_pool_clear(struct AllocOnlyPool *pool);
