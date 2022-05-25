@@ -870,7 +870,11 @@ SDLCROSS ?= $(CROSS)
 AS := $(CROSS)as
 
 ifeq ($(OSX_BUILD),1)
+# cross assembler required for '00_sound_player.s'
 AS := i686-w64-mingw32-as
+# native assembler required for 'sound_data.s'
+# (GNU as is not available in any OSX port of binutils, use LLVM as instead)
+AS_NATIVE := as
 endif
 
 ifneq ($(TARGET_WEB),1) # As in, not-web PC port
