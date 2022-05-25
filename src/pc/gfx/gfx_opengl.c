@@ -37,7 +37,7 @@
 #  if defined(USE_GLES)
 #    define USE_FRAMEBUFFER 1
 #  else
-#    if defined(USES_WINDOWS) || defined(OSX_BUILD)
+#    if defined(USES_WINDOWS)
 #      define USE_FRAMEBUFFER GLEW_ARB_framebuffer_object
 #    else
 #      define USE_FRAMEBUFFER 0
