@@ -991,6 +991,7 @@ ifneq ($(SDL1_USED)$(SDL2_USED),00)
     # on OSX at least the homebrew version of sdl-config gives include path as `.../include/SDL2` instead of `.../include`
     OSX_PREFIX := $(shell $(SDLCONFIG) --prefix)
     BACKEND_CFLAGS += -I$(OSX_PREFIX)/include $(shell $(SDLCONFIG) --cflags)
+    BACKEND_LDFLAGS += $(shell $(SDLCONFIG) --libs)
   else
     BACKEND_CFLAGS += $(shell $(SDLCONFIG) --cflags)
     ifeq ($(WINDOWS_BUILD),1)
