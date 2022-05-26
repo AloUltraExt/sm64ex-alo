@@ -434,8 +434,8 @@ void render_multi_text_string(s16 *xPos, s16 *yPos, s8 multiTextID)
 
 #if defined(VERSION_JP) || defined(VERSION_SH)
     #define MAX_STRING_WIDTH 18
-    #define CHAR_WIDTH_SPACE 5.0f
-    #define CHAR_WIDTH_DEFAULT 10.0f
+    #define CHAR_WIDTH_SPACE (f32)(JP_DIALOG_CHAR_WIDTH / 2)
+    #define CHAR_WIDTH_DEFAULT (f32)JP_DIALOG_CHAR_WIDTH
 #else
     #define MAX_STRING_WIDTH 16
     #define CHAR_WIDTH_SPACE (f32)(gDialogCharWidths[DIALOG_CHAR_SPACE])
@@ -620,14 +620,10 @@ void print_hud_lut_string(s8 hudLUT, s16 x, s16 y, const u8 *str) {
     if (hudLUT == HUD_LUT_JPMENU) {
         xStride = 16;
     } else { // HUD_LUT_GLOBAL
-#ifdef VERSION_JP
-        xStride = 14;
-#else
-        xStride = 12; //? Shindou uses this.
-#endif
+        xStride = HUD_LUT_STRIDE_GLOBAL;
     }
 
-    while (str[strPos] != GLOBAR_CHAR_TERMINATOR) {
+    while (str[strPos] != GLOBAL_CHAR_TERMINATOR) {
 #ifndef VERSION_JP
         switch (str[strPos]) {
 #ifdef VERSION_EU
@@ -743,7 +739,7 @@ void print_menu_generic_string(s16 x, s16 y, const u8 *str) {
                 }
 #endif
 #if defined(VERSION_JP) || defined(VERSION_SH)
-                curX += JP_DIALOG_CHAR_STRING;
+                curX += JP_DIALOG_CHAR_WIDTH - 1;
 #else
                 curX += gDialogCharWidths[str[strPos]];
 #endif
@@ -765,7 +761,7 @@ void print_credits_string(s16 x, s16 y, const u8 *str) {
                 G_TX_CLAMP, 3, G_TX_NOLOD, G_TX_CLAMP, 3, G_TX_NOLOD);
     gDPSetTileSize(gDisplayListHead++, G_TX_RENDERTILE, 0, 0, (8 - 1) << G_TEXTURE_IMAGE_FRAC, (8 - 1) << G_TEXTURE_IMAGE_FRAC);
 
-    while (str[strPos] != GLOBAR_CHAR_TERMINATOR) {
+    while (str[strPos] != GLOBAL_CHAR_TERMINATOR) {
         switch (str[strPos]) {
             case GLOBAL_CHAR_SPACE:
                 curX += 4;
@@ -903,7 +899,7 @@ s16 get_string_width(u8 *str) {
         #if defined(VERSION_US) || defined(VERSION_EU)
         width += gDialogCharWidths[str[strPos]];
         #else
-        width += JP_DIALOG_CHAR_STRING;
+        width += JP_DIALOG_CHAR_WIDTH;
         #endif
         strPos++;
     }
@@ -2037,7 +2033,7 @@ void print_credits_str_ascii(s16 x, s16 y, const char *str) {
         c = str[pos];
     }
 
-    creditStr[pos] = GLOBAR_CHAR_TERMINATOR;
+    creditStr[pos] = GLOBAL_CHAR_TERMINATOR;
 
     print_credits_string(x, y, creditStr);
 }

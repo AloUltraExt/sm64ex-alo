@@ -27,7 +27,14 @@
 #define HUD_LUT_DIFF HUD_LUT_GLOBAL
 #endif
 
-#define JP_DIALOG_CHAR_STRING 9
+// Japanese font use the same width string size
+#define JP_DIALOG_CHAR_WIDTH 10
+
+#ifdef VERSION_JP
+#define HUD_LUT_STRIDE_GLOBAL   14
+#else
+#define HUD_LUT_STRIDE_GLOBAL   12
+#endif
 
 enum MenuMode {
     MENU_MODE_NONE = -1,
@@ -57,7 +64,7 @@ enum HudSpecialHUDChars {
 
 enum SpecialFontChars {
     GLOBAL_CHAR_SPACE = 0x9E,
-    GLOBAR_CHAR_TERMINATOR = 0xFF
+    GLOBAL_CHAR_TERMINATOR = 0xFF
 };
 
 enum DialogMark {
@@ -136,6 +143,8 @@ extern s8 gRedCoinsCollected;
 
 void create_dl_identity_matrix(void);
 void create_dl_translation_matrix(s8 pushOp, f32 x, f32 y, f32 z);
+void create_dl_rotation_matrix(s8 pushOp, f32 a, f32 x, f32 y, f32 z);
+void create_dl_scale_matrix(s8 pushOp, f32 x, f32 y, f32 z);
 void create_dl_ortho_matrix(void);
 void print_generic_string(s16 x, s16 y, const u8 *str);
 void print_hud_lut_string(s8 hudLUT, s16 x, s16 y, const u8 *str);

@@ -15,7 +15,7 @@
 #include "game/ingame_menu.h"
 
 #include "options_menu.h"
-#include "draw_utils.h"
+#include "draw_util.h"
 
 #include "pc/configfile.h"
 
@@ -289,7 +289,7 @@ static void uint_to_hex(u32 num, u8 *dst) {
 static void optmenu_draw_text(s16 x, s16 y, const u8 str[], u8 col) {
     u8 textX = get_str_x_pos_from_center(x, (u8 *) str, 10.0f);
     gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
-    print_generic_string(textX+1, y-1, str);
+    print_generic_string(textX + 1, y - 1, str);
     if (col == 0) {
         gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
     } else {
@@ -305,17 +305,16 @@ static void optmenu_draw_opt_scroll(const struct Option *opt, s16 i) {
     minvar = *opt->uval - opt->scrMin;
 
     // Grey bar
-    ext_print_quad_rect(96,111+(32*i)-(currentMenu->scroll*32),224,117+(32*i)-(currentMenu->scroll*32),0x80,0x80,0x80, 0xFF);
+    print_solid_color_quad(96,111+(32*i)-(currentMenu->scroll*32),224,117+(32*i)-(currentMenu->scroll*32),0x80,0x80,0x80, 0xFF);
     // White bar
-    ext_print_quad_rect(96,111+(32*i)-(currentMenu->scroll*32),96+(((f32)minvar/maxvar)*128),117+(32*i)-(currentMenu->scroll*32),0xFF,0xFF,0xFF, 0xFF);
+    print_solid_color_quad(96,111+(32*i)-(currentMenu->scroll*32),96+(((f32)minvar/maxvar)*128),117+(32*i)-(currentMenu->scroll*32),0xFF,0xFF,0xFF, 0xFF);
     // Red middle bar
-    ext_print_quad_rect(94+(((f32)minvar/maxvar)*128),109+(32*i)-(currentMenu->scroll*32),98+(((f32)minvar/maxvar)*128),119+(32*i)-(currentMenu->scroll*32),0xFF,0x0,0x0, 0xFF);
+    print_solid_color_quad(94+(((f32)minvar/maxvar)*128),109+(32*i)-(currentMenu->scroll*32),98+(((f32)minvar/maxvar)*128),119+(32*i)-(currentMenu->scroll*32),0xFF,0x0,0x0, 0xFF);
     // To fix strings
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
 }
 
 static void optmenu_draw_opt(const struct Option *opt, s16 x, s16 y, u8 sel, s16 iScrl) {
-
     u8 buf[32] = { 0 };
 
     if (opt->type == OPT_SUBMENU || opt->type == OPT_BUTTON)
@@ -404,16 +403,12 @@ static void optmenu_opt_change(struct Option *opt, s32 val) {
     }
 }
 
-#ifdef VERSION_JP
-#define STRIDE 8
-#else
-#define STRIDE 6
-#endif
+#define STRIDE (HUD_LUT_STRIDE_GLOBAL / 2) // stride is 12 (14 in JP)
 static inline s16 get_hudstr_centered_x(const s16 sx, const u8 *str) {
     const u8 *chr = str;
     s16 len = 0;
-    while (*chr != GLOBAR_CHAR_TERMINATOR) ++chr, ++len;
-    return sx - len * STRIDE; // stride is 12 (14 in JP)
+    while (*chr != GLOBAL_CHAR_TERMINATOR) ++chr, ++len;
+    return sx - len * STRIDE;
 }
 #undef STRIDE
 
@@ -424,13 +419,13 @@ void optmenu_draw(void) {
     s16 scrollpos;
     f32 sinpos;
 
-    ext_print_quad_rect(47, 83, 281, 84, 0x0, 0x0, 0x0, 0xFF);
-    ext_print_quad_rect(47, 218, 281, 219, 0x0, 0x0, 0x0, 0xFF);
-    ext_print_quad_rect(47, 83, 48, 219, 0x0, 0x0, 0x0, 0xFF);
-    ext_print_quad_rect(280, 83, 281, 219, 0x0, 0x0, 0x0, 0xFF);
-    ext_print_quad_rect(271, 83, 272, 219, 0x0, 0x0, 0x0, 0xFF);
+    print_solid_color_quad(47, 83, 281, 84, 0x0, 0x0, 0x0, 0xFF);
+    print_solid_color_quad(47, 218, 281, 219, 0x0, 0x0, 0x0, 0xFF);
+    print_solid_color_quad(47, 83, 48, 219, 0x0, 0x0, 0x0, 0xFF);
+    print_solid_color_quad(280, 83, 281, 219, 0x0, 0x0, 0x0, 0xFF);
+    print_solid_color_quad(271, 83, 272, 219, 0x0, 0x0, 0x0, 0xFF);
 
-    ext_print_quad_rect(48, 84, 272, 218, 0x0, 0x0, 0x0, 0x50);
+    print_solid_color_quad(48, 84, 272, 218, 0x0, 0x0, 0x0, 0x50);
 
     const s16 labelX = get_hudstr_centered_x(SCREEN_WIDTH / 2, currentMenu->label);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
@@ -440,9 +435,9 @@ void optmenu_draw(void) {
 
     if (currentMenu->numOpts > 4)
     {
-        ext_print_quad_rect(272, 84, 280, 218, 0x80, 0x80, 0x80, 0xFF);
+        print_solid_color_quad(272, 84, 280, 218, 0x80, 0x80, 0x80, 0xFF);
         scrollpos = (62)*((f32)currentMenu->scroll/(currentMenu->numOpts-4));
-        ext_print_quad_rect(272, 84 + scrollpos,280,156+scrollpos,0xFF,0xFF,0xFF, 0xFF);
+        print_solid_color_quad(272, 84 + scrollpos,280,156+scrollpos,0xFF,0xFF,0xFF, 0xFF);
     }
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
@@ -465,16 +460,13 @@ void optmenu_draw(void) {
 
 //This has been separated for interesting reasons. Don't question it.
 void optmenu_draw_prompt(void) {
-    s16 strValue = get_string_width((u8*)optSmallStr[optmenu_open]);
+    u8 *str = (u8 *) optSmallStr[optmenu_open];
+    s16 strW = get_string_width(str);
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
 
-    gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
-    print_generic_string(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(56 + strValue), 211, optSmallStr[optmenu_open]);
-
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
-    print_generic_string(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(57 + strValue), 212, optSmallStr[optmenu_open]);
-
+    print_generic_string_detail(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(57 + strW), 212, str, 255, 255, 255, 255, TRUE, 1);
+    
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 }
 
