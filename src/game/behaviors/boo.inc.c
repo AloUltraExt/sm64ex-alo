@@ -861,7 +861,7 @@ void bhv_boo_in_castle_loop(void) {
 }
 
 void bhv_boo_staircase(void) {
-    f32 targetY;
+    f32 targetY = 0.0f;
 
     switch (o->oBhvParams2ndByte) {
         case 1:

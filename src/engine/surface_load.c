@@ -140,19 +140,18 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
     struct SurfaceNode *list;
     s32 surfacePriority;
     s32 priority;
-    s32 sortDir;
+    s32 sortDir = 1; // highest to lowest, then insertion order (water and floors)
     s32 listIndex;
 
     if (surface->normal.y > NORMAL_FLOOR_THRESHOLD) {
         listIndex = SPATIAL_PARTITION_FLOORS;
-        sortDir = 1; // highest to lowest, then insertion order
-    } else if (surface->normal.y < NORMAL_CEIL_THRESHOLD) {
-        listIndex = SPATIAL_PARTITION_CEILS;
-        sortDir = -1; // lowest to highest, then insertion order
 #ifdef WATER_SURFACES
     } else if (SURFACE_IS_NEW_WATER(surface->type)) {
         listIndex = SPATIAL_PARTITION_WATER;
 #endif
+    } else if (surface->normal.y < NORMAL_CEIL_THRESHOLD) {
+        listIndex = SPATIAL_PARTITION_CEILS;
+        sortDir = -1; // lowest to highest, then insertion order
     } else {
         listIndex = SPATIAL_PARTITION_WALLS;
         sortDir = 0; // insertion order
@@ -632,8 +631,7 @@ u32 get_area_terrain_size(TerrainData *data) {
  */
 void load_area_terrain(s16 index, TerrainData *data, RoomData *surfaceRooms, s16 *macroObjects) {
     TerrainData terrainLoadType;
-    TerrainData *vertexData;
-    UNUSED u8 filler[4];
+    TerrainData *vertexData = NULL;
 
     // Initialize the data for this.
     gEnvironmentRegions = NULL;
@@ -864,9 +862,9 @@ void load_object_collision_model(void) {
     f32 marioDist = gCurrentObject->oDistanceToMario;
 
 
-    // On an object's first frame, the distance is set to 19000.0f.
+    // On an object's first frame, the distance is set to F32_MAX.
     // If the distance hasn't been updated, update it now.
-    if (gCurrentObject->oDistanceToMario == 19000.0f) {
+    if (gCurrentObject->oDistanceToMario == F32_MAX) {
         marioDist = dist_between_objects(gCurrentObject, gMarioObject);
     }
 
@@ -894,9 +892,16 @@ void load_object_collision_model(void) {
 
     f32 drawDist = gCurrentObject->oDrawingDistance;
 
+    // ex-alo change
+    // Ensure the object is allocated to set default collision and drawing distance
+    if (gCurrentObject->activeFlags & ACTIVE_FLAG_ALLOCATED && collisionData != NULL) {
+        if (colDist  == 0.0f) colDist = 1000.0f;
+        if (drawDist == 0.0f) drawDist = 4000.0f;
+    }
+
     // If the object collision is supposed to be loaded more than the
     // drawing distance, extend the drawing range.
-    if (colDist > drawDist) {
+    if (drawDist < colDist) {
         drawDist = colDist;
     }
 
@@ -913,7 +918,7 @@ void load_object_collision_model(void) {
     }
 
 #ifndef NODRAWINGDISTANCE
-    if (marioDist < gCurrentObject->oDrawingDistance) {
+    if (marioDist < drawDist) {
         gCurrentObject->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
     } else {
         gCurrentObject->header.gfx.node.flags &= ~GRAPH_RENDER_ACTIVE;
@@ -921,4 +926,7 @@ void load_object_collision_model(void) {
 #else
     gCurrentObject->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
 #endif
+
+    gCurrentObject->oCollisionDistance = colDist;
+    gCurrentObject->oDrawingDistance = drawDist;
 }

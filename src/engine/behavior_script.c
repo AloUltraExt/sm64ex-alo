@@ -956,6 +956,12 @@ void cur_obj_update(void) {
         obj_update_gfx_pos_and_angle(gCurrentObject);
     }
 
+    // ex-alo change
+    // Ensure the object is allocated to set default drawing distance
+    if (gCurrentObject->activeFlags & ACTIVE_FLAG_ALLOCATED && gCurrentObject->collisionData == NULL) {
+        if (gCurrentObject->oDrawingDistance == 0.0f) gCurrentObject->oDrawingDistance = 4000.0f;
+    }
+
     // Handle visibility of object
     if (gCurrentObject->oRoom != -1) {
         // If the object is in a room, only show it when Mario is in the room.

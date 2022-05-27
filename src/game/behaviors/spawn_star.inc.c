@@ -29,7 +29,7 @@ void bhv_collect_star_loop(void) {
     o->oFaceAngleYaw += 0x800;
 
     if (o->oInteractStatus & INT_STATUS_INTERACTED) {
-        mark_obj_for_deletion(o);
+        obj_mark_for_deletion(o);
         o->oInteractStatus = 0;
     }
 }
@@ -112,7 +112,7 @@ void bhv_star_spawn_loop(void) {
             }
 
             if (o->oInteractStatus & INT_STATUS_INTERACTED) {
-                mark_obj_for_deletion(o);
+                obj_mark_for_deletion(o);
                 o->oInteractStatus = 0;
             }
             break;
@@ -132,17 +132,20 @@ struct Object *spawn_star(struct Object *star, f32 homeX, f32 homeY, f32 homeZ) 
 }
 
 void spawn_default_star(f32 homeX, f32 homeY, f32 homeZ) {
-    struct Object *star = spawn_star(star, homeX, homeY, homeZ);
+    struct Object *star = NULL;
+    star = spawn_star(star, homeX, homeY, homeZ);
     star->oBhvParams2ndByte = 0;
 }
 
 void spawn_red_coin_cutscene_star(f32 homeX, f32 homeY, f32 homeZ) {
-    struct Object *star = spawn_star(star, homeX, homeY, homeZ);
+    struct Object *star = NULL;
+    star = spawn_star(star, homeX, homeY, homeZ);
     star->oBhvParams2ndByte = 1;
 }
 
 void spawn_no_exit_star(f32 homeX, f32 homeY, f32 homeZ) {
-    struct Object *star = spawn_star(star, homeX, homeY, homeZ);
+    struct Object *star = NULL;
+    star = spawn_star(star, homeX, homeY, homeZ);
     star->oBhvParams2ndByte = 1;
     star->oInteractionSubtype |= INT_SUBTYPE_NO_EXIT;
 }

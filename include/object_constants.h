@@ -14,7 +14,7 @@
 #define ACTIVE_FLAG_INITIATED_TIME_STOP    (1 <<  5) // 0x0020
 #define ACTIVE_FLAG_MOVE_THROUGH_GRATE     (1 <<  6) // 0x0040
 #define ACTIVE_FLAG_DITHERED_ALPHA         (1 <<  7) // 0x0080
-#define ACTIVE_FLAG_UNK8                   (1 <<  8) // 0x0100
+#define ACTIVE_FLAG_ALLOCATED              (1 <<  8) // 0x0100
 #define ACTIVE_FLAG_UNK9                   (1 <<  9) // 0x0200
 #define ACTIVE_FLAG_UNK10                  (1 << 10) // 0x0400
 

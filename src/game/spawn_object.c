@@ -18,6 +18,8 @@
 #include "spawn_object.h"
 #include "types.h"
 
+#if 0 // Old version of this file
+
 /**
  * An unused linked list struct that seems to have been replaced by ObjectNode.
  */
@@ -77,6 +79,43 @@ struct LinkedList *unused_try_allocate(struct LinkedList *destList,
 }
 
 /**
+ * Remove the node from the doubly linked list it's in, and place it in the
+ * singly linked freeList.
+ * This function seems to have been replaced by deallocate_object.
+ */
+void unused_deallocate(struct LinkedList *freeList, struct LinkedList *node) {
+    // Remove from doubly linked list
+    node->next->prev = node->prev;
+    node->prev->next = node->next;
+
+    // Insert at beginning of singly linked list
+    node->next = freeList->next;
+    freeList->next = node;
+}
+
+/**
+ * Delete the leaf graph nodes under obj and obj's siblings.
+ */
+UNUSED static void unused_delete_leaf_nodes(struct Object *obj) {
+    struct Object *children;
+    struct Object *sibling;
+    struct Object *obj0 = obj;
+
+    if ((children = (struct Object *) obj->header.gfx.node.children) != NULL) {
+        unused_delete_leaf_nodes(children);
+    } else {
+        // No children
+        obj_mark_for_deletion(obj);
+    }
+
+    while ((sibling = (struct Object *) obj->header.gfx.node.next) != obj0) {
+        unused_delete_leaf_nodes(sibling);
+        obj = (struct Object *) sibling->header.gfx.node.next;
+    }
+}
+#endif
+
+/**
  * Attempt to allocate an object from freeList (singly linked) and append it
  * to the end of destList (doubly linked). Return the object, or NULL if
  * freeList is empty.
@@ -117,21 +156,6 @@ struct Object *try_allocate_object(struct ObjectNode *destList, struct ObjectNod
     geo_add_child(&gObjParentGraphNode, &nextObj->gfx.node);
 
     return (struct Object *) nextObj;
-}
-
-/**
- * Remove the node from the doubly linked list it's in, and place it in the
- * singly linked freeList.
- * This function seems to have been replaced by deallocate_object.
- */
-void unused_deallocate(struct LinkedList *freeList, struct LinkedList *node) {
-    // Remove from doubly linked list
-    node->next->prev = node->prev;
-    node->prev->next = node->next;
-
-    // Insert at beginning of singly linked list
-    node->next = freeList->next;
-    freeList->next = node;
 }
 
 /**
@@ -195,31 +219,10 @@ void clear_object_lists(struct ObjectNode *objLists) {
 }
 
 /**
- * Delete the leaf graph nodes under obj and obj's siblings.
- */
-UNUSED static void unused_delete_leaf_nodes(struct Object *obj) {
-    struct Object *children;
-    struct Object *sibling;
-    struct Object *obj0 = obj;
-
-    if ((children = (struct Object *) obj->header.gfx.node.children) != NULL) {
-        unused_delete_leaf_nodes(children);
-    } else {
-        // No children
-        mark_obj_for_deletion(obj);
-    }
-
-    while ((sibling = (struct Object *) obj->header.gfx.node.next) != obj0) {
-        unused_delete_leaf_nodes(sibling);
-        obj = (struct Object *) sibling->header.gfx.node.next;
-    }
-}
-
-/**
  * Free the given object.
  */
 void unload_object(struct Object *obj) {
-    obj->activeFlags = ACTIVE_FLAG_DEACTIVATED;
+    obj_mark_for_deletion(obj);
     obj->prevObj = NULL;
 
     obj->header.gfx.throwMatrix = NULL;
@@ -229,9 +232,7 @@ void unload_object(struct Object *obj) {
     geo_add_child(&gObjParentGraphNode, &obj->header.gfx.node);
 #endif
 
-    obj->header.gfx.node.flags &= ~GRAPH_RENDER_BILLBOARD;
-    obj->header.gfx.node.flags &= ~GRAPH_RENDER_CYLBOARD;
-    obj->header.gfx.node.flags &= ~GRAPH_RENDER_ACTIVE;
+    obj->header.gfx.node.flags &= ~(GRAPH_RENDER_BILLBOARD | GRAPH_RENDER_CYLBOARD | GRAPH_RENDER_ACTIVE);
 
     deallocate_object(&gFreeObjectList, &obj->header);
 }
@@ -274,20 +275,21 @@ struct Object *allocate_object(struct ObjectNode *objList) {
 
     // Initialize object fields
 
-    obj->activeFlags = ACTIVE_FLAG_ACTIVE | ACTIVE_FLAG_UNK8;
+    obj->activeFlags = ACTIVE_FLAG_ACTIVE;
     obj->parentObj = obj;
     obj->prevObj = NULL;
     obj->collidedObjInteractTypes = 0;
     obj->numCollidedObjs = 0;
 
 #if IS_64_BIT
-    for (i = 0; i < 0x50; i++) {
+    for (i = 0; i < MAX_OBJECT_FIELDS; i++) {
         obj->rawData.asS32[i] = 0;
         obj->ptrData.asVoidPtr[i] = NULL;
     }
 #else
-    // -O2 needs everything until = on the same line
-    for (i = 0; i < 0x50; i++) obj->rawData.asS32[i] = 0;
+    for (i = 0; i < MAX_OBJECT_FIELDS; i++) {
+        obj->rawData.asS32[i] = 0;
+    }
 #endif
 
     obj->unused1 = 0;
@@ -307,93 +309,47 @@ struct Object *allocate_object(struct ObjectNode *objList) {
     obj->oDamageOrCoinValue = 0;
     obj->oHealth = 2048;
 
-    obj->oCollisionDistance = 1000.0f;
-    if (gCurrLevelNum == LEVEL_TTC) {
-        obj->oDrawingDistance = 2000.0f;
-    } else {
-        obj->oDrawingDistance = 4000.0f;
-    }
-
     mtxf_identity(obj->transform);
 
     obj->respawnInfoType = RESPAWN_INFO_TYPE_NULL;
     obj->respawnInfo = NULL;
 
-    obj->oDistanceToMario = 19000.0f;
+    obj->oDistanceToMario = F32_MAX;
     obj->oRoom = -1;
 
+    // ex-alo change
+    // Set these distances to 0 to prevent early collision and drawing load
+    // Proper values are set when ACTIVE_FLAG_ALLOCATED active flag is set
+    obj->oCollisionDistance = 0.0f;
+    obj->oDrawingDistance = 0.0f;
+
     obj->header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
-    obj->header.gfx.pos[0] = -10000.0f;
-    obj->header.gfx.pos[1] = -10000.0f;
-    obj->header.gfx.pos[2] = -10000.0f;
+    vec3_zero(obj->header.gfx.pos);
     obj->header.gfx.throwMatrix = NULL;
 
     return obj;
 }
 
 /**
- * If the object is close to being on the floor, move it to be exactly on the floor.
- */
-static void snap_object_to_floor(struct Object *obj) {
-    struct Surface *surface;
-
-    obj->oFloorHeight = find_floor(obj->oPosX, obj->oPosY, obj->oPosZ, &surface);
-
-    if (obj->oFloorHeight + 2.0f > obj->oPosY && obj->oPosY > obj->oFloorHeight - 10.0f) {
-        obj->oPosY = obj->oFloorHeight;
-        obj->oMoveFlags |= OBJ_MOVE_ON_GROUND;
-    }
-}
-
-/**
  * Spawn an object at the origin with the behavior script at virtual address bhvScript.
  */
 struct Object *create_object(const BehaviorScript *bhvScript) {
-    s32 objListIndex;
     struct Object *obj;
     struct ObjectNode *objList;
-    const BehaviorScript *behavior = bhvScript;
 
-    // If the first behavior script command is "begin <object list>", then
-    // extract the object list from it
-    if ((bhvScript[0] >> 24) == 0) {
-        objListIndex = (bhvScript[0] >> 16) & 0xFFFF;
-    } else {
-        objListIndex = OBJ_LIST_DEFAULT;
-    }
+    u32 objListIndex = get_object_list_from_behavior(bhvScript);
 
     objList = &gObjectLists[objListIndex];
     obj = allocate_object(objList);
 
     obj->curBhvCommand = bhvScript;
-    obj->behavior = behavior;
+    obj->behavior = bhvScript;
 
     if (objListIndex == OBJ_LIST_UNIMPORTANT) {
         obj->activeFlags |= ACTIVE_FLAG_UNIMPORTANT;
     }
 
-    //! They intended to snap certain objects to the floor when they spawn.
-    //  However, at this point the object's position is the origin. So this will
-    //  place the object at the floor beneath the origin. Typically this
-    //  doesn't matter since the caller of this function sets oPosX/Y/Z
-    //  themselves.
-    switch (objListIndex) {
-        case OBJ_LIST_GENACTOR:
-        case OBJ_LIST_PUSHABLE:
-        case OBJ_LIST_POLELIKE:
-            snap_object_to_floor(obj);
-            break;
-        default:
-            break;
-    }
+    obj->activeFlags |= ACTIVE_FLAG_ALLOCATED;
 
     return obj;
-}
-
-/**
- * Mark an object to be unloaded at the end of the frame.
- */
-void mark_obj_for_deletion(struct Object *obj) {
-    //! Same issue as obj_mark_for_deletion
-    obj->activeFlags = ACTIVE_FLAG_DEACTIVATED;
 }

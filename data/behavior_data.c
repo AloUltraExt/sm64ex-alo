@@ -70,73 +70,10 @@
 #define BC_W(a) ((uintptr_t)(u32)(a))
 #define BC_PTR(a) ((uintptr_t)(a))
 
-// List of commands as enum for ifdefs
-// Vanilla ones are left unnamed, custom ones are named
-enum BehaviorCommandsIDList
-{
-    BHV_SCRIPT_CMD_00,
-    BHV_SCRIPT_CMD_01,
-    BHV_SCRIPT_CMD_02,
-    BHV_SCRIPT_CMD_03,
-    BHV_SCRIPT_CMD_04,
-    BHV_SCRIPT_CMD_05,
-    BHV_SCRIPT_CMD_06,
-    BHV_SCRIPT_CMD_07,
-    BHV_SCRIPT_CMD_08,
-    BHV_SCRIPT_CMD_09,
-    BHV_SCRIPT_CMD_0A,
-    BHV_SCRIPT_CMD_0B,
-    BHV_SCRIPT_CMD_0C,
-    BHV_SCRIPT_CMD_0D,
-    BHV_SCRIPT_CMD_0E,
-    BHV_SCRIPT_CMD_0F,
-    BHV_SCRIPT_CMD_10,
-    BHV_SCRIPT_CMD_11,
-    BHV_SCRIPT_CMD_12,
-    BHV_SCRIPT_CMD_13,
-    BHV_SCRIPT_CMD_14,
-    BHV_SCRIPT_CMD_15,
-    BHV_SCRIPT_CMD_16,
-    BHV_SCRIPT_CMD_17,
-    BHV_SCRIPT_CMD_18,
-    BHV_SCRIPT_CMD_19,
-    BHV_SCRIPT_CMD_1A,
-    BHV_SCRIPT_CMD_1B,
-    BHV_SCRIPT_CMD_1C,
-    BHV_SCRIPT_CMD_1D,
-    BHV_SCRIPT_CMD_1E,
-    BHV_SCRIPT_CMD_1F,
-    BHV_SCRIPT_CMD_20,
-    BHV_SCRIPT_CMD_21,
-    BHV_SCRIPT_CMD_22,
-    BHV_SCRIPT_CMD_23,
-    BHV_SCRIPT_CMD_24,
-    BHV_SCRIPT_CMD_25,
-    BHV_SCRIPT_CMD_26,
-    BHV_SCRIPT_CMD_27,
-    BHV_SCRIPT_CMD_28,
-    BHV_SCRIPT_CMD_29,
-    BHV_SCRIPT_CMD_2A,
-    BHV_SCRIPT_CMD_2B,
-    BHV_SCRIPT_CMD_2C,
-    BHV_SCRIPT_CMD_2D,
-    BHV_SCRIPT_CMD_2E,
-    BHV_SCRIPT_CMD_2F,
-    BHV_SCRIPT_CMD_30,
-    BHV_SCRIPT_CMD_31,
-    BHV_SCRIPT_CMD_32,
-    BHV_SCRIPT_CMD_33,
-    BHV_SCRIPT_CMD_34,
-    BHV_SCRIPT_CMD_35,
-    BHV_SCRIPT_CMD_36,
-    BHV_SCRIPT_CMD_37,
-    BHV_SCRIPT_CMD_CYLBOARD,
-};
-
 // Defines the start of the behavior script as well as the object list the object belongs to.
 // Has some special behavior for certain objects.
 #define BEGIN(objList) \
-    BC_BB(BHV_SCRIPT_CMD_00, objList)
+    BC_BB(BHV_CMD_BEGIN, objList)
 
 // Delays the behavior script for a certain number of frames.
 #define DELAY(num) \
@@ -812,6 +749,7 @@ const BehaviorScript bhvWFBreakableWallLeft[] = {
     // WF breakable walls - common:
     OR_INT(oFlags, (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
     SET_HITBOX(/*Radius*/ 300, /*Height*/ 400),
+    SET_FLOAT(oDrawingDistance, 5000),
     SET_INT(oIntangibleTimer, 0),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_wf_breakable_wall_loop),
@@ -872,6 +810,7 @@ const BehaviorScript bhvExitPodiumWarp[] = {
     OR_INT(oFlags, (OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
     SET_INT(oInteractType, INTERACT_WARP),
     DROP_TO_FLOOR(),
+    SET_FLOAT(oDrawingDistance, 8000),
     SET_FLOAT(oCollisionDistance, 8000),
     LOAD_COLLISION_DATA(ttm_seg7_collision_podium_warp),
     SET_INT(oIntangibleTimer, 0),
@@ -1827,7 +1766,7 @@ const BehaviorScript bhvBreakableBox[] = {
     BEGIN(OBJ_LIST_SURFACE),
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_DONT_CALC_COLL_DIST),
     LOAD_COLLISION_DATA(breakable_box_seg8_collision_08012D70),
-    SET_FLOAT(oCollisionDistance, 500),
+    SET_FLOAT(oCollisionDistance, 1000),
     CALL_NATIVE(bhv_init_room),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_breakable_box_loop),
@@ -2428,8 +2367,10 @@ const BehaviorScript bhvVolcanoFlames[] = {
 
 const BehaviorScript bhvLLLRotatingHexagonalRing[] = {
     BEGIN(OBJ_LIST_SURFACE),
-    OR_INT(oFlags, (OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
+    OR_INT(oFlags, (OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_DONT_CALC_COLL_DIST)),
     LOAD_COLLISION_DATA(lll_seg7_collision_rotating_platform),
+    SET_FLOAT(oCollisionDistance, 4000),
+    SET_FLOAT(oDrawingDistance, 8000),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_lll_rotating_hexagonal_ring_loop),
         CALL_NATIVE(load_object_collision_model),
@@ -2799,6 +2740,7 @@ const BehaviorScript bhvInSunkenShip3[] = {
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
     LOAD_COLLISION_DATA(jrb_seg7_collision_in_sunken_ship_3),
     SET_HOME(),
+    SET_FLOAT(oDrawingDistance, 4000),
     SET_FLOAT(oCollisionDistance, 4000),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_ship_part_3_loop),
@@ -2844,6 +2786,7 @@ const BehaviorScript bhvInSunkenShip2[] = {
     LOAD_COLLISION_DATA(jrb_seg7_collision_in_sunken_ship_2),
     // Sunken ship - common:
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
+    SET_FLOAT(oDrawingDistance, 4000),
     SET_FLOAT(oCollisionDistance, 4000),
     CALL(bhvSunkenShipSetRotation),
     BEGIN_LOOP(),
@@ -4485,6 +4428,7 @@ const BehaviorScript bhvPyramidElevator[] = {
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
     LOAD_COLLISION_DATA(ssl_seg7_collision_pyramid_elevator),
     SET_HOME(),
+    SET_FLOAT(oDrawingDistance, 20000),
     SET_FLOAT(oCollisionDistance, 20000),
     CALL_NATIVE(bhv_pyramid_elevator_init),
     BEGIN_LOOP(),
@@ -4507,6 +4451,7 @@ const BehaviorScript bhvPyramidTop[] = {
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
     LOAD_COLLISION_DATA(ssl_seg7_collision_pyramid_top),
     SET_HOME(),
+    SET_FLOAT(oDrawingDistance, 20000),
     SET_FLOAT(oCollisionDistance, 20000),
     CALL_NATIVE(bhv_pyramid_top_init),
     BEGIN_LOOP(),
@@ -4636,7 +4581,7 @@ const BehaviorScript bhvBigBoulder[] = {
     OR_INT(oFlags, (OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
     SET_FLOAT(oGraphYOffset, 180),
     CALL_NATIVE(bhv_big_boulder_init),
-    SET_FLOAT(oCollisionDistance, 20000),
+    SET_FLOAT(oDrawingDistance, 20000),
     BEGIN_LOOP(),
         SET_INT(oIntangibleTimer, 0),
         CALL_NATIVE(bhv_big_boulder_loop),
@@ -5696,6 +5641,7 @@ const BehaviorScript bhvOctagonalPlatformRotating[] = {
 const BehaviorScript bhvAnimatesOnFloorSwitchPress[] = {
     BEGIN(OBJ_LIST_SURFACE),
     OR_INT(oFlags, (OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
+    SET_FLOAT(oDrawingDistance, 8000),
     SET_FLOAT(oCollisionDistance, 8000),
     CALL_NATIVE(bhv_animates_on_floor_switch_press_init),
     BEGIN_LOOP(),
