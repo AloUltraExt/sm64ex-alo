@@ -57,11 +57,11 @@ s8 sAudioEnabled = TRUE;
 u32 gNumVblanks = 0;
 s8 gResetTimer = 0;
 s8 gNmiResetBarsTimer = 0;
-s8 gDebugLevelSelect = FALSE;
 s8 D_8032C650 = 0;
 
-s8 gShowProfiler = FALSE;
-s8 gShowDebugText = FALSE;
+int gDebugLevelSelect = FALSE;
+int gShowProfiler = FALSE;
+int gShowDebugText = FALSE;
 
 // unused
 void handle_debug_key_sequences(void) {

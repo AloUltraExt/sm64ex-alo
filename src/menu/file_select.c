@@ -1181,6 +1181,12 @@ void load_main_menu_save_file(struct Object *fileButton, s32 fileNum) {
     if (fileButton->oMenuButtonState == MENU_BUTTON_STATE_FULLSCREEN) {
         sSelectedFileNum = fileNum;
     }
+
+#ifdef EXT_DEBUG_MENU
+    if (gPlayer1Controller->buttonDown == (L_CBUTTONS | D_CBUTTONS)) {
+        get_complete_save_file(fileNum);
+    }
+#endif
 }
 
 /**
@@ -3051,9 +3057,11 @@ static void print_file_select_strings(void) {
 
 #ifdef SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
     // Adds key combo to skip peach intro cutscene, useful on Non-PC targets
-    if (gPlayer1Controller->buttonDown == (Z_TRIG | START_BUTTON | L_CBUTTONS | R_CBUTTONS)) {
-        play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
-        gGlobalGameSkips |= GAME_SKIP_INTRO_SCENE;
+    if ((gPlayer1Controller->buttonDown == (L_TRIG | R_TRIG)) && sCurrentMenuLevel == MENU_LAYER_MAIN) {
+        if (!(gGlobalGameSkips & GAME_SKIP_INTRO_SCENE)) {
+            play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
+            gGlobalGameSkips |= GAME_SKIP_INTRO_SCENE;
+        }
     }
 #endif
 }

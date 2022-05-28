@@ -613,7 +613,7 @@ s32 save_file_get_course_star_count(s32 fileIndex, s32 courseIndex) {
     u8 flag = 1;
     u8 starFlags = save_file_get_star_flags(fileIndex, courseIndex);
 
-    for (i = 0; i < 7; i++, flag <<= 1) {
+    for (i = 0; i < (STAR_INDEX_100_COINS + 1); i++, flag <<= 1) {
         if (starFlags & flag) {
             count++;
         }
@@ -771,6 +771,20 @@ u16 eu_get_language(void) {
     if (gSaveBuffer.menuData[0].language >= LANGUAGE_MAX)
         eu_set_language(LANGUAGE_ENGLISH); // reset it to english if not
     return gSaveBuffer.menuData[0].language;
+}
+#endif
+
+#ifdef EXT_DEBUG_MENU
+void get_complete_save_file(s16 saveNum) {
+    int i, j;
+    for (i = 0; i < COURSE_MAX; i++) {
+        for (j = 0; j < STAR_INDEX_CANNON + 1; j++) { 
+            save_file_set_star_flags(saveNum - 1, i, 1 << j);
+        }
+    }
+    
+    save_file_set_flags(0xFFFFFFFF);
+    save_file_clear_flags(SAVE_FLAG_CAP_ON_GROUND | SAVE_FLAG_CAP_ON_KLEPTO | SAVE_FLAG_CAP_ON_UKIKI | SAVE_FLAG_CAP_ON_MR_BLIZZARD);
 }
 #endif
 

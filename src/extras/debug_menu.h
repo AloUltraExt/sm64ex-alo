@@ -26,14 +26,16 @@
 extern const u8 optDebugMenuStr[][32];
 
 struct DebugOptList {
-    bool    SimpleDbgTxt;
     bool    ComplexDbgTxt;
-    bool    LevelSelect;
     bool    FreeMoveAct;
     bool    CapChanger;
-    bool    ShowProfiler;
     bool    ShowFps;
+    bool    CompleteSave;
+    u16     FreeMoveActFlags;
 };
+
+#define ACT_DEBUG_STATE_CHECK_FLOOR (1 << 0)
+#define ACT_DEBUG_STATE_CHECK_CEIL  (1 << 1)
 
 extern struct DebugOptList DebugOpt;
 

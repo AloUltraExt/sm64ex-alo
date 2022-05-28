@@ -49,7 +49,6 @@
 #include "fs/fs.h"
 
 #include "game/game_init.h"
-#include "game/main.h"
 #include "game/rumble_init.h"
 
 #ifdef DISCORDRPC
@@ -61,9 +60,9 @@ OSMesgQueue gSIEventMesgQueue;
 
 s8 gResetTimer;
 s8 gNmiResetBarsTimer;
-s8 gDebugLevelSelect;
-s8 gShowProfiler;
-s8 gShowDebugText;
+bool gDebugLevelSelect;
+bool gShowProfiler;
+bool gShowDebugText;
 
 static struct AudioAPI *audio_api;
 static struct GfxWindowManagerAPI *wm_api;

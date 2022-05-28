@@ -29,10 +29,11 @@ extern struct SPTask *gActiveSPTask;
 extern u32 gNumVblanks;
 extern s8 gResetTimer;
 extern s8 gNmiResetBarsTimer;
-extern s8 gDebugLevelSelect;
 extern s8 D_8032C650;
-extern s8 gShowProfiler;
-extern s8 gShowDebugText;
+
+extern int gDebugLevelSelect;
+extern int gShowProfiler;
+extern int gShowDebugText;
 
 void set_vblank_handler(s32 index, struct VblankHandler *handler, OSMesgQueue *queue, OSMesg *msg);
 void dispatch_audio_sptask(struct SPTask *spTask);

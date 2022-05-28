@@ -27,9 +27,9 @@
 #include "options_menu.h"
 #include "debug_menu.h"
 
-extern s8 gShowDebugText;
-extern s8 gDebugLevelSelect;
-extern s8 gShowProfiler;
+extern bool gShowDebugText;
+extern bool gDebugLevelSelect;
+extern bool gShowProfiler;
 extern s16 gMenuMode;
 extern s8 gMenuState;
 extern struct CreditsEntry sCreditsSequence[];
@@ -54,6 +54,7 @@ static const u8 optsDebugStr[][64] = {
     { TEXT_OPT_DEBUG5 },
     { TEXT_OPT_DEBUG6 },
     { TEXT_OPT_DEBUG7 },
+    { TEXT_OPT_DEBUG8 },
 };
 
 static const u8 optsDebugWarpDestStr[][64] = {
@@ -125,14 +126,15 @@ static struct Option optDebugWarpDest[] = {
 static struct SubMenu menuDebugWarpDest = DEF_SUBMENU( optDebugMenuStr[1], optDebugWarpDest );
 
 struct Option optsDebug[] = {
-    DEF_OPT_TOGGLE( optsDebugStr[0], &DebugOpt.SimpleDbgTxt ),
+    DEF_OPT_TOGGLE( optsDebugStr[0], &gShowDebugText ),
     DEF_OPT_TOGGLE( optsDebugStr[1], &DebugOpt.ComplexDbgTxt ),
-    DEF_OPT_TOGGLE( optsDebugStr[2], &DebugOpt.LevelSelect ),
+    DEF_OPT_TOGGLE( optsDebugStr[2], &gDebugLevelSelect ),
     DEF_OPT_TOGGLE( optsDebugStr[3], &DebugOpt.FreeMoveAct ),
     DEF_OPT_TOGGLE( optsDebugStr[4], &DebugOpt.CapChanger ),
-    DEF_OPT_TOGGLE( optsDebugStr[5], &DebugOpt.ShowProfiler ),
+    DEF_OPT_TOGGLE( optsDebugStr[5], &gShowProfiler ),
     DEF_OPT_TOGGLE( optsDebugStr[6], &DebugOpt.ShowFps ),
-    DEF_OPT_SUBMENU( optsDebugStr[7], &menuDebugWarpDest ),
+    DEF_OPT_TOGGLE( optsDebugStr[7], &DebugOpt.CompleteSave ),
+    DEF_OPT_SUBMENU( optsDebugStr[8], &menuDebugWarpDest ),
 };
 
 struct SubMenu menuDebug = DEF_SUBMENU( optDebugMenuStr[0], optsDebug );
@@ -147,9 +149,20 @@ void activate_complex_debug_display(void) {
     }
 }
 
-void set_debug_free_move_action(struct MarioState *m) {
-    if (m->controller->buttonPressed & L_TRIG) {
-        set_mario_action(m, ACT_DEBUG_FREE_MOVE, 0);
+void set_debug_free_move_action(struct MarioState *m) {    
+    if (m->action == ACT_DEBUG_FREE_MOVE) {
+        if (m->controller->buttonPressed & L_TRIG) {
+            DebugOpt.FreeMoveActFlags ^= ACT_DEBUG_STATE_CHECK_FLOOR;
+        }
+    
+        if (m->controller->buttonPressed & R_TRIG) {
+            DebugOpt.FreeMoveActFlags ^= ACT_DEBUG_STATE_CHECK_CEIL;
+        }
+    } else {
+        DebugOpt.FreeMoveActFlags = ACT_DEBUG_STATE_CHECK_FLOOR;
+        if (m->controller->buttonPressed & L_TRIG) {
+            set_mario_action(m, ACT_DEBUG_FREE_MOVE, 0);
+        }
     }
 }
 
@@ -214,10 +227,10 @@ void set_debug_main_action(void) {
     if (DebugOpt.ShowFps) {
         debug_calculate_and_print_fps();
     }
-
-    gShowDebugText = DebugOpt.SimpleDbgTxt;
-    gDebugLevelSelect = DebugOpt.LevelSelect;
-    gShowProfiler = DebugOpt.ShowProfiler;
+    
+    if (DebugOpt.CompleteSave) {
+        get_complete_save_file(gCurrSaveFileNum);
+    }
 }
 
 #endif

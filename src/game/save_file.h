@@ -166,4 +166,8 @@ void eu_set_language(u16 language);
 u16 eu_get_language(void);
 #endif
 
+#ifdef EXT_DEBUG_MENU
+void get_complete_save_file(s16 saveNum);
+#endif
+
 #endif // SAVE_FILE_H

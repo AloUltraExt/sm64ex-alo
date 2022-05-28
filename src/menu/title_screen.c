@@ -26,7 +26,7 @@
 #define STUB_LEVEL(textname, _1, _2, _3, _4, _5, _6, _7, _8) textname,
 #define DEFINE_LEVEL(textname, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10) textname,
 
-char gLevelSelectStageNames[64][16] = {
+char gLevelSelectStageNames[][16] = {
     #include "levels/level_defines.h"
 };
 #undef STUB_LEVEL
@@ -130,13 +130,11 @@ s16 intro_level_select(void) {
     print_text_fmt_int(40, 60, "%2d", gCurrLevelNum);
     print_text(80, 60, gLevelSelectStageNames[gCurrLevelNum - 1]); // print stage name
 
-#define QUIT_LEVEL_SELECT_COMBO (Z_TRIG | START_BUTTON | L_CBUTTONS | R_CBUTTONS)
-
     // start being pressed signals the stage to be started. that is, unless...
     if (gPlayer1Controller->buttonPressed & START_BUTTON) {
         // ... the level select quit combo is being pressed, which uses START. If this
         // is the case, quit the menu instead.
-        if (gPlayer1Controller->buttonDown == QUIT_LEVEL_SELECT_COMBO) {
+        if (gPlayer1Controller->buttonDown == (L_TRIG | R_TRIG)) {
             gDebugLevelSelect = FALSE;
             return -1;
         }
@@ -153,6 +151,9 @@ s16 intro_level_select(void) {
 s32 intro_regular(void) {
     s32 level = LEVEL_NONE;
 
+    if (gGlobalGameSkips & GAME_SKIP_GODDARD) {
+        return (100 + gDebugLevelSelect);
+    }
 #ifndef VERSION_JP
     // When the game stars, gGlobalTimer is less than 129 frames,
     // so Mario greets the player. After that, he will always say
@@ -168,12 +169,6 @@ s32 intro_regular(void) {
     }
 #endif
     print_intro_text();
-
-#ifdef SET_KEY_COMBO_LEVEL_SELECT
-    if (gPlayer1Controller->buttonDown == QUIT_LEVEL_SELECT_COMBO) {
-        gDebugLevelSelect = 1;
-    }
-#endif
 
     if (gPlayer1Controller->buttonPressed & START_BUTTON) {
         play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
@@ -198,6 +193,9 @@ s32 intro_regular(void) {
 s32 intro_game_over(void) {
     s32 level = LEVEL_NONE;
 
+    if (gGlobalGameSkips & GAME_SKIP_GODDARD) {
+        return (100 + gDebugLevelSelect);
+    }
 #ifndef VERSION_JP
     if (sPlayMarioGameOver == TRUE) {
         play_sound(SOUND_MARIO_GAME_OVER, gGlobalSoundSource);
@@ -237,36 +235,30 @@ s32 intro_play_its_a_me_mario(void) {
  * Returns a level ID after their criteria is met.
  */
 s32 lvl_intro_update(s16 arg, UNUSED s32 unusedArg) {
-    s32 retVar;
+#ifdef SET_KEY_COMBO_LEVEL_SELECT
+    if (gPlayer1Controller->buttonDown == (L_TRIG | R_TRIG) && arg == LVL_INTRO_REGULAR) {
+        gDebugLevelSelect = TRUE;
+    }
+#endif
 
     switch (arg) {
         case LVL_INTRO_PLAY_ITS_A_ME_MARIO:
-            retVar = intro_play_its_a_me_mario();
-            break;
+            return intro_play_its_a_me_mario();
 #ifdef GODDARD_MFACE
         case LVL_INTRO_REGULAR:
-            if (gGlobalGameSkips & GAME_SKIP_GODDARD) {
-                retVar = (100 + gDebugLevelSelect);
-            } else {
-                retVar = intro_regular();
-            }    
-            break;
+            return intro_regular();
         case LVL_INTRO_GAME_OVER:
-            if (gGlobalGameSkips & GAME_SKIP_GODDARD) {
-                retVar = (100 + gDebugLevelSelect);
-            } else {
-                retVar = intro_game_over();
-            }
-            break;
+            return intro_game_over();
 #else
         case LVL_INTRO_REGULAR:
         case LVL_INTRO_GAME_OVER:
-            retVar = (100 + gDebugLevelSelect);
+            return (100 + gDebugLevelSelect);
             break;
 #endif
         case LVL_INTRO_LEVEL_SELECT:
-            retVar = intro_level_select();
+            return intro_level_select();
             break;
+        default:
+            return LEVEL_NONE;
     }
-    return retVar;
 }

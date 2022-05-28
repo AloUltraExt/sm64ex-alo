@@ -85,9 +85,9 @@ static inline int arg_uint(UNUSED const char *name, const char *value, unsigned 
 
 void set_cli_opts(void) {
     // might be redundant
-    extern s16 gDebugLevelSelect;
-    extern s16 gShowProfiler;
-    extern s16 gShowDebugText;
+    extern bool gDebugLevelSelect;
+    extern bool gShowProfiler;
+    extern bool gShowDebugText;
     if (gCLIOpts.SkipIntro) gGlobalGameSkips |= GAME_SKIP_INTRO_SCENE;
     if (gCLIOpts.LevelSelect) gDebugLevelSelect = TRUE;
     if (gCLIOpts.Profiler) gShowProfiler = TRUE;

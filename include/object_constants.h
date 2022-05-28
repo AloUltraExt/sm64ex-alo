@@ -134,6 +134,7 @@
 #define STAR_INDEX_ACT_5     4
 #define STAR_INDEX_ACT_6     5
 #define STAR_INDEX_100_COINS 6
+#define STAR_INDEX_CANNON    7
 
 /* gTTCSpeedSetting */
 #define TTC_SPEED_SLOW    0

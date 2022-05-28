@@ -35,6 +35,10 @@
 #include "extras/cheats.h"
 #endif
 
+#ifdef EXT_DEBUG_MENU
+#include "extras/debug_menu.h"
+#endif
+
 static struct Object *sIntroWarpPipeObj;
 static struct Object *sEndPeachObj;
 static struct Object *sEndRightToadObj;
@@ -550,15 +554,13 @@ s32 act_reading_sign(struct MarioState *m) {
 }
 
 s32 act_debug_free_move(struct MarioState *m) {
-    struct Surface *surf;
-    f32 floorHeight;
+    struct Surface *floor, *ceil;
     Vec3f pos;
     f32 speed;
-    u32 action;
 
     // integer immediates, generates convert instructions for some reason
     speed = gPlayer1Controller->buttonDown & B_BUTTON ? 4 : 1;
-    if (gPlayer1Controller->buttonDown & L_TRIG) {
+    if (gPlayer1Controller->buttonDown & Z_TRIG) {
         speed = 0.01f;
     }
 
@@ -572,33 +574,71 @@ s32 act_debug_free_move(struct MarioState *m) {
         pos[1] -= 16.0f * speed;
     }
 
+    if (gPlayer1Controller->buttonPressed == A_BUTTON) {
+#ifdef EXT_DEBUG_MENU
+        vec3_zero(m->vel);
+        m->forwardVel = 0.0f;
+        m->input &= ~INPUT_A_PRESSED;
+#endif
+
+        if (m->pos[1] <= m->waterLevel - 100) {
+            return set_mario_action(m, ACT_WATER_IDLE, 0);
+        }
+#ifdef EXT_DEBUG_MENU
+        else if (m->pos[1] <= m->floorHeight) {
+            return set_mario_action(m, ACT_IDLE, 0);
+        } else {
+            // slight upwards boost to get you some hover time
+            m->vel[1] = 20.0f;
+            DebugOpt.FreeMoveActFlags = 0;
+            return set_mario_action(m, ACT_FREEFALL, 0);
+        }
+#else
+        else {
+            return set_mario_action(m, ACT_IDLE, 0);
+        }
+#endif
+    }
+
     if (m->intendedMag > 0) {
-        pos[0] += 32.0f * speed * sins(m->intendedYaw);
-        pos[2] += 32.0f * speed * coss(m->intendedYaw);
+#ifdef EXT_DEBUG_MENU
+        speed *= m->intendedMag * 2.0f;
+#else
+        speed * 32.0f;
+#endif
+        pos[0] += speed * sins(m->intendedYaw);
+        pos[2] += speed * coss(m->intendedYaw);
     }
 
     resolve_and_return_wall_collisions(pos, 60.0f, 50.0f);
 
-    floorHeight = find_floor(pos[0], pos[1], pos[2], &surf);
-    if (surf != NULL) {
-        if (pos[1] < floorHeight) {
-            pos[1] = floorHeight;
+    f32 floorHeight = find_floor(pos[0], pos[1], pos[2], &floor);
+    
+    if (floor == NULL) {
+        return FALSE;
+    }
+
+#ifdef EXT_DEBUG_MENU
+    f32 ceilHeight = vec3f_find_ceil(pos, floorHeight, &ceil);
+
+        if (floor != NULL && (DebugOpt.FreeMoveActFlags & ACT_DEBUG_STATE_CHECK_FLOOR)) {
+            if (pos[1] < floorHeight) pos[1] = floorHeight;
         }
+        if (ceil != NULL && (DebugOpt.FreeMoveActFlags & ACT_DEBUG_STATE_CHECK_CEIL)) {
+            if ((pos[1] + 160.0f) > ceilHeight) pos[1] = (ceilHeight - 160.0f);
+        }
+
+        vec3f_copy(m->pos, pos);
+#else
+    if (surf != NULL && pos[1] < floorHeight) {
+        pos[1] = floorHeight;
         vec3f_copy(m->pos, pos);
     }
+#endif
 
     m->faceAngle[1] = m->intendedYaw;
     vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
     vec3s_set(m->marioObj->header.gfx.angle, 0, m->faceAngle[1], 0);
-
-    if (gPlayer1Controller->buttonPressed == A_BUTTON) {
-        if (m->pos[1] <= m->waterLevel - 100) {
-            action = ACT_WATER_IDLE;
-        } else {
-            action = ACT_IDLE;
-        }
-        set_mario_action(m, action, 0);
-    }
 
     return FALSE;
 }
