@@ -268,12 +268,7 @@ void bhv_free_bowling_ball_roll_loop(void) {
         cur_obj_play_sound_1(SOUND_ENV_UNKNOWN2);
     }
 
-#if QOL_FIX_UNUSED_FREE_BOWLING_BALL_COL_FLAGS
-    if ((collisionFlags & OBJ_COL_FLAG_GROUNDED) && !(collisionFlags & OBJ_COL_FLAG_NO_Y_VEL))
-#else
-    if ((collisionFlags & OBJ_COL_FLAG_GROUNDED) && !(collisionFlags & OBJ_COL_FLAGS_LANDED)) 
-#endif
-    {
+    if ((collisionFlags & OBJ_COL_FLAG_GROUNDED) && !(collisionFlags & OBJ_COL_FLAG_NO_Y_VEL)) {
         cur_obj_play_sound_2(SOUND_GENERAL_QUIET_POUND1_LOWPRIO);
     }
 

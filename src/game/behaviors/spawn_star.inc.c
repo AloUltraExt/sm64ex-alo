@@ -37,7 +37,7 @@ void bhv_collect_star_loop(void) {
 #if QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS
 #define CHECK(cond, set)    set
 #else
-#define CHECK(cond, set)    if (cond) { set }
+#define CHECK(cond, set)    if (cond) { set; }
 #endif
 
 void bhv_star_spawn_init(void) {
@@ -153,7 +153,7 @@ void spawn_no_exit_star(f32 homeX, f32 homeY, f32 homeZ) {
 #if QOL_FEATURE_BETTER_REDS_STAR_MARKER
 #define CHECK(cond, set)    set
 #else
-#define CHECK(cond, set)    if (cond) { set }
+#define CHECK(cond, set)    if (cond) { set; }
 #endif
 
 void bhv_hidden_red_coin_star_init(void) {

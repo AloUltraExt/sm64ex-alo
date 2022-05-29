@@ -164,9 +164,6 @@
 /// Fixes BITS tilting pyramid y distance
 /// Credits: (Easy Fix)
 #define QOL_FIX_TILTING_PYRAMID_Y_DISTANCE (0 || QOL_FIXES)
-/// Fixes huge score course list in file select
-/// Credits: (Easy Fix)
-#define QOL_FIX_FILE_SELECT_SCORE_COURSE_LIST (0 || QOL_FIXES)
 /// Fixes surface wind detection (avoid grabbed star wind softlock)
 /// Credits: (AloXado320)
 #define QOL_FIX_SURFACE_WIND_DETECTION (0 || QOL_FIXES)
@@ -176,9 +173,6 @@
 /// Fixes instant warp offset not working when warping across different areas
 /// Credits: (Reonu)
 #define QOL_FIX_INSTANT_WARP_OFFSET (0 || QOL_FIXES)
-/// Fixes handle menu scrolling weird index positions
-/// Credits: (coltongit)
-#define QOL_FIX_MENU_SCROLLING (0 || QOL_FIXES)
 /// Fixes missing surface wind in obj_check_floor_death
 /// Credits: (Easy Fix)
 #define QOL_FIX_OBJ_FLOOR_WIND_DEATH (0 || QOL_FIXES)
@@ -304,9 +298,6 @@
 /// Fixes (or rather removes) 0 yaw code in Beta Chest object
 /// Credits: (Easy Fix)
 #define QOL_FIX_UNUSED_BETA_CHEST_YAW (0 || QOL_FIXES)
-/// Fixes collision flags checks for free bowling ball behavior
-/// Credits: (Easy Fix)
-#define QOL_FIX_UNUSED_FREE_BOWLING_BALL_COL_FLAGS (0 || QOL_FIXES)
 /// Fixes play_mode_unused inclusion so it's "used" as a default "invalid" play mode switch
 /// Credits: (Arceveti)
 #define QOL_FIX_UNUSED_PLAY_MODE (0 || QOL_FIXES)

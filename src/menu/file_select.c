@@ -2770,10 +2770,8 @@ void print_score_file_star_score(s8 fileIndex, s16 courseIndex, s16 x, s16 y) {
  * Prints save file score strings that shows when a save file is chosen inside the score menu.
  */
 void print_save_file_scores(s8 fileIndex) {
-#if QOL_FIX_FILE_SELECT_SCORE_COURSE_LIST
     s16 courseNum;
     s8 tensDigPad;
-#endif
 
 #ifndef VERSION_EU
     unsigned char textMario[] = { TEXT_MARIO };
@@ -2824,7 +2822,6 @@ void print_save_file_scores(s8 fileIndex) {
     gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
 
-#if QOL_FIX_FILE_SELECT_SCORE_COURSE_LIST
     for (courseNum = COURSE_MIN; courseNum <= COURSE_STAGES_MAX; courseNum++) {
         courseNum >= 10 ? (tensDigPad = 0) : (tensDigPad = 1);
 
@@ -2834,34 +2831,7 @@ void print_save_file_scores(s8 fileIndex) {
         print_score_file_star_score(fileIndex, courseNum - 1, GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - STAR_SCORE_X), 23 + 12 * courseNum); 
         print_score_file_course_coin_score(fileIndex, courseNum - 1, GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - 213), 23 + 12 * courseNum);
     }
-#else
-//! Huge print list, for loops exist for a reason!
-#define PRINT_COURSE_SCORES(courseIndex, pad) \
-    print_menu_generic_string(GFX_DIMENSIONS_FROM_LEFT_EDGE(LEVEL_NAME_X + (pad * LEVEL_NUM_PAD)), 23 + 12 * courseIndex, \
-                              segmented_to_virtual(levelNameTable[courseIndex - 1])); \
-    print_score_file_star_score(fileIndex, courseIndex - 1, GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - STAR_SCORE_X), 23 + 12 * courseIndex); \
-    print_score_file_course_coin_score(fileIndex, courseIndex - 1, GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - 213), 23 + 12 * courseIndex);
 
-    // Course values are indexed, from Bob-omb Battlefield to Rainbow Ride
-    PRINT_COURSE_SCORES(COURSE_BOB, 1)
-    PRINT_COURSE_SCORES(COURSE_WF,  1)
-    PRINT_COURSE_SCORES(COURSE_JRB, 1)
-    PRINT_COURSE_SCORES(COURSE_CCM, 1)
-    PRINT_COURSE_SCORES(COURSE_BBH, 1)
-    PRINT_COURSE_SCORES(COURSE_HMC, 1)
-    PRINT_COURSE_SCORES(COURSE_LLL, 1)
-    PRINT_COURSE_SCORES(COURSE_SSL, 1)
-    PRINT_COURSE_SCORES(COURSE_DDD, 1)
-    PRINT_COURSE_SCORES(COURSE_SL,  0)
-    PRINT_COURSE_SCORES(COURSE_WDW, 0)
-    PRINT_COURSE_SCORES(COURSE_TTM, 0)
-    PRINT_COURSE_SCORES(COURSE_THI, 0)
-    PRINT_COURSE_SCORES(COURSE_TTC, 0)
-    PRINT_COURSE_SCORES(COURSE_RR,  0)
-
-#undef PRINT_COURSE_SCORES
-
-#endif
     // Print castle secret stars text
     print_menu_generic_string(GFX_DIMENSIONS_FROM_LEFT_EDGE(LEVEL_NAME_X + SECRET_STARS_PAD), 23 + 12 * 16,
                               segmented_to_virtual(levelNameTable[25]));
