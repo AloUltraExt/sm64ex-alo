@@ -67,9 +67,9 @@ NO_PIE ?= 1
 
 # Backend selection
 
-# Renders: GL, GL_LEGACY, D3D11, D3D12, WHB (forced if the target is Wii U), C3D (forced if the target is 3DS)
+# Renders: GL, GL_LEGACY, D3D11, D3D12, GX2 (forced if the target is Wii U), C3D (forced if the target is 3DS)
 RENDER_API ?= GL
-# Window managers: SDL1, SDL2, DXGI (forced if D3D11 or D3D12 in RENDER_API), WHB (forced if the target is Wii U), 3DS (forced if the target is 3DS)
+# Window managers: SDL1, SDL2, DXGI (forced if D3D11 or D3D12 in RENDER_API), GX2 (forced if the target is Wii U), 3DS (forced if the target is 3DS)
 WINDOW_API ?= SDL2
 # Audio backends: SDL1, SDL2 (forced if the target is Wii U), 3DS (forced if the target is 3DS)
 AUDIO_API ?= SDL2
@@ -90,8 +90,8 @@ else
 endif
 
 ifeq ($(TARGET_WII_U),1)
-  RENDER_API := WHB
-  WINDOW_API := WHB
+  RENDER_API := GX2
+  WINDOW_API := GX2
   AUDIO_API := SDL2
   CONTROLLER_API := WII_U
   
@@ -446,7 +446,11 @@ ifeq (,$(findstring clean,$(MAKECMDGOALS)))
 
   # Make tools if out of date
   $(info Building tools...)
+ifeq ($(TARGET_PORT_CONSOLE),0)
   DUMMY != CC=$(CC) CXX=$(CXX) $(MAKE) -C $(TOOLS_DIR) >&2 || echo FAIL
+else
+  DUMMY != make -C tools >&2 || echo FAIL
+endif
     ifeq ($(DUMMY),FAIL)
       $(error Failed to build tools)
     endif
@@ -538,10 +542,6 @@ else
     PLATFORM_DIR := $(PLATFORM_DIR)/android
   endif
   SRC_DIRS += $(PLATFORM_DIR)
-endif
-
-ifeq ($(TARGET_WII_U),1)
-  SRC_DIRS += src/pc/gfx/shaders_wiiu
 endif
 
 ifeq ($(TARGET_PORT_CONSOLE),0)
@@ -965,7 +965,7 @@ BACKEND_LDFLAGS :=
 SDL1_USED := 0
 SDL2_USED := 0
 
-# for now, it's either SDL+GL, DXGI+DirectX, WHB or C3D so choose based on WAPI
+# for now, it's either SDL+GL, DXGI+DirectX, GX2 or C3D so choose based on WAPI
 ifeq ($(WINDOW_API),DXGI)
   DXBITS := `cat $(ENDIAN_BITWIDTH) | tr ' ' '\n' | tail -1`
   ifeq ($(RENDER_API),D3D12)
@@ -987,7 +987,7 @@ else ifeq ($(findstring SDL,$(WINDOW_API)),SDL)
   else
     BACKEND_LDFLAGS += -lGL
   endif
-else ifeq ($(WINDOW_API),WHB)
+else ifeq ($(WINDOW_API),GX2)
   BACKEND_LDFLAGS += -lSDL2 -lwut
 else ifeq ($(WINDOW_API),C3D)
   BACKEND_LDFLAGS +=
@@ -1015,6 +1015,8 @@ else ifeq ($(SDL1_USED),1)
   BACKEND_CFLAGS += -DHAVE_SDL1=1
 endif
 
+ifeq ($(TARGET_WII_U),0)
+
 ifneq ($(SDL1_USED)$(SDL2_USED),00)
   ifeq ($(TARGET_ANDROID),1)
     BACKEND_LDFLAGS += -lhidapi -lSDL2
@@ -1030,6 +1032,8 @@ ifneq ($(SDL1_USED)$(SDL2_USED),00)
       BACKEND_LDFLAGS += $(shell $(SDLCONFIG) --libs)
     endif
   endif
+endif
+
 endif
 
 ifeq ($(WINDOWS_BUILD),1)

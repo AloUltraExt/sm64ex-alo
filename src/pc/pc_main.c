@@ -19,7 +19,7 @@
 #include "gfx/gfx_direct3d12.h"
 #include "gfx/gfx_dxgi.h"
 #include "gfx/gfx_sdl.h"
-#include "gfx/gfx_whb.h"
+#include "gfx/gfx_gx2.h"
 #include "gfx/gfx_3ds.h"
 #include "gfx/gfx_citro3d.h"
 #include "gfx/gfx_dummy.h"
@@ -319,8 +319,8 @@ void main_func(void) {
     wm_api = &gfx_sdl;
     #elif defined(WAPI_DXGI)
     wm_api = &gfx_dxgi;
-    #elif defined(WAPI_WHB)
-    wm_api = &gfx_whb_window;
+    #elif defined(WAPI_GX2)
+    wm_api = &gfx_gx2_window;
     #elif defined(WAPI_3DS)
     wm_api = &gfx_3ds;
     #elif defined(WAPI_DUMMY)
@@ -342,9 +342,9 @@ void main_func(void) {
     # else
     #  define RAPI_NAME "OpenGL"
     # endif
-    #elif defined(RAPI_WHB)
-    rendering_api = &gfx_whb_api;
-    # define RAPI_NAME "WHB - GX2"
+    #elif defined(RAPI_GX2)
+    rendering_api = &gfx_gx2_api;
+    # define RAPI_NAME "GX2"
     #elif defined(RAPI_C3D)
     rendering_api = &gfx_citro3d_api;
     # define RAPI_NAME "3DS - C3D"
@@ -410,14 +410,13 @@ void main_func(void) {
     audio_api->shutdown();
 #else
 
-    #if defined(TARGET_WII_U)
-    while (whb_window_is_running()) {
-    #elif defined(TARGET_SWITCH)
+    #if defined(TARGET_SWITCH)
     disableBoostMode();
-    while (appletMainLoop()) {
+    while (appletMainLoop())
     #else
-    while (true) {
+    while (true)
     #endif
+    {
         wm_api->main_loop(produce_one_frame);
 #ifdef DISCORDRPC
         discord_update_rich_presence();

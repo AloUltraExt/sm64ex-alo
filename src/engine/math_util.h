@@ -121,7 +121,7 @@ extern f32 gSineTable[];
 
 #define sqr(x)              (    (x) * (x))
 #define cube(x)             ( sqr(x) * (x))
-#define quad(x)             (cube(x) * (x))
+//#define quad(x)             (cube(x) * (x))
 
 #define average_2(a, b      )   (((a) + (b)            ) / 2.0f)
 #define average_3(a, b, c   )   (((a) + (b) + (c)      ) / 3.0f)

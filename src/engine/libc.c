@@ -48,3 +48,90 @@ int strcmp(char *s, char *t) {
 }
 
 #endif
+
+#ifdef TARGET_WII_U
+
+#include <coreinit/cache.h>
+#include <coreinit/memory.h>
+#include <dmae/mem.h>
+
+void* memcpy(void* _dst, const void* _src, u32 size)
+{
+    if (size > 5120)
+    {
+        u8*       dst =       (u8*)_dst;
+        const u8* src = (const u8*)_src;
+
+        const u32 srcMisalignment = (uintptr_t)src & 7U;
+        const u32 dstMisalignment = (uintptr_t)dst & 7U;
+        if (srcMisalignment != dstMisalignment)
+            return OSBlockMove(dst, src, size, FALSE);
+
+        if (srcMisalignment)
+        {
+            const u32 misalignmentInv = 8U - srcMisalignment;
+            OSBlockMove(dst, src, misalignmentInv, FALSE);
+            src += misalignmentInv;
+            dst += misalignmentInv;
+        }
+
+        const u32 sizeAligned   = size & ~3U;
+        const u32 sizeRemainder = size & 3U;
+
+        DCFlushRange((void*)src, sizeAligned);
+        DCFlushRange((void*)dst, sizeAligned);
+        while (!DMAEWaitDone(DMAECopyMem(dst, src, sizeAligned >> 2, DMAE_SWAP_NONE)))
+        {
+        }
+
+        if (sizeRemainder)
+            OSBlockMove(dst + sizeAligned, src + sizeAligned, sizeRemainder, FALSE);
+
+        DCFlushRange(_dst, size);
+        return _dst;
+    }
+
+    return OSBlockMove(_dst, _src, size, FALSE);
+}
+
+void* memmove(void* dst, const void* src, u32 size)
+{
+    if (src + size < dst || dst + size < src)
+        return memcpy(dst, src, size);
+
+    return OSBlockMove(dst, src, size, FALSE);
+}
+
+void* memset(void* _dst, int val, u32 size)
+{
+    if (size > 5120)
+    {
+        u8* dst = (u8*)_dst;
+
+        const u32 dstMisalignment = (uintptr_t)dst & 7U;
+        if (dstMisalignment)
+        {
+            const u32 misalignmentInv = 8U - dstMisalignment;
+            OSBlockSet(dst, val, misalignmentInv);
+            dst += misalignmentInv;
+        }
+
+        const u32 sizeAligned   = size & ~3U;
+        const u32 sizeRemainder = size & 3U;
+
+        DCFlushRange((void*)dst, sizeAligned);
+        while (!DMAEWaitDone(DMAEFillMem(dst, val, sizeAligned >> 2)))
+        {
+        }
+
+        if (sizeRemainder)
+            OSBlockSet(dst + sizeAligned, val, sizeRemainder);
+
+        DCFlushRange(_dst, size);
+        return _dst;
+    }
+
+    return OSBlockSet(_dst, val, size);
+}
+
+#endif
