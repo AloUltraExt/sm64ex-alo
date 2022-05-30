@@ -78,6 +78,9 @@ s32 run_level_id_or_demo(s32 level) {
     return level;
 }
 
+#if ZELDA_STYLE_LEVEL_SELECT
+#include "extras/redone/title_screen.inc.c"
+#else
 /**
  * Level select intro function, updates the selected stage
  * count if an input was received. signals the stage to be started
@@ -143,6 +146,7 @@ s16 intro_level_select(void) {
     }
     return 0;
 }
+#endif
 
 #ifdef GODDARD_MFACE
 /**

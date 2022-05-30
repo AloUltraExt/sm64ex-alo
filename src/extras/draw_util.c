@@ -195,7 +195,7 @@ s16 get_str_x_pos_from_center_custom_ascii(s16 lutType, s16 centerPos, char *str
 
     // return the x position of where the string starts as half the string's
     // length from the position of the provided center.
-    return (centerPos - (spacesWidth / scale));
+    return (centerPos - (spacesWidth / 2.0));
 }
 
 /**
