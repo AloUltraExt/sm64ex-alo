@@ -42,7 +42,11 @@
 #define OBJ_FLAG_1000                             (1 << 12) // 0x00001000
 #define OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO           (1 << 13) // 0x00002000
 #define OBJ_FLAG_PERSISTENT_RESPAWN               (1 << 14) // 0x00004000
-#define OBJ_FLAG_8000                             (1 << 15) // 0x00008000
+#if PLATFORM_DISPLACEMENT_2
+#define OBJ_FLAG_VELOCITY_PLATFORM                (1 << 15) // 0x00008000
+#else
+#define OBJ_FLAG_VELOCITY_PLATFORM                (0 << 0)
+#endif
 #if AUTO_COLLISION_DISTANCE
 #define OBJ_FLAG_DONT_CALC_COLL_DIST              (1 << 16) // 0x00010000
 #else

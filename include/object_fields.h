@@ -961,7 +961,6 @@
 #define /*0x0F4*/ oTiltingPyramidNormalX         OBJECT_FIELD_F32(0x1B)
 #define /*0x0F8*/ oTiltingPyramidNormalY         OBJECT_FIELD_F32(0x1C)
 #define /*0x0FC*/ oTiltingPyramidNormalZ         OBJECT_FIELD_F32(0x1D)
-#define /*0x10C*/ oTiltingPyramidMarioOnPlatform OBJECT_FIELD_S32(0x21)
 
 /* Toad Message */
 #define /*0x108*/ oToadMessageDialogID       OBJECT_FIELD_U32(0x20)

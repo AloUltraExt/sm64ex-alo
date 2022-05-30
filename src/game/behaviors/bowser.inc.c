@@ -1512,6 +1512,10 @@ s32 bowser_check_fallen_off_stage(void) {
     return FALSE;
 }
 
+#if PLATFORM_DISPLACEMENT_2
+struct PlatformDisplacementInfo sBowserDisplacementInfo;
+#endif
+
 /**
  * Set Bowser's actions
  */
@@ -1586,12 +1590,15 @@ s8 sBowserHealth[] = { 1, 1, 3 };
  */
 void bowser_free_update(void) {
     struct Surface *floor;
-    struct Object *platform;
-    UNUSED f32 floorHeight;
+    struct Object *platform = o->platform;
 
     // Platform displacement check (for BitFS)
-    if ((platform = o->platform) != NULL) {
+    if (platform != NULL) {
+#if PLATFORM_DISPLACEMENT_2
+        apply_platform_displacement(&sBowserDisplacementInfo, &o->oPosX, (s16 *) &o->oFaceAngleYaw, platform);
+#else
         apply_platform_displacement(FALSE, platform);
+#endif
     }
     // Reset grabbed status
     o->oBowserGrabbedStatus = BOWSER_GRAB_STATUS_NONE;
@@ -1604,7 +1611,7 @@ void bowser_free_update(void) {
         o->oAction = BOWSER_ACT_JUMP_ONTO_STAGE;
     }
     // Check floor height and platform
-    floorHeight = find_floor(o->oPosX, o->oPosY, o->oPosZ, &floor);
+    find_floor(o->oPosX, o->oPosY, o->oPosZ, &floor);
     if ((floor != NULL) && (floor->object != NULL)) {
         o->platform = floor->object;
     } else {

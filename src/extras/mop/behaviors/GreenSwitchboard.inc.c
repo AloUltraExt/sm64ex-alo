@@ -25,20 +25,20 @@ void bhv_green_switchboard_loop(void) {
 		// print_text(32,96,buf);
 		if((dot)>0){
 			if(dotH<(((o->oBhvParams>>24)&0xFF)*16)){
-				o->oForwardVel = approach_by_increment(MAX_SPEED, o->oForwardVel, SPEED_INC);
+                approach_f32_symmetric_bool(&o->oForwardVel, MAX_SPEED, SPEED_INC);
 			}else{
 				o->oForwardVel=0;
 			}
-			o->oFaceAnglePitch = (u32)approach_by_increment(2048.0f, o->oFaceAnglePitch, 128.0f);
+            approach_s32_symmetric_bool(&o->oFaceAnglePitch, 2048.0f, 128.0f);
 		}else{
 			if (dotH>(o->oBhvParams2ndByte*-16)){
-				o->oForwardVel = approach_by_increment(-MAX_SPEED, o->oForwardVel, SPEED_INC);
+                approach_f32_symmetric_bool(&o->oForwardVel, -MAX_SPEED, SPEED_INC);
 			}else{
 				o->oForwardVel=0;
 			}
 			//this function doesn't work well with negatives thanks nintendo
 			if (o->oFaceAnglePitch>-2048){
-				o->oFaceAnglePitch = (u32)approach_by_increment(-2048.0f, o->oFaceAnglePitch, 128.0f);
+                approach_s32_symmetric_bool(&o->oFaceAnglePitch, -2048.0f, 128.0f);
 			}
 
 		}
@@ -47,8 +47,8 @@ void bhv_green_switchboard_loop(void) {
             cur_obj_play_sound_1(SOUND_OBJ_KOOPA_WALK);
         }
 	}else{
-		o->oForwardVel = approach_by_increment(0.0f, o->oForwardVel, SPEED_INC);
-		o->oFaceAnglePitch = (u32)approach_by_increment(0.0f, o->oFaceAnglePitch, 128.0f);
+        approach_f32_symmetric_bool(&o->oForwardVel, 0.0f, SPEED_INC);
+        approach_s32_symmetric_bool(&o->oFaceAnglePitch, 0.0f, 128.0f);
 	}
 
 	gearObj->oFaceAnglePitch+=(s16)(o->oForwardVel*200);

@@ -10,10 +10,9 @@
 #include "platform_displacement.h"
 #include "types.h"
 
-u16 D_8032FEC0 = 0;
-
-u32 unused_8032FEC4[4] = { 0 };
-
+#if PLATFORM_DISPLACEMENT_2
+#include "extras/redone/platform_displacement.inc.c"
+#else
 struct Object *gMarioPlatform = NULL;
 
 /**
@@ -110,7 +109,6 @@ void apply_platform_displacement(u32 isMario, struct Object *platform) {
     rotation[2] = platform->oAngleVelRoll;
 
     if (isMario) {
-        D_8032FEC0 = 0;
         get_mario_pos(&x, &y, &z);
     } else {
         x = gCurrentObject->oPosX;
@@ -174,7 +172,7 @@ void apply_mario_platform_displacement(void) {
 
     if (!(gTimeStopState & TIME_STOP_ACTIVE) && gMarioObject != NULL && platform != NULL
 #if QOL_FIX_CAMERA_CUTSCENE_MOVING_PLATFORMS
-    && !(gMarioStates->action & ACT_FLAG_INTANGIBLE)
+    && !(gMarioStates[0].action & ACT_FLAG_INTANGIBLE)
 #endif
     ) {
         apply_platform_displacement(TRUE, platform);
@@ -188,4 +186,5 @@ void apply_mario_platform_displacement(void) {
 void clear_mario_platform(void) {
     gMarioPlatform = NULL;
 }
+#endif
 #endif

@@ -23,6 +23,8 @@
 /// Adds Zelda level select used on OOT, MM and Animal Forest
 /// Credits: (AloXado320)
 #define ZELDA_STYLE_LEVEL_SELECT (0 || QOL_REDONE)
+/// Adds improved platform displacement with intertia
+#define PLATFORM_DISPLACEMENT_2 (0 || QOL_REDONE)
 
 // --| Quality of life features
 /// Adds an extra Z button trig for some menu files (Originally defined in EU)

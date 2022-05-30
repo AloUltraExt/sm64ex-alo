@@ -5504,7 +5504,7 @@ const BehaviorScript bhvTTCPendulum[] = {
 
 const BehaviorScript bhvTTCTreadmill[] = {
     BEGIN(OBJ_LIST_SURFACE),
-    OR_INT(oFlags, (OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
+    OR_INT(oFlags, (OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_VELOCITY_PLATFORM)),
     SET_FLOAT(oCollisionDistance, 750),
     CALL_NATIVE(bhv_ttc_treadmill_init),
     DELAY(1),
