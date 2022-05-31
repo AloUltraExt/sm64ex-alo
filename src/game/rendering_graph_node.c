@@ -885,60 +885,56 @@ void geo_set_animation_globals(struct AnimInfo *node, s32 hasAnimation) {
  * the floor below it.
  */
 static void geo_process_shadow(struct GraphNodeShadow *node) {
-    Gfx *shadowList;
-#ifdef HIGH_FPS_PC
-    Gfx *shadowListInterpolated;
-#endif
-    Mat4 mtxf;
-    Vec3f shadowPos;
-#ifdef HIGH_FPS_PC
-    Vec3f shadowPosInterpolated;
-#endif
-    Vec3f animOffset;
-    f32 objScale;
-    f32 shadowScale;
-    f32 sinAng;
-    f32 cosAng;
-    struct GraphNode *geo;
-
     if (gCurGraphNodeCamera != NULL && gCurGraphNodeObject != NULL) {
+        Vec3f shadowPos;
+#if OPTIMIZED_SHADOWS
+        f32 shadowScale = node->shadowScale * 0.5f;
+#else
+        f32 shadowScale = node->shadowScale;
+#endif
         if (gCurGraphNodeHeldObject != NULL) {
             get_pos_from_transform_mtx(shadowPos, gMatStack[gMatStackIndex],
                                        *gCurGraphNodeCamera->matrixPtr);
-            shadowScale = node->shadowScale;
+            shadowScale *= gCurGraphNodeHeldObject->objNode->header.gfx.scale[0];
         } else {
             vec3f_copy(shadowPos, gCurGraphNodeObject->pos);
-            shadowScale = node->shadowScale * gCurGraphNodeObject->scale[0];
+            shadowScale *= gCurGraphNodeObject->scale[0];
         }
 
-        objScale = 1.0f;
-        if (gCurrAnimEnabled) {
-            if (gCurrAnimType == ANIM_TYPE_TRANSLATION
-                || gCurrAnimType == ANIM_TYPE_LATERAL_TRANSLATION) {
-                geo = node->node.children;
-                if (geo != NULL && geo->type == GRAPH_NODE_TYPE_SCALE) {
-                    objScale = ((struct GraphNodeScale *) geo)->scale;
-                }
-                animOffset[0] =
-                    gCurrAnimData[retrieve_animation_index(gCurrAnimFrame, &gCurrAnimAttribute)]
-                    * gCurrAnimTranslationMultiplier * objScale;
-                animOffset[1] = 0.0f;
-                gCurrAnimAttribute += 2;
-                animOffset[2] =
-                    gCurrAnimData[retrieve_animation_index(gCurrAnimFrame, &gCurrAnimAttribute)]
-                    * gCurrAnimTranslationMultiplier * objScale;
-                gCurrAnimAttribute -= 6;
+        s8 shifted = (gCurrAnimEnabled
+                      && (gCurrAnimType == ANIM_TYPE_TRANSLATION
+                       || gCurrAnimType == ANIM_TYPE_LATERAL_TRANSLATION)
+        );
 
-                // simple matrix rotation so the shadow offset rotates along with the object
-                sinAng = sins(gCurGraphNodeObject->angle[1]);
-                cosAng = coss(gCurGraphNodeObject->angle[1]);
-
-                shadowPos[0] += animOffset[0] * cosAng + animOffset[2] * sinAng;
-                shadowPos[2] += -animOffset[0] * sinAng + animOffset[2] * cosAng;
+        if (shifted) {
+            struct GraphNode *geo = node->node.children;
+            f32 objScale = 1.0f;
+            if (geo != NULL && geo->type == GRAPH_NODE_TYPE_SCALE) {
+                objScale = ((struct GraphNodeScale *) geo)->scale;
             }
+            f32 animScale = gCurrAnimTranslationMultiplier * objScale;
+            Vec3f animOffset;
+            animOffset[0] = gCurrAnimData[retrieve_animation_index(gCurrAnimFrame, &gCurrAnimAttribute)] * animScale;
+            animOffset[1] = 0.0f;
+            gCurrAnimAttribute += 2;
+            animOffset[2] = gCurrAnimData[retrieve_animation_index(gCurrAnimFrame, &gCurrAnimAttribute)] * animScale;
+            gCurrAnimAttribute -= 6;
+
+            // simple matrix rotation so the shadow offset rotates along with the object
+            f32 sinAng = sins(gCurGraphNodeObject->angle[1]);
+            f32 cosAng = coss(gCurGraphNodeObject->angle[1]);
+
+            shadowPos[0] += ( animOffset[0] * cosAng) + (animOffset[2] * sinAng);
+            shadowPos[2] += (-animOffset[0] * sinAng) + (animOffset[2] * cosAng);
         }
 
+#if OPTIMIZED_SHADOWS
+        Vec3f floorNormal;
+        Vec3f scaleVec;
+        s8 isDecal;
+#endif
 #ifdef HIGH_FPS_PC
+        Vec3f shadowPosInterpolated;
         if (gCurGraphNodeHeldObject != NULL) {
             if (gGlobalTimer == gCurGraphNodeHeldObject->prevShadowPosTimestamp + 1) {
                 interpolate_vectors(shadowPosInterpolated, gCurGraphNodeHeldObject->prevShadowPos, shadowPos);
@@ -958,38 +954,62 @@ static void geo_process_shadow(struct GraphNodeShadow *node) {
             gCurGraphNodeObject->prevShadowPosTimestamp = gGlobalTimer;
         }
 
-        shadowListInterpolated = create_shadow_below_xyz(shadowPosInterpolated[0], shadowPosInterpolated[1],
+    #if OPTIMIZED_SHADOWS
+        Gfx *shadowListInterpolated = create_shadow_below_xyz(shadowPosInterpolated, floorNormal, scaleVec, shadowScale,
+                                                         node->shadowSolidity, node->shadowType, shifted, &isDecal);
+    #else
+        Gfx *shadowListInterpolated = create_shadow_below_xyz(shadowPosInterpolated[0], shadowPosInterpolated[1],
                                                          shadowPosInterpolated[2], shadowScale,
                                                          node->shadowSolidity, node->shadowType);
+    #endif
 #endif
 
-        shadowList = create_shadow_below_xyz(shadowPos[0], shadowPos[1], shadowPos[2], shadowScale,
+#if OPTIMIZED_SHADOWS
+        Gfx *shadowList = create_shadow_below_xyz(shadowPos, floorNormal, scaleVec, shadowScale,
+                                                  node->shadowSolidity, node->shadowType, shifted, &isDecal);
+#else
+        Gfx *shadowList = create_shadow_below_xyz(shadowPos[0], shadowPos[1], shadowPos[2], shadowScale,
                                              node->shadowSolidity, node->shadowType);
+#endif
 #ifdef HIGH_FPS_PC
         if (shadowListInterpolated != NULL && shadowList != NULL)
 #else
         if (shadowList != NULL)
 #endif
         {
+#if OPTIMIZED_SHADOWS
+            mtxf_shadow(gMatStack[gMatStackIndex + 1], *gCurGraphNodeCamera->matrixPtr,
+                floorNormal, shadowPos, scaleVec, gCurGraphNodeObject->angle[1]);
+    #ifdef HIGH_FPS_PC
+            mtxf_shadow(gMatStack[gMatStackIndex + 1], *gCurGraphNodeCamera->matrixPtr,
+                floorNormal, shadowPosInterpolated, scaleVec, gCurGraphNodeObject->angle[1]);
+    #endif
+#else
+            Mat4 mtxf;
             mtxf_translate(mtxf, shadowPos);
             mtxf_mul(gMatStack[gMatStackIndex + 1], mtxf, *gCurGraphNodeCamera->matrixPtr);
-#ifdef HIGH_FPS_PC
+    #ifdef HIGH_FPS_PC
             mtxf_translate(mtxf, shadowPosInterpolated);
             mtxf_mul(gMatStackInterpolated[gMatStackIndex + 1], mtxf, *gCurGraphNodeCamera->matrixPtrInterpolated);
+    #endif
 #endif
             inc_mat_stack();
 
+#if OPTIMIZED_SHADOWS
+            GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, isDecal ? LAYER_TRANSPARENT_DECAL : LAYER_TRANSPARENT);
+#else
             if (gShadowAboveWaterOrLava == TRUE) {
                 GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_ALPHA);
             } else if (gMarioOnIceOrCarpet == TRUE) {                
                 GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT);
-#ifdef WATER_SURFACES
+    #if WATER_SURFACES
             } else if (gShadowAboveCustomWater == TRUE) {                
                 GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT);
-#endif
+    #endif
             } else {
                 GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT_DECAL);
             }
+#endif
             gMatStackIndex--;
         }
     }

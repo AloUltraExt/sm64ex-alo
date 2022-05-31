@@ -38,7 +38,7 @@ enum RaycastFlags {
     RAYCAST_FIND_FLOOR = (1 << SPATIAL_PARTITION_FLOORS),
     RAYCAST_FIND_CEIL  = (1 << SPATIAL_PARTITION_CEILS),
     RAYCAST_FIND_WALL  = (1 << SPATIAL_PARTITION_WALLS),
-#ifdef WATER_SURFACES
+#if WATER_SURFACES
     RAYCAST_FIND_WATER = (1 << SPATIAL_PARTITION_WATER),
 #endif
     RAYCAST_FIND_SOLID = (RAYCAST_FIND_FLOOR | RAYCAST_FIND_CEIL | RAYCAST_FIND_WALL),
@@ -65,7 +65,7 @@ f32 find_static_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
 f32 find_dynamic_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
 f32 find_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
 f32 find_room_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
-#ifdef WATER_SURFACES
+#if WATER_SURFACES
 s32 find_water_level_and_floor(s32 x, s32 z, struct Surface **pfloor);
 #endif
 f32 find_water_level(f32 x, f32 z);

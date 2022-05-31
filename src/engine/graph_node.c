@@ -8,6 +8,7 @@
 #include "game/rendering_graph_node.h"
 #include "game/area.h"
 #include "geo_layout.h"
+#include "game/shadow.h"
 
 /**
  * Initialize a geo node with a given type. Sets all links such that there
@@ -411,6 +412,17 @@ struct GraphNodeShadow *init_graph_node_shadow(struct AllocOnlyPool *pool,
     }
 
     if (graphNode != NULL) {
+#if OPTIMIZED_SHADOWS
+    #if 1 // LEGACY_SHADOW_IDS, will be enforced until Fast64 support name values
+        if (shadowType == 0 || shadowType == 1 || shadowType == 2 || shadowType == 99) {
+            shadowType = SHADOW_CIRCLE;
+        } else if (shadowType == 11 || shadowType == 12) {
+            shadowType = SHADOW_SQUARE;
+        } else if (shadowType == 10) {
+            shadowType = SHADOW_SQUARE_PERMANENT;
+        }
+    #endif
+#endif
         init_scene_graph_node_links(&graphNode->node, GRAPH_NODE_TYPE_SHADOW);
         graphNode->shadowScale = shadowScale;
         graphNode->shadowSolidity = shadowSolidity;

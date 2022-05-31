@@ -660,7 +660,7 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
     return floor;
 }
 
-#ifdef WATER_SURFACES
+#if WATER_SURFACES
 /**
  * Generic triangle bounds function.
  */
@@ -878,7 +878,7 @@ f32 find_room_floor(f32 x, f32 y, f32 z, struct Surface **pfloor) {
     return find_static_floor(x, y, z, pfloor);
 }
 
-#ifdef WATER_SURFACES
+#if WATER_SURFACES
 /**
  * Find the highest water floor under a given position and return the height.
  */
@@ -952,7 +952,7 @@ f32 find_water_floor(s32 xPos, s32 yPos, s32 zPos, struct Surface **pfloor) {
  *               ENVIRONMENTAL BOXES              *
  **************************************************/
 
-#ifdef WATER_SURFACES
+#if WATER_SURFACES
 s32 find_water_level_and_floor(s32 x, s32 z, struct Surface **pfloor) {
     s32 i;
     s32 val;
@@ -998,7 +998,7 @@ f32 find_water_level(f32 x, f32 z) {
     f32 loX, hiX, loZ, hiZ;
     TerrainData *p = gEnvironmentRegions;
 
-#ifdef WATER_SURFACES
+#if WATER_SURFACES
     struct Surface *floor;
     f32 waterLevel = find_water_floor(x, ((gCollisionFlags & COLLISION_FLAG_CAMERA) ? gLakituState.pos[1] : gMarioState->pos[1]), z, &floor);
     if (p != NULL && waterLevel == FLOOR_LOWER_LIMIT)
