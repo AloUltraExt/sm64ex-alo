@@ -65,6 +65,9 @@
 /// Makes Mario grab hangable ceilings in any air actions
 /// Credits: (AloXado320)
 #define QOL_FEATURE_HANG_AIR_ANYWHERE (0 || QOL_FEATURES)
+/// Makes trees use actual shadows, recommended to use with optimized shadows
+/// Credits: (AloXado320)
+#define QOL_FEATURE_TREE_SHADOWS (0 || QOL_FEATURES)
 /// Makes cutscene object camera correctly focus an object in a room
 /// Credits: (AloXado320)
 #define QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS (0 || QOL_FEATURES || !VANILLA_CHECKS)
@@ -227,7 +230,7 @@
 /// Fixes platform on track checkered detection
 /// Credits: (AloXado320)
 #define QOL_FIX_PLATFORM_TRACK_CHECKERED (0 || QOL_FIXES)
-/// Fixes cutscenes where Mario goes out of camera view on moving platforms
+/// Fixes cutscenes where Mario goes out of camera view on moving platforms (PD2 already has this)
 /// Credits: (AloXado320)
 #define QOL_FIX_CAMERA_CUTSCENE_MOVING_PLATFORMS (0 || QOL_FIXES)
 /// Fixes lower horizontal wind speed value
@@ -310,7 +313,8 @@
 /// Fixes play_mode_unused inclusion so it's "used" as a default "invalid" play mode switch
 /// Credits: (Arceveti)
 #define QOL_FIX_UNUSED_PLAY_MODE (0 || QOL_FIXES)
-// --| Assets Fixes
+
+// --| Assets Fixes (Mostly on vanilla levels)
 /// Fixes duplicated red/white display list in Goddard and properly uses the next ones
 /// Credits: (Easy Fix)
 #define QOL_FIX_ASSET_DUP_STAR_GD (0 || (QOL_FIXES && GODDARD_MFACE))

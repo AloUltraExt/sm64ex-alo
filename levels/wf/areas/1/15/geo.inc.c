@@ -5,7 +5,9 @@ const GeoLayout wf_geo_000958[] = {
         GEO_RENDER_RANGE(-2000, 8000),
         GEO_OPEN_NODE(),
             GEO_DISPLAY_LIST(LAYER_OPAQUE, wf_seg7_dl_0700ABA0),
+        #if !QOL_FEATURE_TREE_SHADOWS
             GEO_DISPLAY_LIST(LAYER_TRANSPARENT_DECAL, wf_seg7_dl_0700AFB8),
+        #endif
         GEO_CLOSE_NODE(),
         GEO_RENDER_RANGE(8000, 20000),
         GEO_OPEN_NODE(),

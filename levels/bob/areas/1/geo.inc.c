@@ -17,7 +17,9 @@ const GeoLayout bob_geo_000488[] = {
                 GEO_OPEN_NODE(),
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, bob_seg7_dl_07004390),
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, bob_seg7_dl_07009D80),
+                #if !QOL_FEATURE_TREE_SHADOWS
                     GEO_DISPLAY_LIST(LAYER_TRANSPARENT_DECAL, bob_seg7_dl_0700A470),
+                #endif
                     GEO_DISPLAY_LIST(LAYER_ALPHA, bob_seg7_dl_0700A920),
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, bob_seg7_dl_0700DD18),
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, bob_seg7_dl_0700E338),

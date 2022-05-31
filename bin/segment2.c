@@ -2452,6 +2452,12 @@ ALIGNED8 static const Texture texture_shadow_quarter_square[] = {
 #include "textures/segment2/shadow_quarter_square.ia8.inc.c"
 };
 
+#if QOL_FEATURE_TREE_SHADOWS
+ALIGNED8 static const Texture texture_shadow_spike[] = {
+#include "textures/segment2/custom/shadow_spike_custom.ia8.inc.c"
+};
+#endif
+
 const Texture texture_transition_star_half[] = {
 #include "textures/segment2/segment2.0F458.ia8.inc.c"
 };
@@ -2569,6 +2575,14 @@ const Gfx dl_shadow_square[] = {
     gsDPLoadTextureBlock(texture_shadow_quarter_square, G_IM_FMT_IA, G_IM_SIZ_8b, 16, 16, 0, G_TX_WRAP | G_TX_MIRROR, G_TX_WRAP | G_TX_MIRROR, 4, 4, G_TX_NOLOD, G_TX_NOLOD),
     gsSPEndDisplayList(),
 };
+
+#if QOL_FEATURE_TREE_SHADOWS
+const Gfx dl_shadow_spike[] = {
+    gsSPDisplayList(dl_shadow_begin),
+    gsDPLoadTextureBlock(texture_shadow_spike, G_IM_FMT_IA, G_IM_SIZ_8b, 16, 16, 0, G_TX_WRAP | G_TX_MIRROR, G_TX_WRAP | G_TX_MIRROR, 4, 4, G_TX_NOLOD, G_TX_NOLOD),
+    gsSPEndDisplayList(),
+};
+#endif
 
 #if OPTIMIZED_SHADOWS
 static const Vtx vertex_shadow[] = {

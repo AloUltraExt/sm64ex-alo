@@ -18,7 +18,9 @@ const GeoLayout castle_grounds_geo_00073C[] = {
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, castle_grounds_seg7_dl_07006D70),
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, castle_grounds_seg7_dl_070095F0),
                     GEO_DISPLAY_LIST(LAYER_ALPHA, castle_grounds_seg7_dl_0700A860),
+                #if !QOL_FEATURE_TREE_SHADOWS
                     GEO_DISPLAY_LIST(LAYER_TRANSPARENT_DECAL, castle_grounds_seg7_dl_0700B1D0),
+                #endif
                     GEO_DISPLAY_LIST(LAYER_ALPHA, castle_grounds_seg7_dl_0700BA20),
                     GEO_DISPLAY_LIST(LAYER_OPAQUE_DECAL, castle_grounds_seg7_dl_0700C430),
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, castle_grounds_seg7_dl_0700C210),

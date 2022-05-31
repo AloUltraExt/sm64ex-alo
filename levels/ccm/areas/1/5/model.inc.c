@@ -175,7 +175,9 @@ const Gfx ccm_seg7_dl_0700DDF0[] = {
     gsDPTileSync(),
     gsDPSetTile(G_IM_FMT_IA, G_IM_SIZ_16b, 8, 0, G_TX_RENDERTILE, 0, G_TX_CLAMP, 5, G_TX_NOLOD, G_TX_CLAMP, 5, G_TX_NOLOD),
     gsDPSetTileSize(0, 0, 0, (32 - 1) << G_TEXTURE_IMAGE_FRAC, (32 - 1) << G_TEXTURE_IMAGE_FRAC),
+#if !QOL_FEATURE_TREE_SHADOWS
     gsSPDisplayList(ccm_seg7_dl_0700DC18),
+#endif
     gsSPDisplayList(ccm_seg7_dl_0700DD28),
     gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_OFF),
     gsDPPipeSync(),

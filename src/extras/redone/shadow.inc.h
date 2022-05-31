@@ -29,6 +29,9 @@ enum ShadowType {
     SHADOW_SQUARE_SCALABLE  = SHADOW_SQUARE,
     SHADOW_SQUARE_TOGGLABLE = SHADOW_SQUARE,
 #endif
+#if QOL_FEATURE_TREE_SHADOWS
+    SHADOW_SPIKE            = 8,
+#endif
     /**
      * This defines an offset after which rectangular shadows with custom
      * widths and heights can be defined.
