@@ -38,9 +38,6 @@
 /// Adds more air steps to special triple jump such as wallkick and grabbing
 /// Credits: (Vatuu)
 #define QOL_FEATURE_SPECIAL_TRIPLE_JUMP_AIR_STEPS (0 || QOL_FEATURES)
-/// Properly adds unused SSL Pyramid cutscene after standing on the 4 pillars
-/// Credits: (Vatuu, AloXado320, SunlitSpace542, Arceveti)
-#define QOL_FEATURE_SSL_PYRAMID_CUTSCENE (0 || QOL_FEATURES)
 /// Adds unused cracked ice object in Snowman Land
 /// Credits: (Original Devs, SunlitSpace542, Arceveti)
 #define QOL_FEATURE_SSL_CRACKED_ICE (0 || QOL_FEATURES)
@@ -125,9 +122,6 @@
 /// Fixes Bully minion knockback timer by reseting it, more info in the fix itself
 /// Credits: (Easy Fix)
 #define QOL_FIX_BULLY_KNOCKBACK_TIMER (0 || QOL_FIXES)
-/// Fixes camera height in water while being Metal
-/// Credits: (Easy Fix)
-#define QOL_FIX_CAMERA_WATER_HEIGHT (0 || QOL_FIXES)
 /// Fixes camera height in BOB and adds missing breaks in code
 /// Credits: (Easy Fix)
 #define QOL_FIX_CAMERA_BOSS_FIGHT_HEIGHT (0 || QOL_FIXES)
@@ -146,9 +140,6 @@
 /// Fixes open door key cutscene on 90-270 degrees
 /// Credits: (AloXado320)
 #define QOL_FIX_DOOR_KEY_CUTSCENE (0 || QOL_FIXES)
-/// Fixes cutscene loop code (see comment in the fix)
-/// Credits: (Easy Fix)
-#define QOL_FIX_CUTSCENE_LOOP (0 || QOL_FIXES)
 /// Fixes incorrect yellow sparkle offset positions
 /// Credits: (Easy Fix)
 #define QOL_FIX_YELLOW_SPARKLES_OFFSET (0 || QOL_FIXES)
@@ -197,9 +188,6 @@
 /// Fixes one frame timer when bully backs up
 /// Credits: (coltongit)
 #define QOL_FIX_BULLY_BACK_UP_TIMER (0 || QOL_FIXES)
-/// Fixes possible softlock with object cutscene focus
-/// Credits: (MysterD)
-#define QOL_FIX_OBJ_CUTSCENE_FOCUS_SOFTLOCK (0 || QOL_FIXES)
 /// Fixes (or rather, adjusts) Mario's head look at bosses
 /// Credits: (coltongit)
 #define QOL_FIX_MARIO_LOOK_HEAD_BOSSES (0 || QOL_FIXES)

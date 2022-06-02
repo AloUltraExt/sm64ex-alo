@@ -83,7 +83,7 @@ void bhv_pyramid_top_explode(void) {
         pyramidFragment->oGravity = random_float() * 2 + 5;
     }
 
-#if QOL_FEATURE_SSL_PYRAMID_CUTSCENE
+#if SSL_PYRAMID_CUTSCENE
     if (gMarioState->action & ACT_FLAG_RIDING_SHELL) {
         disable_time_stop_including_mario();
     }
@@ -98,7 +98,7 @@ void bhv_pyramid_top_loop(void) {
         case PYRAMID_TOP_ACT_CHECK_IF_SOLVED:
             if (o->oPyramidTopPillarsTouched == 4) {
                 play_puzzle_jingle();
-                #if QOL_FEATURE_SSL_PYRAMID_CUTSCENE
+                #if SSL_PYRAMID_CUTSCENE
                 cutscene_object(CUTSCENE_SSL_PYRAMID_EXPLODE, o);
                 #endif
                 o->oAction = PYRAMID_TOP_ACT_SPINNING;
@@ -107,7 +107,7 @@ void bhv_pyramid_top_loop(void) {
 
         case PYRAMID_TOP_ACT_SPINNING:
             if (o->oTimer == 0) {
-                #if QOL_FEATURE_SSL_PYRAMID_CUTSCENE
+                #if SSL_PYRAMID_CUTSCENE
                 if (gMarioState->action & ACT_FLAG_RIDING_SHELL) {
                     gMarioState->forwardVel = 0.0f;
                     enable_time_stop_including_mario();
