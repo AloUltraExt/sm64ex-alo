@@ -176,7 +176,7 @@ static void add_shadow_to_display_list(Gfx *displayListHead, s8 shadowType, u8 s
         case SHADOW_CIRCLE:
             dl_shadow = dl_shadow_circle;
             break;
-#if QOL_FEATURE_TREE_SHADOWS
+#if PROPER_TREE_SHADOWS
         case SHADOW_SPIKE:
             dl_shadow = dl_shadow_spike;
             break;

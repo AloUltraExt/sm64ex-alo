@@ -411,7 +411,7 @@ void bhv_king_bobomb_loop(void) {
             break;
     }
 
-#if QOL_FEATURE_KING_BOBOMB_BLINK
+#if KING_BOBOMB_BLINK_EYES
     curr_obj_random_blink(&o->oKingBobombBlinkTimer);
 #endif
 

@@ -38,24 +38,12 @@
 /// Adds more air steps to special triple jump such as wallkick and grabbing
 /// Credits: (Vatuu)
 #define QOL_FEATURE_SPECIAL_TRIPLE_JUMP_AIR_STEPS (0 || QOL_FEATURES)
-/// Changes how Mario grabs a star so a transparent star is properly shown after being collected
-/// Credits: (Vatuu, AloXado320)
-#define QOL_FEATURE_PROPER_SHOW_COLLECTABLE (0 || QOL_FEATURES)
-/// Correctly changes star model to be transparent when (Klepto and Unagi) stars are collected
-/// Credits: (Vatuu, AloXado320, SunlitSpace542)
-#define QOL_FEATURE_BEH_HELD_TRANSPARENT_STAR (0 || QOL_FEATURES)
 /// Properly adds unused SSL Pyramid cutscene after standing on the 4 pillars
 /// Credits: (Vatuu, AloXado320, SunlitSpace542, Arceveti)
 #define QOL_FEATURE_SSL_PYRAMID_CUTSCENE (0 || QOL_FEATURES)
-/// Adds unused sad eyes for the penguin mother when he lost it's baby
-/// Credits: (Vatuu, Arceveti)
-#define QOL_FEATURE_TUXIES_MOTHER_SAD_EYES (0 || QOL_FEATURES)
 /// Adds unused cracked ice object in Snowman Land
 /// Credits: (Original Devs, SunlitSpace542, Arceveti)
 #define QOL_FEATURE_SSL_CRACKED_ICE (0 || QOL_FEATURES)
-/// Adds blinking to King Bob-omb, reusing it's unused blinking texture
-/// Credits: (AloXado320)
-#define QOL_FEATURE_KING_BOBOMB_BLINK (0 || QOL_FEATURES)
 /// Changes WF breakable wall by no taking damage and returning safely if the proper wall is broken
 /// Credits: (AloXado320)
 #define QOL_FEATURE_BETTER_WF_BREAKEABLE_WALL (0 || QOL_FEATURES)
@@ -65,9 +53,6 @@
 /// Makes Mario grab hangable ceilings in any air actions
 /// Credits: (AloXado320)
 #define QOL_FEATURE_HANG_AIR_ANYWHERE (0 || QOL_FEATURES)
-/// Makes trees use actual shadows, recommended to use with optimized shadows
-/// Credits: (AloXado320)
-#define QOL_FEATURE_TREE_SHADOWS (0 || QOL_FEATURES)
 /// Makes cutscene object camera correctly focus an object in a room
 /// Credits: (AloXado320)
 #define QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS (0 || QOL_FEATURES || !VANILLA_CHECKS)
@@ -315,21 +300,9 @@
 #define QOL_FIX_UNUSED_PLAY_MODE (0 || QOL_FIXES)
 
 // --| Assets Fixes (Mostly on vanilla levels)
-/// Fixes duplicated red/white display list in Goddard and properly uses the next ones
-/// Credits: (Easy Fix)
-#define QOL_FIX_ASSET_DUP_STAR_GD (0 || (QOL_FIXES && GODDARD_MFACE))
-/// Fixes Koopa's pink shorts caused by a miscalled light color value
-/// Credits: (Easy Fix)
-#define QOL_FIX_ASSET_KOOPA_SHORTS (0 || QOL_FIXES)
-/// Fixes Yoshi "it" typo dialog (English)
-/// Credits: (Easy Fix)
-#define QOL_FIX_ASSET_YOSHI_DIALOG (0 || QOL_FIXES)
 /// Fixes impossible coins (also fixes impossible Goomba since it's related)
 /// Credits: (AloXado320)
 #define QOL_FIX_ASSET_IMPOSSIBLE_COINS (0 || QOL_FIXES)
-/// Fixes Burn Smoke texture so it properly displays it
-/// Credits: (Kaze, Arceveti)
-#define QOL_FIX_ASSET_BURN_SMOKE (0 || QOL_FIXES)
 /// Fixes 1up locations in CCM slide
 /// Credits: (Arceveti)
 #define QOL_FIX_ASSET_CCM_SLIDE_1UPS (0 || QOL_FIXES)

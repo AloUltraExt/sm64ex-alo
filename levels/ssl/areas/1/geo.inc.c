@@ -18,7 +18,7 @@ const GeoLayout ssl_geo_000648[] = {
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, ssl_seg7_dl_07009F48),
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, ssl_seg7_dl_0700BA78),
                     GEO_DISPLAY_LIST(LAYER_ALPHA, ssl_seg7_dl_0700BC18),
-                #if !QOL_FEATURE_TREE_SHADOWS
+                #if !PROPER_TREE_SHADOWS
                     GEO_DISPLAY_LIST(LAYER_TRANSPARENT_DECAL, ssl_seg7_dl_0700BD00),
                 #endif
                     GEO_ASM(0x0801, geo_movtex_update_horizontal),

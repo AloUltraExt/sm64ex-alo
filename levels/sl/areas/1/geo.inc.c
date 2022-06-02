@@ -20,7 +20,7 @@ const GeoLayout sl_geo_0003A8[] = {
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, sl_seg7_dl_070073D0),
                     GEO_DISPLAY_LIST(LAYER_ALPHA, sl_seg7_dl_07007880),
                     GEO_DISPLAY_LIST(LAYER_TRANSPARENT, sl_seg7_dl_070088B0),
-                #if !QOL_FEATURE_TREE_SHADOWS
+                #if !PROPER_TREE_SHADOWS
                     GEO_DISPLAY_LIST(LAYER_TRANSPARENT_DECAL, sl_seg7_dl_07008D58),
                 #endif
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, sl_seg7_dl_0700A5A0),

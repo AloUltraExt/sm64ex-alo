@@ -488,19 +488,20 @@ void ukiki_free_loop(void) {
     }
 }
 
+#if UKIKI_BLINK_EYES
 /**
  * Unused function for timing ukiki's blinking.
  * Image still present in Ukiki's actor graphics.
- *
- * Possibly unused so AnimState could be used for wearing a cap?
+ * Properly used with UKIKI_BLINK_EYES.-
  */
-UNUSED static void ukiki_blink_timer(void) {
+static void ukiki_blink_timer(void) {
     if (gGlobalTimer % 50 < 7) {
-        o->oAnimState = UKIKI_ANIM_STATE_EYE_CLOSED;
+        o->oAnimState = o->oUkikiHasCap ? UKIKI_ANIM_STATE_CAP_ON_EYE_CLOSED : UKIKI_ANIM_STATE_EYE_CLOSED;
     } else {
-        o->oAnimState = UKIKI_ANIM_STATE_DEFAULT;
+        o->oAnimState = o->oUkikiHasCap ? UKIKI_ANIM_STATE_CAP_ON: UKIKI_ANIM_STATE_DEFAULT;
     }
 }
+#endif
 
 /**
  * Called by the main behavior function for the cage ukiki whenever it is held.
@@ -555,7 +556,7 @@ void cap_ukiki_held_loop(void) {
         case UKIKI_TEXT_DEFAULT:
             if (mario_lose_cap_to_enemy(2)) {
                 o->oUkikiTextState = UKIKI_TEXT_STEAL_CAP;
-                o->oUkikiHasCap |= UKIKI_CAP_ON;
+                o->oUkikiHasCap = TRUE;
             } else {
             }
             break;
@@ -575,7 +576,7 @@ void cap_ukiki_held_loop(void) {
                 (DIALOG_FLAG_TEXT_DEFAULT | DIALOG_FLAG_TIME_STOP_ENABLED), DIALOG_101, 0)) {
                 mario_retrieve_cap();
                 set_mario_npc_dialog(MARIO_DIALOG_STOP);
-                o->oUkikiHasCap &= ~UKIKI_CAP_ON;
+                o->oUkikiHasCap = FALSE;
                 o->oUkikiTextState = UKIKI_TEXT_GAVE_CAP_BACK;
             }
             break;
@@ -594,7 +595,7 @@ void bhv_ukiki_init(void) {
     if ((o->oBhvParams2ndByte == UKIKI_BP_CAP)
         && (save_file_get_flags() & SAVE_FLAG_CAP_ON_UKIKI)) {
         o->oUkikiTextState = UKIKI_TEXT_HAS_CAP;
-        o->oUkikiHasCap |= UKIKI_CAP_ON;
+        o->oUkikiHasCap = TRUE;
     }
 }
 
@@ -627,11 +628,15 @@ void bhv_ukiki_loop(void) {
             break;
     }
 
-    if (o->oUkikiHasCap & UKIKI_CAP_ON) {
+#if UKIKI_BLINK_EYES
+    ukiki_blink_timer();
+#else
+    if (o->oUkikiHasCap) {
         o->oAnimState = UKIKI_ANIM_STATE_CAP_ON;
     } else {
         o->oAnimState = UKIKI_ANIM_STATE_DEFAULT;
     }
+#endif
 
     o->oInteractStatus = 0;
 

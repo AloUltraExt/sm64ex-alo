@@ -72,11 +72,11 @@ struct Shadow {
  */
 #define SHADOW_SHAPE_SQUARE 20
 
-#if QOL_FEATURE_TREE_SHADOWS
+#if PROPER_TREE_SHADOWS
 /**
  * Constant to indicate any sort of spike shadow.
  */
-#define SHADOW_SHAPE_SPIKE 20
+#define SHADOW_SHAPE_SPIKE 30
 #endif
 
 /**
@@ -514,7 +514,7 @@ void add_shadow_to_display_list(Gfx *displayListHead, Vtx *verts, s8 shadowVerte
         case SHADOW_SHAPE_SQUARE:
             gSPDisplayList(displayListHead++, dl_shadow_square) 
             break;
-#if QOL_FEATURE_TREE_SHADOWS
+#if PROPER_TREE_SHADOWS
         case SHADOW_SHAPE_SPIKE:
             gSPDisplayList(displayListHead++, dl_shadow_spike);
             break;
@@ -744,7 +744,7 @@ Gfx *create_shadow_circle_4_verts(f32 xPos, f32 yPos, f32 zPos, s16 shadowScale,
     return displayList;
 }
 
-#if QOL_FEATURE_TREE_SHADOWS
+#if PROPER_TREE_SHADOWS
 /**
  * Create a spike shadow composed of 4 vertices.
  */
@@ -952,7 +952,7 @@ Gfx *create_shadow_below_xyz(f32 xPos, f32 yPos, f32 zPos, s16 shadowScale, u8 s
         case SHADOW_CIRCLE_4_VERTS:
             displayList = create_shadow_circle_4_verts(xPos, yPos, zPos, shadowScale, shadowSolidity);
             break;
-#if QOL_FEATURE_TREE_SHADOWS
+#if PROPER_TREE_SHADOWS
         case SHADOW_SPIKE:
             displayList = create_shadow_spike(xPos, yPos, zPos, shadowScale, shadowSolidity);
 #else

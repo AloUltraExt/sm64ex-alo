@@ -222,6 +222,7 @@ ALIGNED8 const Texture texture_hud_char_puppycam[] = {
 };
 #endif
 
+#if !CREDITS_TEXT_STRING_FONT
 ALIGNED8 static const Texture texture_credits_char_3[] = {
 #include "textures/segment2/segment2.06200.rgba16.inc.c"
 };
@@ -341,6 +342,7 @@ ALIGNED8 static const Texture texture_credits_char_Z[] = {
 ALIGNED8 static const Texture texture_credits_char_period[] = {
 #include "textures/segment2/segment2.07080.rgba16.inc.c"
 };
+#endif
 
 // JP Small Font
 #if defined(VERSION_JP) || defined(VERSION_SH)
@@ -2053,6 +2055,7 @@ const Texture *const main_font_lut[] = {
 #endif
 };
 
+#if !CREDITS_TEXT_STRING_FONT
 // credits font LUT 0x02008738-0x020087CB
 const Texture *const main_credits_font_lut[] = {
                        0x0,                    0x0,                    0x0, texture_credits_char_3,
@@ -2066,6 +2069,7 @@ const Texture *const main_credits_font_lut[] = {
     texture_credits_char_W, texture_credits_char_X, texture_credits_char_Y, texture_credits_char_Z,
     texture_credits_char_period,
 };
+#endif
 
 // HUD camera table 0x020087CC-0x020087E3
 const Texture *const main_hud_camera_lut[] = {
@@ -2452,7 +2456,7 @@ ALIGNED8 static const Texture texture_shadow_quarter_square[] = {
 #include "textures/segment2/shadow_quarter_square.ia8.inc.c"
 };
 
-#if QOL_FEATURE_TREE_SHADOWS
+#if PROPER_TREE_SHADOWS
 ALIGNED8 static const Texture texture_shadow_spike[] = {
 #include "textures/segment2/custom/shadow_spike_custom.ia8.inc.c"
 };
@@ -2576,7 +2580,7 @@ const Gfx dl_shadow_square[] = {
     gsSPEndDisplayList(),
 };
 
-#if QOL_FEATURE_TREE_SHADOWS
+#if PROPER_TREE_SHADOWS
 const Gfx dl_shadow_spike[] = {
     gsSPDisplayList(dl_shadow_begin),
     gsDPLoadTextureBlock(texture_shadow_spike, G_IM_FMT_IA, G_IM_SIZ_8b, 16, 16, 0, G_TX_WRAP | G_TX_MIRROR, G_TX_WRAP | G_TX_MIRROR, 4, 4, G_TX_NOLOD, G_TX_NOLOD),

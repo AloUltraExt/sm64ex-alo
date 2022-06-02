@@ -77,7 +77,7 @@ static void klepto_anim_dive(void) {
 
 void bhv_klepto_init(void) {
     if (o->oBhvParams2ndByte != 0) {
-#if QOL_FEATURE_BEH_HELD_TRANSPARENT_STAR
+#if OBJ_HOLD_TRANSPARENT_STAR
         u8 bp1 = o->oBhvParams >> 24; // Star ID - Star 1 by default
         if (save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum)) & (1 << bp1)) {
             o->oAnimState = KLEPTO_ANIM_STATE_HOLDING_TRANSPARENT_STAR;

@@ -49,6 +49,19 @@ void obj_update_gfx_pos_and_angle(struct Object *obj) {
     obj->header.gfx.angle[2] = obj->oFaceAngleRoll & 0xFFFF;
 }
 
+#if OBJ_OPACITY_BY_CAM_DIST
+#define OBJ_OPACITY_NEAR   128.0f
+#define OBJ_OPACITY_LENGTH 512.0f
+void obj_set_opacity_from_cam_dist(struct Object *obj) {
+    s32 opacityDist = ((-obj->header.gfx.cameraToObject[2] - OBJ_OPACITY_NEAR) * 256.0f / OBJ_OPACITY_LENGTH);
+    if (opacityDist < 0x00) opacityDist = 0xFF;
+
+    obj->oOpacity = CLAMP(opacityDist, 0x00, 0xFF);
+}
+#undef OBJ_OPACITY_NEAR
+#undef OBJ_OPACITY_LENGTH
+#endif
+
 // Push the address of a behavior command to the object's behavior stack.
 static void cur_obj_bhv_stack_push(uintptr_t bhvAddr) {
     gCurrentObject->bhvStack[gCurrentObject->bhvStackIndex] = bhvAddr;
@@ -955,6 +968,12 @@ void cur_obj_update(void) {
     if (objFlags & OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE) {
         obj_update_gfx_pos_and_angle(gCurrentObject);
     }
+
+#if OBJ_OPACITY_BY_CAM_DIST
+    if (objFlags & OBJ_FLAG_OPACITY_FROM_CAMERA_DIST) {
+        obj_set_opacity_from_cam_dist(gCurrentObject);
+    }
+#endif
 
     // ex-alo change
     // Ensure the object is allocated to set default drawing distance

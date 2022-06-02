@@ -67,6 +67,7 @@
 // Other Settings
 #include "config/config_camera.h"
 #include "config/config_collision.h"
+#include "config/config_graphics.h"
 
 // Screen Size Defines
 #define SCREEN_WIDTH 320

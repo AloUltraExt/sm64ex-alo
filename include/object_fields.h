@@ -592,7 +592,7 @@
 #define /*0x100*/ oKingBobombUnk100 OBJECT_FIELD_S32(0x1E)
 #define /*0x104*/ oKingBobombUnk104 OBJECT_FIELD_S32(0x1F)
 #define /*0x108*/ oKingBobombUnk108 OBJECT_FIELD_S32(0x20)
-#if QOL_FEATURE_KING_BOBOMB_BLINK
+#if KING_BOBOMB_BLINK_EYES
 #define /*0x108*/ oKingBobombBlinkTimer OBJECT_FIELD_S32(0x21)
 #endif
 

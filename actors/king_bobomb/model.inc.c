@@ -532,7 +532,7 @@ static const Vtx king_bobomb_seg5_vertex_0500B218[] = {
     {{{   124,   -158,    493}, 0, {   990,      0}, {0x00, 0xe8, 0x7c, 0xff}}},
 };
 
-#if QOL_FEATURE_KING_BOBOMB_BLINK
+#if KING_BOBOMB_BLINK_EYES
 const Gfx king_bobomb_dl_eyes_start_block[] = {
     gsDPPipeSync(),
     gsDPSetCombineMode(G_CC_DECALRGBA, G_CC_DECALRGBA),

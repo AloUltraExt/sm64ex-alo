@@ -52,6 +52,11 @@
 #else
 #define OBJ_FLAG_DONT_CALC_COLL_DIST              (0 << 0)
 #endif
+#if OBJ_OPACITY_BY_CAM_DIST
+#define OBJ_FLAG_OPACITY_FROM_CAMERA_DIST         (1 << 21) // 0x00010000
+#else
+#define OBJ_FLAG_OPACITY_FROM_CAMERA_DIST         (0 << 0)
+#endif
 #define OBJ_FLAG_30                               (1 << 30) // 0x40000000
 
 /* oHeldState */
@@ -855,12 +860,10 @@
     #define UKIKI_ANIM_HELD         12
 
     /* oAnimState */
-    #define UKIKI_ANIM_STATE_DEFAULT    0
-    #define UKIKI_ANIM_STATE_EYE_CLOSED 1
-    #define UKIKI_ANIM_STATE_CAP_ON     2
-
-    /* oUkikiHasCap */
-    #define UKIKI_CAP_ON 1
+    #define UKIKI_ANIM_STATE_DEFAULT           0
+    #define UKIKI_ANIM_STATE_EYE_CLOSED        1
+    #define UKIKI_ANIM_STATE_CAP_ON            2
+    #define UKIKI_ANIM_STATE_CAP_ON_EYE_CLOSED 3
 
 /* Ukiki Cage Star */
     /* oAction */

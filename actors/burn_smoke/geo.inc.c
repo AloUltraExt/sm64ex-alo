@@ -2,7 +2,7 @@
 const GeoLayout burn_smoke_geo[] = {
     GEO_NODE_START(),
     GEO_OPEN_NODE(),
-#if QOL_FIX_ASSET_BURN_SMOKE
+#if FIX_BURN_SMOKE
       GEO_ASM(0, geo_update_layer_transparency),
 #endif
         GEO_DISPLAY_LIST(LAYER_TRANSPARENT, burn_smoke_seg4_dl_04022070),

@@ -748,6 +748,7 @@ void print_menu_generic_string(s16 x, s16 y, const u8 *str) {
     }
 }
 
+#if !CREDITS_TEXT_STRING_FONT
 void print_credits_string(s16 x, s16 y, const u8 *str) {
     s32 strPos = 0;
     void **fontLUT = segmented_to_virtual(main_credits_font_lut);
@@ -779,6 +780,7 @@ void print_credits_string(s16 x, s16 y, const u8 *str) {
         strPos++;
     }
 }
+#endif
 
 void handle_menu_scrolling(s8 scrollDirection, s8 *currentIndex, s8 minIndex, s8 maxIndex) {
     u8 index = 0;
@@ -1957,13 +1959,20 @@ void reset_cutscene_msg_fade(void) {
     gCutsceneMsgFade = 0;
 }
 
+#if CREDITS_TEXT_STRING_FONT
+#define DL_CREDIT_TEXT_START    dl_ia_text_begin
+#define DL_CREDIT_TEXT_END      dl_ia_text_end
+#else
+#define DL_CREDIT_TEXT_START    dl_rgba16_text_begin
+#define DL_CREDIT_TEXT_END      dl_rgba16_text_end
+#endif
 void dl_rgba16_begin_cutscene_msg_fade(void) {
-    gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
+    gSPDisplayList(gDisplayListHead++, DL_CREDIT_TEXT_START);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, gCutsceneMsgFade);
 }
 
 void dl_rgba16_stop_cutscene_msg_fade(void) {
-    gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
+    gSPDisplayList(gDisplayListHead++, DL_CREDIT_TEXT_END);
 
     if (gCutsceneMsgFade < 250) {
         gCutsceneMsgFade += 25;
@@ -1971,7 +1980,10 @@ void dl_rgba16_stop_cutscene_msg_fade(void) {
         gCutsceneMsgFade = 255;
     }
 }
+#undef DL_CREDIT_TEXT_START
+#undef DL_CREDIT_TEXT_END
 
+#if !CREDITS_TEXT_STRING_FONT
 u8 ascii_to_credits_char(u8 c) {
     if (c >= 'A' && c <= 'Z') {
         return (c - ('A' - 0xA));
@@ -2018,6 +2030,7 @@ void print_credits_str_ascii(s16 x, s16 y, const char *str) {
 
     print_credits_string(x, y, creditStr);
 }
+#endif
 
 void set_cutscene_message(s16 xOffset, s16 yOffset, s16 msgIndex, s16 msgDuration) {
     // is message done printing?

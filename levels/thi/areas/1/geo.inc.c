@@ -19,7 +19,7 @@ const GeoLayout thi_geo_000608[] = {
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, thi_seg7_dl_07006968),
                     GEO_DISPLAY_LIST(LAYER_ALPHA, thi_seg7_dl_07007008),
                     GEO_DISPLAY_LIST(LAYER_TRANSPARENT, thi_seg7_dl_070072E8),
-                #if !QOL_FEATURE_TREE_SHADOWS
+                #if !PROPER_TREE_SHADOWS
                     GEO_DISPLAY_LIST(LAYER_TRANSPARENT_DECAL, thi_seg7_dl_070073C0),
                 #endif
                     GEO_ASM(   0, geo_movtex_pause_control),

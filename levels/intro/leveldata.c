@@ -1,6 +1,7 @@
 #include <PR/ultratypes.h>
 #include <PR/gbi.h>
 
+#include "sm64.h"
 #include "macros.h"
 #include "types.h"
 
@@ -3317,21 +3318,55 @@ const Gfx intro_seg7_dl_0700B3A0[] = {
     gsSPEndDisplayList(),
 };
 
+#define CR_T_W 128
+#define CR_T_H 16
+#define CR_X_L 96
+#define CR_X_R (CR_X_L + CR_T_W)
+#define CR_Y_L 42
+#define CR_Y_R (CR_Y_L + CR_T_H)
+
 // 0x0700B420 - 0x0700B460
 static const Vtx intro_seg7_vertex_0700B420[] = {
-    {{{    96,     42,     -1}, 0, {     0,    512}, {0xff, 0xff, 0xff, 0xff}}},
-    {{{   224,     42,     -1}, 0, {  4096,    512}, {0xff, 0xff, 0xff, 0xff}}},
-    {{{   224,     58,     -1}, 0, {  4096,      0}, {0xff, 0xff, 0xff, 0xff}}},
-    {{{    96,     58,     -1}, 0, {     0,      0}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{ CR_X_L, CR_Y_L, -1}, 0, {           0, CR_T_H << 5}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{ CR_X_R, CR_Y_L, -1}, 0, { CR_T_W << 5, CR_T_H << 5}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{ CR_X_R, CR_Y_R, -1}, 0, { CR_T_W << 5,           0}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{ CR_X_L, CR_Y_R, -1}, 0, {           0,           0}, {0xff, 0xff, 0xff, 0xff}}},
 };
+
+#define TM_T_W 16
+#define TM_T_H 16
+#define TM_X_L 268
+#define TM_X_R (TM_X_L + TM_T_W)
+#define TM_Y_L 180
+#define TM_Y_R (TM_Y_L + TM_T_H)
 
 // 0x0700B460 - 0x0700B4A0
 static const Vtx intro_seg7_vertex_0700B460[] = {
-    {{{   268,    180,     -1}, 0, {     0,    512}, {0xff, 0xff, 0xff, 0xff}}},
-    {{{   284,    180,     -1}, 0, {   544,    512}, {0xff, 0xff, 0xff, 0xff}}},
-    {{{   284,    196,     -1}, 0, {   544,      0}, {0xff, 0xff, 0xff, 0xff}}},
-    {{{   268,    196,     -1}, 0, {     0,      0}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{ TM_X_L, TM_Y_L, -1}, 0, {           0, TM_T_H << 5}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{ TM_X_R, TM_Y_L, -1}, 0, { TM_T_W << 5, TM_T_H << 5}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{ TM_X_R, TM_Y_R, -1}, 0, { TM_T_W << 5,           0}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{ TM_X_L, TM_Y_R, -1}, 0, {           0,           0}, {0xff, 0xff, 0xff, 0xff}}},
 };
+
+#if INTRO_JAPANESE_GAME_TEXT
+#define JP_T_W 128
+#define JP_T_H 16
+#define JP_X_L 96
+#define JP_X_R (CR_X_L + JP_T_W)
+#define JP_Y_L 70
+#define JP_Y_R (JP_Y_L + JP_T_H)
+
+static const Vtx intro_seg7_vertex_jptext[] = {
+    {{{ JP_X_L, JP_Y_L, -1}, 0, {           0, JP_T_H << 5}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{ JP_X_R, JP_Y_L, -1}, 0, { JP_T_W << 5, JP_T_H << 5}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{ JP_X_R, JP_Y_R, -1}, 0, { JP_T_W << 5,           0}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{ JP_X_L, JP_Y_R, -1}, 0, {           0,           0}, {0xff, 0xff, 0xff, 0xff}}},
+};
+
+ALIGNED8 static const Texture intro_seg7_texture_jptext[] = {
+#include "levels/intro/jp_game_text_custom.rgba16.inc.c"
+};
+#endif
 
 #if defined(VERSION_EU) || defined(VERSION_SH)
 // 0x0700B4A0 - 0x0700B4A2
@@ -3368,13 +3403,19 @@ const Gfx intro_seg7_dl_0700C6A0[] = {
     gsDPSetCombineMode(G_CC_DECALFADE, G_CC_DECALFADE),
     gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON),
 
-    gsDPLoadTextureBlock(intro_seg7_texture_0700B4A0, G_IM_FMT_RGBA, G_IM_SIZ_16b, 128, 16, 0, G_TX_CLAMP, G_TX_CLAMP, 7, 4, G_TX_NOLOD, G_TX_NOLOD),
+    gsDPLoadTextureBlock(intro_seg7_texture_0700B4A0, G_IM_FMT_RGBA, G_IM_SIZ_16b, CR_T_W, CR_T_H, 0, G_TX_CLAMP, G_TX_CLAMP, 7, 4, G_TX_NOLOD, G_TX_NOLOD),
     gsSPVertex(intro_seg7_vertex_0700B420, 4, 0),
     gsSP2Triangles( 0,  1,  2, 0x0,  0,  2,  3, 0x0),
 
-    gsDPLoadTextureBlock(intro_seg7_texture_0700C4A0, G_IM_FMT_RGBA, G_IM_SIZ_16b, 16, 16, 0, G_TX_CLAMP, G_TX_CLAMP, 4, 4, G_TX_NOLOD, G_TX_NOLOD),
+    gsDPLoadTextureBlock(intro_seg7_texture_0700C4A0, G_IM_FMT_RGBA, G_IM_SIZ_16b, TM_T_W, TM_T_H, 0, G_TX_CLAMP, G_TX_CLAMP, 4, 4, G_TX_NOLOD, G_TX_NOLOD),
     gsSPVertex(intro_seg7_vertex_0700B460, 4, 0),
     gsSP2Triangles( 0,  1,  2, 0x0,  0,  2,  3, 0x0),
+
+#if INTRO_JAPANESE_GAME_TEXT
+    gsDPLoadTextureBlock(intro_seg7_texture_jptext, G_IM_FMT_RGBA, G_IM_SIZ_16b, JP_T_W, JP_T_H, 0, G_TX_CLAMP, G_TX_CLAMP, 7, 4, G_TX_NOLOD, G_TX_NOLOD),
+    gsSPVertex(intro_seg7_vertex_jptext, 4, 0),
+    gsSP2Triangles( 0,  1,  2, 0x0,  0,  2,  3, 0x0),
+#endif
 
     gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_OFF),
     gsDPPipeSync(),

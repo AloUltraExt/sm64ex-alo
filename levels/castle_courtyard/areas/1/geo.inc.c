@@ -16,7 +16,7 @@ const GeoLayout castle_courtyard_geo_000218[] = {
                 GEO_CAMERA(16, 0, 2000, 6000, 0, 0, 0, geo_camera_main),
                 GEO_OPEN_NODE(),
                     GEO_DISPLAY_LIST(LAYER_OPAQUE, castle_courtyard_seg7_dl_070048B8),
-                #if !QOL_FEATURE_TREE_SHADOWS
+                #if !PROPER_TREE_SHADOWS
                     GEO_DISPLAY_LIST(LAYER_TRANSPARENT_DECAL, castle_courtyard_seg7_dl_07005698),
                 #endif
                     GEO_DISPLAY_LIST(LAYER_ALPHA, castle_courtyard_seg7_dl_07005938),

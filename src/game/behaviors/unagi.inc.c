@@ -23,7 +23,7 @@ void bhv_unagi_init(void) {
     } else {
         o->oPathedStartWaypoint = segmented_to_virtual(jrb_seg7_trajectory_unagi_2);
         o->oAction = 3;
-#if QOL_FEATURE_BEH_HELD_TRANSPARENT_STAR
+#if OBJ_HOLD_TRANSPARENT_STAR
         // Needs doc, 1 is unagi with star, 2 is unagi with transparent star
         u8 bp1 = o->oBhvParams >> 24; // Star ID - Star 2 by default
         if (save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum)) & (1 << bp1)) {

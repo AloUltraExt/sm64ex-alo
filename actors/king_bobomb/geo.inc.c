@@ -35,7 +35,7 @@ const GeoLayout king_bobomb_geo[] = {
                             GEO_CLOSE_NODE(),
                         GEO_CLOSE_NODE(),
                     GEO_CLOSE_NODE(),
-#if QOL_FEATURE_KING_BOBOMB_BLINK
+#if KING_BOBOMB_BLINK_EYES
                     GEO_SWITCH_CASE(2, geo_switch_anim_state),
                     GEO_OPEN_NODE(),
                         GEO_ANIMATED_PART(LAYER_ALPHA, 0, 0, 0, king_bobomb_dl_eyes),

@@ -7,13 +7,13 @@ void bhv_celebration_star_init(void) {
     o->oMoveAngleYaw = gMarioObject->header.gfx.angle[1] + 0x8000;
     o->oCelebStarDiameterOfRotation = 100;
 #if BUGFIX_STAR_BOWSER_KEY
-    #if QOL_FEATURE_PROPER_SHOW_COLLECTABLE
+    #if OBJ_HOLD_TRANSPARENT_STAR
     if (gMarioState->interactObj->header.gfx.sharedChild == gLoadedGraphNodes[MODEL_BOWSER_KEY])
     #else
     if (gCurrLevelNum == LEVEL_BOWSER_1 || gCurrLevelNum == LEVEL_BOWSER_2)
     #endif
     {
-        #if !QOL_FEATURE_PROPER_SHOW_COLLECTABLE
+        #if !OBJ_HOLD_TRANSPARENT_STAR
         o->header.gfx.sharedChild = gLoadedGraphNodes[MODEL_BOWSER_KEY];
         #endif
         o->oFaceAnglePitch = 0;
@@ -21,7 +21,7 @@ void bhv_celebration_star_init(void) {
         cur_obj_scale(0.1f);
         o->oCelebStarUnkF4 = 1;
     } else {
-        #if !QOL_FEATURE_PROPER_SHOW_COLLECTABLE
+        #if !OBJ_HOLD_TRANSPARENT_STAR
         o->header.gfx.sharedChild = gLoadedGraphNodes[MODEL_STAR];
         #endif
         o->oFaceAnglePitch = 0;
@@ -30,7 +30,7 @@ void bhv_celebration_star_init(void) {
         o->oCelebStarUnkF4 = 0;
     }
 #else
-    #if !QOL_FEATURE_PROPER_SHOW_COLLECTABLE
+    #if !OBJ_HOLD_TRANSPARENT_STAR
     o->header.gfx.sharedChild = gLoadedGraphNodes[MODEL_STAR];
     #endif
     cur_obj_scale(0.4f);

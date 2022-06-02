@@ -80,6 +80,7 @@ static Vec4s sJumboStarKeyframes[27] = {
     { 0, -3500, 2100, -2000 },  { 0, -2000, 2200, -3500 },  { 0, 0, 2300, -4000 },
 };
 
+#if !CREDITS_TEXT_STRING_FONT
 /**
  * get_credits_str_width: Calculate width of a Credits String
  * Loop over each character in a credits string and increment the length. If the
@@ -97,11 +98,26 @@ s32 get_credits_str_width(char *str) {
 
     return length;
 }
+#endif
 
 #define CREDIT_TEXT_MARGIN_X ((s32)(GFX_DIMENSIONS_ASPECT_RATIO * 21))
 #define CREDIT_TEXT_X_LEFT GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(CREDIT_TEXT_MARGIN_X)
 #define CREDIT_TEXT_X_RIGHT GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(CREDIT_TEXT_MARGIN_X)
 
+#if CREDITS_TEXT_STRING_FONT
+#include "extras/draw_util.h"
+#define PRINT_CREDITS(x, y, str) print_generic_string_ascii(x, y, str)
+#define STRING_WIDTH(str) get_string_width_ascii(str)
+#define ADD_OR_SUB(a, b) (a - b)
+#define INIT_Y_UP   196
+#define INIT_Y_DOWN 52
+#else
+#define PRINT_CREDITS(x, y, str) print_credits_str_ascii(x, y, str)
+#define STRING_WIDTH(str) get_credits_str_width(str)
+#define ADD_OR_SUB(a, b) (a + b)
+#define INIT_Y_UP   28
+#define INIT_Y_DOWN 172
+#endif
 /**
  * print_displaying_credits_entry: Print the current displaying Credits Entry
  * Called in render_game. This function checks if sDispCreditsEntry points to a
@@ -117,61 +133,50 @@ s32 get_credits_str_width(char *str) {
  * by the value of lineHeight.
  */
 void print_displaying_credits_entry(void) {
-    char **currStrPtr;
-    char *titleStr;
-    s16 numLines;
-    s16 strY;
-#ifndef VERSION_JP
-    s16 lineHeight;
-#endif
-
     if (sDispCreditsEntry != NULL) {
-        currStrPtr = (char **) sDispCreditsEntry->string;
-        titleStr = *currStrPtr++;
-        numLines = *titleStr++ - '0';
+        char **currStrPtr = (char **) sDispCreditsEntry->string;
+        char *titleStr = *currStrPtr++;
+        s16 numLines = *titleStr++ - '0';
 
-        strY = (sDispCreditsEntry->posVpAndText & 32 ? 28 : 172) + (numLines == 1) * 16;
-#ifndef VERSION_JP
-        lineHeight = 16;
+        s16 strY = ADD_OR_SUB((sDispCreditsEntry->posVpAndText & 32 ? INIT_Y_UP : INIT_Y_DOWN), (numLines == 1) * 16);
+        s16 lineHeight = 16;
+
+#if CREDITS_TEXT_STRING_FONT
+        create_dl_ortho_matrix();
 #endif
-
         dl_rgba16_begin_cutscene_msg_fade();
-        print_credits_str_ascii(CREDIT_TEXT_X_LEFT, strY, titleStr);
+        PRINT_CREDITS(CREDIT_TEXT_X_LEFT, strY, titleStr);
 
-#ifndef VERSION_JP
         switch (numLines) {
             case 4:
-                print_credits_str_ascii(CREDIT_TEXT_X_LEFT, strY + 24, *currStrPtr++);
+                PRINT_CREDITS(CREDIT_TEXT_X_LEFT, ADD_OR_SUB(strY, 24), *currStrPtr++);
                 numLines = 2;
                 lineHeight = 24;
                 break;
             case 5:
-                print_credits_str_ascii(CREDIT_TEXT_X_LEFT, strY + 16, *currStrPtr++);
+                PRINT_CREDITS(CREDIT_TEXT_X_LEFT, ADD_OR_SUB(strY, 16), *currStrPtr++);
                 numLines = 3;
                 break;
 #ifdef VERSION_EU
             case 6:
-                print_credits_str_ascii(CREDIT_TEXT_X_LEFT, strY + 32, *currStrPtr++);
+                PRINT_CREDITS(CREDIT_TEXT_X_LEFT, ADD_OR_SUB(strY, 32), *currStrPtr++);
                 numLines = 3;
                 break;
             case 7:
-                print_credits_str_ascii(CREDIT_TEXT_X_LEFT, strY + 16, *currStrPtr++);
-                print_credits_str_ascii(CREDIT_TEXT_X_LEFT, strY + 32, *currStrPtr++);
+                PRINT_CREDITS(CREDIT_TEXT_X_LEFT, ADD_OR_SUB(strY, 16), *currStrPtr++);
+                PRINT_CREDITS(CREDIT_TEXT_X_LEFT, ADD_OR_SUB(strY, 32), *currStrPtr++);
                 numLines = 3;
                 break;
 #endif
         }
-#endif
 
         while (numLines-- > 0) {
-            print_credits_str_ascii(CREDIT_TEXT_X_RIGHT - get_credits_str_width(*currStrPtr), strY, *currStrPtr);
-
-#ifdef VERSION_JP
-            strY += 16;
+            PRINT_CREDITS(CREDIT_TEXT_X_RIGHT - STRING_WIDTH(*currStrPtr), strY, *currStrPtr);
+#if CREDITS_TEXT_STRING_FONT
+            strY -= lineHeight;
 #else
             strY += lineHeight;
 #endif
-
             currStrPtr++;
         }
 
@@ -179,6 +184,11 @@ void print_displaying_credits_entry(void) {
         sDispCreditsEntry = NULL;
     }
 }
+#undef PRINT_CREDITS
+#undef STRING_WIDTH
+#undef ADD_OR_SUB
+#undef INIT_Y_UP
+#undef INIT_Y_DOWN
 
 void bhv_end_peach_loop(void) {
     cur_obj_init_animation_with_sound(sEndPeachAnimation);
@@ -645,7 +655,7 @@ s32 act_debug_free_move(struct MarioState *m) {
 
 void general_star_dance_handler(struct MarioState *m, s32 isInWater) {
     s32 dialogID;
-#if QOL_FEATURE_PROPER_SHOW_COLLECTABLE
+#if OBJ_HOLD_TRANSPARENT_STAR
     s16 i;
     struct Object *initObj;
     s16 modelForDances[] = { MODEL_TRANSPARENT_STAR, MODEL_STAR, MODEL_BOWSER_KEY_CUTSCENE, MODEL_BOWSER_KEY };
@@ -653,7 +663,7 @@ void general_star_dance_handler(struct MarioState *m, s32 isInWater) {
     if (m->actionState == 0) {
         switch (++m->actionTimer) {
             case 1:
-                #if QOL_FEATURE_PROPER_SHOW_COLLECTABLE
+                #if OBJ_HOLD_TRANSPARENT_STAR
                 initObj = spawn_object(m->marioObj, MODEL_STAR, bhvCelebrationStar);
                 for (i = 0; i < (s16) ARRAY_COUNT(modelForDances); i++) {
                     if (gLoadedGraphNodes[modelForDances[i]] == m->interactObj->header.gfx.sharedChild) {
@@ -667,7 +677,7 @@ void general_star_dance_handler(struct MarioState *m, s32 isInWater) {
                 if (m->actionArg & 1) {
                     play_course_clear();
                 } else {
-                    #if QOL_FEATURE_PROPER_SHOW_COLLECTABLE
+                    #if OBJ_HOLD_TRANSPARENT_STAR
                     if (gMarioState->interactObj->header.gfx.sharedChild == gLoadedGraphNodes[MODEL_BOWSER_KEY])
                     #else
                     if (gCurrLevelNum == LEVEL_BOWSER_1 || gCurrLevelNum == LEVEL_BOWSER_2)

@@ -339,14 +339,10 @@ Gfx *geo_switch_tuxie_mother_eyes(s32 run, struct GraphNode *node, UNUSED Mat4 *
         struct GraphNodeSwitchCase *switchCase = (struct GraphNodeSwitchCase *) node;
         s32 timer;
 
-        #if QOL_FEATURE_TUXIES_MOTHER_SAD_EYES
+        #if TUXIES_MOTHER_SAD_EYES
         u32 isMother = obj_has_behavior(obj, bhvTuxiesMother);
         s32 babyDelivered = obj->oAction == 2;
-        if (!isMother || babyDelivered) {
-            switchCase->selectedCase = 0;
-        } else {
-            switchCase->selectedCase = 4;
-        }
+        switchCase->selectedCase = (!isMother || babyDelivered) ? 0 : 4;
         #else
         switchCase->selectedCase = 0;
         #endif
@@ -354,12 +350,8 @@ Gfx *geo_switch_tuxie_mother_eyes(s32 run, struct GraphNode *node, UNUSED Mat4 *
         // timer logic for blinking. uses cases 0-2.
         timer = gGlobalTimer % 50;
         if (timer < 43) {
-            #if QOL_FEATURE_TUXIES_MOTHER_SAD_EYES
-            if (!isMother || babyDelivered) {
-                switchCase->selectedCase = 0;
-            } else {
-                switchCase->selectedCase = 4;
-            }
+            #if TUXIES_MOTHER_SAD_EYES
+            switchCase->selectedCase = (!isMother || babyDelivered) ? 0 : 4;
             #else
             switchCase->selectedCase = 0;
             #endif

@@ -25,7 +25,7 @@ extern const Gfx king_bobomb_seg5_dl_0500B118[];
 extern const Gfx king_bobomb_seg5_dl_0500B150[];
 extern const Gfx king_bobomb_seg5_dl_0500B188[];
 extern const Gfx king_bobomb_seg5_dl_0500B278[];
-#if QOL_FEATURE_KING_BOBOMB_BLINK
+#if KING_BOBOMB_BLINK_EYES
 extern const Gfx king_bobomb_dl_eyes[];
 extern const Gfx king_bobomb_dl_eyes_blink[];
 #else

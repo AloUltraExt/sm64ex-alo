@@ -14,7 +14,7 @@ const GeoLayout unagi_geo[] = {
                         GEO_OPEN_NODE(),
                             GEO_ANIMATED_PART(LAYER_OPAQUE, 475, 0, 0, unagi_seg5_dl_0500D828),
                             GEO_OPEN_NODE(),
-                            #if QOL_FEATURE_BEH_HELD_TRANSPARENT_STAR
+                            #if OBJECTS_HOLD_TRANSPARENT_STAR
                                 GEO_SWITCH_CASE(3, geo_switch_anim_state),
                             #else
                                 GEO_SWITCH_CASE(2, geo_switch_anim_state),
@@ -29,7 +29,7 @@ const GeoLayout unagi_geo[] = {
                                             GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_ALPHA, 2000, 0, 0, 0, 0, 0, star_seg3_dl_0302BA18),
                                         GEO_CLOSE_NODE(),
                                     GEO_CLOSE_NODE(),
-                                #if QOL_FEATURE_BEH_HELD_TRANSPARENT_STAR
+                                #if OBJECTS_HOLD_TRANSPARENT_STAR
                                     GEO_NODE_START(),
                                     GEO_OPEN_NODE(),
                                         GEO_SCALE(0x00, 16384),
