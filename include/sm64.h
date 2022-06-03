@@ -129,6 +129,7 @@ int strcmp(char *s, char *t);
 #define MARIO_METAL_SHOCK               0x00000040
 #define MARIO_TELEPORTING               0x00000080
 #define MARIO_UNKNOWN_08                0x00000100
+#define MARIO_NO_FALL_DAMAGE            0X00000200
 #define MARIO_UNKNOWN_13                0x00002000
 #define MARIO_ACTION_SOUND_PLAYED       0x00010000
 #define MARIO_MARIO_SOUND_PLAYED        0x00020000

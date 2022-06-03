@@ -123,22 +123,18 @@ void exclamation_box_act_3(void) {
     }
 }
 
-void exclamation_box_spawn_contents(struct ExclamationBoxContents *contents, u8 targetContentsID) {
+void exclamation_box_spawn_contents(struct ExclamationBoxContents *contentsList, u8 boxType) {
+    struct ExclamationBoxContents *contents = &contentsList[boxType];
     struct Object *contentsObj = NULL;
 
-    while (contents->id != EXCLAMATION_BOX_BP_END) {
-        if (targetContentsID == contents->id) {
-            contentsObj = spawn_object(o, contents->model, contents->behavior);
-            contentsObj->oVelY = 20.0f;
-            contentsObj->oForwardVel = 3.0f;
-            contentsObj->oMoveAngleYaw = gMarioObject->oMoveAngleYaw;
-            o->oBhvParams |= contents->bhvParams1stByte << 24;
-            if (contents->model == MODEL_STAR) {
-                o->oFlags |= OBJ_FLAG_PERSISTENT_RESPAWN;
-            }
-            break;
-        }
-        contents++;
+    contentsObj = spawn_object(o, contents->model, contents->behavior);
+    contentsObj->oVelY = 20.0f;
+    contentsObj->oForwardVel = 3.0f;
+
+    contentsObj->oMoveAngleYaw = gMarioObject->oMoveAngleYaw;
+    o->oBhvParams |= contents->bhvParams1stByte << 24;
+    if (contents->model == MODEL_STAR) {
+        o->oFlags |= OBJ_FLAG_PERSISTENT_RESPAWN;
     }
 }
 

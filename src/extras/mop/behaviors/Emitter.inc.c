@@ -25,25 +25,20 @@ Gfx *geo_emitter_coloring(s32 callContext, struct GraphNode *node, UNUSED s32 co
 }
 
 void bhv_emitter_loop(void) {
-    s16 i;
-    struct Object *sparkle;
+    struct Object *sparkle = try_to_spawn_object(0, 1.0f, o, MODEL_MOP_EMITTER_SPARKLES, bhvSparkle);;
     u8 bp1half1 = (o->oBhvParams >> 24) >> 4; // Scale
     f32 scalePos = (f32) ((bp1half1 << 1));
 
-    for (i = 0; i < 4; i++) {
-        sparkle = try_to_spawn_object(0, 1.0f, o, MODEL_MOP_EMITTER_SPARKLES, bhvSparkle);
+    if (sparkle != NULL) {
+        sparkle->parentObj = o;
+        sparkle->oPosX += random_float() * scalePos;
+        sparkle->oPosZ += random_float() * scalePos;
 
-        if (sparkle != NULL) {
-            sparkle->parentObj = o;
-            sparkle->oPosX += random_float() * scalePos;
-            sparkle->oPosZ += random_float() * scalePos;
-
-            obj_translate_xyz_random(sparkle, 90.0f);
-            obj_scale_random(sparkle, 1.0, 0.0f);
+        obj_translate_xyz_random(sparkle, 90.0f);
+        obj_scale_random(sparkle, 1.0, 0.0f);
             
-            if (sparkle->oAnimState > 8) {
-                obj_mark_for_deletion(sparkle);
-            }
+        if (sparkle->oAnimState > 8) {
+            obj_mark_for_deletion(sparkle);
         }
     }
 }

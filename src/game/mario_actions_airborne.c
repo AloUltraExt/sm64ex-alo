@@ -91,12 +91,12 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
 	if (Cheats.EnableCheats && Cheats.NoFallDamage) return FALSE;
 #endif
 
-#ifdef PORT_MOP_OBJS
-	if (m->SelFallDmg) {
-		m->SelFallDmg = 0;
-		return FALSE;
+    // ex-alo change
+    // New flag so Mario doesn't get any damage, can be called by objects
+	if (m->flags & MARIO_NO_FALL_DAMAGE) {
+        m->flags &= ~MARIO_NO_FALL_DAMAGE;
+        return FALSE;
 	}
-#endif
 
     if (m->action != ACT_TWIRLING && m->floor->type != SURFACE_BURNING) {
         if (m->vel[1] < -55.0f) {

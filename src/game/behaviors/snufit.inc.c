@@ -40,9 +40,9 @@ Gfx *geo_snufit_move_mask(s32 callContext, struct GraphNode *node, UNUSED Mat4 *
         struct GraphNodeTranslationRotation *transNode
             = (struct GraphNodeTranslationRotation *) node->next;
 
-        transNode->translation[0] = obj->oSnufitXOffset;
-        transNode->translation[1] = obj->oSnufitYOffset;
-        transNode->translation[2] = obj->oSnufitZOffset;
+        transNode->translation[0] = 0;
+        transNode->translation[1] = -32;
+        transNode->translation[2] = obj->oSnufitRecoil + 180;
     }
 
     return NULL;
@@ -151,8 +151,6 @@ void bhv_snufit_loop(void) {
         o->oPosY = o->oHomeY + 8.0f * coss(4000 * gGlobalTimer);
         o->oPosZ = o->oHomeZ + 100.0f * sins(o->oSnufitCircularPeriod);
 
-        o->oSnufitYOffset = -0x20;
-        o->oSnufitZOffset = o->oSnufitRecoil + 180;
         o->oSnufitBodyScale
             = (s16)(o->oSnufitBodyBaseScale + 666
             + o->oSnufitBodyBaseScale * coss(o->oSnufitBodyScalePeriod));

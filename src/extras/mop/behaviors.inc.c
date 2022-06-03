@@ -3,10 +3,10 @@
 
 const BehaviorScript bhvFlipBlock_MOP[] = {
     BEGIN(OBJ_LIST_SURFACE),
-    SET_FLOAT(oDrawingDistance, 7167),
+    SET_FLOAT(oDrawingDistance, 7000),
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_COMPUTE_DIST_TO_MARIO),
     LOAD_COLLISION_DATA(col_FlipBlock_MOP_0x7d1a98),
-    SET_HITBOX(512,512),
+    SET_HITBOX(512, 512),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_flip_block_loop),
         SET_INT(oIntangibleTimer, 0),
@@ -20,7 +20,7 @@ const BehaviorScript bhvNoteblock_MOP[] = {
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
     SET_HOME(),
     LOAD_COLLISION_DATA(col_Noteblock_MOP_0xaa6444),
-    SCALE(0,64),
+    SCALE(0, 64),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_noteblock_loop),
     CALL_NATIVE(load_object_collision_model),
@@ -29,7 +29,7 @@ const BehaviorScript bhvNoteblock_MOP[] = {
 
 const BehaviorScript bhvSandblock_MOP[] = {
     BEGIN(OBJ_LIST_SURFACE),
-    OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE ),
+    OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
     LOAD_COLLISION_DATA(col_Sandblock_MOP_0xaa6444),
         BEGIN_LOOP(),
         CALL_NATIVE(bhv_sandblock_loop),
@@ -38,7 +38,7 @@ const BehaviorScript bhvSandblock_MOP[] = {
 
 const BehaviorScript bhvSpring_MOP[] = {
     BEGIN(OBJ_LIST_LEVEL),
-    SET_HITBOX(160,160),
+    SET_HITBOX(160, 160),
     SET_INTERACT_TYPE(INTERACT_COIN),
     SET_INT(oIntangibleTimer, 0),
     BEGIN_LOOP(),
@@ -48,8 +48,8 @@ const BehaviorScript bhvSpring_MOP[] = {
 
 const BehaviorScript bhvJukebox_MOP[] = {
     BEGIN(OBJ_LIST_GENACTOR),
-    OR_INT(oFlags, (OBJ_FLAG_PERSISTENT_RESPAWN | OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_HOLDABLE | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
-    SET_HITBOX(256,256),
+    OR_INT(oFlags, (OBJ_FLAG_PERSISTENT_RESPAWN | OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
+    SET_HITBOX(256, 256),
     BEGIN_LOOP(),
         SET_INT(oIntangibleTimer, 0),
         SET_INT(oInteractStatus, 0),
@@ -59,7 +59,7 @@ const BehaviorScript bhvJukebox_MOP[] = {
 
 const BehaviorScript bhvShrink_Platform_MOP[] = {
     BEGIN(OBJ_LIST_SURFACE),
-    OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE ),
+    OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
     LOAD_COLLISION_DATA(col_Shrink_Platform_MOP_0xad3720),
     SPAWN_CHILD(MODEL_MOP_SHRINKPLAT_BORDER, bhvUnused05A8),
     BEGIN_LOOP(),
@@ -70,7 +70,7 @@ const BehaviorScript bhvShrink_Platform_MOP[] = {
 
 const BehaviorScript bhvSwitchblock_MOP[] = {
     BEGIN(OBJ_LIST_SURFACE),
-    OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE ),
+    OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
     LOAD_COLLISION_DATA(col_Switchblock_MOP_0x7d3058),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_Switchblock_loop),
@@ -90,7 +90,7 @@ const BehaviorScript bhvEmitter_MOP[] = {
     BEGIN(OBJ_LIST_UNIMPORTANT),
     BILLBOARD(),
     OR_INT(oFlags,OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_COMPUTE_DIST_TO_MARIO),
-    SET_FLOAT(oDrawingDistance,5120),
+    SET_FLOAT(oDrawingDistance, 5000),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_emitter_loop),
     END_LOOP(),
@@ -108,7 +108,7 @@ const BehaviorScript bhvFlipswitch_Panel_MOP[] = {
     BEGIN(OBJ_LIST_SURFACE),
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE ),
     LOAD_COLLISION_DATA(col_Flipswitch_Panel_MOP_0x7daf78),
-    SET_FLOAT(oCollisionDistance,1024),
+    SET_FLOAT(oCollisionDistance, 1000),
     CALL_NATIVE(bhv_flipswitch_panel_init),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_flipswitch_panel_loop),
@@ -120,7 +120,7 @@ const BehaviorScript bhvCheckpoint_Flag_MOP[] = {
     BEGIN(OBJ_LIST_GENACTOR),
     OR_INT(oFlags,OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_COMPUTE_DIST_TO_MARIO),
     SET_INT(oInteractType,INTERACT_POLE),
-    SET_HITBOX(64,650),
+    SET_HITBOX(64, 650),
     CALL_NATIVE(bhv_checkpoint_flag_init),
     SET_INT(oIntangibleTimer, -1),
     BEGIN_LOOP(),
@@ -168,7 +168,7 @@ const BehaviorScript bhvMoving_Rotating_Block_MOP[] = {
     BEGIN(OBJ_LIST_SURFACE),
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
     LOAD_COLLISION_DATA(col_Moving_Rotating_Block_MOP_0x7e3ea0),
-    SET_FLOAT(oDrawingDistance,19455),
+    SET_FLOAT(oDrawingDistance, 20000),
     CALL_NATIVE(bhv_move_rotate_init),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_move_rotate_loop),

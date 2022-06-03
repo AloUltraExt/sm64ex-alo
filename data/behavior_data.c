@@ -1557,7 +1557,7 @@ const BehaviorScript bhvBlackSmokeMario[] = {
     OR_INT(oFlags, (OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_MOVE_XZ_USING_FVEL | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
     BILLBOARD(),
     SET_FLOAT(oGraphYOffset, 50),
-#if QOL_FIX_ASSET_BURN_SMOKE
+#if FIX_BURN_SMOKE
     SET_INT(oOpacity, 255),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_black_smoke_mario_loop),

@@ -369,9 +369,6 @@ struct MarioState {
     /*0xBC*/ f32 peakHeight;
     /*0xC0*/ f32 quicksandDepth;
     /*0xC4*/ f32 unkC4;
-    #ifdef PORT_MOP_OBJS
-	/*0xd4*/ u8 SelFallDmg; //For certain objects I don't want fall damage ever
-    #endif
 };
 
 #endif // _SM64_TYPES_H_

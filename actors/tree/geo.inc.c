@@ -7,7 +7,7 @@ const GeoLayout bubbly_tree_geo[] = {
     GEO_OPEN_NODE(),
 #endif
 #if OBJ_OPACITY_BY_CAM_DIST
-      GEO_ASM(10, geo_update_layer_transparency),
+      GEO_ASM(0, geo_update_layer_transparency),
       GEO_SWITCH_CASE(2, geo_switch_anim_state),
       GEO_OPEN_NODE(),
 #endif
@@ -32,7 +32,7 @@ const GeoLayout spiky_tree_geo[] = {
     GEO_OPEN_NODE(),
 #endif
 #if OBJ_OPACITY_BY_CAM_DIST
-      GEO_ASM(10, geo_update_layer_transparency),
+      GEO_ASM(0, geo_update_layer_transparency),
       GEO_SWITCH_CASE(2, geo_switch_anim_state),
       GEO_OPEN_NODE(),
 #endif
@@ -57,7 +57,7 @@ const GeoLayout snow_tree_geo[] = {
     GEO_OPEN_NODE(),
 #endif
 #if OBJ_OPACITY_BY_CAM_DIST
-      GEO_ASM(10, geo_update_layer_transparency),
+      GEO_ASM(0, geo_update_layer_transparency),
       GEO_SWITCH_CASE(2, geo_switch_anim_state),
       GEO_OPEN_NODE(),
 #endif
@@ -82,7 +82,7 @@ const GeoLayout palm_tree_geo[] = {
     GEO_OPEN_NODE(),
 #endif
 #if OBJ_OPACITY_BY_CAM_DIST
-      GEO_ASM(10, geo_update_layer_transparency),
+      GEO_ASM(0, geo_update_layer_transparency),
       GEO_SWITCH_CASE(2, geo_switch_anim_state),
       GEO_OPEN_NODE(),
 #endif
