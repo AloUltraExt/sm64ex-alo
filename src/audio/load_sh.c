@@ -7,6 +7,11 @@
 #include "load.h"
 #include "seqplayer.h"
 
+#ifdef EXTERNAL_DATA
+#include "pc/platform.h"
+#include "pc/fs/fs.h"
+#endif
+
 #define ALIGN16(val) (((val) + 0xF) & ~0xF)
 
 struct SharedDma {
@@ -104,17 +109,6 @@ s8 gAudioUpdatesPerFrame;
 
 extern u64 gAudioGlobalsStartMarker;
 extern u64 gAudioGlobalsEndMarker;
-
-// Hack: MINGW32 doesn't properly detect these defines in sound_data.s
-#if !IS_64_BIT && defined(__MINGW32__)
-extern u8 gSoundDataADSR[] asm("gSoundDataADSR"); // sound_data.ctl
-extern u8 gSoundDataRaw[] asm("gSoundDataRaw");  // sound_data.tbl
-extern u8 gMusicData[] asm("gMusicData");     // sequences.s
-#else
-extern u8 gSoundDataADSR[]; // ctl
-extern u8 gSoundDataRaw[];  // tbl
-extern u8 gMusicData[];     // sequences
-#endif
 
 ALSeqFile *get_audio_file_header(s32 arg0);
 
@@ -997,7 +991,22 @@ void func_sh_802f41e4(s32 audioResetStatus) {
     func_sh_802f4dcc(audioResetStatus);
 }
 
-#if defined(VERSION_SH)
+#ifdef EXTERNAL_DATA
+# define LOAD_DATA(x) load_sound_res((const char *)x)
+# include <stdio.h>
+# include <stdlib.h>
+static inline void *load_sound_res(const char *path) {
+    void *data = fs_load_file(path, NULL);
+    if (!data) sys_fatal("could not load sound data from '%s'", path);
+    // FIXME: figure out where it is safe to free this shit
+    //        can't free it immediately after in audio_init()
+    return data;
+}
+#else
+# define LOAD_DATA(x) x
+#endif
+
+#ifndef EXTERNAL_DATA
 u8 gShindouSoundBanksHeader[] = {
 #include "sound/ctl_header.inc.c"
 };
@@ -1013,6 +1022,16 @@ u8 gShindouSampleBanksHeader[] = {
 u8 gShindouSequencesHeader[] = {
 #include "sound/sequences_header.inc.c"
 };
+#endif
+
+extern u8 gSoundDataADSR[]; // sound_data.ctl
+extern u8 gSoundDataRaw[];  // sound_data.tbl
+extern u8 gMusicData[];     // sequences.bin
+#ifdef EXTERNAL_DATA
+extern u8 gBankSetsData[];  // bank_sets
+extern u8 gShindouSequencesHeader[];   // sequences_header
+extern u8 gShindouSoundBanksHeader[];  // ctl_header
+extern u8 gShindouSampleBanksHeader[]; // tbl_header
 #endif
 
 // (void) must be omitted from parameters
@@ -1096,14 +1115,14 @@ void audio_init() {
     eu_stubbed_printf_0("Main Heap Initialize.\n");
 
     // Load headers for sounds and sequences
-    gSeqFileHeader = (ALSeqFile *) gShindouSequencesHeader;
-    gAlCtlHeader = (ALSeqFile *) gShindouSoundBanksHeader;
-    gAlTbl = (ALSeqFile *) gShindouSampleBanksHeader;
-    gAlBankSets = gBankSetsData;
+    gSeqFileHeader = LOAD_DATA((ALSeqFile *) gShindouSequencesHeader);
+    gAlCtlHeader = LOAD_DATA((ALSeqFile *) gShindouSoundBanksHeader);
+    gAlTbl = LOAD_DATA((ALSeqFile *) gShindouSampleBanksHeader);
+    gAlBankSets = LOAD_DATA(gBankSetsData);
     gSequenceCount = (s16) gSeqFileHeader->seqCount;
-    patch_seq_file(gSeqFileHeader, gMusicData, D_SH_80315EF4);
-    patch_seq_file(gAlCtlHeader, gSoundDataADSR, D_SH_80315EF8);
-    patch_seq_file(gAlTbl, gSoundDataRaw, D_SH_80315EFC);
+    patch_seq_file(gSeqFileHeader, LOAD_DATA(gMusicData), D_SH_80315EF4);
+    patch_seq_file(gAlCtlHeader, LOAD_DATA(gSoundDataADSR), D_SH_80315EF8);
+    patch_seq_file(gAlTbl, LOAD_DATA(gSoundDataRaw), D_SH_80315EFC);
     seqCount = gAlCtlHeader->seqCount;
     gCtlEntries = sound_alloc_uninitialized(&gAudioInitPool, seqCount * sizeof(struct CtlEntry));
     for (i = 0; i < seqCount; i++) {

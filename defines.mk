@@ -82,6 +82,9 @@ endif
 # Check for external data
 ifeq ($(EXTERNAL_DATA),1)
   CUSTOM_C_DEFINES += -DEXTERNAL_DATA
+  ifeq ($(TARGET_N64),1)
+    $(error External data is not usable on N64)
+  endif
 endif
 
 # Use PC-only exclusive defines

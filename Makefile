@@ -1237,13 +1237,18 @@ $(BASEPACK_LST): $(EXE_DEPEND)
 	@echo "$(BUILD_DIR)/sound/sequences.bin sound/sequences.bin" >> $(BASEPACK_LST)
 	@echo "$(BUILD_DIR)/sound/sound_data.ctl sound/sound_data.ctl" >> $(BASEPACK_LST)
 	@echo "$(BUILD_DIR)/sound/sound_data.tbl sound/sound_data.tbl" >> $(BASEPACK_LST)
+  ifeq ($(VERSION),sh)
+	@echo "$(BUILD_DIR)/sound/sequences_header sound/sequences_header" >> $(BASEPACK_LST)
+	@echo "$(BUILD_DIR)/sound/ctl_header sound/ctl_header" >> $(BASEPACK_LST)
+	@echo "$(BUILD_DIR)/sound/tbl_header sound/tbl_header" >> $(BASEPACK_LST)
+  endif
 	@$(foreach f, $(wildcard $(SKYTILE_DIR)/*), echo $(f) gfx/$(f:$(BUILD_DIR)/%=%) >> $(BASEPACK_LST);)
 	@find actors -name \*.png -exec echo "{} gfx/{}" >> $(BASEPACK_LST) \;
 	@find levels -name \*.png -exec echo "{} gfx/{}" >> $(BASEPACK_LST) \;
 	@find textures -name \*.png -exec echo "{} gfx/{}" >> $(BASEPACK_LST) \;
-    ifeq ($(PORT_MOP_OBJS),1)
+  ifeq ($(PORT_MOP_OBJS),1)
 	@find src/extras/mop/actors -name \*.png -exec echo "{} gfx/{}" >> $(BASEPACK_LST) \;
-    endif
+  endif
 
 # prepares the resource ZIP with base data
 $(BASEPACK_PATH): $(BASEPACK_LST)
@@ -1278,8 +1283,10 @@ $(CRASH_TEXTURE_C_FILES): TEXTURE_ENCODING := u32
 
 $(BUILD_DIR)/lib/rsp.o: $(BUILD_DIR)/rsp/rspboot.bin $(BUILD_DIR)/rsp/fast3d.bin $(BUILD_DIR)/rsp/audio.bin
 
-ifeq ($(VERSION),sh)
-  $(BUILD_DIR)/src/audio/load_sh.o: $(SOUND_BIN_DIR)/bank_sets.inc.c $(SOUND_BIN_DIR)/sequences_header.inc.c $(SOUND_BIN_DIR)/ctl_header.inc.c $(SOUND_BIN_DIR)/tbl_header.inc.c
+ifeq ($(EXTERNAL_DATA),0)
+  ifeq ($(VERSION),sh)
+    $(BUILD_DIR)/src/audio/load_sh.o: $(SOUND_BIN_DIR)/bank_sets.inc.c $(SOUND_BIN_DIR)/sequences_header.inc.c $(SOUND_BIN_DIR)/ctl_header.inc.c $(SOUND_BIN_DIR)/tbl_header.inc.c
+  endif
 endif
 
 $(BUILD_DIR)/include/text_strings.h: include/text_strings.h.in
@@ -1543,7 +1550,14 @@ $(SOUND_BIN_DIR)/%.inc.c: $(SOUND_BIN_DIR)/%
 
 endif
 
-$(SOUND_BIN_DIR)/sound_data.o: $(SOUND_BIN_DIR)/sound_data.ctl $(SOUND_BIN_DIR)/sound_data.tbl $(SOUND_BIN_DIR)/sequences.bin $(SOUND_BIN_DIR)/bank_sets
+SOUND_FILES := $(SOUND_BIN_DIR)/sound_data.ctl $(SOUND_BIN_DIR)/sound_data.tbl $(SOUND_BIN_DIR)/sequences.bin $(SOUND_BIN_DIR)/bank_sets
+ifeq ($(EXTERNAL_DATA),1)
+  ifeq ($(VERSION),sh)
+    SOUND_FILES += $(SOUND_BIN_DIR)/sequences_header $(SOUND_BIN_DIR)/ctl_header $(SOUND_BIN_DIR)/tbl_header
+  endif 
+endif
+
+$(SOUND_BIN_DIR)/sound_data.o: $(SOUND_FILES)
 
 $(BUILD_DIR)/levels/scripts.o: $(BUILD_DIR)/include/level_headers.h
 
