@@ -564,7 +564,7 @@ s32 act_reading_sign(struct MarioState *m) {
 }
 
 s32 act_debug_free_move(struct MarioState *m) {
-    struct Surface *floor, *ceil;
+    struct Surface *floor;
     Vec3f pos;
     f32 speed;
 
@@ -614,7 +614,7 @@ s32 act_debug_free_move(struct MarioState *m) {
 #ifdef EXT_DEBUG_MENU
         speed *= m->intendedMag * 2.0f;
 #else
-        speed * 32.0f;
+        speed *= 32.0f;
 #endif
         pos[0] += speed * sins(m->intendedYaw);
         pos[2] += speed * coss(m->intendedYaw);
@@ -629,6 +629,7 @@ s32 act_debug_free_move(struct MarioState *m) {
     }
 
 #ifdef EXT_DEBUG_MENU
+    struct Surface *ceil;
     f32 ceilHeight = vec3f_find_ceil(pos, floorHeight, &ceil);
 
         if (floor != NULL && (DebugOpt.FreeMoveActFlags & ACT_DEBUG_STATE_CHECK_FLOOR)) {
@@ -640,7 +641,7 @@ s32 act_debug_free_move(struct MarioState *m) {
 
         vec3f_copy(m->pos, pos);
 #else
-    if (surf != NULL && pos[1] < floorHeight) {
+    if (floor != NULL && pos[1] < floorHeight) {
         pos[1] = floorHeight;
         vec3f_copy(m->pos, pos);
     }

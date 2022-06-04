@@ -1405,10 +1405,6 @@ s32 lvl_set_current_level(UNUSED s16 arg0, s32 levelNum) {
         return 0;
     }
 
-    if (gDebugLevelSelect && !gShowProfiler) {
-        return 0;
-    }
-
     return 1;
 }
 

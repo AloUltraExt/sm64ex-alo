@@ -193,6 +193,7 @@ static struct GfxRenderingAPI *gfx_rapi;
 static uint16_t *framebuffer_data;
 static bool requested_framebuffer;
 
+#ifdef EXTERNAL_DATA
 // 4x4 pink-black checkerboard texture to indicate missing textures
 #define MISSING_W 4
 #define MISSING_H 4
@@ -203,7 +204,6 @@ static const uint8_t missing_texture[MISSING_W * MISSING_H * 4] = {
     0x00, 0x00, 0x00, 0xFF,  0x00, 0x00, 0x00, 0xFF,  0xFF, 0x00, 0xFF, 0xFF,  0xFF, 0x00, 0xFF, 0xFF,
 };
 
-#ifdef EXTERNAL_DATA
 static inline size_t string_hash(const uint8_t *str) {
     size_t h = 0;
     for (const uint8_t *p = str; *p; p++)

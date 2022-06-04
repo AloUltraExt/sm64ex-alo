@@ -65,8 +65,6 @@ static void (*touch_down_callback)(void* event);
 static void (*touch_motion_callback)(void* event);
 static void (*touch_up_callback)(void* event);
 
-// whether to use timer for frame control
-static bool use_timer = true;
 // time between consequtive game frames, in perf counter ticks
 static double frame_rate = 0.0; // set in init()
 // time in which a frame began, in perf counter ticks

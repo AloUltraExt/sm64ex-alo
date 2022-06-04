@@ -229,6 +229,7 @@ u32 main_pool_pop_state(void) {
     struct MainPoolState *prevState = gMainPoolState->prev;
     main_pool_free(gMainPoolState);
     gMainPoolState = prevState;
+    return 0;
 }
 #else
 /**

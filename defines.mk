@@ -90,11 +90,9 @@ endif
 # Use PC-only exclusive defines
 ifeq ($(TARGET_PORT_CONSOLE),0)
 
-  ifeq ($(WINDOW_API),SDL2)
-    # Check for SDL2 touch controls
-    ifeq ($(TOUCH_CONTROLS),1)
-      CUSTOM_C_DEFINES += -DTOUCH_CONTROLS
-    endif
+  # Check for SDL2 touch controls
+  ifeq ($(TOUCH_CONTROLS),1)
+    CUSTOM_C_DEFINES += -DTOUCH_CONTROLS
   endif
 
 ifeq ($(TARGET_ANDROID),0)

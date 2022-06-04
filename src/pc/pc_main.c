@@ -49,6 +49,7 @@
 #include "fs/fs.h"
 
 #include "game/game_init.h"
+#include "game/main.h"
 #include "game/rumble_init.h"
 
 #ifdef DISCORDRPC

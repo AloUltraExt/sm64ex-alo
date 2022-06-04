@@ -577,7 +577,7 @@ void clear_objects(void) {
 void update_terrain_objects(void) {
     // ex-alo change
     // Fixes object counter list
-    gObjectCounter = update_objects_in_list(&gObjectLists[OBJ_LIST_SPAWNER]);
+    gObjectCounter = update_objects_in_list(&gObjectLists[OBJ_LIST_SPAWNER])
                    + update_objects_in_list(&gObjectLists[OBJ_LIST_SURFACE]);
 }
 

@@ -13,7 +13,7 @@
 #define MAX_VOLUME 127
 
 typedef struct {
-#ifdef TARGET_WII_U
+#ifdef TARGET_PORT_CONSOLE
     bool reset;
     bool settings_changed;
 #else
