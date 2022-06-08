@@ -81,64 +81,6 @@ CONTROLLER_API ?= SDL2
 # Automatic settings for target devices                                        #
 #==============================================================================#
 
-ifeq ($(TARGET_N64),0)
-  GRUCODE := f3dex2e
-  PC_PORT_DEFINES := 1
-else
-  GRUCODE := f3dzex
-  NO_LDIV := 1
-endif
-
-ifeq ($(TARGET_WII_U),1)
-  RENDER_API := GX2
-  WINDOW_API := GX2
-  AUDIO_API := SDL2
-  CONTROLLER_API := WII_U
-  
-  TARGET_PORT_CONSOLE := 1
-endif
-
-ifeq ($(TARGET_N3DS),1)
-  RENDER_API := C3D
-  WINDOW_API := 3DS
-  AUDIO_API := 3DS
-  CONTROLLER_API := 3DS
-  
-  TARGET_PORT_CONSOLE := 1
-endif
-
-ifeq ($(TARGET_SWITCH),1)
-  RENDER_API := GL
-  WINDOW_API := SDL2
-  AUDIO_API := SDL2
-  CONTROLLER_API := SWITCH
-  
-  TARGET_PORT_CONSOLE := 1
-endif
-
-TOUCH_CONTROLS ?= 0
-
-ifeq ($(TARGET_ANDROID),1)
-  RENDER_API := GL
-  WINDOW_API := SDL2
-  AUDIO_API := SDL2
-  CONTROLLER_API := SDL2
-  
-  TOUCH_CONTROLS := 1
-endif
-
-# Custom Defines
-include defines.mk
-
-# Misc settings for EXTERNAL_DATA
-ifeq ($(TARGET_PORT_CONSOLE),1)
-  BASEDIR ?= sm64ex_res
-else
-  BASEDIR ?= res
-endif
-
-BASEPACK ?= base.zip
-
 # Attempt to detect OS
 ifeq ($(OS),Windows_NT)
   HOST_OS ?= Windows
@@ -150,19 +92,18 @@ else
   endif
 endif
 
-ifeq ($(TARGET_WEB),0)
-  ifeq ($(TARGET_PORT_CONSOLE),0)
-    ifeq ($(HOST_OS),Windows)
-      WINDOWS_BUILD := 1
-    else
-      ifneq ($(shell which termux-setup-storage),)
-        TARGET_ANDROID := 1
-        COMPILER_TYPE := clang
-        ifeq ($(shell dpkg -s apksigner | grep Version | sed "s/Version: //"),0.7-2)
-          OLD_APKSIGNER := 1
-        endif
-      endif
-    endif
+ifeq ($(HOST_OS),Windows)
+  WINDOWS_BUILD := 1
+endif
+
+OLD_APKSIGNER ?= 0
+
+# Attempt to detect termux android build
+ifneq ($(shell which termux-setup-storage 2>/dev/null),)
+  TARGET_ANDROID := 1
+  COMPILER_TYPE := clang
+  ifeq ($(shell dpkg -s apksigner | grep Version | sed "s/Version: //"),0.7-2)
+    OLD_APKSIGNER := 1
   endif
 endif
 
@@ -250,6 +191,65 @@ ifeq ($(TARGET_WII_U),1)
   INCLUDE	    := $(foreach dir,$(LIBDIRS),-I$(dir)/include)
   LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 endif
+
+ifeq ($(TARGET_N64),0)
+  GRUCODE := f3dex2e
+  PC_PORT_DEFINES := 1
+else
+  GRUCODE := f3dzex
+  NO_LDIV := 1
+endif
+
+ifeq ($(TARGET_WII_U),1)
+  RENDER_API := GX2
+  WINDOW_API := GX2
+  AUDIO_API := SDL2
+  CONTROLLER_API := WII_U
+  
+  TARGET_PORT_CONSOLE := 1
+endif
+
+ifeq ($(TARGET_N3DS),1)
+  RENDER_API := C3D
+  WINDOW_API := 3DS
+  AUDIO_API := 3DS
+  CONTROLLER_API := 3DS
+  
+  TARGET_PORT_CONSOLE := 1
+endif
+
+ifeq ($(TARGET_SWITCH),1)
+  RENDER_API := GL
+  WINDOW_API := SDL2
+  AUDIO_API := SDL2
+  CONTROLLER_API := SWITCH
+  
+  TARGET_PORT_CONSOLE := 1
+endif
+
+TOUCH_CONTROLS ?= 0
+
+ifeq ($(TARGET_ANDROID),1)
+  RENDER_API := GL
+  WINDOW_API := SDL2
+  AUDIO_API := SDL2
+  CONTROLLER_API := SDL2
+  
+  TOUCH_CONTROLS := 1
+endif
+
+# Custom Defines
+include defines.mk
+
+# Base settings for EXTERNAL_DATA
+ifeq ($(TARGET_PORT_CONSOLE),1)
+  BASEDIR ?= sm64ex_res
+else
+  BASEDIR ?= res
+endif
+
+BASEPACK ?= base.zip
+
 
 #==============================================================================#
 # Main defines                                                                 #
@@ -746,13 +746,6 @@ endif
 # Automatic dependency files
 DEP_FILES := $(O_FILES:.o=.d) $(ULTRA_O_FILES:.o=.d) $(GODDARD_O_FILES:.o=.d) $(BUILD_DIR)/$(LD_SCRIPT).d
 
-# Files with GLOBAL_ASM blocks
-ifeq ($(NON_MATCHING),0)
-GLOBAL_ASM_C_FILES != grep -rl 'GLOBAL_ASM(' $(wildcard src/**/*.c)
-GLOBAL_ASM_O_FILES = $(foreach file,$(GLOBAL_ASM_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
-GLOBAL_ASM_DEP = $(BUILD_DIR)/src/audio/non_matching_dep
-endif
-
 #==============================================================================#
 # Compiler Options                                                             #
 #==============================================================================#
@@ -792,12 +785,14 @@ C_DEFINES := $(foreach d,$(DEFINES),-D$(d))
 DEF_INC_CFLAGS := $(foreach i,$(INCLUDE_DIRS),-I $(i)) $(C_DEFINES)
 
 # Set C Preprocessor flags
-CPPFLAGS := -P -Wno-trigraphs $(DEF_INC_CFLAGS) $(CUSTOM_C_DEFINES)
-  
-ifeq ($(COMPILER_TYPE),clang)
-  CPPFLAGS := -E -P -x c -Wno-trigraphs $(DEF_INC_CFLAGS) $(CUSTOM_C_DEFINES)
+ifeq ($(COMPILER_TYPE),gcc)
+  CPPFLAGS := -P -Wno-trigraphs 
+else ifeq ($(COMPILER_TYPE),clang)
+  CPPFLAGS := -E -P -x c -Wno-trigraphs
 endif
 
+CPPFLAGS += $(DEF_INC_CFLAGS) $(CUSTOM_C_DEFINES)
+  
 # 3DS Minimap flags
 ifeq ($(TARGET_N3DS),1)
 MINIMAP := $(PLATFORM_DIR)/minimap
@@ -1185,6 +1180,8 @@ GET_GODDARD_SIZE = $(PYTHON) $(TOOLS_DIR)/getGoddardSize.py
 define print
   @$(PRINT) "$(GREEN)$(1) $(YELLOW)$(2)$(GREEN) -> $(BLUE)$(3)$(NO_COL)\n"
 endef
+
+EXTRACT_DATA_FOR_MIO := $(OBJCOPY) -O binary --only-section=.data
 
 ifeq (, $(shell which armips 2>/dev/null))
   RSPASM := $(TOOLS_DIR)/armips$(EXT_PREFIX)
@@ -1583,12 +1580,6 @@ $(BUILD_DIR)/src/engine/surface_collision.o:  OPT_FLAGS := $(COLLISION_OPT_FLAGS
 $(BUILD_DIR)/src/engine/math_util.o:          OPT_FLAGS := $(MATH_UTIL_OPT_FLAGS)
 $(BUILD_DIR)/src/game/rendering_graph_node.o: OPT_FLAGS := $(GRAPH_NODE_OPT_FLAGS)
 
-# Rebuild files with 'GLOBAL_ASM' if the NON_MATCHING flag changes.
-$(GLOBAL_ASM_O_FILES): $(GLOBAL_ASM_DEP).$(NON_MATCHING)
-$(GLOBAL_ASM_DEP).$(NON_MATCHING):
-	@$(RM) -f $(GLOBAL_ASM_DEP).*
-	$(V)touch $@
-
 # Compile C code
 $(BUILD_DIR)/%.o: %.cpp
 	$(call print,Compiling:,$<,$@)
@@ -1649,7 +1640,7 @@ $(BUILD_DIR)/sm64_prelim.ld: $(LD_SCRIPT) $(O_FILES) $(MIO0_OBJ_FILES) $(SEG_FIL
 	$(V)$(CPP) $(CPPFLAGS) -DPRELIMINARY=1 -DBUILD_DIR=$(BUILD_DIR) -MMD -MP -MT $@ -MF $@.d -o $@ $<
 
 $(BUILD_DIR)/sm64_prelim.elf: $(BUILD_DIR)/sm64_prelim.ld
-	@$(PRINT) "$(GREEN)Linking Preliminary ELF file:  $(BLUE)$@ $(NO_COL)\n"
+	@$(PRINT) "$(GREEN)Linking Preliminary ELF file: $(BLUE)$@ $(NO_COL)\n"
     # Slightly edited version of LDFLAGS
 	$(V)$(LD) -L $(BUILD_DIR) -T undefined_syms.txt -T $< -Map $(BUILD_DIR)/sm64_prelim.map --no-check-sections $(SYMBOL_LINKING_FLAGS) -o $@ $(O_FILES) $(LIBS) -lultra $(LIB_GD_FLAG)
 
@@ -1663,7 +1654,7 @@ endif
 
 # Link SM64 ELF file
 $(ELF): $(LIB_GD_PRE_ELF) $(O_FILES) $(MIO0_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) undefined_syms.txt $(BUILD_DIR)/libultra.a $(LIB_GD_FILE)
-	@$(PRINT) "$(GREEN)Linking ELF file:  $(BLUE)$@ $(NO_COL)\n"
+	@$(PRINT) "$(GREEN)Linking ELF file: $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(LD) -L $(BUILD_DIR) $(LDFLAGS) $(GODDARD_TXT_INC) -o $@ $(O_FILES) $(LIBS) -lultra $(LIB_GD_FLAG)
 
 # Build ROM
@@ -1676,7 +1667,8 @@ $(BUILD_DIR)/$(TARGET).objdump: $(ELF)
 	$(OBJDUMP) -D $< > $@
 else ifeq ($(TARGET_WII_U),1)
 $(ELF):  $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
-	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
+	@$(PRINT) "$(GREEN)Linking ELF file: $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
 $(EXE): $(ELF)
 	@cp $< $*.strip.elf
 	$(SILENTCMD)$(STRIP) -g $*.strip.elf $(ERROR_FILTER)
@@ -1696,7 +1688,8 @@ SMDH_AUTHOR ?= mkst
 SMDH_ICON := $(PLATFORM_DIR)/icon.smdh
 
 $(ELF): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o $(SMDH_ICON)
-	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o $(MINIMAP_T3X_O) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
+	@$(PRINT) "$(GREEN)Linking ELF file: $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o $(MINIMAP_T3X_O) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
 
 $(EXE): $(ELF)
 	3dsxtool $< $@ --smdh=$(BUILD_DIR)/$(SMDH_ICON)
@@ -1752,7 +1745,7 @@ endif
 endif
 
 $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
-	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
+	$(V)$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
 endif
 
 ifeq ($(TARGET_SWITCH), 1)

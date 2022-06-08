@@ -61,9 +61,6 @@ static void print_cli_level_list(void) {
     }
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-overflow="
-
 static inline int arg_string(const char *name, const char *value, char *target) {
     const unsigned int arglen = strlen(value);
     if (arglen >= SYS_MAX_PATH) {
@@ -74,8 +71,6 @@ static inline int arg_string(const char *name, const char *value, char *target) 
     target[arglen] = '\0';
     return 1;
 }
-
-#pragma GCC diagnostic pop
 
 static inline int arg_uint(UNUSED const char *name, const char *value, unsigned int *target) {
     const unsigned long int v = strtoul(value, NULL, 0);

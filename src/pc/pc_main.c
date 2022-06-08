@@ -6,6 +6,10 @@
 #include <emscripten/html5.h>
 #endif
 
+#ifdef __ANDROID__
+#include <sys/stat.h>
+#endif
+
 #include "sm64.h"
 
 #include "game/memory.h"
@@ -237,7 +241,6 @@ void move_to_new_dir(char* file) {
 }
 
 void move_to_new_dir_user(char* file) {
-    const char *olddir = SDL_AndroidGetInternalStoragePath();
     const char *basedir = SDL_AndroidGetExternalStoragePath();
     char original_loc[SYS_MAX_PATH];
     char new_loc[SYS_MAX_PATH];

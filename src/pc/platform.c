@@ -192,7 +192,7 @@ static inline bool copy_userdata(const char *userdir) {
 }
 
 const char *sys_user_path(void) {
-    char path[SYS_MAX_PATH];
+    static char path[SYS_MAX_PATH] = ".";
 
     const char *basedir = SDL_AndroidGetExternalStoragePath();
     snprintf(path, sizeof(path), "%s/user", basedir);

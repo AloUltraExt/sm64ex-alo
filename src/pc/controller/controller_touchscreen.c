@@ -139,7 +139,6 @@ static void handle_touch_up(int i) {//seperated for when the layout changes
 }
 
 void touch_up(struct TouchEvent* event) {
-    struct Position pos;
     for(int i = 0; i < ControlElementsLength; i++) {
         if (ControlElements[i].touchID == event->touchID) {
             handle_touch_up(i);
@@ -158,15 +157,14 @@ ALIGNED8 static const u8 texture_button_dark[] = {
 //Sprite drawing code stolen from src/game/print.c
 
 static void select_button_texture(int dark) {
-    const u8 *const *glyphs = segmented_to_virtual(main_hud_lut);
-
     gDPPipeSync(gDisplayListHead++);
+
     if (!dark) {
         gDPSetTextureImage(gDisplayListHead++, G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, texture_button);
-    }
-    else {
+    } else {
         gDPSetTextureImage(gDisplayListHead++, G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, texture_button_dark);
     }
+
     gSPDisplayList(gDisplayListHead++, dl_hud_img_load_tex_block);
 }
 

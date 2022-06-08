@@ -88,14 +88,14 @@ ifeq ($(EXTERNAL_DATA),1)
 endif
 
 # Use PC-only exclusive defines
-ifeq ($(TARGET_PORT_CONSOLE),0)
-
-  # Check for SDL2 touch controls
+ifeq ($(TARGET_ANDROID),1)
+  # Check for touch controls
   ifeq ($(TOUCH_CONTROLS),1)
     CUSTOM_C_DEFINES += -DTOUCH_CONTROLS
   endif
+endif
 
-ifeq ($(TARGET_ANDROID),0)
+ifeq ($(TARGET_PORT_CONSOLE),0)
 
   # Check for Mouse Option (no DirectX yet)
   ifneq ($(WINDOW_API),DXGI)
@@ -112,7 +112,6 @@ ifeq ($(TARGET_ANDROID),0)
     CUSTOM_C_DEFINES += -DCOMMAND_LINE_OPTIONS
   endif
 
-endif # !TARGET_ANDROID
 endif # !TARGET_PORT_CONSOLE
 
 endif # !TARGET_N64

@@ -206,4 +206,5 @@ OSPiHandle *osDriveRomInit(void) {
 s32 osEPiStartDma(UNUSED OSPiHandle *pihandle, OSIoMesg *mb, UNUSED s32 direction) {
     memcpy(mb->dramAddr, (const void *) mb->devAddr, mb->size);
     osSendMesg(mb->hdr.retQueue, mb, OS_MESG_NOBLOCK);
+    return 1;
 }
