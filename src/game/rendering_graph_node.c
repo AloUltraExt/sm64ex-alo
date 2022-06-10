@@ -287,7 +287,7 @@ void geo_append_display_list(void *displayList, s16 layer)
 }
 
 // ex-alo change
-// simplify matrix and dl usage into functions (From HackerSM64) 
+// simplify matrix and dl usage into functions (From HackerSM64)
 void inc_mat_stack(void) {
     Mtx *mtx = alloc_display_list(sizeof(*mtx));
 #ifdef HIGH_FPS_PC
@@ -659,7 +659,7 @@ void geo_process_billboard(struct GraphNodeBillboard *node) {
  */
 void geo_process_display_list(struct GraphNodeDisplayList *node) {
     append_dl_and_return((struct GraphNodeDisplayList *)node);
-    
+
     gMatStackIndex++;
 }
 
@@ -981,7 +981,7 @@ void geo_process_shadow(struct GraphNodeShadow *node) {
             mtxf_shadow(gMatStack[gMatStackIndex + 1], *gCurGraphNodeCamera->matrixPtr,
                 floorNormal, shadowPos, scaleVec, gCurGraphNodeObject->angle[1]);
     #ifdef HIGH_FPS_PC
-            mtxf_shadow(gMatStack[gMatStackIndex + 1], *gCurGraphNodeCamera->matrixPtr,
+            mtxf_shadow(gMatStackInterpolated[gMatStackIndex + 1], *gCurGraphNodeCamera->matrixPtrInterpolated,
                 floorNormal, shadowPosInterpolated, scaleVec, gCurGraphNodeObject->angle[1]);
     #endif
 #else
@@ -1000,10 +1000,10 @@ void geo_process_shadow(struct GraphNodeShadow *node) {
 #else
             if (gShadowAboveWaterOrLava == TRUE) {
                 GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_ALPHA);
-            } else if (gMarioOnIceOrCarpet == TRUE) {                
+            } else if (gMarioOnIceOrCarpet == TRUE) {
                 GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT);
     #if WATER_SURFACES
-            } else if (gShadowAboveCustomWater == TRUE) {                
+            } else if (gShadowAboveCustomWater == TRUE) {
                 GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT);
     #endif
             } else {
@@ -1174,19 +1174,19 @@ void geo_process_object(struct Object *node) {
             }
             vec3f_copy(node->header.gfx.prevPos, node->header.gfx.pos);
             node->header.gfx.prevTimestamp = gGlobalTimer;
-            
+
             // Interpolate scale
             process_object_scale_interpolated(node, scaleInterpolated);
 #endif
             if (node->header.gfx.node.flags & GRAPH_RENDER_CYLBOARD) {
-                mtxf_cylboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], 
+                mtxf_cylboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex],
                                node->header.gfx.pos, node->header.gfx.scale, gCurGraphNodeCamera->roll);
 #ifdef HIGH_FPS_PC
                 mtxf_cylboard(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex],
                                posInterpolated, scaleInterpolated, gCurGraphNodeCamera->roll);
 #endif
             } else { // GRAPH_RENDER_BILLBOARD
-                mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], 
+                mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex],
                                node->header.gfx.pos, node->header.gfx.scale, gCurGraphNodeCamera->roll);
 #ifdef HIGH_FPS_PC
                 mtxf_billboard(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex],
@@ -1220,7 +1220,7 @@ void geo_process_object(struct Object *node) {
             process_object_scale_interpolated(node, scaleInterpolated);
 #endif
             mtxf_scale_vec3f(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex + 1], node->header.gfx.scale);
-#ifdef HIGH_FPS_PC 
+#ifdef HIGH_FPS_PC
             mtxf_scale_vec3f(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex + 1], scaleInterpolated);
 #endif
         }
@@ -1311,7 +1311,7 @@ void geo_process_held_object(struct GraphNodeHeldObject *node) {
         node->objNode->header.gfx.prevScaleTimestamp = gGlobalTimer;
 #endif
 
-        mtxf_held_object(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], 
+        mtxf_held_object(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex],
                          *gCurGraphNodeObject->throwMatrix, translation, node->objNode->header.gfx.scale);
 #ifdef HIGH_FPS_PC
         mtxf_held_object(gMatStackInterpolated[gMatStackIndex + 1], gMatStackInterpolated[gMatStackIndex],
