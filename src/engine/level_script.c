@@ -20,6 +20,7 @@
 #include "graph_node.h"
 #include "level_script.h"
 #include "level_misc_macros.h"
+#include "level_commands.h"
 #include "math_util.h"
 #include "surface_collision.h"
 #include "surface_load.h"
@@ -31,6 +32,8 @@
 #ifdef BETTERCAMERA
 #include "extras/bettercamera.h"
 #endif
+
+#define NUM_PAINTINGS 45
 
 #define CMD_GET(type, offset) (*(type *) (CMD_PROCESS_OFFSET(offset) + (u8 *) sCurrentCmd))
 
@@ -560,9 +563,9 @@ static void level_cmd_create_painting_warp_node(void) {
     if (sCurrAreaIndex != -1) {
         if (gAreas[sCurrAreaIndex].paintingWarpNodes == NULL) {
             gAreas[sCurrAreaIndex].paintingWarpNodes =
-                alloc_only_pool_alloc(sLevelPool, 45 * sizeof(struct WarpNode));
+                alloc_only_pool_alloc(sLevelPool, NUM_PAINTINGS * sizeof(struct WarpNode));
 
-            for (i = 0; i < 45; i++) {
+            for (i = 0; i < NUM_PAINTINGS; i++) {
                 gAreas[sCurrAreaIndex].paintingWarpNodes[i].id = 0;
             }
         }
