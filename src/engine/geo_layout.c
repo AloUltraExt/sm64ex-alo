@@ -249,16 +249,16 @@ void geo_layout_cmd_node_ortho_projection(void) {
   0x0A: Create camera frustum scene graph node
    cmd+0x01: u8  if nonzero, enable frustumFunc field
    cmd+0x02: s16 field of view
-   cmd+0x04: s16 near
-   cmd+0x06: s16 far
+   cmd+0x04: u16 near
+   cmd+0x06: u16 far
    [cmd+0x08: GraphNodeFunc frustumFunc]
 */
 void geo_layout_cmd_node_perspective(void) {
     struct GraphNodePerspective *graphNode;
     GraphNodeFunc frustumFunc = NULL;
     s16 fov = cur_geo_cmd_s16(0x02);
-    s16 near = cur_geo_cmd_s16(0x04);
-    s16 far = cur_geo_cmd_s16(0x06);
+    u16 near = cur_geo_cmd_u16(0x04);
+    u16 far = cur_geo_cmd_u16(0x06);
 
     if (cur_geo_cmd_u8(0x01) != 0) {
         // optional asm function

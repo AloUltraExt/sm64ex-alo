@@ -45,7 +45,7 @@ struct ConfigOption {
 
 // Video/audio stuff
 ConfigWindow configWindow       = {
-#ifdef TARGET_PORT_CONSOLE
+#if defined(TARGET_PORT_CONSOLE) && !defined(WAPI_SDL2)
     .reset = false,
     .settings_changed = false,
 #else

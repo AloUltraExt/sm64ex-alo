@@ -13,7 +13,7 @@
 #define MAX_VOLUME 127
 
 typedef struct {
-#ifdef TARGET_PORT_CONSOLE
+#if defined(TARGET_PORT_CONSOLE) && !defined(WAPI_SDL2)
     bool reset;
     bool settings_changed;
 #else

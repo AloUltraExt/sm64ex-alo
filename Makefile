@@ -196,7 +196,7 @@ ifeq ($(TARGET_N64),0)
   GRUCODE := f3dex2e
   PC_PORT_DEFINES := 1
 else
-  GRUCODE := f3dzex
+  GRUCODE ?= f3dzex
   NO_LDIV := 1
 endif
 
@@ -417,7 +417,7 @@ TOOLS_DIR = tools
 # on tools and assets, and we use directory globs further down
 # in the makefile that we want should cover assets.)
 
-ifeq (,$(findstring clean,$(MAKECMDGOALS)))
+ifeq ($(filter clean distclean print-%,$(MAKECMDGOALS)),)
 
   # Make sure assets exist
   NOEXTRACT ?= 0
@@ -449,14 +449,14 @@ ifeq (,$(findstring clean,$(MAKECMDGOALS)))
   # Make tools if out of date
   $(info Building tools...)
 ifeq ($(TARGET_PORT_CONSOLE),0)
-  DUMMY != CC=$(CC) CXX=$(CXX) $(MAKE) -C $(TOOLS_DIR) >&2 || echo FAIL
+  DUMMY != CC=$(CC) CXX=$(CXX) $(MAKE) -s -C $(TOOLS_DIR) >&2 || echo FAIL
 else
-  DUMMY != make -C tools >&2 || echo FAIL
+  DUMMY != $(MAKE) -s -C tools >&2 || echo FAIL
 endif
     ifeq ($(DUMMY),FAIL)
       $(error Failed to build tools)
     endif
-  $(info Building ROM...)
+  $(info Building game...)
 
 endif
 
@@ -466,59 +466,54 @@ endif
 
 # BUILD_DIR is location where all build artifacts are placed
 BUILD_DIR_BASE := build
+TARGET_NAME :=
 
 ifeq ($(TARGET_N64),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)
+  EXE := $(BUILD_DIR)/$(TARGET)
+  ROM := $(BUILD_DIR)/$(TARGET).z64
+  TARGET_NAME := Nintendo 64
 else ifeq ($(TARGET_WEB),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_web
+  EXE := $(BUILD_DIR)/$(TARGET).html
+  TARGET_NAME := Website
 else ifeq ($(TARGET_WII_U),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_wiiu
+  EXE := $(BUILD_DIR)/$(TARGET).rpx
+  TARGET_NAME := Nintendo Wii U
 else ifeq ($(TARGET_N3DS),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_3ds
+  EXE := $(BUILD_DIR)/$(TARGET).3dsx
+  CIA := $(BUILD_DIR)/$(TARGET).cia
+  TARGET_NAME := Nintendo 3DS
 else ifeq ($(TARGET_SWITCH),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_nx
+  EXE := $(BUILD_DIR)/$(TARGET).nro
+  TARGET_NAME := Nintendo Switch
 else ifeq ($(TARGET_ANDROID),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_android
-else
-  BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_pc
-endif
-
-LIBULTRA := $(BUILD_DIR)/libultra.a
-
-ifeq ($(TARGET_N64),0)
-
-# EXE in this context is the executable is generated for a specific targed
-ifeq ($(TARGET_WEB),1)
-  EXE := $(BUILD_DIR)/$(TARGET).html
-else ifeq ($(TARGET_WII_U),1)
-  EXE := $(BUILD_DIR)/$(TARGET).rpx
-else ifeq ($(TARGET_N3DS),1)
-  EXE := $(BUILD_DIR)/$(TARGET).3dsx
-  ELF := $(BUILD_DIR)/$(TARGET).elf
-  CIA := $(BUILD_DIR)/$(TARGET).cia
-else ifeq ($(WINDOWS_BUILD),1)
-  EXE := $(BUILD_DIR)/$(TARGET).exe
-else ifeq ($(TARGET_ANDROID),1)
   EXE := $(BUILD_DIR)/libmain.so
   APK := $(BUILD_DIR)/$(TARGET).unsigned.apk
   APK_SIGNED := $(BUILD_DIR)/$(TARGET).apk
-else # Linux builds/binary namer
-  ifeq ($(TARGET_RPI),1)
+  TARGET_NAME := Android
+else ifeq ($(WINDOWS_BUILD),1) # us_win (to be renamed)
+  BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_pc
+  EXE := $(BUILD_DIR)/$(TARGET).exe
+  TARGET_NAME := Windows
+else # Linux/Unix builds/binary namer
+  BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_pc
+  ifeq ($(TARGET_RPI),1) # us_rpi (to be renamed)
     EXE := $(BUILD_DIR)/$(TARGET).arm
-  else
+  else # us_unix (to be renamed)
     EXE := $(BUILD_DIR)/$(TARGET)
   endif
+  TARGET_NAME := Unix-based system
 endif
 
-endif
-
-ifeq ($(TARGET_N64),1)
-  EXE := $(BUILD_DIR)/$(TARGET)
-endif
-
-ROM := $(BUILD_DIR)/$(TARGET).z64
-ELF := $(BUILD_DIR)/$(TARGET).elf
+LIBULTRA := $(BUILD_DIR)/libultra.a
 LD_SCRIPT := sm64.ld
+
+ELF := $(BUILD_DIR)/$(TARGET).elf
 MIO0_DIR := $(BUILD_DIR)/bin
 SOUND_BIN_DIR := $(BUILD_DIR)/sound
 TEXTURE_DIR := textures
@@ -637,25 +632,6 @@ endif
 # Whether to colorize build messages
 COLOR ?= 1
 
-# display selected options unless 'make clean' or 'make distclean' is run
-# TODO: Add Info for other targets
-ifeq ($(filter clean distclean,$(MAKECMDGOALS)),)
-  $(info ==== Build Options ====)
-  $(info Version:        $(VERSION))
-  $(info Microcode:      $(GRUCODE))
-  $(info Target:         $(TARGET))
-  $(info =======================)
-endif
-
-ifeq ($(COLOR),1)
-NO_COL  := \033[0m
-RED     := \033[0;31m
-GREEN   := \033[0;32m
-BLUE    := \033[0;34m
-YELLOW  := \033[0;33m
-BLINK   := \033[33;5m
-endif
-
 # File dependencies and variables for specific files
 include Makefile.split
 
@@ -773,12 +749,14 @@ ifeq ($(TARGET_SWITCH),1)
   CXX := $(CROSS)g++
   STRIP := $(CROSS)strip
   NXARCH := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
-  APP_TITLE := Super Mario 64
-  APP_AUTHOR := Nintendo, n64decomp team, sm64pc team
-  APP_VERSION := 1_master_$(VERSION)
-  APP_ICON := $(PLATFORM_DIR)/logo.jpg
   INCLUDE_DIRS += $(LIBNX)/include $(PORTLIBS)/include
   OPT_FLAGS := -O2
+  
+  NX_APP_TITLE := Super Mario 64
+  NX_APP_AUTHOR := Nintendo - Port by Vatuu, fgsfdsfgs and KiritoDev
+  NX_APP_VERSION := ver_$(VERSION)
+  NX_APP_ICON := $(PLATFORM_DIR)/logo.jpg
+  NACP_FILE := $(BUILD_DIR)/$(PLATFORM_DIR)/sm64.nacp
 endif
 
 C_DEFINES := $(foreach d,$(DEFINES),-D$(d))
@@ -827,8 +805,6 @@ else
 endif
 
 # change the compiler to gcc, to use the default, install the gcc-mips-linux-gnu package
-
-AS        := $(CROSS)as
 ifeq ($(COMPILER_TYPE),gcc)
   CC      := $(CROSS)gcc
   $(BUILD_DIR)/actors/%.o:           OPT_FLAGS := -Ofast -mlong-calls
@@ -837,6 +813,8 @@ else ifeq ($(COMPILER_TYPE),clang)
   CC      := clang
 endif
 CPP       := cpp
+# use GNU binutils for assembler, linker, archiver, and object tools
+AS        := $(CROSS)as
 LD        := $(CROSS)ld
 AR        := $(CROSS)ar
 OBJDUMP   := $(CROSS)objdump
@@ -892,6 +870,10 @@ else ifeq ($(TARGET_N3DS),1)
   LD := $(CXX)
   SDLCONFIG :=
 
+  SMDH_TITLE ?= Super Mario 64
+  SMDH_DESCRIPTION ?= Super Mario 64 3DS Port
+  SMDH_AUTHOR ?= Nintendo - port by Fnouwt (Gericom) and mkst
+  SMDH_ICON := $(PLATFORM_DIR)/icon.smdh
 else
 
 # for some reason sdl-config in dka64 is not prefixed, while pkg-config is
@@ -1057,8 +1039,8 @@ ifeq ($(TARGET_N3DS),1)
   CTRULIB  :=  $(DEVKITPRO)/libctru
   LIBDIRS  := $(CTRULIB)
   export LIBPATHS  :=  $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
-  CC_CHECK += -mtp=soft -DARM11 -DosGetTime=n64_osGetTime -D_3DS -march=armv6k -mtune=mpcore -mfloat-abi=hard -mword-relocations -fomit-frame-pointer -ffast-math $(foreach dir,$(LIBDIRS),-I$(dir)/include)
-  CFLAGS += -mtp=soft -DARM11 -DosGetTime=n64_osGetTime -D_3DS -march=armv6k -mtune=mpcore -mfloat-abi=hard -mword-relocations -fomit-frame-pointer -ffast-math $(foreach dir,$(LIBDIRS),-I$(dir)/include)
+  CC_CHECK += -mtp=soft -DosGetTime=n64_osGetTime -D__3DS__ -march=armv6k -mtune=mpcore -mfloat-abi=hard -mword-relocations -fomit-frame-pointer -ffast-math $(foreach dir,$(LIBDIRS),-I$(dir)/include)
+  CFLAGS += -mtp=soft -DosGetTime=n64_osGetTime -D__3DS__ -march=armv6k -mtune=mpcore -mfloat-abi=hard -mword-relocations -fomit-frame-pointer -ffast-math $(foreach dir,$(LIBDIRS),-I$(dir)/include)
   
   ifeq ($(DISABLE_N3DS_AUDIO),1)
     CFLAGS += -DDISABLE_N3DS_AUDIO
@@ -1157,54 +1139,76 @@ EXT_PREFIX :=
 endif
 
 # N64 conversion tools
-MIO0TOOL = $(TOOLS_DIR)/mio0$(EXT_PREFIX)
-N64CKSUM = $(TOOLS_DIR)/n64cksum$(EXT_PREFIX)
-N64GRAPHICS = $(TOOLS_DIR)/n64graphics$(EXT_PREFIX)
-N64GRAPHICS_CI = $(TOOLS_DIR)/n64graphics_ci$(EXT_PREFIX)
-TEXTCONV = $(TOOLS_DIR)/textconv$(EXT_PREFIX)
-AIFF_EXTRACT_CODEBOOK = $(TOOLS_DIR)/aiff_extract_codebook$(EXT_PREFIX)
-VADPCM_ENC = $(TOOLS_DIR)/vadpcm_enc$(EXT_PREFIX)
-EXTRACT_DATA_FOR_MIO = $(TOOLS_DIR)/extract_data_for_mio$(EXT_PREFIX)
-SKYCONV = $(TOOLS_DIR)/skyconv$(EXT_PREFIX)
+MIO0TOOL              := $(TOOLS_DIR)/mio0$(EXT_PREFIX)
+N64CKSUM              := $(TOOLS_DIR)/n64cksum$(EXT_PREFIX)
+N64GRAPHICS           := $(TOOLS_DIR)/n64graphics$(EXT_PREFIX)
+N64GRAPHICS_CI        := $(TOOLS_DIR)/n64graphics_ci$(EXT_PREFIX)
+TEXTCONV              := $(TOOLS_DIR)/textconv$(EXT_PREFIX)
+AIFF_EXTRACT_CODEBOOK := $(TOOLS_DIR)/aiff_extract_codebook$(EXT_PREFIX)
+VADPCM_ENC            := $(TOOLS_DIR)/vadpcm_enc$(EXT_PREFIX)
+EXTRACT_DATA_FOR_MIO  := $(TOOLS_DIR)/extract_data_for_mio$(EXT_PREFIX)
+SKYCONV               := $(TOOLS_DIR)/skyconv$(EXT_PREFIX)
+ifneq (,$(call find-command,armips))
+  RSPASM = armips
+else
+  RSPASM := $(TOOLS_DIR)/armips$(EXT_PREFIX)
+endif
+
+ZEROTERM         := $(PYTHON) $(TOOLS_DIR)/zeroterm.py
+GET_GODDARD_SIZE := $(PYTHON) $(TOOLS_DIR)/getGoddardSize.py
+
+ENDIAN_BITWIDTH  := $(BUILD_DIR)/endian-and-bitwidth
+
 EMULATOR = mupen64plus
-EMU_FLAGS = --noosd
+EMU_FLAGS =
 LOADER = loader64
 LOADER_FLAGS = -vwf
 SHA1SUM = sha1sum
 PRINT = printf
-ZEROTERM = $(PYTHON) $(TOOLS_DIR)/zeroterm.py
-ENDIAN_BITWIDTH := $(BUILD_DIR)/endian-and-bitwidth
-GET_GODDARD_SIZE = $(PYTHON) $(TOOLS_DIR)/getGoddardSize.py
+
+ifeq ($(COLOR),1)
+NO_COL  := \033[0m
+RED     := \033[0;31m
+GREEN   := \033[0;32m
+BLUE    := \033[0;34m
+YELLOW  := \033[0;33m
+BLINK   := \033[32;5m
+endif
+
+EXTRACT_DATA_FOR_MIO := $(OBJCOPY) -O binary --only-section=.data
 
 # Common build print status function
 define print
   @$(PRINT) "$(GREEN)$(1) $(YELLOW)$(2)$(GREEN) -> $(BLUE)$(3)$(NO_COL)\n"
 endef
 
-EXTRACT_DATA_FOR_MIO := $(OBJCOPY) -O binary --only-section=.data
-
-ifeq (, $(shell which armips 2>/dev/null))
-  RSPASM := $(TOOLS_DIR)/armips$(EXT_PREFIX)
-else
-  RSPASM = armips
-endif
-
 #==============================================================================#
 # Main Targets                                                                 #
 #==============================================================================#
 
 ifeq ($(TARGET_N64),1)
-all: $(ROM)
+ALL_FILE := $(ROM)
 else ifeq ($(TARGET_ANDROID),1)
-all: $(APK_SIGNED)
-EXE_DEPEND := $(APK_SIGNED)
+ALL_FILE := $(APK_SIGNED)
 else
-all: $(EXE)
-EXE_DEPEND := $(EXE)
+ALL_FILE := $(EXE)
 endif
 
-ifeq ($(TARGET_SWITCH),1)
-all: $(EXE).nro
+all: $(ALL_FILE)
+	@$(SHA1SUM) $(ALL_FILE)
+	@$(PRINT) "${BLINK}Build succeeded.\n$(NO_COL)"
+	@$(PRINT) "==== Build Details ====$(NO_COL)\n"
+	@$(PRINT) "${GREEN}File:           $(BLUE)$(ALL_FILE)$(NO_COL)\n"
+	@$(PRINT) "${GREEN}Version:        $(BLUE)$(VERSION)$(NO_COL)\n"
+ifeq ($(TARGET_N64),1)
+	@$(PRINT) "${GREEN}Microcode:      $(BLUE)$(GRUCODE)$(NO_COL)\n"
+endif
+	@$(PRINT) "${GREEN}Target:         $(BLUE)$(TARGET_NAME)$(NO_COL)\n"
+
+ifeq ($(TARGET_ANDROID),1)
+  EXE_DEPEND := $(APK_SIGNED)
+else
+  EXE_DEPEND := $(EXE)
 endif
 
 ifeq ($(TARGET_N3DS),1)
@@ -1604,9 +1608,13 @@ $(BUILD_DIR)/%.o: %.s
 ifeq ($(WINDOWS_BUILD),1)
 # Windows Icon
 $(BUILD_DIR)/%.o: %.rc
-	$(call print,Applying Windows Icon...)
+	$(call print,Applying Windows Icon)
 	$(V)$(WINDRES) -o $@ -i $<
 endif
+
+#==============================================================================#
+# Executable Generation                                                        #
+#==============================================================================#
 
 ifeq ($(TARGET_N64),1)
 
@@ -1621,14 +1629,14 @@ $(BUILD_DIR)/$(LD_SCRIPT): $(LD_SCRIPT) $(GODDARD_TXT_INC)
 
 # Link libultra
 $(BUILD_DIR)/libultra.a: $(ULTRA_O_FILES)
-	@$(PRINT) "$(GREEN)Linking libultra:  $(BLUE)$@ $(NO_COL)\n"
+	@$(PRINT) "$(GREEN)Linking libultra: $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(AR) rcs -o $@ $(ULTRA_O_FILES)
 	$(V)$(TOOLS_DIR)/patch_elf_32bit $@
 
 ifeq ($(GODDARD_MFACE),1)
 # Link libgoddard
 $(BUILD_DIR)/libgoddard.a: $(GODDARD_O_FILES)
-	@$(PRINT) "$(GREEN)Linking libgoddard:  $(BLUE)$@ $(NO_COL)\n"
+	@$(PRINT) "$(GREEN)Linking libgoddard: $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(AR) rcs -o $@ $(GODDARD_O_FILES)
     
 LIB_GD_FILE := $(BUILD_DIR)/libgoddard.a
@@ -1650,7 +1658,7 @@ $(BUILD_DIR)/goddard.txt: $(BUILD_DIR)/sm64_prelim.elf
 
 LIB_GD_PRE_ELF := $(BUILD_DIR)/sm64_prelim.elf
 
-endif
+endif # GODDARD_MFACE
 
 # Link SM64 ELF file
 $(ELF): $(LIB_GD_PRE_ELF) $(O_FILES) $(MIO0_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) undefined_syms.txt $(BUILD_DIR)/libultra.a $(LIB_GD_FILE)
@@ -1659,46 +1667,48 @@ $(ELF): $(LIB_GD_PRE_ELF) $(O_FILES) $(MIO0_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)
 
 # Build ROM
 $(ROM): $(ELF)
-	$(call print,Building ROM:,$<,$@)
 	$(V)$(OBJCOPY) $(OBJCOPYFLAGS) $< $(@:.z64=.bin) -O binary
 	$(V)$(N64CKSUM) $(@:.z64=.bin) $@
 
 $(BUILD_DIR)/$(TARGET).objdump: $(ELF)
 	$(OBJDUMP) -D $< > $@
+
 else ifeq ($(TARGET_WII_U),1)
-$(ELF):  $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
+$(ELF): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
 	@$(PRINT) "$(GREEN)Linking ELF file: $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
+
 $(EXE): $(ELF)
-	@cp $< $*.strip.elf
-	$(SILENTCMD)$(STRIP) -g $*.strip.elf $(ERROR_FILTER)
-	$(SILENTCMD)elf2rpl $*.strip.elf $@ $(ERROR_FILTER)
-	@rm $*.strip.elf
-	@echo built ... $(notdir $@)
+	$(V)cp $< $*.strip.elf
+	$(V)$(STRIP) -g $*.strip.elf $(ERROR_FILTER)
+	$(V)elf2rpl $*.strip.elf $@ $(ERROR_FILTER)
+	$(V)rm $*.strip.elf
+
 else ifeq ($(TARGET_N3DS),1)
-# for building the vertex shader
+# Builds the vertex shader
 $(BUILD_DIR)/src/pc/gfx/shader.shbin.o : src/pc/gfx/shader.v.pica
 	$(eval CURBIN := $<.shbin)
-	$(DEVKITPRO)/tools/bin/picasso -o $(BUILD_DIR)/src/pc/gfx/shader.shbin $<
-	$(DEVKITPRO)/tools/bin/bin2s $(BUILD_DIR)/src/pc/gfx/shader.shbin | $(AS) -o $@
-
-SMDH_TITLE ?= Super Mario 64
-SMDH_DESCRIPTION ?= Super Mario 64 3DS Port
-SMDH_AUTHOR ?= mkst
-SMDH_ICON := $(PLATFORM_DIR)/icon.smdh
+	$(call print,Compiling 3DS Shader:,$<,$@)
+	$(V)$(DEVKITPRO)/tools/bin/picasso -o $(BUILD_DIR)/src/pc/gfx/shader.shbin $<
+	$(V)$(DEVKITPRO)/tools/bin/bin2s $(BUILD_DIR)/src/pc/gfx/shader.shbin | $(AS) -o $@
 
 $(ELF): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o $(SMDH_ICON)
 	@$(PRINT) "$(GREEN)Linking ELF file: $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(BUILD_DIR)/src/pc/gfx/shader.shbin.o $(MINIMAP_T3X_O) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
 
 $(EXE): $(ELF)
-	3dsxtool $< $@ --smdh=$(BUILD_DIR)/$(SMDH_ICON)
+	$(V)3dsxtool $< $@ --smdh=$(BUILD_DIR)/$(SMDH_ICON)
 
 $(CIA): $(ELF)
 	@echo "Generating $@, please wait..."
-	makerom -f cia -o "$@" -rsf $(PLATFORM_DIR)/template.rsf -target t -elf "$<" -icon $(PLATFORM_DIR)/icon.icn -banner $(PLATFORM_DIR)/banner.bnr
+	$(V)makerom -f cia -o "$@" -rsf $(PLATFORM_DIR)/template.rsf -target t -elf "$<" -icon $(PLATFORM_DIR)/icon.icn -banner $(PLATFORM_DIR)/banner.bnr
 
-# stolen from /opt/devkitpro/devkitARM/base_tools
+%.smdh: %.png
+	$(V)smdhtool --create "$(SMDH_TITLE)" "$(SMDH_DESCRIPTION)" "$(SMDH_AUTHOR)" $< $(BUILD_DIR)/$@
+
+# Builds converted 3DS textures
+
+# from /opt/devkitpro/devkitARM/base_tools
 define bin2o
   bin2s -a 4 -H $(BUILD_DIR)/$(MINIMAP_TEXTURES)/`(echo $(<F) | tr . _)`.h $(BUILD_DIR)/$< | $(AS) -o $(BUILD_DIR)/$(MINIMAP_TEXTURES)/$(<F).o
 endef
@@ -1708,66 +1718,68 @@ $(BUILD_DIR)/src/pc/gfx/gfx_citro3d.o: $(BUILD_DIR)/src/pc/gfx/gfx_3ds.o
 $(BUILD_DIR)/src/pc/gfx/gfx_3ds.o: $(BUILD_DIR)/src/pc/gfx/gfx_3ds_menu.o
 $(BUILD_DIR)/src/pc/gfx/gfx_3ds_menu.o: $(MINIMAP_T3X_HEADERS)
 
+# Phase 3
 %.t3x.o $(BUILD_DIR)/%_t3x.h: %.t3x
-	$(bin2o)
+	$(call print,Assembling 3DS texture:,$<,$@)
+	$(V)$(bin2o)
 
+# Phase 2
 %.t3x: %.t3s
-	tex3ds -i $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(call print,Converting 3DS texture:,$<,$@)
+	$(V)tex3ds -i $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
 
+# Phase 1
 %.t3s: %.png
+	$(call print,Preprocessing 3DS texture header:,$<,$@)
 	@printf -- "-f rgba -z auto\n../../../../../../$(<)\n" > $(BUILD_DIR)/$@
 
-%.smdh: %.png
-	smdhtool --create "$(SMDH_TITLE)" "$(SMDH_DESCRIPTION)" "$(SMDH_AUTHOR)" $< $(BUILD_DIR)/$@
+else ifeq ($(TARGET_SWITCH),1)
+$(ELF): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES)
+	@$(PRINT) "$(GREEN)Linking ELF file: $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
 
+$(EXE): $(ELF)
+	$(V)cp $< $*.strip.elf
+	$(V)$(STRIP) -g $*.strip.elf $(ERROR_FILTER)
+	$(V)nacptool --create "$(NX_APP_TITLE)" "$(NX_APP_AUTHOR)" "$(NX_APP_VERSION)" $(NACP_FILE) $(NACPFLAGS)
+	$(V)elf2nro $*.strip.elf $@ --nacp=$(NACP_FILE) --icon=$(NX_APP_ICON) $(ERROR_FILTER)
+	$(V)rm $*.strip.elf
 else
 
 ifeq ($(TARGET_ANDROID),1)
 APK_FILES := $(shell find $(PLATFORM_DIR)/android/ -type f)
 
 $(APK): $(EXE) $(APK_FILES)
-	cp -r $(PLATFORM_DIR)/android $(BUILD_DIR)/$(PLATFORM_DIR)/ && \
+	@$(PRINT) "$(GREEN)Packing game and libraries to an APK: $(BLUE)$@ $(NO_COL)\n"
+	$(V)cp -r $(PLATFORM_DIR)/android $(BUILD_DIR)/$(PLATFORM_DIR)/ && \
 	cp $(PREFIX)/lib/libc++_shared.so $(BUILD_DIR)/$(PLATFORM_DIR)/android/lib/$(ARCH_APK)/ && \
 	cp $(EXE) $(BUILD_DIR)/$(PLATFORM_DIR)/android/lib/$(ARCH_APK)/ && \
 	cd $(BUILD_DIR)/$(PLATFORM_DIR)/android && \
-	zip -r ../../../../../$@ ./* && \
+	zip -q -r ../../../../../$@ ./* && \
 	cd ../../../../.. && \
 	rm -rf $(BUILD_DIR)/$(PLATFORM_DIR)/android
 
 ifeq ($(OLD_APKSIGNER),1)
 $(APK_SIGNED): $(APK)
-	apksigner $(BUILD_DIR)/keystore $< $@
+	$(call print,Signing APK:,$<,$@)
+	$(V)apksigner $(BUILD_DIR)/keystore $< $@
 else
 $(APK_SIGNED): $(APK)
-	cp $< $@
-	apksigner sign --cert $(PLATFORM_DIR)/certificate.pem --key $(PLATFORM_DIR)/key.pk8 $@
+	$(call print,Signing APK:,$<,$@)
+	$(V)cp $< $@
+	$(V)apksigner sign --cert $(PLATFORM_DIR)/certificate.pem --key $(PLATFORM_DIR)/key.pk8 $@
 endif
 endif
 
 $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
 	$(V)$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
-endif
-
-ifeq ($(TARGET_SWITCH), 1)
-
-# add `--icon=$(APP_ICON)` to this when we get a suitable icon
-%.nro: %.stripped %.nacp
-	@elf2nro $< $@ --nacp=$*.nacp --icon=$(APP_ICON)
-	@echo built ... $(notdir $@)
-
-%.nacp:
-	@nacptool --create "$(APP_TITLE)" "$(APP_AUTHOR)" "$(APP_VERSION)" $@ $(NACPFLAGS)
-	@echo built ... $(notdir $@)
-
-%.stripped: %
-	@$(STRIP) -o $@ $<
-	@echo stripped ... $(notdir $<)
 
 endif
+
 
 .PHONY: all clean distclean cleantools default diff test load libultra res
-.PRECIOUS: $(BUILD_DIR)/bin/%.elf $(SOUND_BIN_DIR)/%.ctl $(SOUND_BIN_DIR)/%.tbl $(SOUND_SAMPLE_TABLES) $(SOUND_BIN_DIR)/%.s $(BUILD_DIR)/%
-.DELETE_ON_ERROR:
+# with no prerequisites, .SECONDARY causes no intermediate target to be removed
+.SECONDARY:
 
 # Remove built-in rules, to improve performance
 MAKEFLAGS += --no-builtin-rules

@@ -589,7 +589,7 @@ static u32 vec4ToU32Color(float r, float g, float b, float a)
     return (a2 << 24) | (b2 << 16) | (g2 << 8) | r2;
 }
 
-static void renderTwoColorTris(float buf_vbo[], size_t buf_vbo_len, size_t buf_vbo_num_tris)
+static void renderTwoColorTris(float buf_vbo[], UNUSED size_t buf_vbo_len, size_t buf_vbo_num_tris)
 {
     int offset = 0;
     float* dst = &((float*)sVboBuffer)[sBufIdx * VERTEX_SHADER_SIZE];
@@ -764,7 +764,7 @@ static void gfx_citro3d_draw_triangles_helper(float buf_vbo[], size_t buf_vbo_le
     gfx_citro3d_draw_triangles(buf_vbo, buf_vbo_len, buf_vbo_num_tris);
 }
 
-static void gfx_citro3d_get_framebuffer(uint16_t *buffer) {
+static void gfx_citro3d_get_framebuffer(UNUSED uint16_t *buffer) {
 }
 
 static void gfx_citro3d_init(void)

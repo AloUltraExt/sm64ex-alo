@@ -100,7 +100,9 @@ extern f32 gSineTable[];
 #define U32_MAX (S32_MAX * 2U + 1U)
 #define S64_MAX __LONG_LONG_MAX__
 #define S64_MIN (-S64_MAX - 1LL)
+#ifndef TARGET_N3DS
 #define U64_MAX (S64_MAX * 2ULL + 1ULL)
+#endif
 #define F32_MAX __FLT_MAX__
 #define F32_MIN __FLT_MIN__
 #define F64_MAX __DBL_MAX__
