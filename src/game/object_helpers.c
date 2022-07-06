@@ -158,30 +158,20 @@ Gfx *geo_switch_anim_state(s32 callContext, struct GraphNode *node, UNUSED void 
     return NULL;
 }
 
-#if QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS
-void get_camera_focus_room_area_position(Vec3f pos) {
-    if (gCamera && gCamera->cutscene && gCutsceneFocus) {
-        vec3f_copy(pos, gLakituState.pos);
-    } else {
-        vec3f_copy(pos, gMarioState->pos);
-    }
-}
-#endif
-
 Gfx *geo_switch_area(s32 callContext, struct GraphNode *node, UNUSED void *context) {
     struct Surface *floor;
     struct GraphNodeSwitchCase *switchCase = (struct GraphNodeSwitchCase *) node;
-#if QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS
-    Vec3f focusPos;
-    get_camera_focus_room_area_position(focusPos);
-#else
-    Vec3f focusPos = { gMarioObject->oPosX, gMarioObject->oPosY, gMarioObject->oPosZ };
-#endif
 
     if (callContext == GEO_CONTEXT_RENDER) {
         if (gMarioObject == NULL) {
             switchCase->selectedCase = 0;
         } else {
+            Vec3f focusPos = { gMarioObject->oPosX, gMarioObject->oPosY, gMarioObject->oPosZ };
+#if QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS
+            if (gCutsceneFocus != NULL) {
+                vec3f_copy(focusPos, gLakituState.pos);
+            }
+#endif
             // ex-alo change
             // Better room area check (with objects if QOL features is enabled)
             if (gCurrentArea->surfaceRooms != NULL) {

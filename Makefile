@@ -92,10 +92,6 @@ else
   endif
 endif
 
-ifeq ($(HOST_OS),Windows)
-  WINDOWS_BUILD := 1
-endif
-
 OLD_APKSIGNER ?= 0
 
 # Attempt to detect termux android build
@@ -107,8 +103,63 @@ ifneq ($(shell which termux-setup-storage 2>/dev/null),)
   endif
 endif
 
+ifeq ($(TARGET_N64),0)
+  GRUCODE := f3dex2e
+  PC_PORT_DEFINES := 1
+else
+  GRUCODE ?= f3dzex
+  NO_LDIV := 1
+endif
+
+ifeq ($(TARGET_WII_U),1)
+  RENDER_API := GX2
+  WINDOW_API := GX2
+  AUDIO_API := SDL2
+  CONTROLLER_API := WII_U
+  
+  TARGET_PORT_CONSOLE := 1
+endif
+
+ifeq ($(TARGET_N3DS),1)
+  RENDER_API := C3D
+  WINDOW_API := 3DS
+  AUDIO_API := 3DS
+  CONTROLLER_API := 3DS
+  
+  TARGET_PORT_CONSOLE := 1
+endif
+
+ifeq ($(TARGET_SWITCH),1)
+  RENDER_API := GL
+  WINDOW_API := SDL2
+  AUDIO_API := SDL2
+  CONTROLLER_API := SWITCH
+  
+  TARGET_PORT_CONSOLE := 1
+endif
+
+TOUCH_CONTROLS ?= 0
+
+ifeq ($(TARGET_ANDROID),1)
+  RENDER_API := GL
+  WINDOW_API := SDL2
+  AUDIO_API := SDL2
+  CONTROLLER_API := SDL2
+  
+  TOUCH_CONTROLS := 1
+endif
+
+# Custom Defines
+include defines.mk
+
 # MXE overrides
-ifeq ($(WINDOWS_BUILD),1)
+ifeq ($(HOST_OS),Windows)
+  ifeq ($(TARGET_WEB),0)
+    ifeq ($(TARGET_PORT_CONSOLE),0)
+      WINDOWS_BUILD := 1
+    endif
+  endif
+
   ifeq ($(CROSS),i686-w64-mingw32.static-)
     TARGET_ARCH = i386pe
     TARGET_BITS = 32
@@ -191,55 +242,6 @@ ifeq ($(TARGET_WII_U),1)
   INCLUDE	    := $(foreach dir,$(LIBDIRS),-I$(dir)/include)
   LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 endif
-
-ifeq ($(TARGET_N64),0)
-  GRUCODE := f3dex2e
-  PC_PORT_DEFINES := 1
-else
-  GRUCODE ?= f3dzex
-  NO_LDIV := 1
-endif
-
-ifeq ($(TARGET_WII_U),1)
-  RENDER_API := GX2
-  WINDOW_API := GX2
-  AUDIO_API := SDL2
-  CONTROLLER_API := WII_U
-  
-  TARGET_PORT_CONSOLE := 1
-endif
-
-ifeq ($(TARGET_N3DS),1)
-  RENDER_API := C3D
-  WINDOW_API := 3DS
-  AUDIO_API := 3DS
-  CONTROLLER_API := 3DS
-  
-  TARGET_PORT_CONSOLE := 1
-endif
-
-ifeq ($(TARGET_SWITCH),1)
-  RENDER_API := GL
-  WINDOW_API := SDL2
-  AUDIO_API := SDL2
-  CONTROLLER_API := SWITCH
-  
-  TARGET_PORT_CONSOLE := 1
-endif
-
-TOUCH_CONTROLS ?= 0
-
-ifeq ($(TARGET_ANDROID),1)
-  RENDER_API := GL
-  WINDOW_API := SDL2
-  AUDIO_API := SDL2
-  CONTROLLER_API := SDL2
-  
-  TOUCH_CONTROLS := 1
-endif
-
-# Custom Defines
-include defines.mk
 
 # Base settings for EXTERNAL_DATA
 ifeq ($(TARGET_PORT_CONSOLE),1)

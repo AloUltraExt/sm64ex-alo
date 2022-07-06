@@ -35,7 +35,7 @@ void bhv_collect_star_loop(void) {
 }
 
 #if QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS
-#define CHECK(cond, set)    set
+#define CHECK(cond, set)
 #else
 #define CHECK(cond, set)    if (cond) { set; }
 #endif
@@ -47,8 +47,10 @@ void bhv_star_spawn_init(void) {
     o->oForwardVel = o->oStarSpawnDisFromHome / 30.0f;
     o->oStarSpawnUnkFC = o->oPosY;
 
+    CHECK(gCurrCourseNum == COURSE_BBH, cutscene_object(CUTSCENE_STAR_SPAWN, o));
+
     if (o->oBhvParams2ndByte == 0) {
-        CHECK(gCurrCourseNum == COURSE_BBH, cutscene_object(CUTSCENE_STAR_SPAWN, o));
+        cutscene_object(CUTSCENE_STAR_SPAWN, o);
     } else {
         cutscene_object(CUTSCENE_RED_COIN_STAR_SPAWN, o);
     }

@@ -1109,7 +1109,9 @@ s32 play_mode_change_area(void) {
     }
 
     if (--sTransitionTimer == -1) {
-        update_camera(gCurrentArea->camera);
+        if (gCurrentArea != NULL) {
+            update_camera(gCurrentArea->camera);
+        }
 
         sTransitionTimer = 0;
         sTransitionUpdate = NULL;
@@ -1402,6 +1404,10 @@ s32 lvl_set_current_level(UNUSED s16 arg0, s32 levelNum) {
     }
 
     if (gCurrCourseNum > COURSE_STAGES_MAX || warpCheckpointActive) {
+        return 0;
+    }
+
+    if (gDebugLevelSelect) {
         return 0;
     }
 

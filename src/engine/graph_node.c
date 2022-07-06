@@ -800,6 +800,10 @@ s16 geo_update_animation_frame(struct AnimInfo *obj, s32 *accelAssist) {
     s32 result;
     struct Animation *anim = obj->curAnim;
 
+    if (anim == NULL) { // Failsafe is no animations are found
+        return obj->animFrame;
+    }
+
     if (obj->animTimer == gAreaUpdateCounter || anim->flags & ANIM_FLAG_2) {
         if (accelAssist != NULL) {
             accelAssist[0] = obj->animFrameAccelAssist;
