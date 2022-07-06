@@ -14,7 +14,11 @@
 #define FLOOR_LOWER_LIMIT_MISC      (FLOOR_LOWER_LIMIT + 1000)
 
 // The maximum collision radius when checking for walls. Vanilla is 200.
+#if CELL_BUFFER_FIX
+#define MAX_COLLISION_RADIUS 600
+#else
 #define MAX_COLLISION_RADIUS 200
+#endif
 
 #if COLLISION_IMPROVEMENTS
 #define FIND_FLOOR_BUFFER    78

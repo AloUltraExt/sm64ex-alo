@@ -66,28 +66,4 @@
  */
 #define CELL_SIZE ((LEVEL_BOUNDARY_MAX * 2) / NUM_CELLS)
 
-
-// -- Memory pool sizes --
-
-/**
- *  If you see "SURFACE POOL FULL" or "SURFACE NODE POOL FULL" in game, you should increase
- *  SURFACE_POOL_SIZE or SURFACE_NODE_POOL_SIZE, respectively, or reduce the amount of
- *  collision surfaces in your level.
- */
-
-/**
- * The maximum amount of collision surfaces (static and dynamic combined).
- * Vanilla: 2300
- */
-#define SURFACE_POOL_SIZE (LEVEL_BOUNDARY_MAX / 2)
-
-/**
- * The maximum amount of SurfaceNodes (static and dynamic combined).
- * Each cell creates a SurfaceNode for each Surface in it.
- * This means one Surface can have multiple SurfaceNodes if it is more than one collision cell.
- * This should always be larger than SURFACE_POOL_SIZE.
- * Vanilla: 7000
- */
-#define SURFACE_NODE_POOL_SIZE (SURFACE_POOL_SIZE * 4)
-
 #endif
