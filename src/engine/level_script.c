@@ -348,6 +348,9 @@ static void level_cmd_clear_level(void) {
     clear_area_graph_nodes();
     clear_areas();
     main_pool_pop_state();
+    // The game does a push on level load and a pop on level unload, we need to add another
+    // push to store state after the level has been loaded, so one more pop is needed
+    main_pool_pop_state();
 
     sCurrentCmd = CMD_NEXT;
 }
@@ -379,6 +382,7 @@ static void level_cmd_free_level_pool(void) {
             break;
         }
     }
+    main_pool_push_state();
 
     sCurrentCmd = CMD_NEXT;
 }
