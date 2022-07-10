@@ -21,6 +21,15 @@
  */
 SpatialPartitionCell gStaticSurfacePartition[NUM_CELLS][NUM_CELLS];
 SpatialPartitionCell gDynamicSurfacePartition[NUM_CELLS][NUM_CELLS];
+#if BETTER_DYNAMIC_CELLS
+struct CellCoords {
+    u8 z;
+    u8 x;
+};
+struct CellCoords sCellsUsed[NUM_CELLS];
+u16 sNumCellsUsed;
+u8 sClearAllCells;
+#endif
 
 /**
  * Pools of data that can contain either surface nodes or surfaces.
@@ -170,6 +179,24 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
 
     if (dynamic) {
         list = &gDynamicSurfacePartition[cellZ][cellX][listIndex];
+#if BETTER_DYNAMIC_CELLS
+        if (sNumCellsUsed >= sizeof(sCellsUsed) / sizeof(struct CellCoords)) {
+            sClearAllCells = TRUE;
+        } else {
+            u32 addNew = TRUE;
+            for (u32 i = 0; i < NUM_SPATIAL_PARTITIONS; i++) {
+                if (gDynamicSurfacePartition[cellZ][cellX][i].next != NULL) {
+                    addNew = FALSE;
+                    break;
+                }
+            }
+            if (addNew) {
+                sCellsUsed[sNumCellsUsed].x = cellX;
+                sCellsUsed[sNumCellsUsed].z = cellZ;
+                sNumCellsUsed++;
+            }
+        }
+#endif
     } else {
         list = &gStaticSurfacePartition[cellZ][cellX][listIndex];
     }
@@ -544,6 +571,11 @@ void load_area_terrain(s16 index, TerrainData *data, RoomData *surfaceRooms, s16
     gEnvironmentRegions = NULL;
     gSurfaceNodesAllocated = 0;
     gSurfacesAllocated = 0;
+#if BETTER_DYNAMIC_CELLS
+    bzero(&sCellsUsed, sizeof(sCellsUsed));
+    sNumCellsUsed = 0;
+    sClearAllCells = TRUE;
+#endif
 #ifdef USE_SYSTEM_MALLOC
     alloc_only_pool_clear(sStaticSurfaceNodePool);
     alloc_only_pool_clear(sStaticSurfacePool);
@@ -629,7 +661,21 @@ void clear_dynamic_surfaces(void) {
 #ifndef USE_SYSTEM_MALLOC
         gDynamicSurfacePoolEnd = gDynamicSurfacePool;
 #endif
+#if BETTER_DYNAMIC_CELLS
+        if (sClearAllCells) {
+            clear_spatial_partition(&gDynamicSurfacePartition[0][0]);
+        } else {
+            for (u32 i = 0; i < sNumCellsUsed; i++) {
+                for (u32 j = 0; j < NUM_SPATIAL_PARTITIONS; j++) {
+                    gDynamicSurfacePartition[sCellsUsed[i].z][sCellsUsed[i].x][j].next = NULL;
+                }
+            }
+        }
+        sNumCellsUsed = 0;
+        sClearAllCells = FALSE;
+#else
         clear_spatial_partition(&gDynamicSurfacePartition[0][0]);
+#endif
     }
 }
 
@@ -784,7 +830,7 @@ void load_object_collision_model(void) {
     }
 
 #if LOAD_OBJECT_COLLISION_NEAR_CAMERA
-    f32 camDist = absf(gCurrentObject->header.gfx.cameraToObject[2]);
+    f32 camDist = vec3_mag(gCurrentObject->header.gfx.cameraToObject);
     marioDist = MIN(marioDist, camDist);
 #endif
 

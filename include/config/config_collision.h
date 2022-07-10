@@ -19,7 +19,7 @@
 // Fixes landing on a floor vertically aligned and within 160 units of a ceiling
 #define PEDRO_SPOT_FIX (0 || COLLISION_FIXES)
 
-// Push Mario out of sloped ceilings instead of stopping or bonking
+// Push Mario out of sloped ceilings instead of stopping or knocking
 #define BETTER_CEILING_HANDLING (0 || COLLISION_FIXES)
 
 // Adds margins to celling surfaces (except hangable ones).
@@ -28,13 +28,16 @@
 // Adds rounded corners on edge walls along with some extra checks.
 #define BETTER_FIND_WALL_COLLISION (0 || COLLISION_FIXES)
 
-// Improves resolve and return wall checks, alonng with some fixes
+// Improves resolve and return wall checks, along with some fixes
 #define BETTER_RESOLVE_WALL_COLLISION (0 || COLLISION_FIXES)
 
 // Adds water collision surfaces
 #define WATER_SURFACES (0 || COLLISION_FIXES)
 
-// Automatically calculates the optimal collision distance for an object based on its vertices.
+// Saves a lot of CPU over silliness, by cleaning only used dynamic cells
+#define BETTER_DYNAMIC_CELLS (0 || COLLISION_FIXES)
+
+// Automatically calculates the optimal collision distance for an object based on it's vertices.
 #define AUTO_COLLISION_DISTANCE (0 || QOL_FEATURES)
 
 // Allows objects to use camera distance to determine whether to load collision if the camera is closer than Mario.
