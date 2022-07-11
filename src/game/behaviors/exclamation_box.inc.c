@@ -16,7 +16,7 @@ struct ExclamationBoxContents {
     u8 id;
     u8 unused;
     u8 bhvParams1stByte;
-    u8 model;
+    ModelID16 model;
     const BehaviorScript *behavior;
 };
 

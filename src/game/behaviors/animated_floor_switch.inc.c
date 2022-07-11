@@ -2,7 +2,7 @@
 
 struct Struct80331A54 {
     const Collision *collision;
-    s16 model;
+    ModelID16 model;
 };
 
 struct Struct80331A54 D_80331A54[][5] = {

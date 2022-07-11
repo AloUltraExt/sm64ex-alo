@@ -26,7 +26,7 @@
 #include "gfx_dimensions.h"
 
 struct SpawnInfo gPlayerSpawnInfos[1];
-struct GraphNode *D_8033A160[0x100];
+struct GraphNode *gGraphNodePointers[MODEL_ID_COUNT];
 struct Area gAreaData[8];
 
 struct WarpTransition gWarpTransition;
@@ -39,7 +39,7 @@ s16 gMenuOptSelectIndex;
 s16 gSaveOptSelectIndex;
 
 struct SpawnInfo *gMarioSpawnInfo = &gPlayerSpawnInfos[0];
-struct GraphNode **gLoadedGraphNodes = D_8033A160;
+struct GraphNode **gLoadedGraphNodes = gGraphNodePointers;
 struct Area *gAreas = gAreaData;
 struct Area *gCurrentArea = NULL;
 struct CreditsEntry *gCurrCreditsEntry = NULL;

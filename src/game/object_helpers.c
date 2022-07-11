@@ -356,7 +356,7 @@ void obj_set_angle(struct Object *obj, s16 pitch, s16 yaw, s16 roll) {
 /*
  * Spawns an object at an absolute location with a specified angle.
  */
-struct Object *spawn_object_abs_with_rot(struct Object *parent, s16 uselessArg, u32 model,
+struct Object *spawn_object_abs_with_rot(struct Object *parent, s16 uselessArg, ModelID32 model,
                                          const BehaviorScript *behavior,
                                          s16 x, s16 y, s16 z, s16 pitch, s16 yaw, s16 roll) {
     // 'uselessArg' is unused in the function spawn_object_at_origin()
@@ -372,7 +372,7 @@ struct Object *spawn_object_abs_with_rot(struct Object *parent, s16 uselessArg, 
  * The roll argument is never used, and the z offset is used for z-rotation instead. This is most likely
  * a copy-paste typo by one of the programmers.
  */
-struct Object *spawn_object_rel_with_rot(struct Object *parent, u32 model, const BehaviorScript *behavior,
+struct Object *spawn_object_rel_with_rot(struct Object *parent, ModelID32 model, const BehaviorScript *behavior,
                                          s16 xOff, s16 yOff, s16 zOff, s16 pitch, s16 yaw, UNUSED s16 roll) {
     struct Object *newObj = spawn_object_at_origin(parent, 0, model, behavior);
     newObj->oFlags |= OBJ_FLAG_TRANSFORM_RELATIVE_TO_PARENT;
@@ -386,7 +386,7 @@ struct Object *spawn_object_rel_with_rot(struct Object *parent, u32 model, const
     return newObj;
 }
 
-struct Object *spawn_obj_with_transform_flags(struct Object *sp20, s32 model, const BehaviorScript *sp28) {
+struct Object *spawn_obj_with_transform_flags(struct Object *sp20, ModelID32 model, const BehaviorScript *sp28) {
     struct Object *sp1C = spawn_object(sp20, model, sp28);
     sp1C->oFlags |= OBJ_FLAG_0020 | OBJ_FLAG_SET_THROW_MATRIX_FROM_TRANSFORM;
     return sp1C;
@@ -431,7 +431,7 @@ struct Object *spawn_water_droplet(struct Object *parent, struct WaterDropletPar
     return newObj;
 }
 
-struct Object *spawn_object_at_origin(struct Object *parent, UNUSED s32 unusedArg, u32 model,
+struct Object *spawn_object_at_origin(struct Object *parent, UNUSED s32 unusedArg, ModelID32 model,
                                       const BehaviorScript *behavior) {
     struct Object *obj;
     const BehaviorScript *behaviorAddr;
@@ -449,7 +449,7 @@ struct Object *spawn_object_at_origin(struct Object *parent, UNUSED s32 unusedAr
     return obj;
 }
 
-struct Object *spawn_object(struct Object *parent, s32 model, const BehaviorScript *behavior) {
+struct Object *spawn_object(struct Object *parent, ModelID32 model, const BehaviorScript *behavior) {
     struct Object *obj = spawn_object_at_origin(parent, 0, model, behavior);
 
     obj_copy_pos_and_angle(obj, parent);
@@ -457,7 +457,7 @@ struct Object *spawn_object(struct Object *parent, s32 model, const BehaviorScri
     return obj;
 }
 
-struct Object *try_to_spawn_object(s16 offsetY, f32 scale, struct Object *parent, s32 model,
+struct Object *try_to_spawn_object(s16 offsetY, f32 scale, struct Object *parent, ModelID32 model,
                                    const BehaviorScript *behavior) {
     struct Object *obj;
 
@@ -477,7 +477,7 @@ struct Object *try_to_spawn_object(s16 offsetY, f32 scale, struct Object *parent
     }
 }
 
-struct Object *spawn_object_with_scale(struct Object *parent, s32 model, const BehaviorScript *behavior, f32 scale) {
+struct Object *spawn_object_with_scale(struct Object *parent, ModelID32 model, const BehaviorScript *behavior, f32 scale) {
     struct Object *obj = spawn_object_at_origin(parent, 0, model, behavior);
 
     obj_copy_pos_and_angle(obj, parent);
@@ -492,7 +492,7 @@ static void obj_build_relative_transform(struct Object *obj) {
 }
 
 struct Object *spawn_object_relative(s16 behaviorParam, s16 relativePosX, s16 relativePosY, s16 relativePosZ,
-                                     struct Object *parent, s32 model, const BehaviorScript *behavior) {
+                                     struct Object *parent, ModelID32 model, const BehaviorScript *behavior) {
     struct Object *obj = spawn_object_at_origin(parent, 0, model, behavior);
 
     obj_copy_pos_and_angle(obj, parent);
@@ -507,7 +507,7 @@ struct Object *spawn_object_relative(s16 behaviorParam, s16 relativePosX, s16 re
 
 struct Object *spawn_object_relative_with_scale(s16 behaviorParam, s16 relativePosX, s16 relativePosY,
                                                 s16 relativePosZ, f32 scale, struct Object *parent,
-                                                s32 model, const BehaviorScript *behavior) {
+                                                ModelID32 model, const BehaviorScript *behavior) {
     struct Object *obj = spawn_object_relative(behaviorParam, relativePosX, relativePosY, relativePosZ,
                                                parent, model, behavior);
     obj_scale(obj, scale);
@@ -998,7 +998,7 @@ void cur_obj_get_dropped(void) {
     cur_obj_move_after_thrown_or_dropped(0.0f, 0.0f);
 }
 
-void cur_obj_set_model(s32 modelID) {
+void cur_obj_set_model(ModelID16 modelID) {
     o->header.gfx.sharedChild = gLoadedGraphNodes[modelID];
 }
 
@@ -1463,7 +1463,7 @@ void cur_obj_set_hurtbox_radius_and_height(f32 radius, f32 height) {
 
 static void obj_spawn_loot_coins(struct Object *obj, s32 numCoins, f32 baseVelY,
                                     const BehaviorScript *coinBehavior,
-                                    s16 posJitter, s16 model) {
+                                    s16 posJitter, ModelID16 model) {
     s32 i;
     f32 spawnHeight;
     struct Surface *floor;
@@ -2610,12 +2610,8 @@ s32 cur_obj_update_dialog_with_cutscene(s32 actionArg, s32 dialogFlags, s32 cuts
     return dialogResponse;
 }
 
-s32 cur_obj_has_model(u16 modelID) {
-    if (o->header.gfx.sharedChild == gLoadedGraphNodes[modelID]) {
-        return TRUE;
-    } else {
-        return FALSE;
-    }
+s32 cur_obj_has_model(ModelID16 modelID) {
+    return (o->header.gfx.sharedChild == gLoadedGraphNodes[modelID]);
 }
 
 void cur_obj_align_gfx_with_floor(void) {
@@ -2781,19 +2777,19 @@ void cur_obj_spawn_star_at_y_offset(f32 targetX, f32 targetY, f32 targetZ, f32 o
 #endif
 
 // Extra functions
-void obj_set_model(struct Object *obj, u16 modelID) {
+void obj_set_model(struct Object *obj, ModelID16 modelID) {
     obj->header.gfx.sharedChild = gLoadedGraphNodes[modelID];
 }
 
-s32 obj_has_model(struct Object *obj, u16 modelID) {
+s32 obj_has_model(struct Object *obj, ModelID16 modelID) {
     return (obj->header.gfx.sharedChild == gLoadedGraphNodes[modelID]);
 }
 
-s32 obj_get_model(struct Object *obj) {
+ModelID32 obj_get_model(struct Object *obj) {
     s32 i;
 
     if (!obj->header.gfx.sharedChild) {
-        for (i = MODEL_NONE; i < 256; i++) {
+        for (i = MODEL_NONE; i < MODEL_ID_COUNT; i++) {
             if (obj->header.gfx.sharedChild == gLoadedGraphNodes[i]) {
                 return i;
             }

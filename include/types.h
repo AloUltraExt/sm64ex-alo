@@ -90,6 +90,12 @@ typedef s8 RoomData; // Rooms are limited to -128 to 127. Change the type if you
 typedef Collision TerrainData;
 typedef TerrainData Vec3Terrain[3];
 
+// -- Models --
+
+typedef u8  ModelID8;
+typedef u16 ModelID16;
+typedef u32 ModelID32;
+
 enum SpTaskState {
     SPTASK_STATE_NOT_STARTED,
     SPTASK_STATE_RUNNING,

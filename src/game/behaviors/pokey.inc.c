@@ -149,7 +149,7 @@ void bhv_pokey_body_part_update(void) {
 static void pokey_act_uninitialized(void) {
     struct Object *bodyPart;
     s32 i;
-    s16 partModel;
+    ModelID16 partModel;
 
 #ifndef NODRAWINGDISTANCE
     if (o->oDistanceToMario < 2000.0f) {

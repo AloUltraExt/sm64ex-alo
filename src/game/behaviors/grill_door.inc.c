@@ -2,7 +2,7 @@
 
 struct OpenableGrill {
     s16 halfWidth;
-    s16 modelID;
+    ModelID16 modelID;
     const Collision *collision;
 };
 

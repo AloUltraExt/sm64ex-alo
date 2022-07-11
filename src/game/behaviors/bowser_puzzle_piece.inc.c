@@ -43,7 +43,7 @@ static s8 sPieceActions14[] = { 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
                                 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, -1 };
 
 struct BowserPuzzlePiece {
-    u8 model;
+    ModelID16 model;
     s8 xOffset;
     s8 zOffset;
     s8 initialAction;
@@ -85,7 +85,7 @@ static struct BowserPuzzlePiece sBowserPuzzlePieces[] = {
 /**
  * Spawn a single puzzle piece.
  */
-void bhv_lll_bowser_puzzle_spawn_piece(s16 model, const BehaviorScript *behavior,
+void bhv_lll_bowser_puzzle_spawn_piece(ModelID16 model, const BehaviorScript *behavior,
                                        f32 xOffset, f32 zOffset,
                                        s8 initialAction, s8 *actionList) {
     struct Object *puzzlePiece = spawn_object(o, model, behavior);

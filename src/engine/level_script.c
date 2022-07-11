@@ -416,46 +416,40 @@ static void level_cmd_end_area(void) {
 }
 
 static void level_cmd_load_model_from_dl(void) {
-    s16 val1 = CMD_GET(s16, 2) & 0x0FFF;
-    s16 val2 = ((u16)CMD_GET(s16, 2)) >> 12;
-    void *val3 = CMD_GET(void *, 4);
+    ModelID16 model = CMD_GET(ModelID16, 0xA);
+    s16 layer = CMD_GET(u16, 0x8);
+    void *dl_ptr = CMD_GET(void *, 4);
 
-    if (val1 < 256) {
-        gLoadedGraphNodes[val1] =
-            (struct GraphNode *) init_graph_node_display_list(sLevelPool, 0, val2, val3);
+    if (model < MODEL_ID_COUNT) {
+        gLoadedGraphNodes[model] =
+            (struct GraphNode *) init_graph_node_display_list(sLevelPool, 0, layer, dl_ptr);
     }
 
     sCurrentCmd = CMD_NEXT;
 }
 
 static void level_cmd_load_model_from_geo(void) {
-    s16 arg0 = CMD_GET(s16, 2);
-    void *arg1 = CMD_GET(void *, 4);
+    ModelID16 model = CMD_GET(ModelID16, 2);
+    void *geo = CMD_GET(void *, 4);
 
-    if (arg0 < 256) {
-        gLoadedGraphNodes[arg0] = process_geo_layout(sLevelPool, arg1);
+    if (model < MODEL_ID_COUNT) {
+        gLoadedGraphNodes[model] = process_geo_layout(sLevelPool, geo);
     }
 
     sCurrentCmd = CMD_NEXT;
 }
 
 static void level_cmd_23(void) {
-    union {
-        s32 i;
-        f32 f;
-    } arg2;
+    ModelID16 model = (CMD_GET(ModelID16, 2) & 0x0FFF);
+    s16 layer = (((u16)CMD_GET(s16, 2)) >> 12);
+    void *dl  = CMD_GET(void *, 4);
+    s32 scale = CMD_GET(s32, 8);
 
-    s16 model = CMD_GET(s16, 2) & 0x0FFF;
-    s16 arg0H = ((u16)CMD_GET(s16, 2)) >> 12;
-    void *arg1 = CMD_GET(void *, 4);
-    // load an f32, but using an integer load instruction for some reason (hence the union)
-    arg2.i = CMD_GET(s32, 8);
-
-    if (model < 256) {
+    if (model < MODEL_ID_COUNT) {
         // GraphNodeScale has a GraphNode at the top. This
         // is being stored to the array, so cast the pointer.
         gLoadedGraphNodes[model] =
-            (struct GraphNode *) init_graph_node_scale(sLevelPool, 0, arg0H, arg1, arg2.f);
+            (struct GraphNode *) init_graph_node_scale(sLevelPool, 0, layer, dl, scale);
     }
 
     sCurrentCmd = CMD_NEXT;
@@ -469,20 +463,16 @@ static void level_cmd_init_mario(void) {
     gMarioSpawnInfo->areaIndex = 0;
     gMarioSpawnInfo->behaviorArg = CMD_GET(u32, 4);
     gMarioSpawnInfo->behaviorScript = CMD_GET(void *, 8);
-    gMarioSpawnInfo->model = gLoadedGraphNodes[CMD_GET(u8, 3)];
+    gMarioSpawnInfo->model = gLoadedGraphNodes[CMD_GET(ModelID16, 0x2)];
     gMarioSpawnInfo->next = NULL;
 
     sCurrentCmd = CMD_NEXT;
 }
 
 static void level_cmd_place_object(void) {
-    u8 val7 = 1 << (gCurrActNum - 1);
-    u16 model;
-    struct SpawnInfo *spawnInfo;
-
-    if (sCurrAreaIndex != -1 && ((CMD_GET(u8, 2) & val7) || CMD_GET(u8, 2) == 0x1F)) {
-        model = CMD_GET(u8, 3);
-        spawnInfo = alloc_only_pool_alloc(sLevelPool, sizeof(struct SpawnInfo));
+    if (sCurrAreaIndex != -1 && ((CMD_GET(u8, 2) & (1 << (gCurrActNum - 1))) || CMD_GET(u8, 2) == 0x1F)) {
+        ModelID16 model = CMD_GET(u32, 0x18);
+        struct SpawnInfo *spawnInfo = alloc_only_pool_alloc(sLevelPool, sizeof(struct SpawnInfo));
 
         spawnInfo->startPos[0] = CMD_GET(s16, 4);
         spawnInfo->startPos[1] = CMD_GET(s16, 6);

@@ -190,7 +190,7 @@ s8 sObjectListUpdateOrder[] = { OBJ_LIST_SPAWNER,
 struct ParticleProperties {
     u32 particleFlag;
     u32 activeParticleFlag;
-    u8 model;
+    ModelID16 model;
     const BehaviorScript *behavior;
 };
 
@@ -254,7 +254,7 @@ void copy_mario_state_to_object(void) {
 /**
  * Spawn a particle at gCurrentObject's location.
  */
-void spawn_particle(u32 activeParticleFlag, s16 model, const BehaviorScript *behavior) {
+void spawn_particle(u32 activeParticleFlag, ModelID16 model, const BehaviorScript *behavior) {
     if (!(gCurrentObject->oActiveParticleFlags & activeParticleFlag)) {
         struct Object *particle;
         gCurrentObject->oActiveParticleFlags |= activeParticleFlag;

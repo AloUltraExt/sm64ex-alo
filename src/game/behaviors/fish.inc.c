@@ -11,7 +11,7 @@
 static void fish_spawner_act_spawn(void) {
     s32 i;
     s32 schoolQuantity = 0;
-    s16 model = MODEL_NONE;
+    ModelID16 model = MODEL_NONE;
 #ifdef NODRAWINGDISTANCE
     UNUSED
 #endif

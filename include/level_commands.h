@@ -278,8 +278,9 @@ enum LevelCommandsIDList {
     CMD_BBH(LVL_SCRIPT_CMD_20, 0x04, 0x0000)
 
 #define LOAD_MODEL_FROM_DL(model, dl, layer) \
-    CMD_BBH(LVL_SCRIPT_CMD_21, 0x08, ((layer << 12) | model)), \
-    CMD_PTR(dl)
+    CMD_BBH(LVL_SCRIPT_CMD_21, 0x0C, 0), \
+    CMD_PTR(dl), \
+    CMD_HH(layer, model)
 
 #define LOAD_MODEL_FROM_GEO(model, geo) \
     CMD_BBH(LVL_SCRIPT_CMD_22, 0x08, model), \
@@ -287,21 +288,22 @@ enum LevelCommandsIDList {
 
 // unk8 is float, but doesn't really matter since CMD23 is unused
 #define CMD23(model, unk4, unk8) \
-    CMD_BBH(LVL_SCRIPT_CMD_23, 0x08, model), \
+    CMD_BBH(LVL_SCRIPT_CMD_23, 0x08, 0), \
     CMD_PTR(unk4), \
     CMD_W(unk8)
 
 #define OBJECT_WITH_ACTS(model, posX, posY, posZ, angleX, angleY, angleZ, bhvParam, bhv, acts) \
-    CMD_BBBB(LVL_SCRIPT_CMD_24, 0x18, acts, model), \
+    CMD_BBBB(LVL_SCRIPT_CMD_24, 0x1C, acts, 0x00), \
     CMD_HHHHHH(posX, posY, posZ, angleX, angleY, angleZ), \
     CMD_W(bhvParam), \
-    CMD_PTR(bhv)
+    CMD_PTR(bhv), \
+    CMD_W(model)
 
 #define OBJECT(model, posX, posY, posZ, angleX, angleY, angleZ, bhvParam, bhv) \
     OBJECT_WITH_ACTS(model, posX, posY, posZ, angleX, angleY, angleZ, bhvParam, bhv, 0x1F)
 
 #define MARIO(model, bhvArg, bhv) \
-    CMD_BBBB(LVL_SCRIPT_CMD_25, 0x0C, 0x00, model), \
+    CMD_BBH(LVL_SCRIPT_CMD_25, 0x0C, model), \
     CMD_W(bhvArg), \
     CMD_PTR(bhv)
 
