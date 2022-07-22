@@ -290,3 +290,9 @@ IPL3_RAW_FILES              := $(addprefix $(BUILD_DIR)/,$(patsubst %.png,%,$(IP
 
 CRASH_TEXTURE_FILES         := $(wildcard $(TEXTURE_DIR)/crash_screen/*.png)
 CRASH_TEXTURE_C_FILES       := $(addprefix $(BUILD_DIR)/,$(patsubst %.png,%.inc.c,$(CRASH_TEXTURE_FILES)))
+
+ifeq ($(TARGET_N64),0)
+  CRASH_TEXTURE_PC_FILES       := $(wildcard $(TEXTURE_DIR)/crash_screen_pc/*.png)
+  CRASH_TEXTURE_PC_C_FILES     := $(addprefix $(BUILD_DIR)/,$(patsubst %.png,%.inc.c,$(CRASH_TEXTURE_PC_FILES)))
+endif
+

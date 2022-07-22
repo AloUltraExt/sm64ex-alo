@@ -512,7 +512,6 @@ else # Linux/Unix builds/binary namer
   TARGET_NAME := Unix-based system
 endif
 
-LIBULTRA := $(BUILD_DIR)/libultra.a
 LD_SCRIPT := sm64.ld
 
 ELF := $(BUILD_DIR)/$(TARGET).elf
@@ -1020,7 +1019,9 @@ endif
 ifeq ($(WINDOWS_BUILD),1)
   CC_CHECK := $(CC) -fsyntax-only -fsigned-char $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -Wall -Wextra -Wno-format-security
   CFLAGS := $(OPT_FLAGS) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -fwrapv
-
+  ifeq ($(TARGET_BITS), 32)
+    BACKEND_LDFLAGS += -ldbghelp
+  endif
 else ifeq ($(TARGET_WEB),1)
   CC_CHECK := $(CC) -fsyntax-only -fsigned-char $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -Wall -Wextra -Wno-format-security -s USE_SDL=2
   CFLAGS := $(OPT_FLAGS) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -fwrapv -s USE_SDL=2
@@ -1277,9 +1278,11 @@ test: $(ROM)
 load: $(ROM)
 	$(LOADER) $(LOADER_FLAGS) $<
 
+
 $(BUILD_DIR)/$(RPC_LIBS):
 	@$(CP) -f $(RPC_LIBS) $(BUILD_DIR)
 
+ifeq ($(TARGET_N64),1)
 libultra: $(BUILD_DIR)/libultra.a
 
 $(BUILD_DIR)/asm/boot.o: $(IPL3_RAW_FILES)
@@ -1287,6 +1290,9 @@ $(BUILD_DIR)/src/game/crash_screen.o: $(CRASH_TEXTURE_C_FILES)
 $(CRASH_TEXTURE_C_FILES): TEXTURE_ENCODING := u32
 
 $(BUILD_DIR)/lib/rsp.o: $(BUILD_DIR)/rsp/rspboot.bin $(BUILD_DIR)/rsp/fast3d.bin $(BUILD_DIR)/rsp/audio.bin
+else
+$(BUILD_DIR)/src/pc/crash_screen_pc.o: $(CRASH_TEXTURE_PC_C_FILES)
+endif
 
 ifeq ($(EXTERNAL_DATA),0)
   ifeq ($(VERSION),sh)
@@ -1771,6 +1777,13 @@ $(APK_SIGNED): $(APK)
 	$(V)cp $< $@
 	$(V)apksigner sign --cert $(PLATFORM_DIR)/certificate.pem --key $(PLATFORM_DIR)/key.pk8 $@
 endif
+endif
+
+# For the crash handler on Windows
+ifeq ($(WINDOWS_BUILD),1)
+all: PC_EXE_MAP
+PC_EXE_MAP: $(EXE)
+	$(V)objdump -t $(EXE) > $(BUILD_DIR)/sm64pc.map
 endif
 
 $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
