@@ -113,7 +113,7 @@ SECTIONS
     BEGIN_SEG(main, .) SUBALIGN(16)
     {
         BUILD_DIR/asm/entry.o(.text);
-        BUILD_DIR/src/game/crash_screen.o(.text);
+        BUILD_DIR/src/extras/n64*.o(.text);
         BUILD_DIR/src/game/main.o(.text);
         BUILD_DIR/src/game/game_init.o(.text);
         BUILD_DIR/src/game/sound_init.o(.text);
@@ -464,7 +464,7 @@ SECTIONS
 #endif
 
         /* data */
-        BUILD_DIR/src/game/crash_screen.o(.data*);
+        BUILD_DIR/src/extras/n64*.o(.data*);
         BUILD_DIR/src/game/main.o(.data*);
         BUILD_DIR/src/game/game_init.o(.data*);
         BUILD_DIR/src/game/sound_init.o(.data*);
@@ -583,7 +583,7 @@ SECTIONS
 #endif
 
         /* rodata */
-        BUILD_DIR/src/game/crash_screen.o(.rodata*);
+        BUILD_DIR/src/extras/n64*.o(.rodata*);
         BUILD_DIR/src/game/main.o(.rodata*);
         BUILD_DIR/src/game/game_init.o(.rodata*);
         BUILD_DIR/src/game/sound_init.o(.rodata*);
@@ -694,7 +694,7 @@ SECTIONS
     #endif
     BEGIN_NOLOAD(main)
     {
-        BUILD_DIR/src/game/crash_screen.o(.bss*);
+        BUILD_DIR/src/extras/n64*.o(.bss*);
         BUILD_DIR/src/game/main.o(.bss*);
         BUILD_DIR/src/game/game_init.o(.bss*);
         BUILD_DIR/src/game/sound_init.o(.bss*);

@@ -288,10 +288,10 @@ $(BUILD_DIR)/src/goddard/renderer.o: $(addprefix $(BUILD_DIR)/,$(patsubst %.png,
 IPL3_TEXTURE_FILES          := $(wildcard $(TEXTURE_DIR)/ipl3_raw/*.png)
 IPL3_RAW_FILES              := $(addprefix $(BUILD_DIR)/,$(patsubst %.png,%,$(IPL3_TEXTURE_FILES)))
 
-CRASH_TEXTURE_FILES         := $(wildcard $(TEXTURE_DIR)/crash_screen/*.png)
-CRASH_TEXTURE_C_FILES       := $(addprefix $(BUILD_DIR)/,$(patsubst %.png,%.inc.c,$(CRASH_TEXTURE_FILES)))
-
-ifeq ($(TARGET_N64),0)
+ifeq ($(TARGET_N64),1)
+  CRASH_TEXTURE_FILES         := $(wildcard $(TEXTURE_DIR)/crash_screen/*.png)
+  CRASH_TEXTURE_C_FILES       := $(addprefix $(BUILD_DIR)/,$(patsubst %.png,%.inc.c,$(CRASH_TEXTURE_FILES)))
+else
   CRASH_TEXTURE_PC_FILES       := $(wildcard $(TEXTURE_DIR)/crash_screen_pc/*.png)
   CRASH_TEXTURE_PC_C_FILES     := $(addprefix $(BUILD_DIR)/,$(patsubst %.png,%.inc.c,$(CRASH_TEXTURE_PC_FILES)))
 endif

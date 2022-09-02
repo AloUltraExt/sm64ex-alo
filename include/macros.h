@@ -3,16 +3,6 @@
 
 #include "platform_info.h"
 
-#ifndef __sgi
-#define GLOBAL_ASM(...)
-#endif
-
-#if !defined(__sgi) && (!defined(NON_MATCHING) || !defined(AVOID_UB))
-// asm-process isn't supported outside of IDO, and undefined behavior causes
-// crashes.
-#error Matching build is only possible on IDO; please build with NON_MATCHING=1.
-#endif
-
 #define ARRAY_COUNT(arr) (s32)(sizeof(arr) / sizeof(arr[0]))
 
 #define GLUE(a, b) a ## b
@@ -60,11 +50,18 @@
 #define ALIGNED64
 #endif
 
-// Align to 16-byte boundary for audio lib requirements
+// Makes a function always inline
 #ifdef __GNUC__
 #define ALWAYS_INLINE inline __attribute__((always_inline))
 #else
 #define ALWAYS_INLINE inline
+#endif
+
+// Makes a function no inline
+#ifdef __GNUC__
+#define NO_INLINE inline __attribute__((noinline))
+#else
+#define NO_INLINE inline
 #endif
 
 #ifndef NO_SEGMENTED_MEMORY

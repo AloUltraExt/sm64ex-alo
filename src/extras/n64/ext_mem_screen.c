@@ -1,10 +1,11 @@
 /*
- * mem_error_screen.inc.c
+ * ext_mem_screen.c
  *
- * This enhancement should be used for ROM hacks that require the expansion pak.
+ * This file is used when 8 MB (Expansion Pak) is set.
+ * If the game doesn't have it, then it shows the screen telling the user to
+ * insert one, or set the emulator to 8 MB (most recent ones sets it automatically).
  *
  */
-#ifdef TARGET_N64
 
 #include <types.h>
 #include "segments.h"
@@ -17,11 +18,16 @@
 #include "engine/level_script.h"
 
 #ifdef N64_USE_EXTENDED_RAM
-
+/*
+ * mem_error_screen.inc.c
+ *
+ * This enhancement should be used for ROM hacks that require the expansion pak.
+ *
+ */
 // Require 8 MB of RAM, even if the pool doesn't go into extended memory.
 // Change the '8' to whatever MB limit you want.
 // Note: only special emulators allow for RAM sizes above 8 MB.
-#define REQUIRED_MIN_MEM_SIZE 1048576 * 8
+#define REQUIRED_MIN_MEM_SIZE 0x100000 * 8
 
 u8 gNotEnoughMemory = FALSE;
 u8 gDelayForErrorMessage = 0;
@@ -98,7 +104,4 @@ void thread5_mem_error_message_loop(UNUSED void *arg) {
         display_and_vsync();
     }
 }
-
-#endif
-
 #endif

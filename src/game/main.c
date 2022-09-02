@@ -12,7 +12,7 @@
 #include "main.h"
 #include "rumble_init.h"
 #ifdef N64_USE_EXTENDED_RAM
-#include "extras/n64_mem_error_screen.h"
+#include "extras/n64/ext_mem_screen.h"
 #endif
 
 /**

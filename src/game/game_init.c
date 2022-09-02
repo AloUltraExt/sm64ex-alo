@@ -21,6 +21,10 @@
 #include "segment_symbols.h"
 #include "rumble_init.h"
 
+#ifdef TARGET_N64
+#include "extras/n64/system_checks.h"
+#endif
+
 #ifdef BETTERCAMERA
 #include "extras/bettercamera.h"
 #endif
@@ -352,6 +356,8 @@ void draw_reset_bars(void) {
  * Initial settings for the first rendered frame.
  */
 void render_init(void) {
+    n64_system_device_checks();
+
     gGfxPool = &gGfxPools[0];
     set_segment_base_addr(1, gGfxPool->buffer);
     gGfxSPTask = &gGfxPool->spTask;
@@ -362,7 +368,12 @@ void render_init(void) {
     end_master_display_list();
     exec_display_list(&gGfxPool->spTask);
 
-    sRenderingFramebuffer++;
+    // Skip incrementing the initial framebuffer index on emulators so that they display immediately as the Gfx task finishes
+    // VC probably emulates osViSwapBuffer accurately so instant patch breaks VC compatibility
+    // Currently, Ares passes the cache emulation test and has issues with single buffering so disable it there as well.
+    if (gIsConsole || gIsWiiVC || gCacheEmulated) {
+        sRenderingFramebuffer++;
+    }
     gGlobalTimer++;
 }
 #endif
@@ -417,12 +428,17 @@ void display_and_vsync(void) {
     osViSwapBuffer((void *) PHYSICAL_TO_VIRTUAL(gPhysicalFramebuffers[sRenderedFramebuffer]));
     profiler_log_thread5_time(THREAD5_END);
     osRecvMesg(&gGameVblankQueue, &gMainReceivedMesg, OS_MESG_BLOCK);
-    if (++sRenderedFramebuffer == 3) {
-        sRenderedFramebuffer = 0;
+#ifdef TARGET_N64
+    // Skip swapping buffers on inaccurate emulators other than VC so that they display immediately as the Gfx task finishes
+    if (gIsConsole || gIsWiiVC || gCacheEmulated) {
+        if (++sRenderedFramebuffer == 3) {
+            sRenderedFramebuffer = 0;
+        }
+        if (++sRenderingFramebuffer == 3) {
+            sRenderingFramebuffer = 0;
+        }
     }
-    if (++sRenderingFramebuffer == 3) {
-        sRenderingFramebuffer = 0;
-    }
+#endif
     gGlobalTimer++;
 }
 
