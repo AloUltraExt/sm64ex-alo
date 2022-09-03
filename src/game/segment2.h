@@ -23,6 +23,8 @@ extern Gfx dl_proj_mtx_fullscreen[];
 extern Gfx dl_draw_quad_verts_0123[];
 extern Gfx dl_screen_transition_end[];
 extern Gfx dl_transition_draw_filled_region[];
+extern Gfx dl_shadow_begin_decal[];
+extern Gfx dl_shadow_begin_non_decal[];
 extern Gfx dl_shadow_circle[];
 extern Gfx dl_shadow_square[];
 extern Gfx dl_shadow_spike[];

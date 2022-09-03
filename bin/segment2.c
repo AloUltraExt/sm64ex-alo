@@ -2556,33 +2556,53 @@ const Gfx dl_draw_quad_verts_4567[] = {
     gsSPEndDisplayList(),
 };
 
-const Gfx dl_shadow_begin[] = {
-    gsDPPipeSync(),
-    gsSPClearGeometryMode(G_LIGHTING | G_CULL_BACK),
 #if OPTIMIZED_SHADOWS
+const Gfx dl_shadow_begin_decal[] = {
+    gsDPPipeSync(),
+    gsSPClearGeometryMode(G_LIGHTING),
     gsDPSetCombineMode(G_CC_MODULATEIFADEA, G_CC_MODULATEIFADEA),
-#else
-    gsDPSetCombineMode(G_CC_MODULATEIA, G_CC_MODULATEIA),
-#endif
     gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON),
     gsSPEndDisplayList(),
 };
 
+const Gfx dl_shadow_begin_non_decal[] = {
+    gsDPPipeSync(),
+    gsSPClearGeometryMode(G_LIGHTING | G_CULL_BACK),
+    gsDPSetCombineMode(G_CC_MODULATEIFADEA, G_CC_MODULATEIFADEA),
+    gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON),
+    gsSPEndDisplayList(),
+};
+#else
+const Gfx dl_shadow_begin[] = {
+    gsDPPipeSync(),
+    gsSPClearGeometryMode(G_LIGHTING | G_CULL_BACK),
+    gsDPSetCombineMode(G_CC_MODULATEIA, G_CC_MODULATEIA),
+    gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON),
+    gsSPEndDisplayList(),
+};
+#endif
+
 const Gfx dl_shadow_circle[] = {
+#if !OPTIMIZED_SHADOWS
     gsSPDisplayList(dl_shadow_begin),
+#endif
     gsDPLoadTextureBlock(texture_shadow_quarter_circle, G_IM_FMT_IA, G_IM_SIZ_8b, 16, 16, 0, G_TX_WRAP | G_TX_MIRROR, G_TX_WRAP | G_TX_MIRROR, 4, 4, G_TX_NOLOD, G_TX_NOLOD),
     gsSPEndDisplayList(),
 };
 
 const Gfx dl_shadow_square[] = {
+#if !OPTIMIZED_SHADOWS
     gsSPDisplayList(dl_shadow_begin),
+#endif
     gsDPLoadTextureBlock(texture_shadow_quarter_square, G_IM_FMT_IA, G_IM_SIZ_8b, 16, 16, 0, G_TX_WRAP | G_TX_MIRROR, G_TX_WRAP | G_TX_MIRROR, 4, 4, G_TX_NOLOD, G_TX_NOLOD),
     gsSPEndDisplayList(),
 };
 
 #if PROPER_TREE_SHADOWS
 const Gfx dl_shadow_spike[] = {
+#if !OPTIMIZED_SHADOWS
     gsSPDisplayList(dl_shadow_begin),
+#endif
     gsDPLoadTextureBlock(texture_shadow_spike, G_IM_FMT_IA, G_IM_SIZ_8b, 16, 16, 0, G_TX_WRAP | G_TX_MIRROR, G_TX_WRAP | G_TX_MIRROR, 4, 4, G_TX_NOLOD, G_TX_NOLOD),
     gsSPEndDisplayList(),
 };
@@ -2590,9 +2610,9 @@ const Gfx dl_shadow_spike[] = {
 
 #if OPTIMIZED_SHADOWS
 static const Vtx vertex_shadow[] = {
-    {{{    -1,      0,     -1}, 0, {  -496,   -496}, {0xff, 0xff, 0xff, 0xff}}},
-    {{{     1,      0,     -1}, 0, {   496,   -496}, {0xff, 0xff, 0xff, 0xff}}},
-    {{{    -1,      0,      1}, 0, {  -496,    496}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{    -1,      0,     -1}, 0, {  -528,   -528}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{     1,      0,     -1}, 0, {   496,   -528}, {0xff, 0xff, 0xff, 0xff}}},
+    {{{    -1,      0,      1}, 0, {  -528,    496}, {0xff, 0xff, 0xff, 0xff}}},
     {{{     1,      0,      1}, 0, {   496,    496}, {0xff, 0xff, 0xff, 0xff}}},
 };
 
