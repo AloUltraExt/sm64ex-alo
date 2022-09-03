@@ -2788,7 +2788,7 @@ s32 obj_has_model(struct Object *obj, ModelID16 modelID) {
 ModelID32 obj_get_model(struct Object *obj) {
     s32 i;
 
-    if (!obj->header.gfx.sharedChild) {
+    if (obj->header.gfx.sharedChild != NULL) {
         for (i = MODEL_NONE; i < MODEL_ID_COUNT; i++) {
             if (obj->header.gfx.sharedChild == gLoadedGraphNodes[i]) {
                 return i;

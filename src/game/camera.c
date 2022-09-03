@@ -3027,14 +3027,49 @@ void update_lakitu(struct Camera *c) {
     gLakituState.defMode = c->defMode;
 }
 
+/**
+ * Stores type and height of the nearest floor and ceiling to Mario in `pg`
+ *
+ * Note: Also finds the water level, but waterHeight is unused
+ */
+void update_mario_geometry_info(struct PlayerGeometry *pg) {
+    struct MarioState *marioState = &gMarioStates[0];
+    struct Surface *surf = NULL;
+
+    // Stores previous geometry information.
+    pg->prevFloorHeight = pg->currFloorHeight;
+    pg->prevCeilHeight  = pg->currCeilHeight;
+    pg->prevFloor       = pg->currFloor;
+    pg->prevCeil        = pg->currCeil;
+    pg->prevFloorType   = pg->currFloorType;
+    pg->prevCeilType    = pg->currCeilType;
+
+    surf = marioState->floor;
+    pg->currFloor = surf;
+    pg->currFloorHeight = marioState->floorHeight;
+    if (pg->currFloorHeight != FLOOR_LOWER_LIMIT && surf) {
+        pg->currFloorType = surf->type;
+    } else {
+        pg->currFloorType = SURFACE_DEFAULT;
+    }
+
+    surf = marioState->ceil;
+    pg->currCeil = surf;
+    pg->currCeilHeight = marioState->ceilHeight;
+    if (pg->currCeilHeight != CELL_HEIGHT_LIMIT && surf) {
+        pg->currCeilType = surf->type;
+    } else {
+        pg->currCeilType = SURFACE_DEFAULT;
+    }
+
+    pg->waterHeight = marioState->waterLevel;
+}
 
 /**
  * The main camera update function.
  * Gets controller input, checks for cutscenes, handles mode changes, and moves the camera
  */
 void update_camera(struct Camera *c) {
-    UNUSED u8 filler[24];
-
     gCamera = c;
     update_camera_hud_status(c);
     if (c->cutscene == 0
@@ -3066,15 +3101,7 @@ void update_camera(struct Camera *c) {
 #ifdef BETTERCAMERA
     if (!gPuppyCam.enabled || gCurrDemoInput || c->cutscene != 0 || gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON) {
 #endif
-    // Store previous geometry information
-    sMarioGeometry.prevFloorHeight = sMarioGeometry.currFloorHeight;
-    sMarioGeometry.prevCeilHeight = sMarioGeometry.currCeilHeight;
-    sMarioGeometry.prevFloor = sMarioGeometry.currFloor;
-    sMarioGeometry.prevCeil = sMarioGeometry.currCeil;
-    sMarioGeometry.prevFloorType = sMarioGeometry.currFloorType;
-    sMarioGeometry.prevCeilType = sMarioGeometry.currCeilType;
-
-    find_mario_floor_and_ceil(&sMarioGeometry);
+    update_mario_geometry_info(&sMarioGeometry);
     gCollisionFlags |= COLLISION_FLAG_CAMERA;
     vec3f_copy(c->pos, gLakituState.goalPos);
     vec3f_copy(c->focus, gLakituState.goalFocus);
@@ -3363,7 +3390,6 @@ void reset_camera(struct Camera *c) {
 }
 
 void init_camera(struct Camera *c) {
-    struct Surface *floor = 0;
     Vec3f marioOffset;
     s32 i;
 
@@ -3385,13 +3411,7 @@ void init_camera(struct Camera *c) {
     sStatusFlags &= ~CAM_FLAG_SMOOTH_MOVEMENT;
     vec3f_set(sCastleEntranceOffset, 0.f, 0.f, 0.f);
     vec3f_set(sPlayer2FocusOffset, 0.f, 0.f, 0.f);
-    find_mario_floor_and_ceil(&sMarioGeometry);
-    sMarioGeometry.prevFloorHeight = sMarioGeometry.currFloorHeight;
-    sMarioGeometry.prevCeilHeight = sMarioGeometry.currCeilHeight;
-    sMarioGeometry.prevFloor = sMarioGeometry.currFloor;
-    sMarioGeometry.prevCeil = sMarioGeometry.currCeil;
-    sMarioGeometry.prevFloorType = sMarioGeometry.currFloorType;
-    sMarioGeometry.prevCeilType = sMarioGeometry.currCeilType;
+    update_mario_geometry_info(&sMarioGeometry);
     for (i = 0; i < 32; i++) {
         sCurCreditsSplinePos[i].index = -1;
         sCurCreditsSplineFocus[i].index = -1;
@@ -3501,8 +3521,7 @@ void init_camera(struct Camera *c) {
     // Set the camera pos to marioOffset (relative to Mario), added to Mario's position
     offset_rotated(c->pos, sMarioCamState->pos, marioOffset, sMarioCamState->faceAngle);
     if (c->mode != CAMERA_MODE_BEHIND_MARIO) {
-        c->pos[1] = find_floor(sMarioCamState->pos[0], sMarioCamState->pos[1] + 100.f,
-                               sMarioCamState->pos[2], &floor) + 125.f;
+        c->pos[1] = sMarioGeometry.currFloorHeight;
     }
     vec3f_copy(c->focus, sMarioCamState->pos);
     vec3f_copy(gLakituState.curPos, c->pos);
@@ -6687,41 +6706,6 @@ s32 rotate_camera_around_walls(struct Camera *c, Vec3f cPos, s16 *avoidYaw, s16 
     }
 
     return status;
-}
-
-/**
- * Stores type and height of the nearest floor and ceiling to Mario in `pg`
- *
- * Note: Also finds the water level, but waterHeight is unused
- */
-void find_mario_floor_and_ceil(struct PlayerGeometry *pg) {
-    struct Surface *surf;
-    s32 tempCollisionFlags = gCollisionFlags;
-    gCollisionFlags |= COLLISION_FLAG_CAMERA;
-
-    if (find_floor(sMarioCamState->pos[0], sMarioCamState->pos[1] + 10.f,
-                   sMarioCamState->pos[2], &surf) != FLOOR_LOWER_LIMIT) {
-        pg->currFloorType = surf->type;
-    } else {
-        pg->currFloorType = 0;
-    }
-
-    if (find_ceil(sMarioCamState->pos[0], sMarioCamState->pos[1] - 10.f,
-                  sMarioCamState->pos[2], &surf) != CELL_HEIGHT_LIMIT) {
-        pg->currCeilType = surf->type;
-    } else {
-        pg->currCeilType = 0;
-    }
-
-    gCollisionFlags &= ~COLLISION_FLAG_CAMERA;
-    pg->currFloorHeight = find_floor(sMarioCamState->pos[0],
-                                     sMarioCamState->pos[1] + 10.f,
-                                     sMarioCamState->pos[2], &pg->currFloor);
-    pg->currCeilHeight = find_ceil(sMarioCamState->pos[0],
-                                   sMarioCamState->pos[1] - 10.f,
-                                   sMarioCamState->pos[2], &pg->currCeil);
-    pg->waterHeight = find_water_level(sMarioCamState->pos[0], sMarioCamState->pos[2]);
-    gCollisionFlags = tempCollisionFlags;
 }
 
 /**

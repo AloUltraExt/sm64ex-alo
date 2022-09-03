@@ -618,6 +618,10 @@ s32 act_debug_free_move(struct MarioState *m) {
 #endif
         pos[0] += speed * sins(m->intendedYaw);
         pos[2] += speed * coss(m->intendedYaw);
+#ifdef EXT_DEBUG_MENU
+        m->faceAngle[1] = m->intendedYaw;
+        vec3s_set(m->marioObj->header.gfx.angle, 0, m->faceAngle[1], 0);
+#endif
     }
 
     resolve_and_return_wall_collisions(pos, 60.0f, 50.0f);
@@ -632,24 +636,26 @@ s32 act_debug_free_move(struct MarioState *m) {
     struct Surface *ceil;
     f32 ceilHeight = vec3f_find_ceil(pos, floorHeight, &ceil);
 
-        if (floor != NULL && (DebugOpt.FreeMoveActFlags & ACT_DEBUG_STATE_CHECK_FLOOR)) {
-            if (pos[1] < floorHeight) pos[1] = floorHeight;
-        }
-        if (ceil != NULL && (DebugOpt.FreeMoveActFlags & ACT_DEBUG_STATE_CHECK_CEIL)) {
-            if ((pos[1] + 160.0f) > ceilHeight) pos[1] = (ceilHeight - 160.0f);
-        }
+    if (floor != NULL && (DebugOpt.FreeMoveActFlags & ACT_DEBUG_STATE_CHECK_FLOOR)) {
+        if (pos[1] < floorHeight) pos[1] = floorHeight;
+    }
+    if (ceil != NULL && (DebugOpt.FreeMoveActFlags & ACT_DEBUG_STATE_CHECK_CEIL)) {
+        if ((pos[1] + 160.0f) > ceilHeight) pos[1] = (ceilHeight - 160.0f);
+    }
 
-        vec3f_copy(m->pos, pos);
+    vec3f_copy(m->pos, pos);
+
+    vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
 #else
     if (floor != NULL && pos[1] < floorHeight) {
         pos[1] = floorHeight;
         vec3f_copy(m->pos, pos);
     }
-#endif
-
+    
     m->faceAngle[1] = m->intendedYaw;
     vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
     vec3s_set(m->marioObj->header.gfx.angle, 0, m->faceAngle[1], 0);
+#endif
 
     return FALSE;
 }

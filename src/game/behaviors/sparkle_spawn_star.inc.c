@@ -13,13 +13,13 @@ struct ObjectHitbox sSparkleSpawnStarHitbox = {
 };
 
 void bhv_spawned_star_init(void) {
-    s32 starIndex = (o->oBhvParams >> 24) & 0xFF;
-
     if (!(o->oInteractionSubtype & INT_SUBTYPE_NO_EXIT)) {
         o->oBhvParams = o->parentObj->oBhvParams;
     }
 
-    if ((1 << starIndex) & save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum))) {
+    s32 starIndex = (o->oBhvParams >> 24) & 0xFF;
+
+    if (save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum)) & (1 << starIndex)) {
         cur_obj_set_model(MODEL_TRANSPARENT_STAR);
     }
 

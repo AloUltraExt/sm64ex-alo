@@ -25,6 +25,7 @@ SpatialPartitionCell gDynamicSurfacePartition[NUM_CELLS][NUM_CELLS];
 struct CellCoords {
     u8 z;
     u8 x;
+    u8 partition;
 };
 struct CellCoords sCellsUsed[NUM_CELLS];
 u16 sNumCellsUsed;
@@ -66,8 +67,7 @@ static struct SurfaceNode *alloc_surface_node(u32 dynamic) {
     struct SurfaceNode *node = alloc_only_pool_alloc(pool, sizeof(struct SurfaceNode));
 #else
     struct SurfaceNode **poolEnd = (struct SurfaceNode **)(dynamic ? &gDynamicSurfacePoolEnd : &gCurrStaticSurfacePoolEnd);
-    struct SurfaceNode *node = *poolEnd;
-    (*poolEnd)++;
+    struct SurfaceNode *node = (*poolEnd)++;
 #endif
     gSurfaceNodesAllocated++;
 
@@ -86,8 +86,7 @@ static struct Surface *alloc_surface(u32 dynamic) {
     struct Surface *surface = alloc_only_pool_alloc(pool, sizeof(struct Surface));
 #else
     struct Surface **poolEnd = (struct Surface **)(dynamic ? &gDynamicSurfacePoolEnd : &gCurrStaticSurfacePoolEnd);
-    struct Surface *surface = *poolEnd;
-    (*poolEnd)++;
+    struct Surface *surface = (*poolEnd)++;
 #endif
     gSurfacesAllocated++;
 
@@ -183,16 +182,10 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
         if (sNumCellsUsed >= sizeof(sCellsUsed) / sizeof(struct CellCoords)) {
             sClearAllCells = TRUE;
         } else {
-            u32 addNew = TRUE;
-            for (u32 i = 0; i < NUM_SPATIAL_PARTITIONS; i++) {
-                if (gDynamicSurfacePartition[cellZ][cellX][i].next != NULL) {
-                    addNew = FALSE;
-                    break;
-                }
-            }
-            if (addNew) {
-                sCellsUsed[sNumCellsUsed].x = cellX;
+            if (list->next == NULL) {
                 sCellsUsed[sNumCellsUsed].z = cellZ;
+                sCellsUsed[sNumCellsUsed].x = cellX;
+                sCellsUsed[sNumCellsUsed].partition = listIndex;
                 sNumCellsUsed++;
             }
         }
@@ -657,7 +650,6 @@ void clear_dynamic_surfaces(void) {
 
         gSurfacesAllocated = gNumStaticSurfaces;
         gSurfaceNodesAllocated = gNumStaticSurfaceNodes;
-
 #ifndef USE_SYSTEM_MALLOC
         gDynamicSurfacePoolEnd = gDynamicSurfacePool;
 #endif
@@ -666,9 +658,7 @@ void clear_dynamic_surfaces(void) {
             clear_spatial_partition(&gDynamicSurfacePartition[0][0]);
         } else {
             for (u32 i = 0; i < sNumCellsUsed; i++) {
-                for (u32 j = 0; j < NUM_SPATIAL_PARTITIONS; j++) {
-                    gDynamicSurfacePartition[sCellsUsed[i].z][sCellsUsed[i].x][j].next = NULL;
-                }
+                gDynamicSurfacePartition[sCellsUsed[i].z][sCellsUsed[i].x][sCellsUsed[i].partition].next = NULL;
             }
         }
         sNumCellsUsed = 0;
@@ -831,7 +821,9 @@ void load_object_collision_model(void) {
 
 #if LOAD_OBJECT_COLLISION_NEAR_CAMERA
     f32 camDist = vec3_mag(gCurrentObject->header.gfx.cameraToObject);
-    marioDist = MIN(marioDist, camDist);
+    if (marioDist > camDist && camDist > 0.0f) {
+        marioDist = camDist;
+    }
 #endif
 
 #if AUTO_COLLISION_DISTANCE

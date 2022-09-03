@@ -787,48 +787,48 @@ void handle_menu_scrolling(s8 scrollDirection, s8 *currentIndex, s8 minIndex, s8
 
     if (scrollDirection == MENU_SCROLL_VERTICAL) {
         if (gPlayer3Controller->rawStickY > 60) {
-            index++;
+            index |= 0b01; // Up
         }
-
         if (gPlayer3Controller->rawStickY < -60) {
-            index += 2;
+            index |= 0b10; // Down
         }
     } else if (scrollDirection == MENU_SCROLL_HORIZONTAL) {
         if (gPlayer3Controller->rawStickX > 60) {
-            index += 2;
+            index |= 0b10; // Right
         }
 
         if (gPlayer3Controller->rawStickX < -60) {
-            index++;
+            index |= 0b01; // Left
         }
     }
 
-    if (((index ^ gMenuHoldKeyIndex) & index) == 2) {
-        // if <=, this could cause an OOB array access and crash. Use < instead here to fix this.
-        // >= is incorrect and will cause the menu to not function correctly
-        if (*currentIndex < maxIndex) {
+    // Only increase/decrese if not holding that direction on the previous frame:
+
+    if (((index ^ gMenuHoldKeyIndex) & index) == 0b10) {
+        if (*currentIndex != maxIndex) {
             play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
             (*currentIndex)++;
         }
     }
 
-    if (((index ^ gMenuHoldKeyIndex) & index) == 1) {
-        // if >=, this could cause an OOB array access and crash. Use > instead here to fix this.
-        if (*currentIndex > minIndex) {
+    if (((index ^ gMenuHoldKeyIndex) & index) == 0b01) {
+        if (*currentIndex != minIndex) {
             play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
             (*currentIndex)--;
         }
     }
 
+    // If there has been input for 10 frames, set the timer to 8 and set gMenuHoldKeyIndex to 0 so the above becomes true.
     if (gMenuHoldKeyTimer == 10) {
         gMenuHoldKeyTimer = 8;
-        gMenuHoldKeyIndex = 0;
+        gMenuHoldKeyIndex = 0b00;
     } else {
+        // Otherwise, increment the timer while there is input.
         gMenuHoldKeyTimer++;
         gMenuHoldKeyIndex = index;
     }
 
-    if ((index & 3) == 0) {
+    if (index == 0) {
         gMenuHoldKeyTimer = 0;
     }
 }

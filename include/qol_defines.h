@@ -44,9 +44,6 @@
 /// Changes WF breakable wall by no taking damage and returning safely if the proper wall is broken
 /// Credits: (AloXado320)
 #define QOL_FEATURE_BETTER_WF_BREAKEABLE_WALL (0 || QOL_FEATURES)
-/// Adds "new" star grab action that uses floating star dance if on a lethal floor
-/// Credits: (AloXado320)
-#define QOL_FEATURE_STAR_GRAB_NO_FALL_DEATH (0 || QOL_FEATURES)
 /// Makes Mario grab hangable ceilings in any air actions
 /// Credits: (AloXado320)
 #define QOL_FEATURE_HANG_AIR_ANYWHERE (0 || QOL_FEATURES)
@@ -62,9 +59,6 @@
 /// Changes hanging so you don't need to hold A to stay hanging, adjusts speed and position
 /// Credits: (Arceveti)
 #define QOL_FEATURE_BETTER_HANGING (0 || QOL_FEATURES)
-/// Makes Mario not fall after star grab if the floor is too far below
-/// Credits: (Arceveti)
-#define QOL_FEATURE_STAR_GRAB_NO_FALL_HEIGHT (0 || QOL_FEATURES)
 /// Changes obj_resolve_object_collisions to work consistently
 /// Credits: (Arceveti)
 #define QOL_FEATURE_BETTER_OBJ_COLLISIONS (0 || QOL_FEATURES)

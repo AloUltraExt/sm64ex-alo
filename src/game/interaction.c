@@ -794,9 +794,7 @@ u32 interact_star_or_key(struct MarioState *m, UNUSED u32 interactType, struct O
             if (m->capTimer > 1) {
                 m->capTimer = 1;
             }
-        }
-
-        if (noExit) {
+        } else {
             starGrabAction = ACT_STAR_DANCE_NO_EXIT;
         }
 
@@ -808,23 +806,18 @@ u32 interact_star_or_key(struct MarioState *m, UNUSED u32 interactType, struct O
             starGrabAction = ACT_STAR_DANCE_WATER;
         }
 
-#if QOL_FEATURE_STAR_GRAB_NO_FALL_HEIGHT
-        if ((m->action & ACT_FLAG_AIR) && (m->pos[1] < (m->floorHeight + 1024.0f))) {
-            starGrabAction = ACT_FALL_AFTER_STAR_GRAB;
-        } else {
-            starGrabAction = ACT_STAR_DANCE_WATER;
-        }
-#else
         if (m->action & ACT_FLAG_AIR) {
+#if MIDAIR_STAR_DANCE
+            if ((m->pos[1] > m->floorHeight + 1024.0f) || (m->floor != NULL 
+                && m->floor->type == SURFACE_DEATH_PLANE || m->floor->type == SURFACE_VERTICAL_WIND)) {
+                starGrabAction = ACT_STAR_DANCE_WATER;
+            } else {
+                starGrabAction = ACT_FALL_AFTER_STAR_GRAB;
+            }
+#else
             starGrabAction = ACT_FALL_AFTER_STAR_GRAB;
-        }
 #endif
-
-#if QOL_FEATURE_STAR_GRAB_NO_FALL_DEATH
-        if (m->floor->type == SURFACE_DEATH_PLANE || m->floor->type == SURFACE_VERTICAL_WIND) {
-            starGrabAction = ACT_STAR_DANCE_WATER;
         }
-#endif
 
         spawn_object(o, MODEL_NONE, bhvStarKeyCollectionPuffSpawner);
 
