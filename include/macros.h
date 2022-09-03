@@ -15,11 +15,45 @@
 #define UNUSED
 #endif
 
+#ifdef __GNUC__
+#define FALL_THROUGH __attribute__((fallthrough))
+#else
+#define FALL_THROUGH
+#endif
+
 // Avoid undefined behaviour for non-returning functions
 #ifdef __GNUC__
 #define NORETURN __attribute__((noreturn))
 #else
 #define NORETURN
+#endif
+
+// Avoid inline a function
+#ifdef __GNUC__
+#define NO_INLINE inline __attribute__((noinline))
+#else
+#define NO_INLINE inline
+#endif
+
+// Always inline a function
+#ifdef __GNUC__
+#define ALWAYS_INLINE inline __attribute__((always_inline))
+#else
+#define ALWAYS_INLINE inline
+#endif
+
+// Use Os when compiling the function
+#ifdef __GNUC__
+#define OPTIMIZE_OS __attribute__((optimize("Os")))
+#else
+#define OPTIMIZE_OS
+#endif
+
+// Use Ofast when compiling the function
+#ifdef __GNUC__
+#define OPTIMIZE_OFAST __attribute__((optimize("Ofast")))
+#else
+#define OPTIMIZE_OFAST
 #endif
 
 // Static assertions
@@ -29,39 +63,32 @@
 #define STATIC_ASSERT(cond, msg) typedef char GLUE2(static_assertion_failed, __LINE__)[(cond) ? 1 : -1]
 #endif
 
-// Align to 8-byte boundary for DMA requirements
+// Align to 8-byte boundary (for DMA requirements)
 #ifdef __GNUC__
 #define ALIGNED8 __attribute__((aligned(8)))
 #else
 #define ALIGNED8
 #endif
 
-// Align to 16-byte boundary for audio lib requirements
+// Align to 16-byte boundary (for audio lib requirements)
 #ifdef __GNUC__
 #define ALIGNED16 __attribute__((aligned(16)))
 #else
 #define ALIGNED16
 #endif
 
-// Align to 16-byte boundary for audio lib requirements
+// Align to 32-byte boundary
+#ifdef __GNUC__
+#define ALIGNED32 __attribute__((aligned(32)))
+#else
+#define ALIGNED32
+#endif
+
+// Align to 64-byte boundary
 #ifdef __GNUC__
 #define ALIGNED64 __attribute__((aligned(64)))
 #else
 #define ALIGNED64
-#endif
-
-// Makes a function always inline
-#ifdef __GNUC__
-#define ALWAYS_INLINE inline __attribute__((always_inline))
-#else
-#define ALWAYS_INLINE inline
-#endif
-
-// Makes a function no inline
-#ifdef __GNUC__
-#define NO_INLINE inline __attribute__((noinline))
-#else
-#define NO_INLINE inline
 #endif
 
 #ifndef NO_SEGMENTED_MEMORY
