@@ -2,6 +2,7 @@
 #define AUDIO_SYNTHESIS_H
 
 #include "internal.h"
+#include "config.h"
 
 #ifdef VERSION_SH
 #define DEFAULT_LEN_1CH 0x180
@@ -15,6 +16,31 @@
 #define MAX_UPDATES_PER_FRAME 5
 #else
 #define MAX_UPDATES_PER_FRAME 4
+#endif
+
+#define ALIGN16(val) (((val) + 0xF) & ~0xF)
+
+#ifdef VERSION_EU
+#define REVERB_WINDOW_SIZE_MAX 0x1000
+#else
+#define REVERB_WINDOW_SIZE_MAX 0x1000
+#endif
+
+#if defined(VERSION_JP) || defined(VERSION_US)
+#define REVERB_WINDOW_HEAP_SIZE \
+( \
+    (REVERB_WINDOW_SIZE_MAX * sizeof(s16) * 2) \
+    + (4 * (16 * sizeof(s16))) \
+    + (4 /* gAudioUpdatesPerFrame */ * (2 * DEFAULT_LEN_2CH)) \
+)
+#else
+#define REVERB_WINDOW_HEAP_SIZE \
+( \
+    ((REVERB_WINDOW_SIZE_MAX * sizeof(s16) * 2) \
+    + (4 * (16 * sizeof(s16))) \
+    + (4 /* gAudioUpdatesPerFrame */ * (2 * DEFAULT_LEN_2CH))) \
+    * 4 /* gNumSynthesisReverbs */ \
+)
 #endif
 
 struct ReverbRingBufferItem {

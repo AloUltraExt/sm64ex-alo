@@ -11,6 +11,7 @@
 #include "segments.h"
 #include "main.h"
 #include "rumble_init.h"
+#include "extras/n64/system_checks.h"
 #ifdef N64_USE_EXTENDED_RAM
 #include "extras/n64/ext_mem_screen.h"
 #endif
@@ -343,6 +344,7 @@ void thread3_main(UNUSED void *arg) {
     setup_mesg_queues();
     alloc_pool();
     load_engine_code_segment();
+    n64_system_device_checks();
 
     create_thread(&gSoundThread, 4, thread4_sound, NULL, gThread4Stack + 0x2000, 20);
     osStartThread(&gSoundThread);

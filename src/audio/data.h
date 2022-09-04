@@ -5,6 +5,8 @@
 
 #include "internal.h"
 #include "types.h"
+#include "synthesis.h"
+#include "config.h"
 
 #define AUDIO_LOCK_UNINITIALIZED 0
 #define AUDIO_LOCK_NOT_LOADING 0x76557364
@@ -12,12 +14,48 @@
 
 #define NUMAIBUFFERS 3
 
+#if defined(VERSION_EU)
+#define DMA_BUF_SIZE_0 0x400
+#define DMA_BUF_SIZE_1 0x200
+#else
+#define DMA_BUF_SIZE_0 (144 * 9)
+#define DMA_BUF_SIZE_1 (160 * 9)
+#endif
+
+// Debug?
+#if defined(VERSION_EU) || defined(VERSION_SH)
+#define UNUSED_COUNT_80333EE8 24
+#else
+#define UNUSED_COUNT_80333EE8 16
+#endif
+
+#if EXPAND_AUDIO_HEAP
+#define PERSISTENT_SEQ_MEM 0x8200
+#define PERSISTENT_BANK_MEM 0xDC00
+#define TEMPORARY_SEQ_MEM 0xE800
+#define TEMPORARY_BANK_MEM 0x5500
+#define BANK_SETS_ALLOC 0x400
+#define EXT_AUDIO_INIT_POOL_SIZE 0x2000
+#else
+#define PERSISTENT_SEQ_MEM 0x4100
+#define PERSISTENT_BANK_MEM 0x6E00
+#define TEMPORARY_SEQ_MEM 0x7400
+#define TEMPORARY_BANK_MEM 0x2A80
+#define BANK_SETS_ALLOC 0x100
+#define EXT_AUDIO_INIT_POOL_SIZE 0x0
+#endif
+
+#define SEQ_BANK_MEM (PERSISTENT_SEQ_MEM + PERSISTENT_BANK_MEM + TEMPORARY_SEQ_MEM + TEMPORARY_BANK_MEM)
+
 // constant .data
 #if defined(VERSION_EU) || defined(VERSION_SH)
 extern struct AudioSessionSettingsEU gAudioSessionPresets[];
+extern struct ReverbSettingsEU sReverbSettings[8];
 #else
-extern struct AudioSessionSettings gAudioSessionPresets[18];
+extern struct AudioSessionSettings gAudioSessionPresets[1];
+extern struct ReverbSettingsUS gReverbSettings[18];
 #endif
+
 extern u16 D_80332388[128]; // unused
 
 #if defined(VERSION_EU) || defined(VERSION_SH)
@@ -109,6 +147,29 @@ extern u16 gUnused80226E98[0x10];
 
 extern u32 gAudioRandom;
 
+#if defined(VERSION_US) || defined(VERSION_JP)
+#define NOTES_BUFFER_SIZE \
+( \
+    MAX_SIMULTANEOUS_NOTES * ((4 /* updatesPerFrame */ * 20 * 2 * sizeof(u64)) \
+    + ALIGN16(sizeof(struct Note)) \
+    + (DMA_BUF_SIZE_0 * 3) \
+    + DMA_BUF_SIZE_1 \
+    + ALIGN16(sizeof(struct NoteSynthesisBuffers))) \
+    + (320 * 2 * sizeof(u64)) /* gMaxAudioCmds */ \
+)
+#else // EU and SH have an additional struct to account for
+#define NOTES_BUFFER_SIZE \
+( \
+    MAX_SIMULTANEOUS_NOTES * ((4 /* updatesPerFrame */ * 0x10 * 2 * sizeof(u64)) \
+    + ALIGN16(sizeof(struct Note)) \
+    + (DMA_BUF_SIZE_0 * 3 * 1 /* presetUnk4 */) \
+    + (DMA_BUF_SIZE_1) \
+    + ALIGN16(sizeof(struct NoteSynthesisBuffers)) \
+    + ALIGN16(4 /* updatesPerFrame */ * sizeof(struct NoteSubEu))) \
+    + ((0x300 + (4 /* numReverbs */ * 0x20)) * 2 * sizeof(u64)) /* gMaxAudioCmds */ \
+)
+#endif
+
 #ifdef VERSION_SH
 extern f32 unk_sh_data_1[];
 
@@ -135,14 +196,12 @@ extern OSMesgQueue *D_SH_80350FA8;
 #endif
 
 #if defined(VERSION_EU) || defined(VERSION_SH)
-#define UNUSED_COUNT_80333EE8 24
-#define AUDIO_HEAP_SIZE 0x2c500
-#define AUDIO_INIT_POOL_SIZE 0x2c00
+#define AUDIO_INIT_POOL_SIZE (0x2B00 + BANK_SETS_ALLOC + EXT_AUDIO_INIT_POOL_SIZE)
 #else
-#define UNUSED_COUNT_80333EE8 16
-#define AUDIO_HEAP_SIZE 0x31150
-#define AUDIO_INIT_POOL_SIZE 0x2500
+#define AUDIO_INIT_POOL_SIZE (0x2400 + BANK_SETS_ALLOC + EXT_AUDIO_INIT_POOL_SIZE)
 #endif
+
+#define AUDIO_HEAP_SIZE (SEQ_BANK_MEM + AUDIO_INIT_POOL_SIZE + NOTES_BUFFER_SIZE + REVERB_WINDOW_HEAP_SIZE)
 
 #ifdef VERSION_SH
 extern u32 D_SH_80315EF0;

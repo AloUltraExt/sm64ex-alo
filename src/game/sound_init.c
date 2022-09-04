@@ -242,7 +242,10 @@ void set_background_music(u16 a, u16 seqArgs, s16 fadeTimer) {
             sound_reset(a);
         }
 
-        if (!gNeverEnteredCastle || seqArgs != SEQ_LEVEL_INSIDE_CASTLE) {
+#ifdef VANILLA_CHECKS
+        if (!gNeverEnteredCastle || seqArgs != SEQ_LEVEL_INSIDE_CASTLE)
+#endif
+        {
             play_music(SEQ_PLAYER_LEVEL, seqArgs, fadeTimer);
             sCurrentMusic = seqArgs;
         }
@@ -295,10 +298,22 @@ void stop_shell_music(void) {
     }
 }
 
+#if PERSISTENT_CAP_MUSIC
+static s8 sDoResetMusic = FALSE;
+extern void stop_cap_music(void);
+#endif
+
 /**
  * Called from threads: thread5_game_loop
  */
 void play_cap_music(u16 seqArgs) {
+#if PERSISTENT_CAP_MUSIC
+    if (sDoResetMusic) {
+        sDoResetMusic = FALSE;
+        stop_cap_music();
+    }
+#endif
+
     play_music(SEQ_PLAYER_LEVEL, seqArgs, 0);
     if (sCurrentCapMusic != MUSIC_NONE && sCurrentCapMusic != seqArgs) {
         stop_background_music(sCurrentCapMusic);
@@ -312,6 +327,9 @@ void play_cap_music(u16 seqArgs) {
 void fadeout_cap_music(void) {
     if (sCurrentCapMusic != MUSIC_NONE) {
         fadeout_background_music(sCurrentCapMusic, 600);
+#if PERSISTENT_CAP_MUSIC
+        sDoResetMusic = TRUE;
+#endif
     }
 }
 

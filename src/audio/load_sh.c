@@ -323,7 +323,7 @@ struct AudioBank *load_banks_immediate(s32 seqId, s32 *outDefaultBank) {
     u8 bank;
     s32 offset;
     s32 i;
-    void *ret;
+    void *ret = NULL;
 
     offset = ((u16 *)gAlBankSets)[canonicalize_index(0, seqId)];
     bank = 0xFF;
@@ -1469,7 +1469,7 @@ void patch_sound(struct AudioBankSound *sound, struct AudioBank *memBase, struct
 
 BAD_RETURN(s32) func_sh_802f5310(s32 bankId, struct AudioBank *mem, struct PatchStruct *patchInfo, s32 arg3) {
     UNUSED u32 pad[2];
-    u8 *addr;
+    u8 *addr = NULL;
     UNUSED u32 pad1[3];
     s32 sp4C;
     struct AudioBankSample *temp_s0;

@@ -49,7 +49,7 @@ OSMesgQueue gAudioDmaMesgQueue;
 OSMesg gAudioDmaMesg;
 OSIoMesg gAudioDmaIoMesg;
 
-struct SharedDma sSampleDmas[0x60];
+struct SharedDma sSampleDmas[MAX_SIMULTANEOUS_NOTES * 4];
 u32 gSampleDmaNumListItems; // sh: 0x803503D4
 u32 sSampleDmaListSize1; // sh: 0x803503D8
 u32 sUnused80226B40; // set to 0, never read, sh: 0x803503DC
@@ -324,11 +324,7 @@ void init_sample_dma_buffers(UNUSED s32 arg0) {
     s32 j;
 #endif
 
-#if defined(VERSION_EU)
-    sDmaBufSize = 0x400;
-#else
-    sDmaBufSize = 144 * 9;
-#endif
+    sDmaBufSize = DMA_BUF_SIZE_0;
 
 #if defined(VERSION_EU)
     for (i = 0; i < gMaxSimultaneousNotes * 3 * gAudioBufferParameters.presetUnk4; i++)
@@ -368,11 +364,8 @@ out1:
     sSampleDmaReuseQueueHead1 = (u8) gSampleDmaNumListItems;
     sSampleDmaListSize1 = gSampleDmaNumListItems;
 
-#if defined(VERSION_EU)
-    sDmaBufSize = 0x200;
-#else
-    sDmaBufSize = 160 * 9;
-#endif
+    sDmaBufSize = DMA_BUF_SIZE_1;
+
     for (i = 0; i < gMaxSimultaneousNotes; i++) {
         sSampleDmas[gSampleDmaNumListItems].buffer = soundAlloc(&gNotesAndBuffersPool, sDmaBufSize);
         if (sSampleDmas[gSampleDmaNumListItems].buffer == NULL) {
@@ -768,8 +761,8 @@ u8 get_missing_bank(u32 seqId, s32 *nonNullCount, s32 *nullCount) {
 }
 
 struct AudioBank *load_banks_immediate(s32 seqId, u8 *outDefaultBank) {
-    void *ret;
-    u32 bankId;
+    void *ret = NULL;
+    u32 bankId = 0;
     u16 offset;
     u8 i;
 
@@ -816,13 +809,7 @@ void preload_sequence(u32 seqId, u8 preloadMask) {
     }
 
     if (preloadMask & PRELOAD_SEQUENCE) {
-        // @bug should be IS_SEQ_LOAD_COMPLETE
-#if QOL_FIX_AUDIO_LOAD_BANK_NOT_SEQUENCE
-        if (IS_SEQ_LOAD_COMPLETE(seqId) == TRUE)
-#else
-        if (IS_BANK_LOAD_COMPLETE(seqId) == TRUE)
-#endif
-        {
+        if (IS_SEQ_LOAD_COMPLETE(seqId)) {
             eu_stubbed_printf_1("SEQ  %d ALREADY CACHED\n", seqId);
             sequenceData = get_bank_or_seq(&gSeqLoadedPool, 2, seqId);
         } else {
@@ -966,10 +953,10 @@ void audio_init() {
     // It seems boot.s doesn't clear the .bss area for audio, so do it here.
     i = 0;
     lim3 = ((uintptr_t) &gAudioGlobalsEndMarker - (uintptr_t) &gAudioGlobalsStartMarker) / 8;
-    ptr64 = &gAudioGlobalsStartMarker - 1;
+    ptr64 = &gAudioGlobalsStartMarker;
     for (k = lim3; k >= 0; k--) {
-        i++;
         ptr64[i] = 0;
+        i++;
     }
 #endif
 
@@ -1037,7 +1024,7 @@ void audio_init() {
     gAudioResetStatus = 1;
     audio_shut_down_and_reset_step();
 #else
-    audio_reset_session(&gAudioSessionPresets[0]);
+    audio_reset_session(0);
 #endif
 
     // Not sure about these prints
@@ -1086,8 +1073,8 @@ void audio_init() {
 
     // Load bank sets for each sequence
     data = LOAD_DATA(gBankSetsData);
-    gAlBankSets = soundAlloc(&gAudioInitPool, 0x100);
-    audio_dma_copy_immediate((uintptr_t) data, gAlBankSets, 0x100);
+    gAlBankSets = soundAlloc(&gAudioInitPool, BANK_SETS_ALLOC);
+    audio_dma_copy_immediate((uintptr_t) data, gAlBankSets, BANK_SETS_ALLOC);
 #else
     // Load headers for sounds and sequences
     data = LOAD_DATA(gMusicData);

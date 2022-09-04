@@ -107,9 +107,6 @@
 /// Fixes manta's water rings to match where it looks
 /// Credits: (Kaze Emanuar)
 #define QOL_FIX_WATER_RING (0 || QOL_FIXES)
-/// Fixes missing sounds in key exit cutscene caused by missing "breaks" in code
-/// Credits: (Easy Fix)
-#define QOL_FIX_MISSING_SOUNDS_KEY_EXIT (0 || QOL_FIXES)
 /// Fixes an oddly defined interaction sub type in penguin mother behavior
 /// Credits: (Easy Fix)
 #define QOL_FIX_TUXIE_HELD_STATE (0 || QOL_FIXES)
@@ -119,12 +116,6 @@
 /// Fixes camera height in BOB and adds missing breaks in code
 /// Credits: (Easy Fix)
 #define QOL_FIX_CAMERA_BOSS_FIGHT_HEIGHT (0 || QOL_FIXES)
-/// Fixes audio code preload sequence so it checks sequences instead of banks
-/// Credits: (Easy Fix)
-#define QOL_FIX_AUDIO_LOAD_BANK_NOT_SEQUENCE (0 || QOL_FIXES)
-/// Fixes drowing sound continously playing while Metal
-/// Credits: (AdyaGD)
-#define QOL_FIX_DROWING_SOUND_METAL (0 || QOL_FIXES)
 /// Fixes complete coins not giving lives every 50 coins after 150 coins
 /// Credits: (coltongit)
 #define QOL_FIX_COMPLETE_COURSE_50_COINS (0 || QOL_FIXES)

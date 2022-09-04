@@ -276,6 +276,12 @@ u16 sLevelAcousticReaches[LEVEL_COUNT] = {
 #define VOLUME_RANGE_UNK2 0.8f
 #endif
 
+// sBackgroundMusicDefaultVolume represents the default volume for background music sequences using the level player (deprecated).
+// This code block is simply commented out for now as to not destroy compatibility with any streamed audio tools.
+// TODO: Delete this entirely once the unsupporting streamed tools or their builds are outdated.
+
+/*
+
 // Default volume for background music sequences (playing on player 0).
 u8 sBackgroundMusicDefaultVolume[] = {
     127, // SEQ_SOUND_PLAYER
@@ -318,25 +324,14 @@ u8 sBackgroundMusicDefaultVolume[] = {
 STATIC_ASSERT(ARRAY_COUNT(sBackgroundMusicDefaultVolume) == SEQ_COUNT,
               "change this array if you are adding sequences");
 
+*/
+
 u8 sCurrentBackgroundMusicSeqId = SEQUENCE_NONE;
 u8 sMusicDynamicDelay = 0;
 u8 sSoundBankUsedListBack[SOUND_BANK_COUNT] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 u8 sSoundBankFreeListFront[SOUND_BANK_COUNT] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 u8 sNumSoundsInBank[SOUND_BANK_COUNT] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; // only used for debugging
 u8 sMaxChannelsForSoundBank[SOUND_BANK_COUNT] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-
-#ifndef AUDIO_NO_LIMIT_BANK_SIZE_TABLE
-// Banks 2 and 7 both grew from 0x30 sounds to 0x40 in size in US.
-#ifdef VERSION_JP
-#define BANK27_SIZE 0x30
-#else
-#define BANK27_SIZE 0x40
-#endif
-u8 sNumSoundsPerBank[SOUND_BANK_COUNT] = {
-    0x70, 0x30, BANK27_SIZE, 0x80, 0x20, 0x80, 0x20, BANK27_SIZE, 0x80, 0x80,
-};
-#undef BANK27_SIZE
-#endif
 
 // sBackgroundMusicMaxTargetVolume and sBackgroundMusicTargetVolume use the 0x80
 // bit to indicate that they are set, and the rest of the bits for the actual value
@@ -834,33 +829,15 @@ void play_sound(s32 soundBits, f32 *pos) {
  * Called from threads: thread4_sound, thread5_game_loop (EU only)
  */
 static void process_sound_request(u32 bits, f32 *pos) {
-#ifndef AUDIO_NO_LIMIT_BANK_SIZE_TABLE
-    u8 bank;
-    u8 soundIndex;
-    u8 counter = 0;
-    u8 soundId;
-#else
-    s32 bank;
-    s32 soundIndex;
     s32 counter = 0;
-#endif
-    f32 dist;
-    const f32 one = 1.0f;
 
-    bank = (bits & SOUNDARGS_MASK_BANK) >> SOUNDARGS_SHIFT_BANK;
-#ifndef AUDIO_NO_LIMIT_BANK_SIZE_TABLE
-    soundId = (bits & SOUNDARGS_MASK_SOUNDID) >> SOUNDARGS_SHIFT_SOUNDID;
+    s32 bank = (bits & SOUNDARGS_MASK_BANK) >> SOUNDARGS_SHIFT_BANK;
 
-    if (soundId >= sNumSoundsPerBank[bank] || sSoundBankDisabled[bank]) {
-        return;
-    }
-#else
     if (sSoundBankDisabled[bank]) {
         return;
     }
-#endif
 
-    soundIndex = sSoundBanks[bank][0].next;
+    s32 soundIndex = sSoundBanks[bank][0].next;
     while (soundIndex != 0xff && soundIndex != 0) {
         // If an existing sound from the same source exists in the bank, then we should either
         // interrupt that sound and replace it with the new sound, or we should drop the new sound.
@@ -909,7 +886,7 @@ static void process_sound_request(u32 bits, f32 *pos) {
         // Allocate from free list
         soundIndex = sSoundBankFreeListFront[bank];
 
-        dist = sqrtf(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]) * one;
+        f32 dist = sqrtf(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]);
         sSoundBanks[bank][soundIndex].x = &pos[0];
         sSoundBanks[bank][soundIndex].y = &pos[1];
         sSoundBanks[bank][soundIndex].z = &pos[2];
@@ -2106,7 +2083,7 @@ static u8 begin_background_music_fade(u16 fadeDuration) {
         targetVolume = 40;
     }
 
-    if (sSoundBanksThatLowerBackgroundMusic != 0 && targetVolume > 20) {
+    if (sSoundBanksThatLowerBackgroundMusic && targetVolume > 20) {
         targetVolume = 20;
     }
 
@@ -2115,8 +2092,7 @@ static u8 begin_background_music_fade(u16 fadeDuration) {
             seq_player_fade_to_target_volume(SEQ_PLAYER_LEVEL, fadeDuration, targetVolume);
         } else {
 #if defined(VERSION_JP) || defined(VERSION_US)
-            gSequencePlayers[SEQ_PLAYER_LEVEL].volume =
-                sBackgroundMusicDefaultVolume[sCurrentBackgroundMusicSeqId] / 127.0f;
+            gSequencePlayers[SEQ_PLAYER_LEVEL].volume = gSequencePlayers[SEQ_PLAYER_LEVEL].volumeDefault;
 #endif
             seq_player_fade_to_normal_volume(SEQ_PLAYER_LEVEL, fadeDuration);
         }
@@ -2416,7 +2392,9 @@ void play_music(u8 player, u16 seqArgs, u16 fadeTimer) {
     for (i = 0; i < sBackgroundMusicQueueSize; i++) {
         if (sBackgroundMusicQueue[i].seqId == seqId) {
             if (i == 0) {
+#if !PERSISTENT_CAP_MUSIC
                 seq_player_play_sequence(SEQ_PLAYER_LEVEL, seqId, fadeTimer);
+#endif
             } else if (!gSequencePlayers[SEQ_PLAYER_LEVEL].enabled) {
                 stop_background_music(sBackgroundMusicQueue[0].seqId);
             }
@@ -2737,7 +2715,7 @@ void sound_reset(u8 presetId) {
     func_802ad74c(0xF2000000, 0);
 #endif
 #if defined(VERSION_JP) || defined(VERSION_US)
-    audio_reset_session(&gAudioSessionPresets[presetId]);
+    audio_reset_session(presetId);
 #else
     audio_reset_session_eu(presetId);
 #endif

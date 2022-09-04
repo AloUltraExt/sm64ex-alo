@@ -397,7 +397,7 @@ u64 *synthesis_process_note(s32 noteIndex, struct NoteSubEu *noteSubEu, struct N
     u16 resamplingRateFixedPoint; // sp5c, sp11A
     s32 nSamplesToLoad; //s0, Ec
     UNUSED u8 pad7[0x0c]; // sp100
-    s32 sp130; //sp128, sp104
+    s32 sp130 = 0; //sp128, sp104
     UNUSED s32 tempBufLen;
     UNUSED u32 pad9;
     s32 t0;
@@ -418,7 +418,7 @@ u64 *synthesis_process_note(s32 noteIndex, struct NoteSubEu *noteSubEu, struct N
     s32 nSamplesInThisIteration; // v1_2
     u32 a3;
     u8 *v0_2;
-    s32 unk_s6; // sp90
+    s32 unk_s6 = 0; // sp90
     s32 s5Aligned;
     s32 sp88;
     s32 sp84;

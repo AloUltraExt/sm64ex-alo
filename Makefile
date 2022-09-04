@@ -1202,11 +1202,14 @@ else
 endif
 
 SOUND_FILES := $(SOUND_BIN_DIR)/sound_data.ctl $(SOUND_BIN_DIR)/sound_data.tbl $(SOUND_BIN_DIR)/sequences.bin $(SOUND_BIN_DIR)/bank_sets
+SOUND_FILES_SH :=
 ifeq ($(VERSION),sh)
   ifeq ($(EXTERNAL_DATA),1)
-    SOUND_FILES += $(SOUND_BIN_DIR)/sequences_header $(SOUND_BIN_DIR)/ctl_header $(SOUND_BIN_DIR)/tbl_header
+    SOUND_FILES_SH := $(SOUND_BIN_DIR)/sequences_header $(SOUND_BIN_DIR)/ctl_header $(SOUND_BIN_DIR)/tbl_header
+    SOUND_FILES += $(SOUND_FILES_SH)
   else
-    $(BUILD_DIR)/src/audio/load_sh.o: $(SOUND_BIN_DIR)/bank_sets.inc.c $(SOUND_BIN_DIR)/sequences_header.inc.c $(SOUND_BIN_DIR)/ctl_header.inc.c $(SOUND_BIN_DIR)/tbl_header.inc.c
+    SOUND_FILES_SH := $(SOUND_BIN_DIR)/bank_sets.inc.c $(SOUND_BIN_DIR)/sequences_header.inc.c $(SOUND_BIN_DIR)/ctl_header.inc.c $(SOUND_BIN_DIR)/tbl_header.inc.c
+    $(BUILD_DIR)/src/audio/load_sh.o: $(SOUND_FILES_SH)
   endif
 endif
 
@@ -1445,6 +1448,12 @@ $(SOUND_BIN_DIR)/%.m64: $(SOUND_BIN_DIR)/%.o
 #==============================================================================#
 # Generated Source Code Files                                                  #
 #==============================================================================#
+
+# Convert binary file to a comma-separated list of byte values for inclusion in C code
+$(BUILD_DIR)/%.inc.c: $(BUILD_DIR)/%
+	$(call print,Converting to C:,$<,$@)
+	$(V)hexdump -v -e '1/1 "0x%X,"' $< > $@
+	$(V)echo >> $@
 
 # Generate animation data
 $(BUILD_DIR)/assets/mario_anim_data.c: $(wildcard assets/anims/*.inc.c)

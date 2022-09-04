@@ -630,9 +630,6 @@ void seq_channel_layer_process_script(struct SequenceChannelLayer *layer) {
                         layer->instrument = NULL;
                     }
 
-                    if (1) {
-                    }
-
                     if (cmd == 0xff) {
                         layer->adsr.releaseRate = 0;
                     }
@@ -1120,9 +1117,6 @@ s32 seq_channel_layer_process_script_part2(struct SequenceChannelLayer *layer) {
                         layer->instrument = NULL;
                     }
 
-                    if (1) {
-                    }
-
                     if (cmd == 0xff) {
                         layer->adsr.releaseRate = 0;
                     }
@@ -1179,7 +1173,7 @@ s32 seq_channel_layer_process_script_part2(struct SequenceChannelLayer *layer) {
             case 0xce:
                 cmd = m64_read_u8(state) + 0x80;
                 layer->freqScaleMultiplier = unk_sh_data_1[cmd];
-                // missing break :)
+                break;
 
             default:
                 switch (cmd & 0xf0) {
@@ -1328,8 +1322,8 @@ s32 seq_channel_layer_process_script_part4(struct SequenceChannelLayer *layer, s
 
 s32 seq_channel_layer_process_script_part3(struct SequenceChannelLayer *layer, s32 cmd) {
     struct M64ScriptState *state = &layer->scriptState;
-    u16 sp3A;
-    s32 vel;
+    u16 sp3A = 0;
+    s32 vel = 0;
     struct SequenceChannel *seqChannel = layer->seqChannel;
     struct SequencePlayer *seqPlayer = seqChannel->seqPlayer;
 
@@ -1493,7 +1487,7 @@ void sequence_channel_process_script(struct SequenceChannel *seqChannel) {
     u8 loBits;
     u16 sp5A;
     s32 sp38;
-    s8 value;
+    s8 value = 0;
     s32 i;
     u8 *seqData;
 
@@ -1669,11 +1663,11 @@ void sequence_channel_process_script(struct SequenceChannel *seqChannel) {
                     case 0xc5: // chan_dynsetdyntable
                         if (value != -1) {
 #if defined(VERSION_EU) || defined(VERSION_SH)
-                            seqData = (*seqChannel->dynTable)[value];
+                            seqData = (*seqChannel->dynTable)[(u8) value];
                             sp38 = (u16)((seqData[0] << 8) + seqData[1]);
                             seqChannel->dynTable = (void *) (seqPlayer->seqData + sp38);
 #else
-                            sp5A = (u16)((((*seqChannel->dynTable)[value])[0] << 8) + (((*seqChannel->dynTable)[value])[1]));
+                            sp5A = (u16)((((*seqChannel->dynTable)[(u8) value])[0] << 8) + (((*seqChannel->dynTable)[(u8) value])[1]));
                             seqChannel->dynTable = (void *) (seqPlayer->seqData + sp5A);
 #endif
                         }
@@ -1700,7 +1694,7 @@ void sequence_channel_process_script(struct SequenceChannel *seqChannel) {
                         } else {
                             eu_stubbed_printf_1("SUB:ERR:BANK %d NOT CACHED.\n", cmd);
                         }
-                        // fallthrough
+                        break;
 #endif
 
                     case 0xc1: // chan_setinstr ("set program"?)
@@ -1942,7 +1936,7 @@ void sequence_channel_process_script(struct SequenceChannel *seqChannel) {
                                 eu_stubbed_printf_0("Audio:Track: CTBLCALL Macro Level Over Error!\n");
                             }
 #endif
-                            seqData = (*seqChannel->dynTable)[value];
+                            seqData = (*seqChannel->dynTable)[(u8) value];
 #if defined(VERSION_EU) || defined(VERSION_SH)
                             state->stack[state->depth++] = state->pc;
                             sp38 = (u16)((seqData[0] << 8) + seqData[1]);
@@ -2060,11 +2054,11 @@ void sequence_channel_process_script(struct SequenceChannel *seqChannel) {
                         break;
 
                     case 0xb5:
-                        seqChannel->unkC8 = *(u16 *) (*seqChannel->dynTable)[value];
+                        seqChannel->unkC8 = *(u16 *) (*seqChannel->dynTable)[(u8) value];
                         break;
 
                     case 0xb6:
-                        value = (*seqChannel->dynTable)[0][value];
+                        value = (*seqChannel->dynTable)[0][(u8) value];
                         break;
 #endif
                 }
@@ -2084,7 +2078,6 @@ void sequence_channel_process_script(struct SequenceChannel *seqChannel) {
                         case 0x88:
                             sp5A = m64_read_s16(state);
                             if (seq_channel_set_layer(seqChannel, loBits) == 0) {
-                                if (1) {}
                                 seqChannel->layers[loBits]->scriptState.pc = seqPlayer->seqData + sp5A;
                             }
                             break;
@@ -2095,7 +2088,7 @@ void sequence_channel_process_script(struct SequenceChannel *seqChannel) {
 
                         case 0x98:
                             if (value != -1 && seq_channel_set_layer(seqChannel, loBits) != -1) {
-                                seqData = (*seqChannel->dynTable)[value];
+                                seqData = (*seqChannel->dynTable)[(u8) value];
                                 sp5A = ((seqData[0] << 8) + seqData[1]);
                                 seqChannel->layers[loBits]->scriptState.pc = seqPlayer->seqData + sp5A;
                             }
@@ -2161,9 +2154,6 @@ void sequence_channel_process_script(struct SequenceChannel *seqChannel) {
                     case 0x90: // chan_setlayer
                         sp5A = m64_read_s16(state);
                         if (seq_channel_set_layer(seqChannel, loBits) == 0) {
-#ifdef VERSION_EU
-                            if (1) {}
-#endif
                             seqChannel->layers[loBits]->scriptState.pc = seqPlayer->seqData + sp5A;
                         }
                         break;
@@ -2174,7 +2164,7 @@ void sequence_channel_process_script(struct SequenceChannel *seqChannel) {
 
                     case 0xb0: // chan_dynsetlayer
                         if (value != -1 && seq_channel_set_layer(seqChannel, loBits) != -1) {
-                            seqData = (*seqChannel->dynTable)[value];
+                            seqData = (*seqChannel->dynTable)[(u8) value];
                             sp5A = ((seqData[0] << 8) + seqData[1]);
                             seqChannel->layers[loBits]->scriptState.pc = seqPlayer->seqData + sp5A;
                         }
@@ -2236,7 +2226,7 @@ void sequence_player_process_sequence(struct SequencePlayer *seqPlayer) {
 #endif
     u8 loBits;
     u8 temp;
-    s32 value;
+    s32 value = 0;
     s32 i;
     u16 u16v;
     u8 *seqData;
@@ -2555,6 +2545,10 @@ void sequence_player_process_sequence(struct SequencePlayer *seqPlayer) {
 #else
                     case 0xdb: // seq_setvol
                         cmd = m64_read_u8(state);
+                        seqPlayer->volumeDefault = FLOAT_CAST(cmd) / 127.0f;
+                        if (seqPlayer->volumeDefault >= 1.0f)
+                            seqPlayer->volumeDefault = 1.0f;
+
                         switch (seqPlayer->state) {
                             case SEQUENCE_PLAYER_STATE_2:
                                 if (seqPlayer->fadeRemainingFrames != 0) {
@@ -2576,8 +2570,13 @@ void sequence_player_process_sequence(struct SequencePlayer *seqPlayer) {
 
                     case 0xda: // seq_changevol
                         temp = m64_read_u8(state);
-                        seqPlayer->fadeVolume =
-                            seqPlayer->fadeVolume + (f32)(s8) temp / US_FLOAT(127.0);
+                        seqPlayer->fadeVolume += (f32)(s8) temp / US_FLOAT(127.0);
+                        
+                        seqPlayer->volumeDefault += (f32)(s8) temp / US_FLOAT(127.0);
+                        if (seqPlayer->volumeDefault > 1.0f)
+                            seqPlayer->volumeDefault = 1.0f;
+                        else if (seqPlayer->volumeDefault < 0.0f)
+                            seqPlayer->volumeDefault = 0.0f;
                         break;
 #endif
 
@@ -2769,6 +2768,7 @@ void init_sequence_player(u32 player) {
     seqPlayer->state = 1;
 #else
     seqPlayer->state = SEQUENCE_PLAYER_STATE_0;
+    seqPlayer->volumeDefault = 1.0f;
 #endif
     seqPlayer->fadeRemainingFrames = 0;
 #if defined(VERSION_EU) || defined(VERSION_SH)
