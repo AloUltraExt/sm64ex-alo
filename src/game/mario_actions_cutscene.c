@@ -870,7 +870,7 @@ s32 launch_mario_until_land(struct MarioState *m, s32 endAction, s32 animation, 
 s32 act_unlocking_key_door(struct MarioState *m) {
     m->faceAngle[1] = m->usedObj->oMoveAngleYaw;
 
-#if QOL_FIX_DOOR_KEY_CUTSCENE
+#if FIX_DOOR_KEY_CUTSCENE
     s16 dAngle = abs_angle_diff(m->usedObj->oFaceAngleYaw, m->faceAngle[1]);
     f32 offset = ((dAngle <= 0x4000) ? 75.0f : -75.0f);
 
@@ -1140,6 +1140,48 @@ s32 act_spawn_spin_landing(struct MarioState *m) {
     return FALSE;
 }
 
+#if BETTER_EXIT_AIRBORNE
+s32 act_exit_airborne(struct MarioState *m) {
+    f32 scale;
+    Vec3f nextScale;
+
+    switch (m->actionState) {
+        case 0:
+            // Set initial scale
+            m->squishTimer = 0xFF;
+            vec3f_set(m->marioObj->header.gfx.scale, 0.0f, 0.0f, 0.0f);
+            // Set forward animation (instead of no animation)
+            set_mario_animation(m, MARIO_ANIM_FORWARD_SPINNING);
+
+            m->actionState = 1;
+            break;
+        case 1: 
+            // Setup Mario scale
+            scale = m->actionTimer / 15.0f;
+            vec3f_set(nextScale, scale, scale, scale);
+            approach_vec3f_asymptotic(m->marioObj->header.gfx.scale, nextScale, 2.0f, 2.0f, 2.0f);
+
+            if (m->actionTimer++ > 15) {
+                m->actionState = 2;
+            }
+            break;
+        case 2:
+            // Land out of painting
+            if (launch_mario_until_land(m, ACT_EXIT_LAND_SAVE_DIALOG, MARIO_ANIM_GENERAL_FALL, -32.0f)) {
+                // heal Mario
+                m->healCounter = 31;
+                // Restore default Scale
+                m->squishTimer = 0;
+            }
+            break;
+    }
+
+    // Rotate him to face away from the entrance
+    m->marioObj->header.gfx.angle[1] += 0x8000;
+    m->particleFlags |= PARTICLE_SPARKLES;
+    return FALSE;
+}
+#else
 /**
  * act_exit_airborne: Jump out of a level after collecting a Power Star (no
  ** sparkles)
@@ -1161,6 +1203,7 @@ s32 act_exit_airborne(struct MarioState *m) {
     m->particleFlags |= PARTICLE_SPARKLES;
     return FALSE;
 }
+#endif
 
 s32 act_falling_exit_airborne(struct MarioState *m) {
     if (launch_mario_until_land(m, ACT_EXIT_LAND_SAVE_DIALOG, MARIO_ANIM_GENERAL_FALL, 0.0f)) {
@@ -1594,7 +1637,7 @@ s32 act_squished(struct MarioState *m) {
     f32 spaceUnderCeil;
     s16 surfAngle;
     s32 underSteepSurf = FALSE; // seems to be responsible for setting velocity?
-#if QOL_FEATURE_SMOOTH_SQUISH
+#if SMOOTH_SQUISH
     Vec3f nextScale;
 #endif
 
@@ -1614,7 +1657,7 @@ s32 act_squished(struct MarioState *m) {
             if (spaceUnderCeil >= 10.1f) {
                 // Mario becomes a pancake
                 squishAmount = spaceUnderCeil / 160.0f;
-#if QOL_FEATURE_SMOOTH_SQUISH
+#if SMOOTH_SQUISH
                 vec3f_set(nextScale, (2.0f - squishAmount), squishAmount, (2.0f - squishAmount));
                 approach_vec3f_asymptotic(m->marioObj->header.gfx.scale, nextScale, 0.5f, 0.5f, 0.5f);
 #else
@@ -1627,9 +1670,7 @@ s32 act_squished(struct MarioState *m) {
                     play_sound_if_no_flag(m, SOUND_MARIO_ATTACKED, MARIO_MARIO_SOUND_PLAYED);
                 }
 
-                // Both of the 1.8's are really floats, but one of them has to
-                // be written as a double for this to match on -O2.
-                vec3f_set(m->marioObj->header.gfx.scale, 1.8, 0.05f, 1.8f);
+                vec3f_set(m->marioObj->header.gfx.scale, 1.8f, 0.05f, 1.8f);
 #ifdef RUMBLE_FEEDBACK
                 queue_rumble_data(10, 80);
 #endif
@@ -1647,10 +1688,8 @@ s32 act_squished(struct MarioState *m) {
                 // 1 unit of health
                 if (m->health < 0x0100) {
                     level_trigger_warp(m, WARP_OP_DEATH);
-                    #if !QOL_FIX_NO_DISAPPEARANCE_SQUISH
                     // woosh, he's gone!
                     set_mario_action(m, ACT_DISAPPEARED, 0);
-                    #endif
                 } else if (m->hurtCounter == 0) {
                     // un-squish animation
                     m->squishTimer = 30;
@@ -1708,10 +1747,8 @@ s32 act_squished(struct MarioState *m) {
         m->health = 0x00FF;
         m->hurtCounter = 0;
         level_trigger_warp(m, WARP_OP_DEATH);
-        #if !QOL_FIX_NO_DISAPPEARANCE_SQUISH
         // woosh, he's gone!
         set_mario_action(m, ACT_DISAPPEARED, 0);
-        #endif
     }
     stop_and_set_height_to_floor(m);
     set_mario_animation(m, MARIO_ANIM_A_POSE);
@@ -2289,10 +2326,6 @@ static void end_peach_cutscene_descend_peach(struct MarioState *m) {
 
 // Mario runs to peach
 static void end_peach_cutscene_run_to_peach(struct MarioState *m) {
-#if !QOL_FIX_END_CUTSCENE_MARIO_FLOOR
-    struct Surface *surf;
-#endif
-
     if (m->actionTimer == 22) {
         sEndPeachAnimation = 5;
     }
@@ -2302,11 +2335,7 @@ static void end_peach_cutscene_run_to_peach(struct MarioState *m) {
         advance_cutscene_step(m);
     }
 
-#if QOL_FIX_END_CUTSCENE_MARIO_FLOOR
     m->pos[1] = m->floorHeight;
-#else
-    m->pos[1] = find_floor(m->pos[0], m->pos[1], m->pos[2], &surf);
-#endif
 
     set_mario_anim_with_accel(m, MARIO_ANIM_RUNNING, 0x00080000);
     play_step_sound(m, 9, 45);

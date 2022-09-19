@@ -35,18 +35,12 @@
 /// Adds Mario's Face Easter Egg (Originally defined in SH)
 /// Credits: (Original Devs)
 #define QOL_FEATURE_MARIO_HEAD_EASTER_EGG (0 || VERSION_SH || (QOL_FEATURES && GODDARD_MFACE && HAS_FRAMEBUFFER))
-/// Adds more air steps to special triple jump such as wallkick and grabbing
-/// Credits: (Vatuu)
-#define QOL_FEATURE_SPECIAL_TRIPLE_JUMP_AIR_STEPS (0 || QOL_FEATURES)
 /// Adds unused cracked ice object in Snowman Land
 /// Credits: (Original Devs, SunlitSpace542, Arceveti)
 #define QOL_FEATURE_SSL_CRACKED_ICE (0 || QOL_FEATURES)
 /// Changes WF breakable wall by no taking damage and returning safely if the proper wall is broken
 /// Credits: (AloXado320)
 #define QOL_FEATURE_BETTER_WF_BREAKEABLE_WALL (0 || QOL_FEATURES)
-/// Makes Mario grab hangable ceilings in any air actions
-/// Credits: (AloXado320)
-#define QOL_FEATURE_HANG_AIR_ANYWHERE (0 || QOL_FEATURES)
 /// Makes cutscene object camera correctly focus an object in a room
 /// Credits: (AloXado320)
 #define QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS (0 || QOL_FEATURES || !VANILLA_CHECKS)
@@ -56,21 +50,9 @@
 /// Changes blue coin switch to respawn instead of disappearing
 /// Credits: (Arceveti)
 #define QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH (0 || QOL_FEATURES)
-/// Changes hanging so you don't need to hold A to stay hanging, adjusts speed and position
-/// Credits: (Arceveti)
-#define QOL_FEATURE_BETTER_HANGING (0 || QOL_FEATURES)
 /// Changes obj_resolve_object_collisions to work consistently
 /// Credits: (Arceveti)
 #define QOL_FEATURE_BETTER_OBJ_COLLISIONS (0 || QOL_FEATURES)
-/// Makes Mario's squish scale smooth rather than being instantly set
-/// Credits: (Arceveti)
-#define QOL_FEATURE_SMOOTH_SQUISH (0 || QOL_FEATURES)
-/// Makes the pitch change when hitting the floor underwater smooth instead of instant
-/// Credits: (Arceveti)
-#define QOL_FEATURE_SMOOTH_WATER_FLOOR_PITCH (0 || QOL_FEATURES)
-/// Hold A when bouncing on an enemy to go higher
-/// Credits: (Arceveti)
-#define QOL_FEATURE_BOUNCE_BOOST (0 || QOL_FEATURES)
 /// Makes leaf particles occasionally fall from trees which contain Hoot 
 /// Credits: (Arceveti)
 #define QOL_FEATURE_HOOT_TREE_PARTICLES (0 || QOL_FEATURES)
@@ -86,18 +68,12 @@
 /// Use intendedYaw to control Hoot instead of raw left and right inputs
 /// Credits: (Arceveti)
 #define QOL_FEATURE_BETTER_HOOT_YAW_CONTROL (0 || QOL_FEATURES)
-/// Makes it slightly easier to stay on narrow platforms
-/// Credits: (Arceveti)
-#define QOL_FEATURE_LEDGE_PROTECTION (0 || QOL_FEATURES)
 /// Makes Koopa Shell boxes respawn
 /// Credits: (Arceveti)
 #define QOL_FEATURE_KOOPA_SHELL_BOXES_RESPAWN (0 || QOL_FEATURES)
 /// Makes rooms code use find_room_floor, and improves bhv_init_room
 /// Credits: (Arceveti)
 #define QOL_FEATURE_BETTER_ROOM_CHECKS (0 || QOL_FEATURES)
-/// Makes turning walking speed based of velocity
-/// Credits: (Arceveti)
-#define QOL_FEATURE_VELOCITY_BASED_TURN_SPEED (0 || QOL_FEATURES)
 
 // --| Quality of life fixes
 // --| Code Fixes
@@ -122,9 +98,6 @@
 /// Fixes cap cloning when Mario takes a fade warp
 /// Credits: (AloXado320)
 #define QOL_FIX_HAT_CLONE_FADE (0 || QOL_FIXES)
-/// Fixes open door key cutscene on 90-270 degrees
-/// Credits: (AloXado320)
-#define QOL_FIX_DOOR_KEY_CUTSCENE (0 || QOL_FIXES)
 /// Fixes incorrect yellow sparkle offset positions
 /// Credits: (Easy Fix)
 #define QOL_FIX_YELLOW_SPARKLES_OFFSET (0 || QOL_FIXES)
@@ -137,9 +110,6 @@
 /// Fixes BITS tilting pyramid y distance
 /// Credits: (Easy Fix)
 #define QOL_FIX_TILTING_PYRAMID_Y_DISTANCE (0 || QOL_FIXES)
-/// Fixes surface wind detection (avoid grabbed star wind softlock)
-/// Credits: (AloXado320)
-#define QOL_FIX_SURFACE_WIND_DETECTION (0 || QOL_FIXES)
 /// Fixes King Bob-omb music still playing while you go away after throwing him off
 /// Credits: (AloXado320)
 #define QOL_FIX_KING_BOBOMB_MUSIC_THROWN_OFF (0 || QOL_FIXES)
@@ -164,21 +134,12 @@
 /// Fixes Bowser being invisible in BITFS after grabbing him
 /// Credits: (AloXado320)
 #define QOL_FIX_BOWSER_TRANSPARENT_HELD (0 || QOL_FIXES)
-/// Fixes input off check order in common_landing_cancels
-/// Credits: (Easy Fix)
-#define QOL_FIX_LANDING_CANCEL_OFF_FLOOR (0 || QOL_FIXES)
-/// Fixes non slippery surfaces, so Mario can jump kick them, instead of being forced to dive
-/// Credits: (Reonu)
-#define QOL_FIX_JUMP_KICK_NOT_SLIPPERY (0 || QOL_FIXES)
 /// Fixes one frame timer when bully backs up
 /// Credits: (coltongit)
 #define QOL_FIX_BULLY_BACK_UP_TIMER (0 || QOL_FIXES)
 /// Fixes (or rather, adjusts) Mario's head look at bosses
 /// Credits: (coltongit)
 #define QOL_FIX_MARIO_LOOK_HEAD_BOSSES (0 || QOL_FIXES)
-/// Fixes slide action so they have short hitbox
-/// Credits: (AloXado320)
-#define QOL_FIX_SHORT_HITBOX_SLIDE_ACTS (0 || QOL_FIXES)
 /// Fixes pss slide value not being reset on exit
 /// Credits: (AloXado320)
 #define QOL_FIX_RESET_PSS_SLIDE_STARTED (0 || QOL_FIXES)
@@ -197,15 +158,6 @@
 /// Fixes fake pole grab on the bottom of it, allowing to be properly grabbed
 /// Credits: (Arceveti)
 #define QOL_FIX_POLE_BOTTOM_GRAB (0 || QOL_FIXES)
-/// Fixes undefined anim return in the hit wall code, more info in the fix itself
-/// Credits: (Arceveti)
-#define QOL_FIX_HIT_WALL_ACTION (0 || QOL_FIXES)
-/// Fixes Mario floor height in the peach ending cutscene
-/// Credits: (Arceveti)
-#define QOL_FIX_END_CUTSCENE_MARIO_FLOOR (0 || QOL_FIXES)
-/// Fixes bonks when ground pounding next to a wall
-/// Credits: (Arceveti)
-#define QOL_FIX_GROUND_POUND_WALL (0 || QOL_FIXES)
 /// Fixes spawnable star softlock when a cutscene is already playing
 /// Credits: (Arceveti)
 #define QOL_FIX_SPAWNED_STAR_SOFTLOCK (0 || QOL_FIXES)
@@ -221,36 +173,15 @@
 /// Fixes Mario interact shell start action while in air
 /// Credits: (Arceveti)
 #define QOL_FIX_MARIO_KOOPA_SHELL_ACTION (0 || QOL_FIXES)
-/// Fixes missing not grabbable check in water
-/// Credits: (Arceveti)
-#define QOL_FIX_WATER_GRAB_NOT_GRABBABLE (0 || QOL_FIXES)
-/// Fixes several stationary bugs by perform ground steps while standing still
-/// Credits: (Arceveti)
-#define QOL_FIX_STATIONARY_GROUND_STEPS (0 || QOL_FIXES)
-/// Fixes Mario's collision with lava so it detects regardless of action
-/// Credits: (Arceveti)
-#define QOL_FIX_LAVA_INTERACTION (0 || QOL_FIXES)
 /// Fixes palm height hardcoded course check and height when climbing up/down
 /// Credits: (Arceveti)
 #define QOL_FIX_PALM_TREE_LEAF_HEIGHT (0 || QOL_FIXES || !VANILLA_CHECKS)
-/// Fixes crash if there's no referenced ceiling
-/// Credits: (Arceveti)
-#define QOL_FIX_CEILING_NULL_CRASH (0 || QOL_FIXES)
 /// Fixes shell speed water level origin offset
 /// Credits: (Arceveti)
 #define QOL_FIX_SHELL_SPEED_NEGATIVE_OFFSET (0 || QOL_FIXES)
-/// Fixes bonks when walking into a wall
-/// Credits: (Arceveti)
-#define QOL_FIX_LESS_GROUND_BONKS (0 || QOL_FIXES)
 /// Fixes possible weird behavior when spiny didn't have a proper parent object
 /// Credits: (Arceveti)
 #define QOL_FIX_SPINY_CHECK_ACTIVE_PARENT (0 || QOL_FIXES)
-/// Fixes side flip ground pound visual bug
-/// Credits: (Arceveti)
-#define QOL_FIX_SIDE_FLIP_VISUAL_LOOK (0 || QOL_FIXES)
-/// Fixes Mario disappearance when squished with no health (originally intentional but causes some bugs)
-/// Credits: (Arceveti)
-#define QOL_FIX_NO_DISAPPEARANCE_SQUISH (0 || QOL_FIXES)
 /// Fixes Mr L eyeball billboard position
 /// Credits: (Arceveti)
 #define QOL_FIX_MR_I_EYEBALL_POSITION (0 || QOL_FIXES)

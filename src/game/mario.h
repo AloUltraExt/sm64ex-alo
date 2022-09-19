@@ -31,9 +31,7 @@ void mario_set_forward_vel(struct MarioState *m, f32 speed);
 s32 mario_get_floor_class(struct MarioState *m);
 u32 mario_get_terrain_sound_addend(struct MarioState *m);
 struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 radius);
-#ifdef BETTER_RESOLVE_WALL_COLLISION
 void resolve_and_return_wall_collisions_data(Vec3f pos, f32 offset, f32 radius, struct WallCollisionData *collisionData);
-#endif
 f32 vec3f_find_ceil(Vec3f pos, f32 height, struct Surface **ceil);
 s32 mario_facing_downhill(struct MarioState *m, s32 turnYaw);
 u32 mario_floor_is_slippery(struct MarioState *m);
@@ -51,6 +49,7 @@ s32 hurt_and_set_mario_action(struct MarioState *m, u32 action, u32 actionArg, s
 s32 check_common_action_exits(struct MarioState *m);
 s32 check_common_hold_action_exits(struct MarioState *m);
 s32 transition_submerged_to_walking(struct MarioState *m);
+s32 transition_submerged_to_airborne(struct MarioState *m);
 s32 set_water_plunge_action(struct MarioState *m);
 u32 update_and_return_cap_flags(struct MarioState *m);
 s32 execute_mario_action(UNUSED struct Object *o);

@@ -256,7 +256,7 @@ void stop_and_set_height_to_floor(struct MarioState *m) {
 }
 
 s32 stationary_ground_step(struct MarioState *m) {
-#if QOL_FIX_STATIONARY_GROUND_STEPS
+#if FIX_STATIONARY_GROUND_STEPS
     mario_set_forward_vel(m, 0.0f);
     mario_update_moving_sand(m);
     mario_update_windy_ground(m);
@@ -335,7 +335,7 @@ static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
     }
 
     if (nextPos[1] > floorHeight + 100.0f) {
-#if QOL_FEATURE_LEDGE_PROTECTION
+#if LEDGE_CLIMB_PROTECTION
         // Prevent some cases of slipping off ledges
         if ((m->input & INPUT_NONZERO_ANALOG)
          && (m->forwardVel < 32.0f)
@@ -675,7 +675,7 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
             return AIR_STEP_HIT_WALL;
         }
         if ((m->vel[1] >= 0.0f) && (ceil->type == SURFACE_HANGABLE) &&
-#if QOL_FEATURE_HANG_AIR_ANYWHERE
+#if HANGABLE_SURFACE_AIR_FREELY
         !(m->prevAction & ACT_FLAG_HANGING) && (m->action & ACT_FLAG_AIR)
 #else
         (stepArg & AIR_STEP_CHECK_HANG)
@@ -717,7 +717,7 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
 
             //! Uses referenced ceiling instead of ceil (ceiling hang upwarp)
             if (
-#if QOL_FEATURE_HANG_AIR_ANYWHERE
+#if HANGABLE_SURFACE_AIR_FREELY
             !(m->prevAction & ACT_FLAG_HANGING) && (m->action & ACT_FLAG_AIR)
 #else
             (stepArg & AIR_STEP_CHECK_HANG)
@@ -910,7 +910,7 @@ void apply_vertical_wind(struct MarioState *m) {
         offsetY = m->pos[1] - -1500.0f;
 
         if (m->floor->type == SURFACE_VERTICAL_WIND && -3000.0f < offsetY && offsetY < 2000.0f
-#if QOL_FIX_SURFACE_WIND_DETECTION
+#if FIX_SURFACE_WIND_DETECTION
         && (m->action == ACT_VERTICAL_WIND)
 #endif
         ) {

@@ -1369,7 +1369,7 @@ u32 interact_hit_from_below(struct MarioState *m, UNUSED u32 interactType, struc
 #endif
                 return drop_and_set_mario_action(m, ACT_TWIRLING, 0);
             } else {
-                #if QOL_FEATURE_BOUNCE_BOOST
+                #if JUMP_ENEMY_BOUNCE_BOOST
                 bounce_off_object(m, o, (m->input & INPUT_A_DOWN) ? 50.0f : 30.0f);
                 #else
                 bounce_off_object(m, o, 30.0f);
@@ -1411,7 +1411,7 @@ u32 interact_bounce_top(struct MarioState *m, UNUSED u32 interactType, struct Ob
 #endif
                 return drop_and_set_mario_action(m, ACT_TWIRLING, 0);
             } else {
-                #if QOL_FEATURE_BOUNCE_BOOST
+                #if JUMP_ENEMY_BOUNCE_BOOST
                 bounce_off_object(m, o, (m->input & INPUT_A_DOWN) ? 50.0f : 30.0f);
                 #else
                 bounce_off_object(m, o, 30.0f);
@@ -1866,7 +1866,7 @@ void check_death_barrier(struct MarioState *m) {
     }
 }
 
-#if QOL_FIX_LAVA_INTERACTION
+#if FIX_LAVA_INTERACTION
 #define ACT_FLAG_GROUP_NO_LAVA_BOOST (ACT_FLAG_SWIMMING | ACT_FLAG_RIDING_SHELL)
 #else
 #define ACT_FLAG_GROUP_NO_LAVA_BOOST (ACT_FLAG_AIR | ACT_FLAG_SWIMMING | ACT_FLAG_RIDING_SHELL)

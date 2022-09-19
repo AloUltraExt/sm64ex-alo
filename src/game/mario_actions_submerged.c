@@ -446,17 +446,14 @@ static void common_swimming_step(struct MarioState *m, s16 swimStrength) {
 
     switch (perform_water_step(m)) {
         case WATER_STEP_HIT_FLOOR:
-            #if QOL_FEATURE_SMOOTH_WATER_FLOOR_PITCH
-            floorPitch = atan2s(1.0f, m->floor->normal.y);
-            if (m->faceAngle[0] < floorPitch) {
-                m->faceAngle[0] = approach_s32(m->faceAngle[0], floorPitch, 0x800, 0x800);
-            }
-            #else
             floorPitch = -find_floor_slope(m, -0x8000);
             if (m->faceAngle[0] < floorPitch) {
+#if SMOOTH_PITCH_WHEN_HITTING_FLOOR_UNDERWATER
+                approach_angle_bool(&m->faceAngle[0], floorPitch, 0x800);
+#else
                 m->faceAngle[0] = floorPitch;
+#endif
             }
-            #endif
             break;
 
         case WATER_STEP_HIT_CEILING:
@@ -781,12 +778,6 @@ static s32 check_water_grab(struct MarioState *m) {
     // you can use water grab to pick up heave ho.
     if (m->marioObj->collidedObjInteractTypes & INTERACT_GRABBABLE) {
         struct Object *object = mario_get_collided_object(m, INTERACT_GRABBABLE);
-
-#if QOL_FIX_WATER_GRAB_NOT_GRABBABLE
-        if (object->oInteractionSubtype & INT_SUBTYPE_NOT_GRABBABLE) {
-            return FALSE;
-        }
-#endif
 
         f32 dx = object->oPosX - m->pos[0];
         f32 dz = object->oPosZ - m->pos[2];
@@ -1509,9 +1500,19 @@ static s32 act_hold_metal_water_fall_land(struct MarioState *m) {
 }
 
 static s32 check_common_submerged_cancels(struct MarioState *m) {
-    if (m->pos[1] > m->waterLevel - 80) {
-        if (m->waterLevel - 80 > m->floorHeight) {
-            m->pos[1] = m->waterLevel - 80;
+    s16 waterHeight = m->waterLevel - 80;
+    if (m->pos[1] > waterHeight) {
+        if (waterHeight > m->floorHeight) {
+#if FIX_WATER_PLUNGE_UPWARP
+            if (m->pos[1] - waterHeight < 50) {
+                m->pos[1] = waterHeight; // lock mario to top if the falloff isn't big enough
+            } else {
+                return transition_submerged_to_airborne(m);
+            }
+#else
+            // Vanilla bug: Downwarp swimming out of waterfalls
+            m->pos[1] = waterHeight;
+#endif
         } else {
             //! If you press B to throw the shell, there is a ~5 frame window
             // where your held object is the shell, but you are not in the

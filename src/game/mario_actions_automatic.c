@@ -380,8 +380,8 @@ s32 perform_hanging_step(struct MarioState *m, Vec3f nextPos) {
 s32 update_hang_moving(struct MarioState *m) {
     s32 stepResult;
     Vec3f nextPos;
-#if QOL_FEATURE_BETTER_HANGING
-    f32 maxSpeed = m->intendedMag / 2.0f;
+#if BETTER_HANGING
+    f32 maxSpeed = (m->intendedMag / 2.0f);
 #else
     f32 maxSpeed = 4.0f;
 #endif
@@ -391,7 +391,7 @@ s32 update_hang_moving(struct MarioState *m) {
         m->forwardVel = maxSpeed;
     }
 
-#if QOL_FEATURE_BETTER_HANGING
+#if BETTER_HANGING
     s16 turnRange = 0x800;
     s16 dYaw = abs_angle_diff(m->faceAngle[1], m->intendedYaw); // 0x0 is turning forwards, 0x8000 is turning backwards
     if (m->forwardVel < 0.0f) { // Don't modify Mario's speed and turn radius if Mario is moving backwards
@@ -401,11 +401,11 @@ s32 update_hang_moving(struct MarioState *m) {
         // Reduce Mario's forward speed by the turn amount, so Mario won't move off sideward from the intended angle when turning around.
         m->forwardVel *= ((coss(dYaw) + 1.0f) / 2.0f); // 1.0f is turning forwards, 0.0f is turning backwards
         // Increase turn speed if forwardVel is lower and intendedMag is higher
-        turnRange     *= (2.0f - (ABS(m->forwardVel) / MAX(m->intendedMag, __FLT_EPSILON__))); // 1.0f front, 2.0f back
+        turnRange     *= (2.0f - (ABS(m->forwardVel) / MAX(m->intendedMag, NEAR_ZERO))); // 1.0f front, 2.0f back
     }
-    m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, turnRange, turnRange);
+    m->faceAngle[1] = approach_angle(m->faceAngle[1], m->intendedYaw, turnRange);
 #else
-    m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0x800, 0x800);
+    m->faceAngle[1] = approach_angle(m->faceAngle[1], m->intendedYaw, 0x800);
 #endif
 
     m->slideYaw = m->faceAngle[1];
@@ -435,7 +435,7 @@ void update_hang_stationary(struct MarioState *m) {
     m->pos[1] = m->ceilHeight - 160.0f;
     vec3f_copy(m->vel, gVec3fZero);
     vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
-#if QOL_FEATURE_BETTER_HANGING
+#if BETTER_HANGING
     vec3s_set(m->marioObj->header.gfx.angle, 0x0, m->faceAngle[1], 0x0);
 #endif
 }
@@ -445,13 +445,18 @@ s32 act_start_hanging(struct MarioState *m) {
     if (m->actionTimer++ == 0) {
         queue_rumble_data(5, 80);
     }
+#else
+    m->actionTimer++;
 #endif
 
-#if QOL_FEATURE_BETTER_HANGING
+#if BETTER_HANGING
+    // Immediately go into hanging if controller stick is pointed far enough in
+    // any direction, and it has been at least a frame
     if ((m->input & INPUT_NONZERO_ANALOG) && (m->intendedMag > 16.0f) && (m->actionTimer > 1)) {
         return set_mario_action(m, ACT_HANGING, 0);
     }
-    
+
+    // Only let go if A or B has been pressed
     if (m->input & (INPUT_A_PRESSED | INPUT_B_PRESSED)) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
@@ -469,16 +474,16 @@ s32 act_start_hanging(struct MarioState *m) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
-#if QOL_FIX_CEILING_NULL_CRASH
-    if ((m->ceil == NULL) || (m->ceil->type != SURFACE_HANGABLE)) {
-        return set_mario_action(m, ACT_FREEFALL, 0);
-    }
-#else
     //! Crash if Mario's referenced ceiling is NULL (same for other hanging actions)
-    if (m->ceil->type != SURFACE_HANGABLE) {
+    //  Fixed with qol fixes
+    if (
+#if FIX_CEILING_NULL_CRASH
+        (m->ceil == NULL) ||
+#endif
+        (m->ceil->type != SURFACE_HANGABLE)
+    ) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
-#endif
 
     set_mario_animation(m, MARIO_ANIM_HANG_ON_CEILING);
     play_sound_if_no_flag(m, SOUND_ACTION_HANGING_STEP, MARIO_ACTION_SOUND_PLAYED);
@@ -496,29 +501,29 @@ s32 act_hanging(struct MarioState *m) {
         return set_mario_action(m, ACT_HANG_MOVING, m->actionArg);
     }
 
-#if QOL_FEATURE_BETTER_HANGING
-    if (m->input & (INPUT_A_PRESSED | INPUT_B_PRESSED)) {
-        return set_mario_action(m, ACT_FREEFALL, 0);
-    }
+
+    if (
+#if BETTER_HANGING
+        m->input & (INPUT_A_PRESSED | INPUT_B_PRESSED)
 #else
-    if (!(m->input & INPUT_A_DOWN)) {
+        !(m->input & INPUT_A_DOWN)
+#endif
+    ) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
-#endif
 
     if (m->input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
-#if QOL_FIX_CEILING_NULL_CRASH
-    if ((m->ceil == NULL) || (m->ceil->type != SURFACE_HANGABLE)) {
-        return set_mario_action(m, ACT_FREEFALL, 0);
-    }
-#else
-    if (m->ceil->type != SURFACE_HANGABLE) {
-        return set_mario_action(m, ACT_FREEFALL, 0);
-    }
+    if (
+#if FIX_CEILING_NULL_CRASH
+        (m->ceil == NULL) ||
 #endif
+        (m->ceil->type != SURFACE_HANGABLE)
+    ) {
+        return set_mario_action(m, ACT_FREEFALL, 0);
+    }
 
     if (m->actionArg & 1) {
         set_mario_animation(m, MARIO_ANIM_HANDSTAND_LEFT);
@@ -532,43 +537,43 @@ s32 act_hanging(struct MarioState *m) {
 }
 
 s32 act_hang_moving(struct MarioState *m) {
-#if QOL_FEATURE_BETTER_HANGING
-    if (m->input & (INPUT_A_PRESSED | INPUT_B_PRESSED)) {
-        return set_mario_action(m, ACT_FREEFALL, 0);
-    }
+    if (
+#if BETTER_HANGING
+        m->input & (INPUT_A_PRESSED | INPUT_B_PRESSED)
 #else
-    if (!(m->input & INPUT_A_DOWN)) {
+        !(m->input & INPUT_A_DOWN)
+#endif
+    ) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
-#endif
 
     if (m->input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
-#if QOL_FIX_CEILING_NULL_CRASH
-    if ((m->ceil == NULL) || (m->ceil->type != SURFACE_HANGABLE)) {
-        return set_mario_action(m, ACT_FREEFALL, 0);
-    }
-#else
-    if (m->ceil->type != SURFACE_HANGABLE) {
-        return set_mario_action(m, ACT_FREEFALL, 0);
-    }
+    if (
+#if FIX_CEILING_NULL_CRASH
+        (m->ceil == NULL) ||
 #endif
+        (m->ceil->type != SURFACE_HANGABLE)
+    ) {
+        return set_mario_action(m, ACT_FREEFALL, 0);
+    }
 
+#if BETTER_HANGING
+    // determine animation speed from forward velocity
+    set_mario_anim_with_accel(
+        m,
+        (m->actionArg & 0x1) ? MARIO_ANIM_MOVE_ON_WIRE_NET_RIGHT : MARIO_ANIM_MOVE_ON_WIRE_NET_LEFT,
+        (m->forwardVel + 1.0f) * 0x2000
+    );
+#else
     if (m->actionArg & 1) {
-#if QOL_FEATURE_BETTER_HANGING
-        set_mario_anim_with_accel(m, MARIO_ANIM_MOVE_ON_WIRE_NET_RIGHT, ((m->forwardVel + 1.0f) * 0x2000));
-#else
         set_mario_animation(m, MARIO_ANIM_MOVE_ON_WIRE_NET_RIGHT);
-#endif
     } else {
-#if QOL_FEATURE_BETTER_HANGING
-        set_mario_anim_with_accel(m, MARIO_ANIM_MOVE_ON_WIRE_NET_LEFT, ((m->forwardVel + 1.0f) * 0x2000));
-#else
         set_mario_animation(m, MARIO_ANIM_MOVE_ON_WIRE_NET_LEFT);
-#endif
     }
+#endif
 
 
     if (m->marioObj->header.gfx.animInfo.animFrame == 12) {
@@ -578,7 +583,7 @@ s32 act_hang_moving(struct MarioState *m) {
 #endif
     }
 
-#if QOL_FEATURE_BETTER_HANGING
+#if BETTER_HANGING
     if (m->input & INPUT_UNKNOWN_5) {
         if (m->marioObj->header.gfx.animInfo.animFrame > 6) m->actionArg ^= 1;
         set_mario_action(m, ACT_HANGING, m->actionArg);

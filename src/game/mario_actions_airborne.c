@@ -616,14 +616,14 @@ s32 act_hold_freefall(struct MarioState *m) {
 
 s32 act_side_flip(struct MarioState *m) {
     if (m->input & INPUT_B_PRESSED) {
-#if QOL_FIX_SIDE_FLIP_VISUAL_LOOK
+#if FIX_SIDE_FLIP_VISUAL_LOOK
         m->marioObj->header.gfx.angle[1] += 0x8000;
 #endif
         return set_mario_action(m, ACT_DIVE, 0);
     }
 
     if (m->input & INPUT_Z_PRESSED) {
-#if QOL_FIX_SIDE_FLIP_VISUAL_LOOK
+#if FIX_SIDE_FLIP_VISUAL_LOOK
         m->marioObj->header.gfx.angle[1] += 0x8000;
 #endif
         return set_mario_action(m, ACT_GROUND_POUND, 0);
@@ -998,7 +998,7 @@ s32 act_ground_pound(struct MarioState *m) {
             }
             set_camera_shake_from_hit(SHAKE_GROUND_POUND);
         }
-#if !QOL_FIX_GROUND_POUND_WALL
+#if !FIX_GROUND_POUND_WALL
         else if (stepResult == AIR_STEP_HIT_WALL) {
             mario_set_forward_vel(m, -16.0f);
             if (m->vel[1] > 0.0f) {
@@ -1368,9 +1368,11 @@ s32 act_air_hit_wall(struct MarioState *m) {
         return set_mario_action(m, ACT_SOFT_BONK, 0);
     }
 
-#if QOL_FIX_HIT_WALL_ACTION
+#if FIX_HIT_WALL_ACTION
+    set_mario_animation(m, MARIO_ANIM_START_WALLKICK);
     m->marioObj->header.gfx.angle[1] = atan2s(m->wall->normal.z, m->wall->normal.x);
-    return set_mario_animation(m, MARIO_ANIM_START_WALLKICK);
+
+    return FALSE;
 #else
     #ifdef AVOID_UB
     return
@@ -2058,7 +2060,7 @@ s32 act_special_triple_jump(struct MarioState *m) {
 
     switch (perform_air_step(m, 0)) {
         case AIR_STEP_LANDED:
-            #if QOL_FEATURE_SPECIAL_TRIPLE_JUMP_AIR_STEPS
+            #if SPECIAL_TRIPLE_JUMP_AIR_STEPS
             if (m->actionState++ != 0) {
                 set_mario_action(m, ACT_FREEFALL_LAND_STOP, 0);
             }
@@ -2072,7 +2074,7 @@ s32 act_special_triple_jump(struct MarioState *m) {
             play_mario_landing_sound(m, SOUND_ACTION_TERRAIN_LANDING);
             break;
         
-        #if QOL_FEATURE_SPECIAL_TRIPLE_JUMP_AIR_STEPS
+        #if SPECIAL_TRIPLE_JUMP_AIR_STEPS
         case AIR_STEP_HIT_WALL:
             if (m->forwardVel > 16.0f) {
                 mario_bonk_reflection(m, FALSE);
