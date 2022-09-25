@@ -477,14 +477,15 @@ void update_walking_speed(struct MarioState *m) {
     if (m->quicksandDepth > 10.0f) {
         targetSpeed *= 6.25 / m->quicksandDepth;
     }
-#if FIX_INITIAL_WALKING_SPEED
-    if (m->forwardVel <= 8.0f) {
-        m->forwardVel = MIN(m->intendedMag, 8.0f);
-    }
-#endif
+
     if (m->forwardVel <= 0.0f) {
         m->forwardVel += 1.1f;
     } else if (m->forwardVel <= targetSpeed) {
+#if FIX_INITIAL_WALKING_SPEED
+        if (m->forwardVel <= 8.0f) {
+            m->forwardVel = MIN(m->intendedMag, 8.0f);
+        }
+#endif
         m->forwardVel += 1.1f - m->forwardVel / 43.0f;
     } else if (m->floor->normal.y >= 0.95f) {
         m->forwardVel -= 1.0f;
