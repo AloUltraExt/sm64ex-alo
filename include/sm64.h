@@ -14,6 +14,14 @@
 #include "surface_terrains.h"
 #include "macros.h"
 
+// Misc tweaks defines usually changed in binary roms
+#ifdef RM2C
+#include "rm2c.h"
+#include "src/extras/rm2c/tweaks.h"
+#else
+#include "include/tweaks.h"
+#endif
+
 #if defined(__GNUC__) && defined(TARGET_N64)
 void *memset(void *dest, int c, size_t n);
 int memcmp(const void *str1, const void *str2, size_t n);

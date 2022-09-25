@@ -51,6 +51,23 @@ OUTPUT_ARCH (mips)
     } \
     END_SEG(name)
 
+#ifdef RM2C
+#define CUSTOM_LEVEL(name) \
+   BEGIN_SEG(name##_segment_E, 0x0E000000) \
+   { \
+      BUILD_DIR/levels/name/custom.leveldata.o(.data); \
+   } \
+   END_SEG(name##_segment_E) \
+   BEGIN_SEG(name##_segment_1B, 0x1B000000) \
+   { \
+	  BUILD_DIR/levels/name/custom.geo.o(.data); \
+	  BUILD_DIR/levels/name/custom.script.o(.data); \
+      . = ALIGN(0x10); \
+   } \
+   END_SEG(name##_segment_1B)
+
+#endif
+
 #define STANDARD_OBJECTS(name, segAddr, geoAddr) \
     BEGIN_SEG(name##_mio0, segAddr) \
     { \
@@ -1118,6 +1135,11 @@ SECTIONS
     MIO0_SEG(bidw_skybox, 0x0A000000)
     MIO0_SEG(bits_skybox, 0x0A000000)
 
+   // Custom Skyboxes from RM2C. In base repo dummy file exists
+#ifdef RM2C
+   #include "textures/skyboxes/Skybox_Rules.ld"
+#endif
+
     // Texture bins
     MIO0_SEG(fire, 0x09000000)
     MIO0_SEG(spooky, 0x09000000)
@@ -1140,6 +1162,13 @@ SECTIONS
 
 #undef STUB_LEVEL
 #undef DEFINE_LEVEL
+
+#ifdef RM2C
+//So RM2C can partially output custom levels instead of forcing all levels to have custom content
+#define DEFINE_LEVEL(folder,_0) CUSTOM_LEVEL(folder)
+   #include "levels/custom_level_defines.h"
+#undef DEFINE_LEVEL
+#endif
 
     /* 4E9FA0-? [?] */
     BEGIN_SEG(assets, __romPos)

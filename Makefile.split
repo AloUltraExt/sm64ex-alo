@@ -87,6 +87,11 @@ ifeq ($(PORT_MOP_OBJS),1)
   MOP_DIRS       := Blargg_MOP Checkpoint_Flag_MOP FlipBlock_MOP Flipswap_Platform_MOP Flipswap_Platform_Border_MOP Flipswitch_Panel_MOP Green_Switchboard_MOP Green_Switchboard_Gears_MOP Moving_Rotating_Block_MOP Noteblock_MOP SandBlock_MOP Shrink_Platform_MOP Shrink_Platform_Border_MOP Spring_MOP Switchblock_MOP Switchblock_Switch_MOP 
 endif
 
+# Custom RM2C leveldata rules
+ifeq ($(RM2C),1)
+  $(BUILD_DIR)/levels/%/custom.leveldata.elf: SEGMENT_ADDRESS := 0x0E000000
+endif
+
 # Actor Textures
 AMP_CHUCKYA_TEXTURES            := $(foreach dir,$(AMP_DIRS),        $(wildcard actors/$(dir)/*.png))
 BOBOMBS_BUBBLE_TEXTURES         := $(foreach dir,$(KING_BOBOMB_DIRS),$(wildcard actors/$(dir)/*.png))

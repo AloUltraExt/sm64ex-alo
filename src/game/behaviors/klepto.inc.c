@@ -377,7 +377,11 @@ void bhv_klepto_update(void) {
             || o->oAnimState == KLEPTO_ANIM_STATE_HOLDING_TRANSPARENT_STAR
             #endif
             ) {
+                #ifdef RM2C_HAS_CUSTOM_STAR_POS
+                spawn_default_star(KleptoStarPos);
+                #else
                 spawn_default_star(-5550.0f, 300.0f, -930.0f);
+                #endif
             }
 
             o->oAnimState = KLEPTO_ANIM_STATE_HOLDING_NOTHING;

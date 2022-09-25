@@ -1,7 +1,7 @@
 #pragma once
 
 /// Increase audio heap size to allow for larger/more custom sequences/banks/sfx to be imported without causing issues.
-#define EXPAND_AUDIO_HEAP (0 || EXTERNAL_DATA)
+#define EXPAND_AUDIO_HEAP (0 || RM2C || EXTERNAL_DATA)
 
 /**
  * The maximum number of notes (sfx inclusive) that can sound at any given time.

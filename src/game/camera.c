@@ -170,7 +170,7 @@ extern struct ParallelTrackingPoint *sParTrackPath;
 extern struct CameraStoredInfo sParTrackTransOff;
 extern struct CameraStoredInfo sCameraStoreCUp;
 extern struct CameraStoredInfo sCameraStoreCutscene;
-extern s16 gCameraMovementFlags;
+extern u16 gCameraMovementFlags;
 extern s16 sStatusFlags;
 extern struct CutsceneSplinePoint sCurCreditsSplinePos[32];
 extern struct CutsceneSplinePoint sCurCreditsSplineFocus[32];
@@ -248,7 +248,7 @@ s16 sSelectionFlags;
 /**
  * Flags that determine what movements the camera should start / do this frame.
  */
-s16 gCameraMovementFlags;
+u16 gCameraMovementFlags;
 s16 unused8033B316;
 
 /**
@@ -471,7 +471,6 @@ s32 update_boss_fight_camera(struct Camera *c, Vec3f, Vec3f);
 s32 update_parallel_tracking_camera(struct Camera *c, Vec3f, Vec3f);
 s32 update_fixed_camera(struct Camera *c, Vec3f, Vec3f);
 s32 update_8_directions_camera(struct Camera *c, Vec3f, Vec3f);
-s32 update_slide_or_0f_camera(struct Camera *c, Vec3f, Vec3f);
 s32 update_spiral_stairs_camera(struct Camera *c, Vec3f, Vec3f);
 
 typedef s32 (*CameraTransition)(struct Camera *c, Vec3f, Vec3f);
@@ -491,7 +490,7 @@ CameraTransition sModeTransitions[] = {
     update_parallel_tracking_camera,
     update_fixed_camera,
     update_8_directions_camera,
-    update_slide_or_0f_camera,
+    update_8_directions_camera, // duplicate for 2D camera
     update_mario_camera,
     update_spiral_stairs_camera
 };
@@ -1307,6 +1306,23 @@ void mode_8_directions_camera(struct Camera *c) {
 #else
     set_camera_height(c, pos[1]);
 #endif
+}
+
+/**
+ * A mode that only has 1 camera angle.
+ */
+void mode_2_directions_camera(struct Camera *c) {
+    Vec3f pos;
+    s16 oldAreaYaw = sAreaYaw;
+
+    radial_camera_input(c);
+    lakitu_zoom(400.f, 0x900);
+    c->nextYaw = update_8_directions_camera(c, c->focus, pos);
+	s8DirModeYawOffset=0x4000;
+    c->pos[0] = pos[0];
+    c->pos[2] = pos[2];
+    sAreaYawChange = sAreaYaw - oldAreaYaw;
+    set_camera_height(c, pos[1]);
 }
 
 /**
@@ -2958,7 +2974,7 @@ void transition_to_camera_mode(struct Camera *c, s16 newMode, s16 numFrames) {
         c->mode = sModeInfo.newMode;
 
         // Clear movement flags that would affect the transition
-        gCameraMovementFlags &= (u16)~(CAM_MOVE_RESTRICT | CAM_MOVE_ROTATE);
+        gCameraMovementFlags &= (CAM_MOVE_RESTRICT | CAM_MOVE_ROTATE);
         if (!(sStatusFlags & CAM_FLAG_FRAME_AFTER_CAM_INIT)) {
             transition_next_state(c, numFrames);
             sCUpCameraPitch = 0;
@@ -2992,7 +3008,7 @@ void set_camera_mode(struct Camera *c, s16 mode, s16 frames) {
 #endif        
     {
         // Clear movement flags that would affect the transition
-        gCameraMovementFlags &= (u16)~(CAM_MOVE_RESTRICT | CAM_MOVE_ROTATE);
+        gCameraMovementFlags &= (CAM_MOVE_RESTRICT | CAM_MOVE_ROTATE);
         gCameraMovementFlags |= CAM_MOVING_INTO_MODE;
         if (mode == CAMERA_MODE_NONE) {
             mode = CAMERA_MODE_CLOSE;
@@ -3191,7 +3207,7 @@ void update_camera(struct Camera *c) {
     update_camera_hud_status(c);
     if (c->cutscene == 0
 #ifdef BETTERCAMERA
-    && !gPuppyCam.enabled && !gCurrDemoInput && !(c->mode == CAMERA_MODE_INSIDE_CANNON)
+    && !gPuppyCam.enabled && !gCurrDemoInput && !(c->mode == CAMERA_MODE_INSIDE_CANNON) && !(c->mode == CAMERA_MODE_2_DIRECTIONS)
 #endif
     ) {
         // Only process R_TRIG if 'fixed' is not selected in the menu
@@ -3216,7 +3232,8 @@ void update_camera(struct Camera *c) {
     }
 
 #ifdef BETTERCAMERA
-    if (!gPuppyCam.enabled || gCurrDemoInput || c->cutscene != 0 || c->mode == CAMERA_MODE_INSIDE_CANNON) {
+    if (!gPuppyCam.enabled || gCurrDemoInput || c->cutscene != 0 
+        || c->mode == CAMERA_MODE_INSIDE_CANNON || c->mode == CAMERA_MODE_2_DIRECTIONS) {
 #endif
     update_mario_geometry_info(&sMarioGeometry);
     gCollisionFlags |= COLLISION_FLAG_CAMERA;
@@ -3274,6 +3291,10 @@ void update_camera(struct Camera *c) {
                     mode_cannon_camera(c);
                     break;
 
+                case CAMERA_MODE_2_DIRECTIONS:
+                    mode_2_directions_camera(c);
+                    break;
+
                 default:
                     mode_mario_camera(c);
             }
@@ -3309,6 +3330,10 @@ void update_camera(struct Camera *c) {
                     mode_cannon_camera(c);
                     break;
 
+                case CAMERA_MODE_2_DIRECTIONS:
+                    mode_2_directions_camera(c);
+                    break;
+
                 default:
                     mode_8_directions_camera(c);
                     break;
@@ -3334,6 +3359,10 @@ void update_camera(struct Camera *c) {
 
                 case CAMERA_MODE_8_DIRECTIONS:
                     mode_8_directions_camera(c);
+                    break;
+
+                case CAMERA_MODE_2_DIRECTIONS:
+                    mode_2_directions_camera(c);
                     break;
 
                 case CAMERA_MODE_RADIAL:
@@ -3387,7 +3416,8 @@ void update_camera(struct Camera *c) {
     gCollisionFlags &= ~COLLISION_FLAG_CAMERA;
     
 #ifdef BETTERCAMERA
-    if (!gPuppyCam.enabled || gCurrDemoInput || c->cutscene != 0 || c->mode == CAMERA_MODE_INSIDE_CANNON) {
+    if (!gPuppyCam.enabled || gCurrDemoInput || c->cutscene != 0 
+        || c->mode == CAMERA_MODE_INSIDE_CANNON || c->mode == CAMERA_MODE_2_DIRECTIONS) {
 #endif
     if (gCurrLevelNum != LEVEL_CASTLE) {
         // If fixed camera is selected as the alternate mode, then fix the camera as long as the right
@@ -3442,7 +3472,8 @@ void update_camera(struct Camera *c) {
         }
     }
 
-    if (c->cutscene == 0 && gPuppyCam.enabled && !gCurrDemoInput && !(c->mode == CAMERA_MODE_INSIDE_CANNON)) {
+    if (c->cutscene == 0 && gPuppyCam.enabled && !gCurrDemoInput 
+        && !(c->mode == CAMERA_MODE_INSIDE_CANNON)) {
         // Clear the recent cutscene after 8 frames
         if (gRecentCutscene != 0 && sFramesSinceCutsceneEnded < 8) {
             sFramesSinceCutsceneEnded++;
@@ -3652,7 +3683,7 @@ void init_camera(struct Camera *c) {
             vec3f_set(sFixedModeBasePosition, -2985.f, 478.f, -5568.f);
             break;
     }
-    if (c->mode == CAMERA_MODE_8_DIRECTIONS) {
+    if (c->mode == CAMERA_MODE_8_DIRECTIONS || c->mode == CAMERA_MODE_2_DIRECTIONS) {
         gCameraMovementFlags |= CAM_MOVE_ZOOMED_OUT;
     }
     switch (gCurrLevelArea) {

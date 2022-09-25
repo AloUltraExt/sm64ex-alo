@@ -56,7 +56,11 @@ static s8 D_8032CBE4 = 0;
 static s8 D_8032CBE8 = 0;
 static s8 D_8032CBEC[7] = { 2, 3, 2, 1, 2, 3, 2 };
 
+#ifdef RM2C
+static u8 sStarsNeededForDialog[] = { STAR_MILESTONES };
+#else
 static u8 sStarsNeededForDialog[] = { 1, 3, 8, 30, 50, 70 };
+#endif
 
 /**
  * Data for the jumbo star cutscene. It specifies the flight path after triple
@@ -248,6 +252,9 @@ UNUSED static void stub_is_textbox_active(u16 *arg) {
  * numStars has reached a milestone and prevNumStarsForDialog has not reached it.
  */
 s32 get_star_collection_dialog(struct MarioState *m) {
+#if !SHOW_STAR_MILESTONES
+    return 0;
+#endif
     s32 i;
     s32 dialogID = 0;
     s32 numStarsRequired;

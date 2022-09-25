@@ -40,6 +40,11 @@
 #define DEFINE_LEVEL(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10) + 3
 static const LevelScript script_exec_level_table[2
   #include "level_defines.h"
+#ifdef RM2C
+  #undef DEFINE_LEVEL
+  #define DEFINE_LEVEL(_0, _1) + 3
+  #include "custom_level_defines.h"
+#endif
 ];
 #undef DEFINE_LEVEL
 #undef STUB_LEVEL
@@ -51,7 +56,12 @@ static const LevelScript goto_mario_head_dizzy[4];
 static const LevelScript script_L5[4];
 
 #define STUB_LEVEL(_0, _1, _2, _3, _4, _5, _6, _7, _8)
+#ifdef RM2C
+#define DEFINE_LEVEL(_0, _1, _2, folder, _4, _5, _6, _7, _8, _9, _10) static const LevelScript script_exec_ ## folder [4 + 1]; \
+static const LevelScript custom_script_exec_ ## folder [4 + 1];
+#else
 #define DEFINE_LEVEL(_0, _1, _2, folder, _4, _5, _6, _7, _8, _9, _10) static const LevelScript script_exec_ ## folder [4 + 1];
+#endif
 
 #include "level_defines.h"
 
@@ -165,17 +175,34 @@ static const LevelScript script_L5[] = {
 };
 
 // Include the level jumptable.
-
-#define STUB_LEVEL(_0, _1, _2, _3, _4, _5, _6, _7, _8)
-
-#define DEFINE_LEVEL(_0, levelenum, _2, folder, _4, _5, _6, _7, _8, _9, _10) JUMP_IF(OP_EQ, levelenum, script_exec_ ## folder),
-
 static const LevelScript script_exec_level_table[] = {
     GET_OR_SET(/*op*/ OP_GET, /*var*/ VAR_CURR_LEVEL_NUM),
+#ifdef RM2C
+#define DEFINE_LEVEL(folder,levelenum) JUMP_IF(OP_EQ, levelenum, custom_script_exec_ ## folder),
+
+    #include "levels/custom_level_defines.h"
+
+#undef DEFINE_LEVEL
+#endif
+#define STUB_LEVEL(_0, _1, _2, _3, _4, _5, _6, _7, _8)
+#define DEFINE_LEVEL(_0, levelenum, _2, folder, _4, _5, _6, _7, _8, _9, _10) JUMP_IF(OP_EQ, levelenum, script_exec_ ## folder),
     #include "levels/level_defines.h"
     EXIT(),
 };
 #undef DEFINE_LEVEL
+
+#ifdef RM2C
+
+#define DEFINE_LEVEL(folder,_0) \
+static const LevelScript custom_script_exec_ ## folder [] = { \
+    EXECUTE(0x1B, _ ## folder ## _segment_1BSegmentRomStart, _ ## folder ## _segment_1BSegmentRomEnd, level_ ## folder ## _custom_entry), \
+    RETURN(), \
+};
+
+#include "levels/custom_level_defines.h"
+
+#undef DEFINE_LEVEL
+#endif
 
 #define DEFINE_LEVEL(_0, _1, _2, folder, _4, _5, _6, _7, _8, _9, _10) \
 static const LevelScript script_exec_ ## folder [] = { \

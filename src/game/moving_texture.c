@@ -297,6 +297,10 @@ struct MovtexObject gMovtexColored2[] = {
     { 0x00000000, 0x00000000, 0, NULL, NULL, NULL, NULL, 0x00, 0x00, 0x00, 0x00, 0x00000000 },
 };
 
+#ifdef RM2C_HAS_WATER_BOXES
+#include "src/extras/rm2c/water_box.inc.c"
+#endif
+
 /**
  * Sets the initial water level in Wet-Dry World based on how high Mario
  * jumped into the painting.
@@ -589,7 +593,11 @@ void *get_quad_collection_from_id(u32 id) {
         case TTM_MOVTEX_PUDDLE:
             return ttm_movtex_puddle;
         default:
+        #ifdef RM2C_HAS_WATER_BOXES
+            return GetRomhackWaterBox(id);
+        #else
             return NULL;
+        #endif
     }
 }
 

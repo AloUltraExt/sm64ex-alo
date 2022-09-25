@@ -355,7 +355,11 @@ static void wiggler_act_shrink(void) {
 
         // 4 is the default scale, so shrink to 1/4 of regular size
         if (approach_f32_ptr(&o->header.gfx.scale[0], 1.0f, 0.1f)) {
+            #ifdef RM2C_HAS_CUSTOM_STAR_POS
+            spawn_default_star(WigglerStarPos);
+            #else
             spawn_default_star(0.0f, 2048.0f, 0.0f);
+            #endif
             o->oAction = WIGGLER_ACT_FALL_THROUGH_FLOOR;
         }
 

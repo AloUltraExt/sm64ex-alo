@@ -1067,7 +1067,7 @@ s32 act_first_person(struct MarioState *m) {
     }
 
     if (m->floor->type == SURFACE_LOOK_UP_WARP
-        && save_file_get_total_star_count(gCurrSaveFileNum - 1, COURSE_MIN - 1, COURSE_MAX - 1) >= 10) {
+        && save_file_get_total_star_count(gCurrSaveFileNum - 1, COURSE_MIN - 1, COURSE_MAX - 1) >= WING_CAP_WARP_STAR_REQ) {
         s16 sp1A = m->statusForCamera->headRotation[0];
         s16 sp18 = ((m->statusForCamera->headRotation[1] * 4) / 3) + m->faceAngle[1];
         if (sp1A == -0x1800 && (sp18 < -0x6FFF || sp18 >= 0x7000)) {

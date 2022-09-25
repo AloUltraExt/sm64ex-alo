@@ -166,7 +166,11 @@ void bhv_treasure_chest_jrb_loop(void) {
         case 1:
             if (o->oTimer == 60) {
                 spawn_mist_particles();
+                #ifdef RM2C_HAS_CUSTOM_STAR_POS
+                spawn_default_star(TreasureChestStarPos);
+                #else
                 spawn_default_star(-1800.0f, -2500.0f, -1700.0f);
+                #endif
                 o->oAction = 2;
             }
             break;

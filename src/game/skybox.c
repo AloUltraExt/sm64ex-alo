@@ -87,7 +87,14 @@ extern SkyboxTexture ssl_skybox_ptrlist;
 extern SkyboxTexture water_skybox_ptrlist;
 extern SkyboxTexture wdw_skybox_ptrlist;
 
-SkyboxTexture *sSkyboxTextures[10] = {
+#ifdef RM2C_HAS_CUSTOM_SKYBOX
+#define MIO0_SEG(skybox, _2) \
+extern SkyboxTexture skybox##_ptrlist;
+#include "textures/skyboxes/Skybox_Rules.ld"
+#undef MIO0_SEG
+#endif
+
+SkyboxTexture *sSkyboxTextures[] = {
     &water_skybox_ptrlist,
     &bitfs_skybox_ptrlist,
     &wdw_skybox_ptrlist,
@@ -98,6 +105,12 @@ SkyboxTexture *sSkyboxTextures[10] = {
     &bidw_skybox_ptrlist,
     &clouds_skybox_ptrlist,
     &bits_skybox_ptrlist,
+#ifdef RM2C_HAS_CUSTOM_SKYBOX
+	#define MIO0_SEG(skybox, _2) \
+	&skybox##_ptrlist,
+	#include "textures/skyboxes/Skybox_Rules.ld"
+	#undef MIO0_SEG
+#endif 
 };
 
 /**

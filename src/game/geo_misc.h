@@ -4,6 +4,8 @@
 #include <PR/ultratypes.h>
 #include <PR/gbi.h>
 
+#include "rm2c.h"
+
 enum FlyingCarpetState {
     FLYING_CARPET_IDLE = 0,
     FLYING_CARPET_MOVING_WITHOUT_MARIO = 1,
@@ -11,6 +13,18 @@ enum FlyingCarpetState {
 };
 
 extern s8 gFlyingCarpetState;
+
+#ifdef RM2C_HAS_CUSTOM_SKYBOX
+#define MIO0_SEG(name, addr) \
+    name##_Index, \
+
+
+enum Custom_Skybox_Indices{
+#include "textures/skyboxes/Skybox_Rules.ld"
+};
+
+#undef MIO0_SEG
+#endif
 
 #ifndef GBI_FLOATS
 extern void make_vertex(

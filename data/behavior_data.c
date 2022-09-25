@@ -6137,6 +6137,32 @@ const BehaviorScript bhvIntroScene[] = {
     END_LOOP(),
 };
 
+const BehaviorScript bhv2DPhysics[] = {
+    BEGIN(OBJ_LIST_DEFAULT),
+    OR_INT(oFlags, (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
+    BEGIN_LOOP(),
+        CALL_NATIVE(bhv_2d_physics_loop),
+    END_LOOP(),
+};
+
+const BehaviorScript bhvLegacyScrollTexture[] = {
+    BEGIN(OBJ_LIST_GENACTOR),
+    BEGIN_LOOP(),
+        CALL_NATIVE(uv_update_scroll),
+    END_LOOP(),
+};
+
 #ifdef PORT_MOP_OBJS
 #include "src/extras/mop/behaviors.inc.c"
+#endif
+
+#ifdef RM2C_HAS_SCROLLING_TEXTURES
+// Scrolling textures from RM and Editor need manual fixing to work on both PC and N64
+const BehaviorScript RM_Scroll_Texture[] = {
+    GOTO(bhvLegacyScrollTexture),
+};
+
+const BehaviorScript editor_Scroll_Texture[] = {
+    GOTO(bhvLegacyScrollTexture),
+};
 #endif

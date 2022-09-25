@@ -83,9 +83,6 @@
 /// Fixes manta's water rings to match where it looks
 /// Credits: (Kaze Emanuar)
 #define QOL_FIX_WATER_RING (0 || QOL_FIXES)
-/// Fixes an oddly defined interaction sub type in penguin mother behavior
-/// Credits: (Easy Fix)
-#define QOL_FIX_TUXIE_HELD_STATE (0 || QOL_FIXES)
 /// Fixes Bully minion knockback timer by reseting it, more info in the fix itself
 /// Credits: (Easy Fix)
 #define QOL_FIX_BULLY_KNOCKBACK_TIMER (0 || QOL_FIXES)

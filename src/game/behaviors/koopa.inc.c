@@ -60,10 +60,18 @@ struct KoopaTheQuickProperties {
 /**
  * Properties for the BoB race and the THI race.
  */
+#ifdef RM2C_HAS_TRAJECTORIES
+//grab trajectory from Trajectories.inc.c and star pos from star_pos.inc.c
+static struct KoopaTheQuickProperties sKoopaTheQuickProperties[] = {
+    { DIALOG_005, DIALOG_007, KoopaBoB_path, KoopaBoBStarPos },
+    { DIALOG_009, DIALOG_031, KoopaTHI_path, KoopaTHIStarPos }
+};
+#else
 static struct KoopaTheQuickProperties sKoopaTheQuickProperties[] = {
     { DIALOG_005, DIALOG_007, bob_seg7_trajectory_koopa, { 3030, 4500, -4600 } },
     { DIALOG_009, DIALOG_031, thi_seg7_trajectory_koopa, { 7100, -1300, -6000 } },
 };
+#endif
 
 /**
  * Initialization function.
@@ -618,11 +626,11 @@ static void koopa_the_quick_act_race(void) {
                         && (o->oPathedPrevWaypointFlags & WAYPOINT_MASK_00FF) < 28) {
                         // Move faster if mario has already finished the race or
                         // cheated by shooting from cannon
-                        o->oKoopaAgility = 8.0f;
+                        o->oKoopaAgility = KOOPA_SPEED_RACE_END;
                     } else if (o->oKoopaTheQuickRaceIndex != KOOPA_THE_QUICK_BOB_INDEX) {
-                        o->oKoopaAgility = 6.0f;
+                        o->oKoopaAgility = KOOPA_SPEED_THI;
                     } else {
-                        o->oKoopaAgility = 4.0f;
+                        o->oKoopaAgility = KOOPA_SPEED_BOB;
                     }
 
                     obj_forward_vel_approach(o->oKoopaAgility * 6.0f * downhillSteepness,

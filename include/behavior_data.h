@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+#include "rm2c.h"
+
 // List of commands as enum for ifdefs
 // Vanilla ones are left unnamed, custom ones are named
 enum BehaviorCommandsIDList
@@ -611,8 +613,16 @@ extern const BehaviorScript bhvEndBirds2[];
 extern const BehaviorScript bhvIntroScene[];
 extern const BehaviorScript bhvUnusedFakeStar[];
 
+extern const BehaviorScript bhv2DPhysics[];
+extern const BehaviorScript bhvLegacyScrollTexture[];
+
 #ifdef PORT_MOP_OBJS
 #include "src/extras/mop/include_behaviors.h"
+#endif
+
+#ifdef RM2C_HAS_SCROLLING_TEXTURES
+extern const BehaviorScript editor_Scroll_Texture[];
+extern const BehaviorScript RM_Scroll_Texture[];
 #endif
 
 #endif // BEHAVIOR_DATA_H

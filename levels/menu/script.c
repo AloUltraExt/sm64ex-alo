@@ -59,12 +59,20 @@ const LevelScript level_main_menu_entry_1[] = {
     SLEEP(/*frames*/ 16),
     CLEAR_LEVEL(),
     SLEEP_BEFORE_EXIT(/*frames*/ 1),
+#ifdef RM2C
+    SET_REG(/*value*/ START_LEVEL),
+#else
     SET_REG(/*value*/ LEVEL_CASTLE_GROUNDS),
+#endif
     EXIT_AND_EXECUTE(/*seg*/ 0x15, _scriptsSegmentRomStart, _scriptsSegmentRomEnd, level_main_scripts_entry),
 };
 
 const LevelScript level_main_menu_entry_1_skip[] = {
+#ifdef RM2C
+    SET_REG(/*value*/ START_LEVEL),
+#else
     SET_REG(/*value*/ LEVEL_CASTLE_GROUNDS),
+#endif
     EXIT_AND_EXECUTE(/*seg*/ 0x15, _scriptsSegmentRomStart, _scriptsSegmentRomEnd, level_main_scripts_entry),
 };
 

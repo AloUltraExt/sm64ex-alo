@@ -98,6 +98,7 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
         return FALSE;
 	}
 
+#if FALL_DAMAGE
     if (m->action != ACT_TWIRLING && m->floor->type != SURFACE_BURNING) {
         if (m->vel[1] < -55.0f) {
             if (fallHeight > 3000.0f) {
@@ -119,6 +120,7 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
             }
         }
     }
+#endif
 
     return FALSE;
 }
@@ -2160,7 +2162,9 @@ s32 mario_execute_airborne_action(struct MarioState *m) {
         return TRUE;
     }
 
+#if FALL_DAMAGE
     play_far_fall_sound(m);
+#endif
 
     /* clang-format off */
     switch (m->action) {

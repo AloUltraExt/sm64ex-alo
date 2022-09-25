@@ -759,7 +759,7 @@ u32 interact_coin(struct MarioState *m, UNUSED u32 interactType, struct Object *
     o->oInteractStatus = INT_STATUS_INTERACTED;
 
     if (COURSE_IS_MAIN_COURSE(gCurrCourseNum)
-        && m->numCoins - o->oDamageOrCoinValue < 100 && m->numCoins >= 100) {
+        && m->numCoins - o->oDamageOrCoinValue < COINS_REQ_COINSTAR && m->numCoins >= COINS_REQ_COINSTAR) {
         bhv_spawn_star_no_level_exit(STAR_INDEX_100_COINS);
     }
 
@@ -1632,17 +1632,17 @@ u32 interact_cap(struct MarioState *m, UNUSED u32 interactType, struct Object *o
 
         switch (capFlag) {
             case MARIO_VANISH_CAP:
-                capTime = 600;
+                capTime = VC_TIME;
                 capMusic = SEQUENCE_ARGS(4, SEQ_EVENT_POWERUP);
                 break;
 
             case MARIO_METAL_CAP:
-                capTime = 600;
+                capTime = MC_TIME;
                 capMusic = SEQUENCE_ARGS(4, SEQ_EVENT_METAL_CAP);
                 break;
 
             case MARIO_WING_CAP:
-                capTime = 1800;
+                capTime = WC_TIME;
                 capMusic = SEQUENCE_ARGS(4, SEQ_EVENT_POWERUP);
                 break;
         }
@@ -1898,14 +1898,17 @@ void pss_begin_slide(UNUSED struct MarioState *m) {
 }
 
 void pss_end_slide(struct MarioState *m) {
-#if !QOL_FIX_RESET_PSS_SLIDE_STARTED
-    //! This flag isn't set on death or level entry, allowing double star spawn
-#endif
+    //! This value isn't set on death or level entry, allowing double star spawn
+    //  Fixed with QOL_FIX_RESET_PSS_SLIDE_STARTED
     if (gPSSSlideStarted) {
         u16 slideTime = level_control_timer(TIMER_CONTROL_STOP);
-        if (slideTime < 630) {
+        if (slideTime < SLIDE_TIME) {
             m->marioObj->oBhvParams = (STAR_INDEX_ACT_2 << 24);
+            #ifdef RM2C_HAS_CUSTOM_STAR_POS
+            spawn_default_star(PssSlideStarPos);
+            #else
             spawn_default_star(-6358.0f, -4300.0f, 4700.0f);
+            #endif
         }
         gPSSSlideStarted = FALSE;
     }

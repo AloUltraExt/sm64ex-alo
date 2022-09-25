@@ -18,6 +18,19 @@ static Collision const *sPlatformOnTrackCollisionModels[] = {
 /**
  * Paths for the different instances of these platforms.
  */
+#ifdef RM2C_HAS_TRAJECTORIES
+static void const *sPlatformOnTrackPaths[] = {
+    rr_seg7_trajectory_0702EC3C_RM2C_path,
+    rr_seg7_trajectory_0702ECC0_RM2C_path,
+    ccm_seg7_trajectory_0701669C_RM2C_path,
+    bitfs_seg7_trajectory_070159AC_RM2C_path,
+    hmc_seg7_trajectory_0702B86C_RM2C_path,
+    lll_seg7_trajectory_0702856C_RM2C_path,
+    lll_seg7_trajectory_07028660_RM2C_path,
+    rr_seg7_trajectory_0702ED9C_RM2C_path,
+    rr_seg7_trajectory_0702EEE0_RM2C_path,
+};
+#else
 static Trajectory const *sPlatformOnTrackPaths[] = {
     rr_seg7_trajectory_0702EC3C,
     rr_seg7_trajectory_0702ECC0,
@@ -29,6 +42,7 @@ static Trajectory const *sPlatformOnTrackPaths[] = {
     rr_seg7_trajectory_0702ED9C,
     rr_seg7_trajectory_0702EEE0,
 };
+#endif
 
 /**
  * Despawn all track balls and enter the init action.

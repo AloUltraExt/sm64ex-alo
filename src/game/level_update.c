@@ -315,17 +315,17 @@ void set_mario_initial_cap_powerup(struct MarioState *m) {
     switch (capCourseIndex) {
         case COURSE_COTMC - COURSE_CAP_COURSES:
             m->flags |= MARIO_METAL_CAP | MARIO_CAP_ON_HEAD;
-            m->capTimer = 600;
+            m->capTimer = MC_LEVEL_TIME;
             break;
 
         case COURSE_TOTWC - COURSE_CAP_COURSES:
             m->flags |= MARIO_WING_CAP | MARIO_CAP_ON_HEAD;
-            m->capTimer = 1200;
+            m->capTimer = WC_LEVEL_TIME;
             break;
 
         case COURSE_VCUTM - COURSE_CAP_COURSES:
             m->flags |= MARIO_VANISH_CAP | MARIO_CAP_ON_HEAD;
-            m->capTimer = 600;
+            m->capTimer = VC_LEVEL_TIME;
             break;
     }
 }
@@ -755,9 +755,11 @@ s16 level_trigger_warp(struct MarioState *m, s32 warpOp) {
                 break;
 
             case WARP_OP_DEATH:
+                #if !DISABLE_LIVES
                 if (m->numLives == 0) {
                     sDelayedWarpOp = WARP_OP_GAME_OVER;
                 }
+                #endif
                 sDelayedWarpTimer = 48;
                 sSourceWarpNodeId = WARP_NODE_DEATH;
                 play_transition(WARP_TRANSITION_FADE_INTO_BOWSER, 0x30, 0x00, 0x00, 0x00);
@@ -767,11 +769,15 @@ s16 level_trigger_warp(struct MarioState *m, s32 warpOp) {
             case WARP_OP_WARP_FLOOR:
                 sSourceWarpNodeId = WARP_NODE_WARP_FLOOR;
                 if (area_get_warp_node(sSourceWarpNodeId) == NULL) {
+                    #if !DISABLE_LIVES
                     if (m->numLives == 0) {
                         sDelayedWarpOp = WARP_OP_GAME_OVER;
                     } else {
                         sSourceWarpNodeId = WARP_NODE_DEATH;
                     }
+                    #else
+                    sSourceWarpNodeId = WARP_NODE_DEATH;
+                    #endif
                 }
                 sDelayedWarpTimer = 20;
                 play_transition(WARP_TRANSITION_FADE_INTO_CIRCLE, 0x14, 0x00, 0x00, 0x00);
@@ -1026,7 +1032,9 @@ s32 play_mode_normal(void) {
 #ifdef RUMBLE_FEEDBACK
             cancel_rumble();
 #endif
+#if CAMERA_MOVE_WHEN_PAUSE
             gCameraMovementFlags |= CAM_MOVE_PAUSE_SCREEN;
+#endif
             set_play_mode(PLAY_MODE_PAUSED);
         }
     }
@@ -1045,7 +1053,11 @@ s32 play_mode_paused(void) {
         if (gDebugLevelSelect) {
             fade_into_special_warp(-9, 1);
         } else {
+            #ifdef RM2C
+            initiate_warp(EXIT_COURSE, 0);
+            #else
             initiate_warp(LEVEL_CASTLE, 1, 0x1F, 0);
+            #endif
             fade_into_special_warp(0, 0);
             gSavedCourseNum = COURSE_NONE;
         }

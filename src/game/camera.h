@@ -101,6 +101,7 @@
 #define CAMERA_MODE_PARALLEL_TRACKING 0x0C
 #define CAMERA_MODE_FIXED             0x0D
 #define CAMERA_MODE_8_DIRECTIONS      0x0E // AKA Parallel Camera, Bowser Courses & Rainbow Ride
+#define CAMERA_MODE_2_DIRECTIONS      0x0F // For 2D levels
 #define CAMERA_MODE_FREE_ROAM         0x10
 #define CAMERA_MODE_SPIRAL_STAIRS     0x11
 
@@ -643,7 +644,7 @@ extern s16 sCameraSoundFlags;
 extern u16 sCButtonsPressed;
 extern struct PlayerCameraState gPlayerCameraState[2];
 extern struct LakituState gLakituState;
-extern s16 gCameraMovementFlags;
+extern u16 gCameraMovementFlags;
 extern s32 gObjCutsceneDone;
 extern struct Camera *gCamera;
 #endif

@@ -47,6 +47,10 @@
 #define OBJ_COL_FLAG_NO_Y_VEL   (1 << 3)
 #define OBJ_COL_FLAGS_LANDED    (OBJ_COL_FLAG_GROUNDED | OBJ_COL_FLAG_NO_Y_VEL)
 
+#ifdef RM2C_HAS_TRAJECTORIES
+#include "src/extras/rm2c/trajectories.inc.c"
+#endif
+
 /**
  * Current object floor as defined in object_step.
  */

@@ -2745,7 +2745,8 @@ s16 render_pause_screen(void) {
             shade_screen();
             render_pause_my_score_coins();
             render_pause_red_coins();
-            
+
+#if !EXIT_COURSE_ANYWHERE
 /* Added support for the "Exit course at any time" cheat */
             if ((gMarioStates[0].action & ACT_FLAG_PAUSE_EXIT) 
 #ifdef CHEATS_ACTIONS
@@ -2754,6 +2755,7 @@ s16 render_pause_screen(void) {
                 ) {
                 render_pause_course_options(99, 93, &gMenuLineNum, 15);
             }
+#endif
 
 #if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
             if (gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | Z_TRIG))

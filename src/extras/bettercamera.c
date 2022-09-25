@@ -1005,7 +1005,7 @@ void puppycam_projection_behaviours(void) {
 static void puppycam_vanilla_actions(void) {
     // Adds support for wing mario tower
     if (gMarioState->floor && gMarioState->floor->type == SURFACE_LOOK_UP_WARP
-        && save_file_get_total_star_count(gCurrSaveFileNum - 1, COURSE_MIN - 1, COURSE_MAX - 1) >= 10) {
+        && save_file_get_total_star_count(gCurrSaveFileNum - 1, COURSE_MIN - 1, COURSE_MAX - 1) >= WING_CAP_WARP_STAR_REQ) {
         if (gPuppyCam.pitch > 0x6000 && gMarioState->forwardVel == 0
             && (gMarioState->action & ACT_GROUP_MASK) != ACT_GROUP_CUTSCENE) {
             level_trigger_warp(gMarioState, WARP_OP_UNKNOWN_01);

@@ -825,6 +825,13 @@ def write_sequences(
             )
 
     ind_to_name = []
+    #epic
+    pops = []
+    for k,v in json.items():
+        if v==None:
+             pops.append(k)
+    for p in pops:
+        del json[p]
     for key in json:
         ind = int(key.split("_")[0], 16)
         while len(ind_to_name) <= ind:

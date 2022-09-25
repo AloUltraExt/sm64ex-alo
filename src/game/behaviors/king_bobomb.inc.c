@@ -30,7 +30,7 @@ void king_bobomb_act_0(void) {
         gSecondCameraFocus = o;
         cur_obj_init_animation_with_sound(5);
         cur_obj_set_pos_to_home();
-        o->oHealth = 3;
+        o->oHealth = KING_BOMB_HEALTH;
 
         if (cur_obj_can_mario_activate_textbox_2(500.0f, 100.0f)) {
             o->oSubAction++;
@@ -76,8 +76,8 @@ void king_bobomb_act_2(void) {
         }
 
         if (o->oKingBobombUnk108 == 0) {
-            o->oForwardVel = 3.0f;
-            cur_obj_rotate_yaw_toward(o->oAngleToMario, 0x100);
+            o->oForwardVel = KING_BOMB_FVEL;
+            cur_obj_rotate_yaw_toward(o->oAngleToMario, KING_BOMB_YAWVEL);
         } else {
             o->oForwardVel = 0.0f;
             o->oKingBobombUnk108--;
@@ -214,11 +214,13 @@ void king_bobomb_act_7(void) {
         spawn_mist_particles_variable(0, 0, 200.0f);
         spawn_triangle_break_particles(20, MODEL_DIRT_ANIMATION, 3.0f, 4);
         cur_obj_shake_screen(SHAKE_POS_SMALL);
-#ifndef VERSION_JP
-        cur_obj_spawn_star_at_y_offset(2000.0f, 4500.0f, -4500.0f, 200.0f);
-#else
+#ifdef VERSION_JP
         o->oPosY += 100.0f;
-        spawn_default_star(2000.0f, 4500.0f, -4500.0f);
+#endif
+#ifdef RM2C_HAS_CUSTOM_STAR_POS
+        cur_obj_spawn_star_at_y_offset(KingBobOmbStarPos, 200.0f);
+#else
+        cur_obj_spawn_star_at_y_offset(2000.0f, 4500.0f, -4500.0f, 200.0f);
 #endif
         o->oAction = 8;
     }

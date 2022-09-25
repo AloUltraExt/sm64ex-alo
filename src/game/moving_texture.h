@@ -110,6 +110,10 @@ extern f32 gPaintingMarioYEntry;
 #define MOVTEX_TREADMILL_BIG         (0 | MOVTEX_AREA_TTC)
 #define MOVTEX_TREADMILL_SMALL       (1 | MOVTEX_AREA_TTC)
 
+#ifdef RM2C_HAS_WATER_BOXES
+extern void *GetRomhackWaterBox(u32 id);
+#endif
+
 Gfx *geo_wdw_set_initial_water_level(s32 callContext, UNUSED struct GraphNode *node, UNUSED Mat4 mtx);
 Gfx *geo_movtex_pause_control(s32 callContext, UNUSED struct GraphNode *node, UNUSED Mat4 mtx);
 Gfx *geo_movtex_draw_water_regions(s32 callContext, struct GraphNode *node, UNUSED Mat4 mtx);
