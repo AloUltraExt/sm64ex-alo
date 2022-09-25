@@ -36,7 +36,14 @@
 #define TEXT_OPT_ENABLED   _("ENABLED")
 #define TEXT_OPT_DISABLED  _("DISABLED")
 
-#define TEXT_OPT_CAMON     _("PUPPYCAM 2")
+#define TEXT_OPT_VANILLA_CAM      _("VANILLA CAMERA")
+#define TEXT_OPT_LAKITU_PARALLEL  _("PARALLEL LAKITU CAM")
+#define TEXT_OPT_SR_MARIO_CAM     _("STAR ROAD MARIO CAM")
+#define TEXT_OPT_CAM_C_UP_SOUNDS  _("CAMERA SOUND EFFECTS")
+#define TEXT_OPT_CAM_PARALLEL_COL _("PARALLEL CAM COLLISION")
+
+#define TEXT_OPT_PUPPYON   _("PUPPYCAM 2")
+#define TEXT_OPT_PUPPYCAM  _("PUPPY CAMERA")
 #define TEXT_OPT_CAMMOUSE  _("CAMERA MOUSE CONTROL")
 #define TEXT_OPT_CAMX      _("CAMERA X SENSITIVITY")
 #define TEXT_OPT_CAMY      _("CAMERA Y SENSITIVITY")
@@ -106,7 +113,14 @@
 #define TEXT_OPT_ENABLED   _("Enabled")
 #define TEXT_OPT_DISABLED  _("Disabled")
 
-#define TEXT_OPT_CAMON     _("PuppyCam 2")
+#define TEXT_OPT_VANILLA_CAM      _("VANILLA CAMERA")
+#define TEXT_OPT_LAKITU_PARALLEL  _("Parallel Lakitu Cam")
+#define TEXT_OPT_SR_MARIO_CAM     _("Star Road Mario Cam")
+#define TEXT_OPT_CAM_C_UP_SOUNDS  _("Camera Sound Effects")
+#define TEXT_OPT_CAM_PARALLEL_COL _("Parallel Cam Collision")
+
+#define TEXT_OPT_PUPPYON   _("PuppyCam 2")
+#define TEXT_OPT_PUPPYCAM  _("PUPPY CAMERA")
 #define TEXT_OPT_CAMMOUSE  _("Camera Mouse Control")
 #define TEXT_OPT_CAMX      _("Camera X Sensitivity")
 #define TEXT_OPT_CAMY      _("Camera Y Sensitivity")

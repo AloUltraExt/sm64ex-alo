@@ -55,9 +55,9 @@ enum PuppyCamOpacityTypes
 #include "include/command_macros_base.h"
 #include "options_menu.h"
 
-extern const u8 optsCameraStr[][32];
+extern const u8 optsPuppyCamStr[][32];
 
-extern struct SubMenu menuCamera;
+extern struct SubMenu menuPuppyCam;
 
 #define PUPPYVOLUME(x, y, z, length, height, width, yaw, functionptr, anglesptr, addflags, removeflags, flagpersistance, room, shape, fov) \
     CMD_BBH(LVL_SCRIPT_CMD_PUPPYVOLUME, 0x28, x), \

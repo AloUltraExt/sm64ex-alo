@@ -49,18 +49,23 @@ u16 gPuppyVolumeCount = 0;
 struct MemoryPool *gPuppyMemoryPool;
 s32 gPuppyError = 0;
 
-#ifdef TARGET_N64 // TODO: save to eeprom
+#ifdef TARGET_N64 // TODO: save to EEPROM
 // BetterCamera settings
-bool configEnableCamera  = true;
-bool configCameraAnalog  = false;
-bool configCameraInvertX = true;
-bool configCameraInvertY = true;
-unsigned int configCameraXSens   = 100;
-unsigned int configCameraYSens   = 100;
-unsigned int configCameraAggr    = 50;
-unsigned int configCameraScheme  = PUPPYCAM_INPUT_TYPE_DOUBLE_TAP;
-unsigned int configCameraOpacity = PUPPYCAM_OPACITY_TYPE_FADE;
-bool configDebugCamera   = 0;
+ConfigPuppyCam configPuppyCam = {
+    .enable = TRUE,
+    .analog = FALSE,
+#ifdef MOUSE_ACTIONS
+    .mouse = FALSE,
+#endif
+    .invertX = TRUE,
+    .invertY = TRUE,
+    .sensX = 100,
+    .sensY = 100,
+    .aggression = 50,
+    .scheme = 0, // PUPPYCAM_INPUT_TYPE_DOUBLE_TAB
+    .opacity = 1, // PUPPYCAM_OPACITY_TYPE_FADE
+    .debug = FALSE,
+};
 #endif
 
 s16 LENSIN(s16 length, s16 direction) {
@@ -81,9 +86,9 @@ static inline float softClamp(float x, float a, float b) {
 
 /// CONFIG
 
-const u8 optsCameraStr[][32] = {
-    { TEXT_OPT_CAMERA },
-    { TEXT_OPT_CAMON },
+const u8 optsPuppyCamStr[][32] = {
+    { TEXT_OPT_PUPPYCAM },
+    { TEXT_OPT_PUPPYON },
     { TEXT_OPT_ANALOGUE },
     { TEXT_OPT_CAMMOUSE },
     { TEXT_OPT_INVERTX },
@@ -96,62 +101,62 @@ const u8 optsCameraStr[][32] = {
     { TEXT_OPT_DBG_CAM },
 };
 
-static const u8 optsCameraSchemeStr[][64] = {
+static const u8 optsPuppyCamSchemeStr[][64] = {
     { TEXT_OPT_CAM_SCH1 },
     { TEXT_OPT_CAM_SCH2 },
     { TEXT_OPT_CAM_SCH3 },
 };
 
-static const u8 *cameraChoicesScheme[] = {
-    optsCameraSchemeStr[0],
-    optsCameraSchemeStr[1],
-    optsCameraSchemeStr[2],
+static const u8 *puppycamChoicesScheme[] = {
+    optsPuppyCamSchemeStr[0],
+    optsPuppyCamSchemeStr[1],
+    optsPuppyCamSchemeStr[2],
 };
 
-static const u8 optsCameraOpacityStr[][64] = {
+static const u8 optsPuppyCamOpacityStr[][64] = {
     { TEXT_OPT_OPA_T1 },
     { TEXT_OPT_OPA_T2 },
     { TEXT_OPT_OPA_T3 },
 };
 
-static const u8 *cameraChoicesOpacity[] = {
-    optsCameraOpacityStr[0],
-    optsCameraOpacityStr[1],
-    optsCameraOpacityStr[2],
+static const u8 *puppycamChoicesOpacity[] = {
+    optsPuppyCamOpacityStr[0],
+    optsPuppyCamOpacityStr[1],
+    optsPuppyCamOpacityStr[2],
 };
 
-static struct Option optsCamera[] = {
-    DEF_OPT_TOGGLE( optsCameraStr[1], &configEnableCamera ),
-    DEF_OPT_TOGGLE( optsCameraStr[2], &configCameraAnalog ),
+static struct Option optsPuppyCam[] = {
+    DEF_OPT_TOGGLE( optsPuppyCamStr[2], &configPuppyCam.analog ),
 #ifdef MOUSE_ACTIONS
-    DEF_OPT_TOGGLE( optsCameraStr[3], &configCameraMouse ),
+    DEF_OPT_TOGGLE( optsPuppyCamStr[3], &configPuppyCam.mouse ),
 #endif
-    DEF_OPT_TOGGLE( optsCameraStr[4], &configCameraInvertX ),
-    DEF_OPT_TOGGLE( optsCameraStr[5], &configCameraInvertY ),
-    DEF_OPT_SCROLL( optsCameraStr[6], &configCameraXSens, 1, 100, 1 ),
-    DEF_OPT_SCROLL( optsCameraStr[7], &configCameraYSens, 1, 100, 1 ),
-    DEF_OPT_SCROLL( optsCameraStr[8], &configCameraAggr, 0, 100, 1 ),
-    DEF_OPT_CHOICE( optsCameraStr[9], &configCameraScheme, cameraChoicesScheme ),
-    DEF_OPT_CHOICE(optsCameraStr[10], &configCameraOpacity, cameraChoicesOpacity ),
-    DEF_OPT_TOGGLE(optsCameraStr[11], &configDebugCamera ),
+    DEF_OPT_TOGGLE( optsPuppyCamStr[4], &configPuppyCam.invertX ),
+    DEF_OPT_TOGGLE( optsPuppyCamStr[5], &configPuppyCam.invertY ),
+    DEF_OPT_SCROLL( optsPuppyCamStr[6], &configPuppyCam.sensX, 1, 100, 1 ),
+    DEF_OPT_SCROLL( optsPuppyCamStr[7], &configPuppyCam.sensY, 1, 100, 1 ),
+    DEF_OPT_SCROLL( optsPuppyCamStr[8], &configPuppyCam.aggression, 0, 100, 1 ),
+    DEF_OPT_CHOICE( optsPuppyCamStr[9], &configPuppyCam.scheme, puppycamChoicesScheme ),
+    DEF_OPT_CHOICE(optsPuppyCamStr[10], &configPuppyCam.opacity, puppycamChoicesOpacity ),
+    DEF_OPT_TOGGLE(optsPuppyCamStr[11], &configPuppyCam.debug ),
 };
 
-struct SubMenu menuCamera   = DEF_SUBMENU( optsCameraStr[0], optsCamera );
+struct SubMenu menuPuppyCam = DEF_SUBMENU( optsPuppyCamStr[0], optsPuppyCam );
+
 
 void puppycam_default_config(void) {
-    gPuppyCam.enabled = configEnableCamera;
-    gPuppyCam.options.analogue = configCameraAnalog;
+    gPuppyCam.enabled = configPuppyCam.enable;
+    gPuppyCam.options.analogue = configPuppyCam.analog;
 #ifdef MOUSE_ACTIONS
-    gPuppyCam.mouse = configCameraMouse;
+    gPuppyCam.mouse = configPuppyCam.mouse;
 #endif
-    gPuppyCam.options.invertX = configCameraInvertX;
-    gPuppyCam.options.invertY = configCameraInvertY;
-    gPuppyCam.options.sensitivityX = configCameraXSens;
-    gPuppyCam.options.sensitivityY = configCameraYSens;
-    gPuppyCam.options.turnAggression = configCameraAggr;
-    gPuppyCam.options.inputType = configCameraScheme;
-    gPuppyCam.options.opacityType = configCameraOpacity;
-    gPuppyCam.options.debugCam = configDebugCamera;
+    gPuppyCam.options.invertX = configPuppyCam.invertX;
+    gPuppyCam.options.invertY = configPuppyCam.invertY;
+    gPuppyCam.options.sensitivityX = configPuppyCam.sensX;
+    gPuppyCam.options.sensitivityY = configPuppyCam.sensY;
+    gPuppyCam.options.turnAggression = configPuppyCam.aggression;
+    gPuppyCam.options.inputType = configPuppyCam.scheme;
+    gPuppyCam.options.opacityType = configPuppyCam.opacity;
+    gPuppyCam.options.debugCam = configPuppyCam.debug;
 }
 
 // Initial setup. Ran at the beginning of the game and never again.
@@ -1315,7 +1320,7 @@ static void puppycam_apply(void) {
 
     gLakituState.mode    = gCamera->mode;
     gLakituState.defMode = gCamera->defMode;
-    gLakituState.roll    = 0x0;
+    gLakituState.roll    = 0;
 
     if (gMarioState->floor != NULL) {
         sMarioGeometry.prevFloor = sMarioGeometry.currFloor = gMarioState->floor;

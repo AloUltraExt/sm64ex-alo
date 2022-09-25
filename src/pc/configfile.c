@@ -60,6 +60,7 @@ ConfigWindow configWindow       = {
     .settings_changed = false,
 #endif
 };
+
 unsigned int configFiltering    = 1;          // 0=force nearest, 1=linear
 unsigned int configMasterVolume = MAX_VOLUME; // 0 - MAX_VOLUME
 unsigned int configMusicVolume = MAX_VOLUME;
@@ -103,21 +104,32 @@ bool configDiscordRPC = true;
 bool configSkipIntro = false;
 bool configHUD = true;
 
+#if MORE_VANILLA_CAM_STUFF
+ConfigVanillaCam configVanillaCam = {
+    .parallel = false,
+    .srMario = false,
+    .parallelCol = false,
+    .cUpSounds = true,
+};
+#endif
+
 #ifdef BETTERCAMERA
 // PuppyCam 2 settings
-bool configEnableCamera  = true;
-bool configCameraAnalog  = false;
+ConfigPuppyCam configPuppyCam = {
+    .enable = true,
+    .analog = false,
 #ifdef MOUSE_ACTIONS
-bool configCameraMouse   = false;
+    .mouse = false,
 #endif
-bool configCameraInvertX = true;
-bool configCameraInvertY = true;
-unsigned int configCameraXSens   = 100;
-unsigned int configCameraYSens   = 100;
-unsigned int configCameraAggr    = 50;
-unsigned int configCameraScheme  = 0; // PUPPYCAM_INPUT_TYPE_DOUBLE_TAB
-unsigned int configCameraOpacity = 1; // PUPPYCAM_OPACITY_TYPE_FADE
-bool configDebugCamera   = false;
+    .invertX = true,
+    .invertY = true,
+    .sensX = 100,
+    .sensY = 100,
+    .aggression = 50,
+    .scheme = 0, // PUPPYCAM_INPUT_TYPE_DOUBLE_TAB
+    .opacity = 1, // PUPPYCAM_OPACITY_TYPE_FADE
+    .debug = false,
+};
 #endif
 
 static const struct ConfigOption options[] = {
@@ -166,20 +178,26 @@ static const struct ConfigOption options[] = {
     {.name = "discordrpc_enable",    .type = CONFIG_TYPE_BOOL, .boolValue = &configDiscordRPC},
     #endif
     {.name = "skip_intro",           .type = CONFIG_TYPE_BOOL, .boolValue = &configSkipIntro},
+#if MORE_VANILLA_CAM_STUFF
+    {.name = "vanillacam_parallel",     .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.parallel},  
+    {.name = "vanillacam_srmario",      .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.srMario},
+    {.name = "vanillacam_c_up_sounds",  .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.cUpSounds},
+    {.name = "vanillacam_parallel_col", .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.parallelCol},
+#endif
 #ifdef BETTERCAMERA
-    {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configEnableCamera},  
-    {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraAnalog},
+    {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.enable},  
+    {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.analog},
     #ifdef MOUSE_ACTIONS
-    {.name = "bettercam_mouse_look", .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraMouse},
+    {.name = "bettercam_mouse_look", .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.mouse},
     #endif
-    {.name = "bettercam_invertx",    .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraInvertX},
-    {.name = "bettercam_inverty",    .type = CONFIG_TYPE_BOOL, .boolValue = &configCameraInvertY},
-    {.name = "bettercam_xsens",      .type = CONFIG_TYPE_UINT, .uintValue = &configCameraXSens},
-    {.name = "bettercam_ysens",      .type = CONFIG_TYPE_UINT, .uintValue = &configCameraYSens},
-    {.name = "bettercam_aggression", .type = CONFIG_TYPE_UINT, .uintValue = &configCameraAggr},
-    {.name = "bettercam_scheme",     .type = CONFIG_TYPE_UINT, .uintValue = &configCameraScheme},
-    {.name = "bettercam_opacity",    .type = CONFIG_TYPE_UINT, .uintValue = &configCameraOpacity},
-    {.name = "bettercam_debug",      .type = CONFIG_TYPE_BOOL, .boolValue = &configDebugCamera},
+    {.name = "bettercam_invertx",    .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.invertX},
+    {.name = "bettercam_inverty",    .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.invertY},
+    {.name = "bettercam_xsens",      .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.sensX},
+    {.name = "bettercam_ysens",      .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.sensY},
+    {.name = "bettercam_aggression", .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.aggression},
+    {.name = "bettercam_scheme",     .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.scheme},
+    {.name = "bettercam_opacity",    .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.opacity},
+    {.name = "bettercam_debug",      .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.debug},
 #endif
 };
 

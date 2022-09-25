@@ -4,6 +4,9 @@
  * CAMERA SETTINGS *
  *******************/
 
+/// Enabled specific vanilla camera code.
+#define CAMERA_VANILLA_DEFINES (0 || VANILLA_CHECKS)
+
 /// Makes the camera approach Mario's height much more quickly.
 #define FAST_VERTICAL_CAMERA_MOVEMENT (0 || QOL_FIXES)
 
@@ -18,6 +21,9 @@
 
 /// Changes C-Up vanilla camera similar to the DS version
 #define DS_CAM_MOVEMENT_C_UP (0 || QOL_FEATURES)
+
+/// Adds parallel lakitu camera, star road mario camera and some reonucam stuff, all configurable
+#define MORE_VANILLA_CAM_STUFF (0 || (EXT_OPTIONS_MENU && QOL_FEATURES))
 
 /// The number of steps between Mario and the camera to check for walls obstructing Mario. Vanilla is 8.
 #define CAMERA_NUM_OBSTRUCTION_CHECKS   8
