@@ -608,7 +608,7 @@ void vec3s_quot(Vec3s dest, const Vec3s a, const Vec3s b);
 f32  vec3f_dot(              const Vec3f a, const Vec3f b);
 void vec3f_cross(Vec3f dest, const Vec3f a, const Vec3f b);
 void vec3f_normalize(Vec3f dest);
-void vec3f_normalize_max(Vec3f dest, f32 max);
+Bool32 vec3f_normalize_bool(Vec3f dest);
 // Mtxf operations
 void mtxf_copy(Mat4 dest, Mat4 src);
 // Create specific matrices

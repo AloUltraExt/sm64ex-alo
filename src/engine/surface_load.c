@@ -314,9 +314,9 @@ static void add_surface(struct Surface *surface, s32 dynamic) {
  * @param dynamic If the surface belongs to an object or not
  */
 static struct Surface *read_surface_data(TerrainData *vertexData, TerrainData **vertexIndices, u32 dynamic) {
-    Vec3Terrain v[3];
+    Vec3t v[3];
     Vec3f n;
-    Vec3Terrain offset;
+    Vec3t offset;
     s16 min, max;
 
     vec3_prod_val(offset, (*vertexIndices), 3);
@@ -327,7 +327,7 @@ static struct Surface *read_surface_data(TerrainData *vertexData, TerrainData **
 
     find_vector_perpendicular_to_plane(n, v[0], v[1], v[2]);
 
-    vec3f_normalize(n);
+    if (!vec3f_normalize_bool(n)) return NULL;
 
     struct Surface *surface = alloc_surface(dynamic);
 

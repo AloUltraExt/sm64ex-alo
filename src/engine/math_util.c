@@ -330,20 +330,15 @@ void vec3f_normalize(Vec3f dest) {
     }
 }
 
-/// Scale vector 'dest' so it has length at most 'max'.
-void vec3f_normalize_max(Vec3f dest, f32 max) {
+/// Scale vector 'dest' and returns TRUE if is a valid value.
+Bool32 vec3f_normalize_bool(Vec3f dest) {
     f32 mag = vec3_sumsq(dest);
     if (mag > (NEAR_ZERO)) {
-        if (mag > sqr(max)) {
-            f32 invsqrt = max / sqrtf(mag);
-            vec3_mul_val(dest, invsqrt);
-        }
-    } else {
-        // Default to up vector.
-        dest[0] = 0;
-        ((u32 *) dest)[1] = FLOAT_ONE;
-        dest[2] = 0;
+        f32 invsqrt = ((1.0f) / sqrtf(mag));
+        vec3_mul_val(dest, invsqrt);
+        return TRUE;
     }
+    return FALSE;
 }
 
 /// Struct the same data size as a Mat4
@@ -352,7 +347,7 @@ struct CopyMat4 {
 };
 
 /// Copy matrix 'src' to 'dest' by casting to a struct CopyMat4 pointer.
-UNUSED void mtxf_copy(Mat4 dest, Mat4 src) {
+void mtxf_copy(Mat4 dest, Mat4 src) {
     *((struct CopyMat4 *) dest) = *((struct CopyMat4 *) src);
 }
 
@@ -369,7 +364,7 @@ void mtxf_identity(Mat4 mtx) {
 }
 
 /// Set dest to a translation matrix of vector b.
-UNUSED void mtxf_translate(Mat4 dest, Vec3f b) {
+void mtxf_translate(Mat4 dest, Vec3f b) {
     s32 i;
     f32 *pen;
     for (pen = ((f32 *) dest + 1), i = 0; i < 12; pen++, i++) {

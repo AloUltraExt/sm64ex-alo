@@ -88,7 +88,7 @@ typedef s16 PaintingData;
 typedef u8 Texture;
 typedef s8 RoomData; // Rooms are limited to -128 to 127. Change the type if you wish to have more rooms.
 typedef Collision TerrainData;
-typedef TerrainData Vec3Terrain[3];
+typedef Collision Vec3t[3];
 
 // -- Models --
 
@@ -287,9 +287,9 @@ struct Surface {
     /*0x05*/ RoomData room;
     /*0x06*/ TerrainData lowerY;
     /*0x08*/ TerrainData upperY;
-    /*0x0A*/ Vec3Terrain vertex1;
-    /*0x10*/ Vec3Terrain vertex2;
-    /*0x16*/ Vec3Terrain vertex3;
+    /*0x0A*/ Vec3t vertex1;
+    /*0x10*/ Vec3t vertex2;
+    /*0x16*/ Vec3t vertex3;
     /*0x1C*/ struct {
         f32 x;
         f32 y;
