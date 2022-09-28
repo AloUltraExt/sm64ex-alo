@@ -1,7 +1,8 @@
 /*
  * Redone description:
  * A backported version of the level select used in Zelda-engine games released on N64.
- * Adapted to Super Mario 64 by AloXado320, replaces old debug level select.
+ * Replaces old debug level select.
+ * Adapted to Super Mario 64 and improved by AloXado320.
  * Props to ZeldaRET for decompiling the code (z_select.c).
  */
 
@@ -9,7 +10,7 @@
 #include "game/ingame_menu.h"
 #include "extras/draw_util.h"
 
-#define MAX_PAGE_STRINGS 16
+#define MAX_PAGE_STRINGS 12
 #define PAGE_DOWN_STOPS_MAX (LEVEL_MAX / MAX_PAGE_STRINGS)
 
 struct ZDebugLevelSelect {
@@ -25,6 +26,8 @@ struct ZDebugLevelSelect {
     s32 lockUp;
     s32 lockDown;
     s32 refreshRate;
+    s32 toggleCourseLevelView;
+    s32 toggleControlsView;
 };
 
 // Duplicate copy to initiate struct
@@ -34,10 +37,13 @@ struct ZDebugLevelSelect *gZDbgLevelSelect = &gZDbgLevelSelectInit;
 void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
     s32 scene;
     s32 i;
-    char *name;
+    char *levelName;
+    s32 courseNum;
+    u8 *courseName;
     s32 xPos;
     char *chrTemp;
-    u8 strScene[4];
+    u8 levelNumStr[4];
+    u8 courseNumStr[4];
 
     gDPSetEnvColor(gDisplayListHead++, 255, 155, 150, 255);
     chrTemp = "SUPER MARIO LEVEL SELECT";
@@ -45,9 +51,30 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
     print_generic_string_ascii(xPos, 210, chrTemp);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
 
+    if (this->toggleControlsView) {
+        return;
+    }
+
+    void **courseNameTbl;
+#ifdef VERSION_EU
+    switch (gInGameLanguage) {
+        case LANGUAGE_ENGLISH:
+            courseNameTbl = segmented_to_virtual(course_name_table_eu_en);
+            break;
+        case LANGUAGE_FRENCH:
+            courseNameTbl = segmented_to_virtual(course_name_table_eu_fr);
+            break;
+        case LANGUAGE_GERMAN:
+            courseNameTbl = segmented_to_virtual(course_name_table_eu_de);
+            break;
+    }
+#else
+    courseNameTbl = segmented_to_virtual(seg2_course_name_table);
+#endif
+
     for (i = 0; i < MAX_PAGE_STRINGS; i++) {
         scene = (this->topDisplayedScene + i + this->count) % this->count;
-        int_to_str(scene + 1, strScene);
+        int_to_str(scene + 1, levelNumStr);
 
         if (scene == this->currentScene) {
             gDPSetEnvColor(gDisplayListHead++, 255, 126, 0, 255);
@@ -55,34 +82,98 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
             gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
         }
 
-        name = gLevelSelectStageNames[scene];
-        if (name == NULL) {
-            name = "**Null**";
+        levelName = gLevelSelectStageNames[scene];
+        if (levelName == NULL) {
+            levelName = "--Null--";
         }
+        courseNum = gLevelToCourseNumTable[scene];
+        courseName = segmented_to_virtual(courseNameTbl[courseNum - 1]);
+        int_to_str(courseNum, courseNumStr);
 
-        print_generic_string(100, 190 - i * 12, strScene);
-        print_generic_string_ascii(120, 190 - i * 12, name);
+        if (this->toggleCourseLevelView) {
+            chrTemp = "LEVEL    NAME";
+            print_generic_string(72, 180 - i * 11, levelNumStr);
+            print_generic_string_ascii(100, 180 - i * 11, levelName);
+        } else {
+            chrTemp = "COURSE   NAME";
+            print_generic_string(72, 180 - i * 11, courseNumStr);
+            if (courseName != NULL && courseNum >= COURSE_MIN && courseNum <= COURSE_MAX) {
+                print_generic_string(100, 180 - i * 11, &courseName[3]);
+            }
+        }
+        gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
+        print_generic_string_ascii(60, 194, chrTemp);
     }
 }
 
-void print_debug_level_select_settings(void) {
+void print_debug_level_select_settings(struct ZDebugLevelSelect *this) {
     u8 strSaveNum[4];
     u8 strActNum[4];
     char *chrTemp;
 
     s16 saveNum = gCurrSaveFileNum;
-    s16 actNum = gCurrActNum;
+    s16 actNum = gDialogCourseActNum = gCurrActNum;
     int_to_str(saveNum, strSaveNum);
     int_to_str(actNum, strActNum);
+
+    u8 *actName;
+    void **actNameTbl;
+    s32 courseNum;
+#ifdef VERSION_EU
+    switch (gInGameLanguage) {
+        case LANGUAGE_ENGLISH:
+            actNameTbl = segmented_to_virtual(act_name_table_eu_en);
+            break;
+        case LANGUAGE_FRENCH:
+            actNameTbl = segmented_to_virtual(act_name_table_eu_fr);
+            break;
+        case LANGUAGE_GERMAN:
+            actNameTbl = segmented_to_virtual(act_name_table_eu_de);
+            break;
+    }
+#else
+    actNameTbl = segmented_to_virtual(seg2_act_name_table);
+#endif
+
+    courseNum = gLevelToCourseNumTable[this->currentScene];
+    actName = segmented_to_virtual(actNameTbl[COURSE_NUM_TO_INDEX(courseNum) * 6 + actNum - 1]);
 
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
 
     chrTemp = "Save File: ";
-    print_generic_string_ascii(20, 40, chrTemp);
-    print_generic_string(20 + get_string_width_ascii(chrTemp), 40, strSaveNum);
+    print_generic_string_ascii(20, 42, chrTemp);
+    print_generic_string(20 + get_string_width_ascii(chrTemp), 42, strSaveNum);
+
     chrTemp = "Level Act: ";
-    print_generic_string_ascii(20, 20, chrTemp);
-    print_generic_string(20 + get_string_width_ascii(chrTemp), 20, strActNum);
+    print_generic_string_ascii(20, 28, chrTemp);
+    print_generic_string(20 + get_string_width_ascii(chrTemp), 28, strActNum);
+    if (actName != NULL && courseNum >= COURSE_MIN && courseNum <= COURSE_STAGES_MAX) {
+        print_generic_string(20 + 20 + get_string_width_ascii(chrTemp), 28, actName);
+    }
+
+    chrTemp = "(C Down) - Show-Hide Controls";
+    print_generic_string_ascii(20, 14, chrTemp);
+}
+
+const char lvlSelectDbgCtrlStr[][40] = {
+    "(D Pad) - Select Level",
+    "(R) - Change List Page",
+    "(Z) - Change Save File",
+    "(B) - Change Act",
+    "(C Up) - Change Level List",
+    "(A)(L)(R) - Hold to Reset",
+    "(A), (Start) - Load Level",
+};
+
+const char lvlSelectDbgCtrlViewStr[] = { "(C Down) - Show-Hide Controls" };
+
+void print_debug_level_select_controls(void) {
+    s32 i;
+    for (i = 0; i < ARRAY_COUNT(lvlSelectDbgCtrlStr); i++) {
+        print_generic_string_ascii(40, 186 - i * 16, lvlSelectDbgCtrlStr[i]);
+    }
+
+    print_generic_string_ascii(40, 38, lvlSelectDbgCtrlViewStr);
 }
 
 void print_debug_level_select_strings(struct ZDebugLevelSelect *this) {
@@ -92,8 +183,12 @@ void print_debug_level_select_strings(struct ZDebugLevelSelect *this) {
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
 
     print_debug_level_select_menu(this);
-    print_debug_level_select_settings();
 
+    if (this->toggleControlsView) {
+        print_debug_level_select_controls();
+    } else {
+        print_debug_level_select_settings(this);
+    }
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 }
 
@@ -107,6 +202,18 @@ Gfx *geo_debug_level_select_strings(s16 callContext, UNUSED struct GraphNode *no
 void debug_level_select_update(struct ZDebugLevelSelect *this) {
     if (this->verticalInputAccumulator == 0) {
         gCurrLevelNum = this->currentScene + 1;
+
+        if (gPlayer1Controller->buttonPressed & D_CBUTTONS) {
+            this->toggleControlsView ^= 1;
+        }
+
+        if (this->toggleControlsView) {
+            return;
+        }
+
+        if (gPlayer1Controller->buttonPressed & U_CBUTTONS) {
+            this->toggleCourseLevelView ^= 1;
+        }
 
         if (gPlayer1Controller->buttonPressed & B_BUTTON) {
             gCurrActNum++;
@@ -253,11 +360,19 @@ s32 lvl_init_intro_level_select(UNUSED s32 arg, UNUSED s32 unused) {
 
     gZDbgLevelSelect->refreshRate = 1;
 
+    gZDbgLevelSelect->toggleCourseLevelView = 0;
+    gZDbgLevelSelect->toggleControlsView = 0;
+
     return 0;
 }
 
 s16 intro_level_select(void) {
     debug_level_select_update(gZDbgLevelSelect);
+
+    // Don't perform any button actions if controls view is active
+    if (gZDbgLevelSelect->toggleControlsView) {
+        return 0;
+    }
 
     // Resets the game and disables level select
     if (gPlayer1Controller->buttonDown == (A_BUTTON | L_TRIG | R_TRIG)) {
