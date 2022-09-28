@@ -47,6 +47,9 @@
 /// Makes red coin star marker correctly be in dynamic floors and water
 /// Credits: (AloXado320)
 #define QOL_FEATURE_BETTER_REDS_STAR_MARKER (0 || QOL_FEATURES || !VANILLA_CHECKS)
+/// Makes ending screen go back to title screen when pressing start
+/// Credits: (Mips96)
+#define QOL_FEATURE_ENDING_SCREEN_START (0 || QOL_FEATURES)
 /// Changes blue coin switch to respawn instead of disappearing
 /// Credits: (Arceveti)
 #define QOL_FEATURE_RESPAWN_BLUE_COIN_SWITCH (0 || QOL_FEATURES)
