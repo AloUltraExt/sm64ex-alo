@@ -44,13 +44,13 @@ const LevelScript level_intro_splash_screen[] = {
 #endif
     LOAD_RAW (/*seg*/ 0x13, _behaviorSegmentRomStart, _behaviorSegmentRomEnd),
     LOAD_MIO0(/*seg*/ 0x07, _intro_segment_7SegmentRomStart, _intro_segment_7SegmentRomEnd),
-
     // Load "Super Mario 64" logo
     ALLOC_LEVEL_POOL(),
+
     AREA(/*index*/ 1, intro_geo_0002D0),
     END_AREA(),
-    FREE_LEVEL_POOL(),
 
+    FREE_LEVEL_POOL(),
     // Start animation
     LOAD_AREA(/*area*/ 1),
 
@@ -131,6 +131,7 @@ const LevelScript level_intro_mario_head_dizzy[] = {
 
 const LevelScript level_intro_mario_head_regular_skip[] = {
     INIT_LEVEL(),
+    PUSH_POOL(),
     CALL_LOOP(/*arg*/ LVL_INTRO_REGULAR, /*func*/ lvl_intro_update),
     JUMP_IF(/*op*/ OP_EQ, /*arg*/ 100, script_intro_L1),
     JUMP_IF(/*op*/ OP_EQ, /*arg*/ 101, script_intro_L2),
@@ -139,6 +140,7 @@ const LevelScript level_intro_mario_head_regular_skip[] = {
 
 const LevelScript level_intro_mario_head_dizzy_skip[] = {
     INIT_LEVEL(),
+    PUSH_POOL(),
     CALL_LOOP(/*arg*/ LVL_INTRO_GAME_OVER, /*func*/ lvl_intro_update),
     JUMP_IF(/*op*/ OP_EQ, /*arg*/ 100, script_intro_L1),
     JUMP_IF(/*op*/ OP_EQ, /*arg*/ 101, script_intro_L2),
@@ -153,10 +155,10 @@ const LevelScript level_intro_entry_4[] = {
 #ifdef GODDARD_MFACE
     FIXED_LOAD(/*loadAddr*/ _goddardSegmentStart, /*romStart*/ _goddardSegmentRomStart, /*romEnd*/ _goddardSegmentRomEnd),
 #endif
-    ALLOC_LEVEL_POOL(),
 #if ZELDA_STYLE_LEVEL_SELECT
     CALL(/*arg*/ 0, /*func*/ lvl_init_intro_level_select),
 #endif
+    ALLOC_LEVEL_POOL(),
 
     AREA(/*index*/ 1, intro_geo_000414),
     END_AREA(),
