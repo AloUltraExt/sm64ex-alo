@@ -911,7 +911,7 @@ void apply_vertical_wind(struct MarioState *m) {
 
         if (m->floor->type == SURFACE_VERTICAL_WIND && -3000.0f < offsetY && offsetY < 2000.0f
 #if FIX_SURFACE_WIND_DETECTION
-        && (m->action == ACT_VERTICAL_WIND)
+        && !(m->action & ACT_FLAG_INTANGIBLE)
 #endif
         ) {
             if (offsetY >= 0.0f) {

@@ -625,18 +625,17 @@ s32 act_hold_freefall(struct MarioState *m) {
     return FALSE;
 }
 
+// ex-alo change
+// add missing += 0x8000 angle changes on these first 2 checks
+
 s32 act_side_flip(struct MarioState *m) {
     if (m->input & INPUT_B_PRESSED) {
-#if FIX_SIDE_FLIP_VISUAL_LOOK
         m->marioObj->header.gfx.angle[1] += 0x8000;
-#endif
         return set_mario_action(m, ACT_DIVE, 0);
     }
 
     if (m->input & INPUT_Z_PRESSED) {
-#if FIX_SIDE_FLIP_VISUAL_LOOK
         m->marioObj->header.gfx.angle[1] += 0x8000;
-#endif
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 

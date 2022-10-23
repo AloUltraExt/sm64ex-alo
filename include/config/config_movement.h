@@ -25,6 +25,9 @@
 /// Fixes input polling by setting an initial min walking speed
 #define FIX_INITIAL_WALKING_SPEED (0 || QOL_FIXES)
 
+/// Fixes slideVel position being slightly off/asymmetric
+#define FIX_SLIDE_VEL_UPDATE_SLIDING (0 || QOL_FIXES)
+
 /// Fixes water upwarp, enables with collision fixes due to water surfaces
 #define FIX_WATER_PLUNGE_UPWARP (0 || QOL_FIXES || COLLISION_FIXES)
 
@@ -64,9 +67,6 @@
 
 /// Fixes crash if there's no referenced ceiling above Mario while hanging.
 #define FIX_CEILING_NULL_CRASH (0 || QOL_FIXES)
-
-/// Fixes side flip ground pound missing angle look
-#define FIX_SIDE_FLIP_VISUAL_LOOK (0 || QOL_FIXES)
 
 /// Makes Mario's squish scale smooth rather than being instantly set.
 #define SMOOTH_SQUISH (0 || QOL_FEATURES)

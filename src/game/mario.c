@@ -1799,6 +1799,29 @@ void mario_update_hitbox_and_cap_model(struct MarioState *m) {
     }
 }
 
+void set_wind_floor_properties(struct MarioState *m) {
+#if FIX_SURFACE_WIND_DETECTION
+    if (!(m->action & ACT_FLAG_INTANGIBLE))
+#endif
+    {
+        // Both of the wind handling portions play wind audio only in
+        // non-Japanese releases.
+        if (m->floor->type == SURFACE_HORIZONTAL_WIND) {
+            spawn_wind_particles(0, (m->floor->force << 8));
+#ifndef VERSION_JP
+            play_sound(SOUND_ENV_WIND2, m->marioObj->header.gfx.cameraToObject);
+#endif
+        }
+
+        if (m->floor->type == SURFACE_VERTICAL_WIND) {
+            spawn_wind_particles(1, 0);
+#ifndef VERSION_JP
+            play_sound(SOUND_ENV_WIND2, m->marioObj->header.gfx.cameraToObject);
+#endif
+        }
+    }
+}
+        
 /**
  * An unused and possibly a debug function. Z + another button input
  * sets Mario with a different cap.
@@ -1904,28 +1927,9 @@ s32 execute_mario_action(UNUSED struct Object *o) {
         update_mario_health(gMarioState);
         update_mario_info_for_cam(gMarioState);
         mario_update_hitbox_and_cap_model(gMarioState);
-
-        // Both of the wind handling portions play wind audio only in
-        // non-Japanese releases.
-        if (gMarioState->floor->type == SURFACE_HORIZONTAL_WIND) {
-            spawn_wind_particles(0, (gMarioState->floor->force << 8));
-#ifndef VERSION_JP
-            play_sound(SOUND_ENV_WIND2, gMarioState->marioObj->header.gfx.cameraToObject);
-#endif
-        }
-
-        if (gMarioState->floor->type == SURFACE_VERTICAL_WIND
-#if FIX_SURFACE_WIND_DETECTION
-        && (gMarioState->action == ACT_VERTICAL_WIND)
-#endif
-        ) {
-            spawn_wind_particles(1, 0);
-#ifndef VERSION_JP
-            play_sound(SOUND_ENV_WIND2, gMarioState->marioObj->header.gfx.cameraToObject);
-#endif
-        }
-
+        set_wind_floor_properties(gMarioState);
         play_infinite_stairs_music();
+
         gMarioState->marioObj->oInteractStatus = 0;
 #ifdef RUMBLE_FEEDBACK
         queue_rumble_particles();
