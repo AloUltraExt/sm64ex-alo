@@ -1649,9 +1649,9 @@ const BehaviorScript bhvWFSolidTowerPlatform[] = {
     BEGIN(OBJ_LIST_SURFACE),
     OR_INT(oFlags, (OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
     LOAD_COLLISION_DATA(wf_seg7_collision_platform),
-    CALL_NATIVE(load_object_static_model),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_wf_solid_tower_platform_loop),
+        CALL_NATIVE(load_object_collision_model),
     END_LOOP(),
 };
 
@@ -5482,7 +5482,7 @@ const BehaviorScript bhvTTCRotatingSolid[] = {
 const BehaviorScript bhvTTCPendulum[] = {
     BEGIN(OBJ_LIST_SURFACE),
     LOAD_COLLISION_DATA(ttc_seg7_collision_clock_pendulum),
-    OR_INT(oFlags, (OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)),
+    OR_INT(oFlags, (OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_DONT_CALC_COLL_DIST)),
     SET_FLOAT(oCollisionDistance, 1500),
     CALL_NATIVE(bhv_ttc_pendulum_init),
     SET_FLOAT(oTTCPendulumAccelDir, 1),

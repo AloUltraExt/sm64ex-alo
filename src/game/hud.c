@@ -373,7 +373,8 @@ void render_hud_timer(void) {
     }
 #else
     str = "TIME";
-    print_text(set_hud_auto_x_pos(HUD_TIME_X), HUD_TIME_Y, str);
+    // If set_hud_auto_x_pos is used, the "TIME" text will be very separate from the actual timer
+    print_text(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(SCREEN_WIDTH - HUD_TIME_X), HUD_TIME_Y, str);
 #endif
 
     print_text_fmt_int(set_hud_auto_x_pos(HUD_TIME_MIN_X), HUD_TIME_Y, "%0d", timerMins);

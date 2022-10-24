@@ -578,6 +578,11 @@ s32 act_debug_free_move(struct MarioState *m) {
     Vec3f pos;
     f32 speed;
 
+#ifdef EXT_DEBUG_MENU
+    // Prevent Mario from being squashed while in free move
+    m->squishTimer = 0;
+#endif
+
     // integer immediates, generates convert instructions for some reason
     speed = gPlayer1Controller->buttonDown & B_BUTTON ? 4 : 1;
     if (gPlayer1Controller->buttonDown & Z_TRIG) {
@@ -628,10 +633,6 @@ s32 act_debug_free_move(struct MarioState *m) {
 #endif
         pos[0] += speed * sins(m->intendedYaw);
         pos[2] += speed * coss(m->intendedYaw);
-#ifdef EXT_DEBUG_MENU
-        m->faceAngle[1] = m->intendedYaw;
-        vec3s_set(m->marioObj->header.gfx.angle, 0, m->faceAngle[1], 0);
-#endif
     }
 
     resolve_and_return_wall_collisions(pos, 60.0f, 50.0f);
@@ -654,18 +655,16 @@ s32 act_debug_free_move(struct MarioState *m) {
     }
 
     vec3f_copy(m->pos, pos);
-
-    vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
 #else
     if (floor != NULL && pos[1] < floorHeight) {
         pos[1] = floorHeight;
         vec3f_copy(m->pos, pos);
     }
-    
+#endif
+
     m->faceAngle[1] = m->intendedYaw;
     vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
     vec3s_set(m->marioObj->header.gfx.angle, 0, m->faceAngle[1], 0);
-#endif
 
     return FALSE;
 }
