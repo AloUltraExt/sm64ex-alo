@@ -9,6 +9,7 @@
 #include "game/segment2.h"
 #include "game/ingame_menu.h"
 #include "extras/draw_util.h"
+#include <stdio.h>
 
 #define MAX_PAGE_STRINGS 12
 #define PAGE_DOWN_STOPS_MAX (LEVEL_MAX / MAX_PAGE_STRINGS)
@@ -40,15 +41,13 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
     char *levelName;
     s32 courseNum;
     u8 *courseName;
-    s32 xPos;
     char *chrTemp;
     u8 levelNumStr[4];
     u8 courseNumStr[4];
 
     gDPSetEnvColor(gDisplayListHead++, 255, 155, 150, 255);
     chrTemp = "SUPER MARIO LEVEL SELECT";
-    xPos = get_str_x_pos_from_center_custom_ascii(LUT_TYPE_STR_ASCII, SCREEN_WIDTH / 2, chrTemp, FALSE, 0);
-    print_generic_string(xPos, 210, chrTemp);
+    print_generic_string_aligned(SCREEN_CENTER_X, 210, chrTemp, TEXT_ALIGN_CENTER);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
 
     if (this->toggleControlsView) {
@@ -98,7 +97,7 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
             chrTemp = "COURSE   NAME";
             print_generic_string(72, 180 - i * 11, courseNumStr);
             if (courseName != NULL && courseNum >= COURSE_MIN && courseNum <= COURSE_MAX) {
-                if (check_number_string_in_course_names(courseName)) {
+                if (check_number_string_in_course_name(courseName)) {
                     print_generic_string(100, 180 - i * 11, &courseName[3]);
                 } else {
                     print_generic_string(100, 180 - i * 11, courseName);
@@ -111,14 +110,15 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
 }
 
 void print_debug_level_select_settings(struct ZDebugLevelSelect *this) {
-    u8 strSaveNum[4];
-    u8 strActNum[4];
+    char str[20];
+    char strSaveNum[8];
+    char strActNum[8];
     char *chrTemp;
 
     s16 saveNum = gCurrSaveFileNum;
     s16 actNum = gDialogCourseActNum = gCurrActNum;
-    int_to_str(saveNum, strSaveNum);
-    int_to_str(actNum, strActNum);
+    format_int_to_string(strSaveNum, saveNum);
+    format_int_to_string(strActNum, actNum);
 
     u8 *actName;
     void **actNameTbl;
@@ -144,22 +144,23 @@ void print_debug_level_select_settings(struct ZDebugLevelSelect *this) {
 
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
 
-    chrTemp = "Save File: ";
-    print_generic_string(20, 42, chrTemp);
-    print_generic_string(20 + get_string_width_ascii(chrTemp), 42, strSaveNum);
+    chrTemp = "Save File: %s";
+    sprintf(str, chrTemp, strSaveNum);
+    print_generic_string(20, 42, str);
 
-    chrTemp = "Level Act: ";
-    print_generic_string(20, 28, chrTemp);
-    print_generic_string(20 + get_string_width_ascii(chrTemp), 28, strActNum);
+    chrTemp = "Level Act: %s";
+    sprintf(str, chrTemp, strActNum);
+    print_generic_string(20, 28, str);
+
     if (actName != NULL && courseNum >= COURSE_MIN && courseNum <= COURSE_STAGES_MAX) {
-        print_generic_string(20 + 20 + get_string_width_ascii(chrTemp), 28, actName);
+        print_generic_string(100, 28, actName);
     }
 
     chrTemp = "(C Down) - Show-Hide Controls";
     print_generic_string(20, 14, chrTemp);
 }
 
-const char lvlSelectDbgCtrlStr[][40] = {
+char lvlSelectDbgCtrlStr[][40] = {
     "(D Pad) - Select Level",
     "(R) - Change List Page",
     "(Z) - Change Save File",
@@ -169,7 +170,7 @@ const char lvlSelectDbgCtrlStr[][40] = {
     "(A), (Start) - Load Level",
 };
 
-const char lvlSelectDbgCtrlViewStr[] = { "(C Down) - Show-Hide Controls" };
+char lvlSelectDbgCtrlViewStr[] = { "(C Down) - Show-Hide Controls" };
 
 void print_debug_level_select_controls(void) {
     s32 i;

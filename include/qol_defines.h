@@ -22,7 +22,7 @@
 // --| Quality of life redone files
 /// Adds Zelda level select used on OOT, MM and Animal Forest
 /// Credits: (AloXado320)
-//#define ZELDA_STYLE_LEVEL_SELECT (0 || QOL_REDONE)
+#define ZELDA_STYLE_LEVEL_SELECT (0 || QOL_REDONE)
 /// Adds improved platform displacement with intertia
 #define PLATFORM_DISPLACEMENT_2 (0 || QOL_REDONE)
 /// Uses optimized shadows which are faster than vanilla
