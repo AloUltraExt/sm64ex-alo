@@ -5,13 +5,13 @@
 # Build debug version
 DEBUG ?= 0
 # Enable extended options menu by default
-EXT_OPTIONS_MENU ?= 1
+EXT_OPTIONS_MENU ?= 0
 # Enable debug options menu (Enabled if DEBUG=1)
 EXT_DEBUG_MENU ?= 0
 # Enable better camera (Puppycam 2)
-BETTERCAMERA ?= 1
+BETTERCAMERA ?= 0
 # Enable cheats
-CHEATS_ACTIONS ?= 1
+CHEATS_ACTIONS ?= 0
 # Enable rumble functions (Originally in Shindou)
 RUMBLE_FEEDBACK ?= 1
 # Disable no drawing distance by default

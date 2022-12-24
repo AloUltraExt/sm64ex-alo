@@ -48,7 +48,7 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
     gDPSetEnvColor(gDisplayListHead++, 255, 155, 150, 255);
     chrTemp = "SUPER MARIO LEVEL SELECT";
     xPos = get_str_x_pos_from_center_custom_ascii(LUT_TYPE_STR_ASCII, SCREEN_WIDTH / 2, chrTemp, FALSE, 0);
-    print_generic_string_ascii(xPos, 210, chrTemp);
+    print_generic_string(xPos, 210, chrTemp);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
 
     if (this->toggleControlsView) {
@@ -93,16 +93,20 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
         if (this->toggleCourseLevelView) {
             chrTemp = "LEVEL    NAME";
             print_generic_string(72, 180 - i * 11, levelNumStr);
-            print_generic_string_ascii(100, 180 - i * 11, levelName);
+            print_generic_string(100, 180 - i * 11, levelName);
         } else {
             chrTemp = "COURSE   NAME";
             print_generic_string(72, 180 - i * 11, courseNumStr);
             if (courseName != NULL && courseNum >= COURSE_MIN && courseNum <= COURSE_MAX) {
-                print_generic_string(100, 180 - i * 11, &courseName[3]);
+                if (check_number_string_in_course_names(courseName)) {
+                    print_generic_string(100, 180 - i * 11, &courseName[3]);
+                } else {
+                    print_generic_string(100, 180 - i * 11, courseName);
+                }
             }
         }
         gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
-        print_generic_string_ascii(60, 194, chrTemp);
+        print_generic_string(60, 194, chrTemp);
     }
 }
 
@@ -141,18 +145,18 @@ void print_debug_level_select_settings(struct ZDebugLevelSelect *this) {
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
 
     chrTemp = "Save File: ";
-    print_generic_string_ascii(20, 42, chrTemp);
+    print_generic_string(20, 42, chrTemp);
     print_generic_string(20 + get_string_width_ascii(chrTemp), 42, strSaveNum);
 
     chrTemp = "Level Act: ";
-    print_generic_string_ascii(20, 28, chrTemp);
+    print_generic_string(20, 28, chrTemp);
     print_generic_string(20 + get_string_width_ascii(chrTemp), 28, strActNum);
     if (actName != NULL && courseNum >= COURSE_MIN && courseNum <= COURSE_STAGES_MAX) {
         print_generic_string(20 + 20 + get_string_width_ascii(chrTemp), 28, actName);
     }
 
     chrTemp = "(C Down) - Show-Hide Controls";
-    print_generic_string_ascii(20, 14, chrTemp);
+    print_generic_string(20, 14, chrTemp);
 }
 
 const char lvlSelectDbgCtrlStr[][40] = {
@@ -170,10 +174,10 @@ const char lvlSelectDbgCtrlViewStr[] = { "(C Down) - Show-Hide Controls" };
 void print_debug_level_select_controls(void) {
     s32 i;
     for (i = 0; i < ARRAY_COUNT(lvlSelectDbgCtrlStr); i++) {
-        print_generic_string_ascii(40, 186 - i * 16, lvlSelectDbgCtrlStr[i]);
+        print_generic_string(40, 186 - i * 16, lvlSelectDbgCtrlStr[i]);
     }
 
-    print_generic_string_ascii(40, 38, lvlSelectDbgCtrlViewStr);
+    print_generic_string(40, 38, lvlSelectDbgCtrlViewStr);
 }
 
 void print_debug_level_select_strings(struct ZDebugLevelSelect *this) {

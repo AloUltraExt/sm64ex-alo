@@ -80,6 +80,12 @@ sm64config.txt
 !/assets/**/*custom*.bin
 !/assets/**/*custom*/**/*.bin
 
+# Pre-extracted files, to use between game versions
+!/levels/**/*predone*.png
+!/levels/**/*predone*/**/*.png
+!/textures/**/*predone*.png
+!/textures/**/*predone*/**/*.png
+
 # Android files
 !/textures/touchcontrols/*.png
 platform/android/SDL/include

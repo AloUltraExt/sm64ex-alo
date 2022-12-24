@@ -29,13 +29,13 @@ OUTPUT_ARCH (mips)
     } \
     END_SEG(name##_mio0)
 
-#define MIO0_EU_SEG(name, segAddr) \
-    BEGIN_SEG(name##_mio0, segAddr) \
-    { \
-        BUILD_DIR/bin/eu/name.mio0.o(.data); \
-        . = ALIGN(0x10); \
-    } \
-    END_SEG(name##_mio0)
+//#define MIO0_EU_SEG(name, segAddr) \
+//    BEGIN_SEG(name##_mio0, segAddr) \
+//    { \
+//        BUILD_DIR/bin/eu/name.mio0.o(.data); \
+//        . = ALIGN(0x10); \
+//    } \
+//    END_SEG(name##_mio0)
 
 #define STANDARD_LEVEL(name) \
     BEGIN_SEG(name##_segment_7, 0x07000000) \
@@ -924,10 +924,18 @@ SECTIONS
 
     /* load MIO0 and level data */
     MIO0_SEG(segment2, 0x02000000)
-#ifdef VERSION_EU
-    MIO0_EU_SEG(translation_en, 0x19000000)
-    MIO0_EU_SEG(translation_fr, 0x19000000)
-    MIO0_EU_SEG(translation_de, 0x19000000)
+
+#ifdef MULTILANG
+   MIO0_SEG(translation_en, 0x19000000)
+#ifdef ENABLE_FRENCH
+   MIO0_SEG(translation_fr, 0x19000000)
+#endif
+#ifdef ENABLE_GERMAN
+   MIO0_SEG(translation_de, 0x19000000)
+#endif
+#ifdef ENABLE_JAPANESE
+   MIO0_SEG(translation_jp, 0x19000000)
+#endif
 #endif
 
     /* mario actor group */

@@ -86,13 +86,11 @@ Vp D_8032CF00 = { {
     { 640, 480, 511, 0 },
 } };
 
-#ifdef VERSION_EU
-const char *gNoControllerMsg[] = {
+LangArray gNoControllerMsg = DEFINE_LANGUAGE_ARRAY(
     "NO CONTROLLER",
     "MANETTE DEBRANCHEE",
     "CONTROLLER FEHLT",
-};
-#endif
+    "NO CONTROLLER");
 
 void override_viewport_and_clip(Vp *a, Vp *b, u8 c, u8 d, u8 e) {
     u16 sp6 = ((c >> 3) << 11) | ((d >> 3) << 6) | ((e >> 3) << 1) | 1;
@@ -111,29 +109,18 @@ void set_warp_transition_rgb(u8 red, u8 green, u8 blue) {
     gWarpTransBlue = blue;
 }
 
-static int scale_x_to_correct_aspect_center(int x) {
+static int scale_x_to_correct_aspect_center(int x) { // x is usually SCREEN_WIDTH / 2
     f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
     return x + (SCREEN_HEIGHT * aspect / 2) - (SCREEN_WIDTH / 2);
 }
 
 void print_intro_text(void) {
-#ifdef VERSION_EU
-    s32 language = eu_get_language();
-#endif
     if ((gGlobalTimer & 31) < 20) {
         if (gControllerBits == 0) {
-#ifdef VERSION_EU
-            print_text_centered(SCREEN_WIDTH / 2, 20, gNoControllerMsg[language]);
-#else
-            print_text_centered(scale_x_to_correct_aspect_center(SCREEN_WIDTH / 2), 20, "NO CONTROLLER");
-#endif
+            print_text_centered(SCREEN_CENTER_X, 20, LANG_ARRAY(gNoControllerMsg));
         } else {
-#ifdef VERSION_EU
-            print_text(GFX_DIMENSIONS_FROM_LEFT_EDGE(20), 20, "START");
-#else
             print_text_centered(GFX_DIMENSIONS_FROM_LEFT_EDGE(60), 38, "PRESS");
             print_text_centered(GFX_DIMENSIONS_FROM_LEFT_EDGE(60), 20, "START");
-#endif
         }
     }
 }

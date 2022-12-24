@@ -4,7 +4,6 @@
 #include "behavior_data.h"
 #include "engine/behavior_script.h"
 #include "engine/graph_node.h"
-#include "eu_translation.h"
 #include "game/area.h"
 #include "game/game_init.h"
 #include "game/ingame_menu.h"
@@ -12,13 +11,17 @@
 #include "game/memory.h"
 #include "game/object_helpers.h"
 #include "game/object_list_processor.h"
-#include "game/rumble_init.h"
 #include "game/save_file.h"
 #include "game/segment2.h"
 #include "game/segment7.h"
+#include "game/rumble_init.h"
 #include "sm64.h"
 #include "star_select.h"
-#include "text_strings.h"
+#include "game/main.h" // n64
+#include <stdio.h> // non-n64
+
+// from hackersm64
+#define o gCurrentObject
 
 /**
  * @file star_select.c
@@ -52,6 +55,12 @@ static s8 sSelectableStarIndex = 0;
 // Act Selector menu timer that keeps counting until you choose an act.
 static s32 sActSelectorMenuTimer = 0;
 
+#ifdef WIDE
+#define ACT_SELECT_WIDESCREEN_SCALE (gConfig.widescreen ? (4.f / 3) : 1.f)
+#else
+#define ACT_SELECT_WIDESCREEN_SCALE 1.f
+#endif
+
 /**
  * Act Selector Star Type Loop Action
  * Defines a select type for a star in the act selector.
@@ -60,17 +69,17 @@ void bhv_act_selector_star_type_loop(void) {
     switch (gCurrentObject->oStarSelectorType) {
         // If a star is not selected, don't rotate or change size
         case STAR_SELECTOR_NOT_SELECTED:
-            gCurrentObject->oStarSelectorSize -= 0.1;
-            if (gCurrentObject->oStarSelectorSize < 1.0) {
-                gCurrentObject->oStarSelectorSize = 1.0;
+            gCurrentObject->oStarSelectorSize -= 0.1f;
+            if (gCurrentObject->oStarSelectorSize < 1.0f) {
+                gCurrentObject->oStarSelectorSize = 1.0f;
             }
             gCurrentObject->oFaceAngleYaw = 0;
             break;
         // If a star is selected, rotate and slightly increase size
         case STAR_SELECTOR_SELECTED:
-            gCurrentObject->oStarSelectorSize += 0.1;
-            if (gCurrentObject->oStarSelectorSize > 1.3) {
-                gCurrentObject->oStarSelectorSize = 1.3;
+            gCurrentObject->oStarSelectorSize += 0.1f;
+            if (gCurrentObject->oStarSelectorSize > 1.3f) {
+                gCurrentObject->oStarSelectorSize = 1.3f;
             }
             gCurrentObject->oFaceAngleYaw += 0x800;
             break;
@@ -89,11 +98,12 @@ void bhv_act_selector_star_type_loop(void) {
  * Renders the 100 coin star with an special star selector type.
  */
 void render_100_coin_star(u8 stars) {
-    if (stars & (1 << 6)) {
+    if (stars & STAR_FLAG_ACT_100_COINS) {
         // If the 100 coin star has been collected, create a new star selector next to the coin score.
-        sStarSelectorModels[6] = spawn_object_abs_with_rot(gCurrentObject, 0, MODEL_STAR,
-                                                        bhvActSelectorStarType, 370, 24, -300, 0, 0, 0);
-        sStarSelectorModels[6]->oStarSelectorSize = 0.8;
+        sStarSelectorModels[6] = spawn_object_abs_with_rot(o, 0, MODEL_STAR,
+                                                        bhvActSelectorStarType, 370 * ACT_SELECT_WIDESCREEN_SCALE, 24, -300, 0, 0, 0);
+
+        sStarSelectorModels[6]->oStarSelectorSize = 0.8f;
         sStarSelectorModels[6]->oStarSelectorType = STAR_SELECTOR_100_COINS;
     }
 }
@@ -148,8 +158,8 @@ void bhv_act_selector_init(void) {
     // Render star selector objects
     for (i = 0; i < sVisibleStars; i++) {
         sStarSelectorModels[i] =
-            spawn_object_abs_with_rot(gCurrentObject, 0, selectorModelIDs[i], bhvActSelectorStarType,
-                                      75 + sVisibleStars * -75 + i * 152, 248, -300, 0, 0, 0);
+            spawn_object_abs_with_rot(o, 0, selectorModelIDs[i], bhvActSelectorStarType,
+                                    (75 + (sVisibleStars * -75) + (i * 152)) * ACT_SELECT_WIDESCREEN_SCALE, 248, -300, 0, 0, 0);
         sStarSelectorModels[i]->oStarSelectorSize = 1.0f;
     }
 
@@ -203,30 +213,34 @@ void bhv_act_selector_loop(void) {
 /**
  * Print the course number selected with the wood rgba16 course texture.
  */
-#ifdef VERSION_EU
-void print_course_number(s16 language) {
-#else
+
 void print_course_number(void) {
-#endif
-    u8 courseNum[4];
+    char courseNum[4];
 
     create_dl_translation_matrix(MENU_MTX_PUSH, 158.0f, 81.0f, 0.0f);
 
     // Full wood texture in JP & US, lower part of it on EU
     gSPDisplayList(gDisplayListHead++, dl_menu_rgba16_wood_course);
 
-#ifdef VERSION_EU
+#ifdef MULTILANG
     // Change upper part of the wood texture depending of the language defined
-    switch (language) {
+    switch (multilang_get_language()) {
         case LANGUAGE_ENGLISH:
+#ifdef ENABLE_JAPANESE
+        case LANGUAGE_JAPANESE:
+#endif
             gSPDisplayList(gDisplayListHead++, dl_menu_texture_course_upper);
             break;
+#ifdef ENABLE_FRENCH
         case LANGUAGE_FRENCH:
             gSPDisplayList(gDisplayListHead++, dl_menu_texture_niveau_upper);
             break;
+#endif
+#ifdef ENABLE_GERMAN
         case LANGUAGE_GERMAN:
             gSPDisplayList(gDisplayListHead++, dl_menu_texture_kurs_upper);
             break;
+#endif
     }
 
     gSPDisplayList(gDisplayListHead++, dl_menu_rgba16_wood_course_end);
@@ -236,142 +250,74 @@ void print_course_number(void) {
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
 
-    int_to_str(gCurrCourseNum, courseNum);
-
-    if (gCurrCourseNum < 10) { // 1 digit number
-        print_hud_lut_string(HUD_LUT_GLOBAL, 152, 158, courseNum);
-    } else { // 2 digit number
-        print_hud_lut_string(HUD_LUT_GLOBAL, 143, 158, courseNum);
-    }
+    sprintf(courseNum, "%d", gCurrCourseNum);
+    print_hud_lut_string_aligned(157, 158, courseNum, TEXT_ALIGN_CENTER);
 
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
 }
 
-#ifdef VERSION_JP
-#define ACT_NAME_X 158
-#else
-#define ACT_NAME_X 163
-#endif
-
+LangArray textActMyScore = DEFINE_LANGUAGE_ARRAY(
+    "MYSCORE",
+    "MON SCORE",
+    "LEISTUNG",
+    "マイスコア");
 /**
  * Print act selector strings, some with special checks.
  */
 void print_act_selector_strings(void) {
-#ifdef VERSION_EU
-    unsigned char myScore[][10] = { {TEXT_MYSCORE}, {TEXT_MY_SCORE_FR}, {TEXT_MY_SCORE_DE} };
-#else
-    unsigned char myScore[] = { TEXT_MYSCORE };
-#endif
-    unsigned char starNumbers[] = { TEXT_ZERO };
-
-#ifdef VERSION_EU
-    u8 **levelNameTbl;
-    u8 *currLevelName;
-    u8 **actNameTbl;
-#else
-    u8 **levelNameTbl = segmented_to_virtual(seg2_course_name_table);
-    u8 *currLevelName = segmented_to_virtual(levelNameTbl[COURSE_NUM_TO_INDEX(gCurrCourseNum)]);
-    u8 **actNameTbl = segmented_to_virtual(seg2_act_name_table);
-#endif
-    u8 *selectedActName;
-    s16 lvlNameX;
-    s16 actNameX;
+    char **levelNameTbl = segmented_to_virtual(languageTable[gInGameLanguage][1]);
+    char *currLevelName = segmented_to_virtual(levelNameTbl[COURSE_NUM_TO_INDEX(gCurrCourseNum)]);
+    char **actNameTbl = segmented_to_virtual(languageTable[gInGameLanguage][2]);
+    char *selectedActName;
     s8 i;
-#ifdef VERSION_EU
-    s16 language = eu_get_language();
-#endif
 
     create_dl_ortho_matrix();
+    gDialogTextAlpha = 255;
 
-#ifdef VERSION_EU
-    switch (language) {
-        case LANGUAGE_ENGLISH:
-            actNameTbl = segmented_to_virtual(act_name_table_eu_en);
-            levelNameTbl = segmented_to_virtual(course_name_table_eu_en);
-            break;
-        case LANGUAGE_FRENCH:
-            actNameTbl = segmented_to_virtual(act_name_table_eu_fr);
-            levelNameTbl = segmented_to_virtual(course_name_table_eu_fr);
-            break;
-        case LANGUAGE_GERMAN:
-            actNameTbl = segmented_to_virtual(act_name_table_eu_de);
-            levelNameTbl = segmented_to_virtual(course_name_table_eu_de);
-            break;
-    }
-    currLevelName = segmented_to_virtual(levelNameTbl[COURSE_NUM_TO_INDEX(gCurrCourseNum)]);
-#endif
     // Print the coin highscore.
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
+    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, gDialogTextAlpha);
     print_hud_my_score_coins(1, gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum), 155, 106);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
+    gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, gDialogTextAlpha);
     // Print the "MY SCORE" text if the coin score is more than 0
     if (save_file_get_course_coin_score(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum)) != 0) {
-#ifdef VERSION_EU
-        print_generic_string(95, 118, myScore[language]);
-#else
-        print_generic_string(102, 118, myScore);
-#endif
+        print_generic_string_aligned(145, 118, LANG_ARRAY(textActMyScore), TEXT_ALIGN_RIGHT);
     }
 
-    lvlNameX = get_str_x_pos_from_center(160, currLevelName + 3, 10.0f);
-    print_generic_string(lvlNameX, 33, currLevelName + 3);
+    print_generic_string_aligned(SCREEN_CENTER_X, 33, currLevelName, TEXT_ALIGN_CENTER);
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 
-#ifdef VERSION_EU
-    print_course_number(language);
-#else
     print_course_number();
-#endif
 
     gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
+    gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, gDialogTextAlpha);
     // Print the name of the selected act.
     if (sVisibleStars != 0) {
         selectedActName = segmented_to_virtual(actNameTbl[COURSE_NUM_TO_INDEX(gCurrCourseNum) * 6 + sSelectedActIndex]);
 
-        actNameX = get_str_x_pos_from_center(ACT_NAME_X, selectedActName, 8.0f);
-        print_menu_generic_string(actNameX, 81, selectedActName);
+        print_menu_generic_string_aligned(SCREEN_CENTER_X, 81, selectedActName, TEXT_ALIGN_CENTER);
     }
 
     // Print the numbers above each star.
     for (i = 1; i <= sVisibleStars; i++) {
-        starNumbers[0] = i;
-#ifdef VERSION_EU
-        print_menu_generic_string(143 - sVisibleStars * 15 + i * 30, 38, starNumbers);
-#else
-        print_menu_generic_string(139 - sVisibleStars * 17 + i * 34, 38, starNumbers);
-#endif
+        char str[4];
+        format_int_to_string(str, i);
+        print_menu_generic_string_aligned(SCREEN_CENTER_X + (i*2 - sVisibleStars - 1) * 17, 38, str, TEXT_ALIGN_CENTER);
     }
 
     gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_end);
-}
+ }
 
 /**
  * Geo function that Print act selector strings.
- *!@bug: This geo function is missing the third param. Harmless in practice due to o32 convention.
  */
-#ifdef AVOID_UB
-Gfx *geo_act_selector_strings(s16 callContext, UNUSED struct GraphNode *node, UNUSED void *context)
-#else
-Gfx *geo_act_selector_strings(s16 callContext, UNUSED struct GraphNode *node)
-#endif
-{
+Gfx *geo_act_selector_strings(s16 callContext, UNUSED struct GraphNode *node, UNUSED void *context) {
     if (callContext == GEO_CONTEXT_RENDER) {
-#ifdef TARGET_N3DS
-        gDPForceFlush(gDisplayListHead++);
-        gDPSet2d(gDisplayListHead++, 1);
-        gDPSetIod(gDisplayListHead++, iodStarSelect);
-#endif
         print_act_selector_strings();
-#ifdef TARGET_N3DS
-        gDPForceFlush(gDisplayListHead++);
-        gDPSet2d(gDisplayListHead++, 0);
-#endif
     }
     return NULL;
 }
@@ -387,22 +333,15 @@ s32 lvl_init_act_selector_values_and_stars(UNUSED s32 arg, UNUSED s32 unused) {
     sInitSelectedActNum = 0;
     sVisibleStars = 0;
     sActSelectorMenuTimer = 0;
-#ifdef NO_SEGMENTED_MEMORY
-    sSelectedActIndex = 0;
-    sSelectableStarIndex = 0;
-#endif
     sObtainedStars =
         save_file_get_course_star_count(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum));
 
     // Don't count 100 coin star
-    if (stars & (1 << 6)) {
+    if (stars & STAR_FLAG_ACT_100_COINS) {
         sObtainedStars--;
     }
 
-    //! no return value
-#ifdef AVOID_UB
     return 0;
-#endif
 }
 
 /**
@@ -412,20 +351,9 @@ s32 lvl_init_act_selector_values_and_stars(UNUSED s32 arg, UNUSED s32 unused) {
 s32 lvl_update_obj_and_load_act_button_actions(UNUSED s32 arg, UNUSED s32 unused) {
     if (sActSelectorMenuTimer > 10) {
         // If any of these buttons are pressed, play sound and go to course act
-#if !QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
-        if ((gPlayer3Controller->buttonPressed & A_BUTTON)
-         || (gPlayer3Controller->buttonPressed & START_BUTTON)
-         || (gPlayer3Controller->buttonPressed & B_BUTTON)) 
-#else
-        if ((gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | B_BUTTON | Z_TRIG))) 
-#endif
-        {
-#ifdef VERSION_JP
-            play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
-#else
+        if ((gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | B_BUTTON | Z_TRIG))) {
             play_sound(SOUND_MENU_STAR_SOUND_LETS_A_GO, gGlobalSoundSource);
-#endif
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
             queue_rumble_data(60, 70);
             queue_rumble_decay(1);
 #endif

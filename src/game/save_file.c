@@ -498,6 +498,9 @@ void save_file_load_all(void) {
                 break;
         }
     }
+#ifdef MULTILANG // TODO TEXTSAVES support
+    gInGameLanguage = multilang_get_language();
+#endif
 #endif // TEXTSAVES
     stub_save_file_1();
 }
@@ -759,17 +762,18 @@ void save_file_move_cap_to_default_location(void) {
     }
 }
 
-#ifdef VERSION_EU
-void eu_set_language(u16 language) {
+#ifdef MULTILANG
+void multilang_set_language(u16 language) {
     gSaveBuffer.menuData[0].language = language;
+    gInGameLanguage = language;
     gMainMenuDataModified = TRUE;
     save_main_menu_data();
 }
 
-u16 eu_get_language(void) {
+u16 multilang_get_language(void) {
     // check if the language is in range, in case we loaded a US save with garbage padding or something
     if (gSaveBuffer.menuData[0].language >= LANGUAGE_MAX)
-        eu_set_language(LANGUAGE_ENGLISH); // reset it to english if not
+        multilang_set_language(LANGUAGE_ENGLISH); // reset it to english if not
     return gSaveBuffer.menuData[0].language;
 }
 #endif

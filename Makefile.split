@@ -11,7 +11,10 @@ SEGMENTS := \
 # Directories containing PNG files
 TEXTURE_DIRS := \
     $(wildcard textures/*/) \
+    $(wildcard levels/*/custom/) \
+    $(wildcard levels/*/predone/) \
     $(wildcard textures/*/custom/) \
+    $(wildcard textures/*/predone/) \
     $(filter %/,$(wildcard actors/*/))
 
 ifeq ($(PORT_MOP_OBJS),1)
@@ -193,6 +196,9 @@ endif
 $(eval $(call level_rules,intro,generic)) # Intro (Super Mario 64 Logo)
 $(eval $(call level_rules,menu,generic)) # Menu (File Select)
 
+CUSTOM_MENU_SEG7_FILES              := $(wildcard levels/menu/custom/*.png) $(wildcard levels/menu/predone/*.png)
+$(BUILD_DIR)/levels/menu/leveldata.o: $(addprefix $(BUILD_DIR)/,$(patsubst %.png,%.inc.c,$(CUSTOM_MENU_SEG7_FILES)))
+
 # --------------------------------------
 # Cake Texture Rules
 # --------------------------------------
@@ -210,7 +216,7 @@ $(BUILD_DIR)/levels/ending/cake.inc.c: levels/ending/cake.png
 # --------------------------------------
 
 # Others
-SEGMENT2_TEXTURES               := $(wildcard $(TEXTURE_DIR)/segment2/*.png) $(wildcard $(TEXTURE_DIR)/segment2/custom/*.png)
+SEGMENT2_TEXTURES               := $(wildcard $(TEXTURE_DIR)/segment2/*.png) $(wildcard $(TEXTURE_DIR)/segment2/custom/*.png) $(wildcard $(TEXTURE_DIR)/segment2/predone/*.png)
 TITLE_SCREEN_BG_TEXTURES        := $(wildcard $(TEXTURE_DIR)/title_screen_bg/*.png)
 SPOOKY_TEXTURES                 := $(wildcard $(TEXTURE_DIR)/spooky/*.png)
 GENERIC_TEXTURES                := $(wildcard $(TEXTURE_DIR)/generic/*.png)
@@ -268,9 +274,9 @@ $(BUILD_DIR)/bin/mountain.elf:           SEGMENT_ADDRESS := 0x09000000
 $(BUILD_DIR)/bin/grass.elf:              SEGMENT_ADDRESS := 0x09000000
 
 # EU segment 19 translations
-$(BUILD_DIR)/bin/eu/translation_de.elf:  SEGMENT_ADDRESS := 0x19000000
-$(BUILD_DIR)/bin/eu/translation_en.elf:  SEGMENT_ADDRESS := 0x19000000
-$(BUILD_DIR)/bin/eu/translation_fr.elf:  SEGMENT_ADDRESS := 0x19000000
+$(BUILD_DIR)/bin/translation_de.elf:  SEGMENT_ADDRESS := 0x19000000
+$(BUILD_DIR)/bin/translation_en.elf:  SEGMENT_ADDRESS := 0x19000000
+$(BUILD_DIR)/bin/translation_fr.elf:  SEGMENT_ADDRESS := 0x19000000
 
 # --------------------------------------
 # Skybox Rules

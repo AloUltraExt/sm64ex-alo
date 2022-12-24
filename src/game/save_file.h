@@ -50,7 +50,7 @@ struct MainMenuSaveData {
     u32 coinScoreAges[NUM_SAVE_FILES];
     u16 soundMode;
 
-#ifdef VERSION_EU
+#ifdef MULTILANG
     u16 language;
 #define SUBTRAHEND 8
 #else
@@ -106,6 +106,18 @@ extern s8 gLevelToCourseNumTable[];
 #define SAVE_FLAG_COLLECTED_MIPS_STAR_1  /* 0x08000000 */ (1 << 27)
 #define SAVE_FLAG_COLLECTED_MIPS_STAR_2  /* 0x10000000 */ (1 << 28)
 
+enum StarFlags {
+    STAR_FLAGS_NONE         = (0 << 0), // 0x00
+    STAR_FLAG_ACT_1         = (1 << 0), // 0x01
+    STAR_FLAG_ACT_2         = (1 << 1), // 0x02
+    STAR_FLAG_ACT_3         = (1 << 2), // 0x04
+    STAR_FLAG_ACT_4         = (1 << 3), // 0x08
+    STAR_FLAG_ACT_5         = (1 << 4), // 0x10
+    STAR_FLAG_ACT_6         = (1 << 5), // 0x20
+    STAR_FLAG_ACT_100_COINS = (1 << 6), // 0x40
+    STAR_FLAG_LAST          = STAR_FLAG_ACT_100_COINS
+};
+
 #define SAVE_FLAG_TO_STAR_FLAG(cmd) (((cmd) >> 24) & 0x7F)
 #define STAR_FLAG_TO_SAVE_FLAG(cmd) ((cmd) << 24)
 
@@ -154,16 +166,9 @@ void disable_warp_checkpoint(void);
 void check_if_should_set_warp_checkpoint(struct WarpNode *warpNode);
 s32 check_warp_checkpoint(struct WarpNode *warpNode);
 
-#ifdef VERSION_EU
-enum EuLanguages {
-    LANGUAGE_ENGLISH,
-    LANGUAGE_FRENCH,
-    LANGUAGE_GERMAN,
-    LANGUAGE_MAX
-};
-
-void eu_set_language(u16 language);
-u16 eu_get_language(void);
+#ifdef MULTILANG
+void multilang_set_language(u16 language);
+u32 multilang_get_language(void);
 #endif
 
 #ifdef EXT_DEBUG_MENU

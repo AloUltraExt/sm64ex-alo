@@ -351,6 +351,7 @@ void render_hud_keys(void) {
 /**
  * Renders the timer when Mario start sliding in PSS.
  */
+/**
 void render_hud_timer(void) {
     u8 *(*hudLUT)[58] = segmented_to_virtual(&main_hud_lut);
     u16 timerValFrames = gHudDisplay.timer;
@@ -386,7 +387,7 @@ void render_hud_timer(void) {
     render_hud_tex_lut(set_hud_auto_x_pos(HUD_TIME_SEC_AA_X), HUD_TIME_A_Y, (*hudLUT)[GLYPH_DOUBLE_QUOTE]);
     gSPDisplayList(gDisplayListHead++, dl_hud_img_end);
 }
-
+ */
 /**
  * Sets HUD status camera value depending of the actions
  * defined in update_camera_status.
@@ -507,7 +508,7 @@ void render_hud(void) {
         }
 #if SHOW_TIMER
         if (hudDisplayFlags & HUD_DISPLAY_FLAG_TIMER) {
-            render_hud_timer();
+            //render_hud_timer();
         }
 #endif
     }

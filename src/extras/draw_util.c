@@ -9,9 +9,9 @@
 
 #include "draw_util.h"
 
-#if defined(VERSION_US) || defined(VERSION_EU)
-extern u8 gDialogCharWidths[];
-#endif
+//#if defined(VERSION_US) || defined(VERSION_EU)
+//extern u8 gDialogCharWidths[];
+//#endif
 
 /**
  * @file draw_util.c
@@ -71,132 +71,6 @@ Gfx dl_tri_quad_ex_end[] = {
 /*****************
  * MISCELLANEOUS *
  *****************/
-
-/**
- * Converts ASCII to hex values (Vanilla) used in generic strings and dialogs.
- * Note, if you edited charmap.txt you may need to edit this function as well.
- */
-static u8 ascii_to_font_char(u8 c) {
-    if (c >= '0' && c <= '9')
-        return (c - '0' + 0x00);
-
-    if (c >= 'A' && c <= 'Z')
-        return (c - 'A' + 0x0A);
-
-    if (c >= 'a' && c <= 'z')
-        return (c - 'a' + 0x24);
-
-    if (c == '\'') return 0x3E;
-    if (c == '.')  return 0x3F;
-    if (c == ',')  return 0x6F;
-    if (c == ' ')  return 0x9E;
-    if (c == '-')  return 0x9F;
-    if (c == '(')  return 0xE1;
-    if (c == ')')  return 0xE3;
-    if (c == '+')  return 0xE4;
-    if (c == '&')  return 0xE5;
-    if (c == ':')  return 0xE6;
-    if (c == '!')  return 0xF2;
-    if (c == '%')  return 0xF3;
-    if (c == '?')  return 0xF4;
-    if (c == '~')  return 0xF7;
-    if (c == '$')  return 0xF9;
-    if (c == '*')  return 0xFA;
-    if (c == '#')  return 0xFD;
-    if (c == '\n') return 0xFE;
-
-    return 0x9E;
-}
-
-s16 get_hud_str_width(u8 *str) {
-    u32 c;
-    s16 length = 0;
-
-    while ((c = *str++) != GLOBAL_CHAR_TERMINATOR) {
-        length += (c == GLOBAL_CHAR_SPACE ? (HUD_LUT_STRIDE_GLOBAL / 2) : HUD_LUT_STRIDE_GLOBAL);
-    }
-
-    return length;
-}
-
-s16 get_hud_str_width_ascii(char *str) {
-    u32 c;
-    s16 length = 0;
-
-    while ((c = *str++) != GLOBAL_CHAR_TERMINATOR) {
-        length += (c == ' ' ? (HUD_LUT_STRIDE_GLOBAL / 2) : HUD_LUT_STRIDE_GLOBAL);
-    }
-
-    return length;
-}
-
-s16 get_string_width_ascii(char *str) {
-    s16 i;
-    u8  buf[100];
-    s16 bufPos = 0;
-    s16 width = 0;
-
-    for (i = 0; str[i] != 0; i++)
-        buf[i] = ascii_to_font_char(str[i]);
-    buf[i] = DIALOG_CHAR_TERMINATOR;
-
-    while (buf[bufPos] != DIALOG_CHAR_TERMINATOR) {
-        #if defined(VERSION_US) || defined(VERSION_EU)
-        width += gDialogCharWidths[buf[bufPos]];
-        #else
-        width += JP_DIALOG_CHAR_WIDTH;
-        #endif
-        bufPos++;
-    }
-
-    return width;
-}
-
-s16 get_str_x_pos_from_center_custom_hex(s16 lutType, s16 centerPos, u8 *strHex, u8 useScale, f32 scale) {
-    s16 spacesWidth = 0;
-
-    switch (lutType) {
-        case LUT_TYPE_HUD_HEX:
-            spacesWidth = get_hud_str_width(strHex);
-            break;
-         case LUT_TYPE_STR_HEX:
-            spacesWidth = get_string_width(strHex);
-            break;
-        default:
-            break;
-    }
-
-    if (useScale) {
-        return (f32) centerPos - ((scale / 2.0) * (spacesWidth / 2.0));
-    }
-
-    // return the x position of where the string starts as half the string's
-    // length from the position of the provided center.
-    return (centerPos - (spacesWidth / 2.0));
-}
-
-s16 get_str_x_pos_from_center_custom_ascii(s16 lutType, s16 centerPos, char *strAscii, u8 useScale, f32 scale) {
-    s16 spacesWidth = 0;
-
-    switch (lutType) {
-        case LUT_TYPE_HUD_ASCII:
-            spacesWidth = get_hud_str_width_ascii(strAscii);
-            break;
-         case LUT_TYPE_STR_ASCII:
-            spacesWidth = get_string_width_ascii(strAscii);
-            break;
-        default:
-            break;
-    }
-
-    if (useScale) {
-        return (f32) centerPos - ((scale / 2.0) * (spacesWidth / 2.0));
-    }
-
-    // return the x position of where the string starts as half the string's
-    // length from the position of the provided center.
-    return (centerPos - (spacesWidth / 2.0));
-}
 
 /**
  * Convert texture resolution to mask.
@@ -273,22 +147,9 @@ static void allocate_quad_vertices(Gfx *dlHead, u16 w, u16 h) {
 /******************
  * MISC RENDERING *
  ******************/
- 
-/**
- * Like print_generic_string but uses ASCII, then it transform it to hex.
- */
-void print_generic_string_ascii(s16 x, s16 y, const char *str) {
-    s16 i;
-    u8  buf[100];
-    for (i = 0; str[i] != 0; i++)
-        buf[i] = ascii_to_font_char(str[i]);
-    buf[i] = DIALOG_CHAR_TERMINATOR;
-
-    print_generic_string(x, y, buf);
-}
 
 /**
- * An detailed version of print_generic_strig_ascii that let's you
+ * An detailed version of print_generic_string that let's you
  * color the font and add shadow to it.
  */
 void print_generic_string_detail(s16 x, s16 y, u8 *str, u8 r, u8 g, u8 b, u8 a, s8 hasShadow, s8 shadowPad) {
@@ -299,20 +160,6 @@ void print_generic_string_detail(s16 x, s16 y, u8 *str, u8 r, u8 g, u8 b, u8 a, 
 
     gDPSetEnvColor(gDisplayListHead++, r, g, b, a);
     print_generic_string(x, y, str);
-}
-
-/**
- * An detailed version of print_generic_strig that let's you
- * color the font and add shadow to it.
- */
-void print_generic_string_ascii_detail(s16 x, s16 y, const char *str, u8 r, u8 g, u8 b, u8 a, s8 hasShadow, s8 shadowPad) {
-    if (hasShadow) {
-        gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
-        print_generic_string_ascii(x + shadowPad, y - shadowPad, str);
-    }
-
-    gDPSetEnvColor(gDisplayListHead++, r, g, b, a);
-    print_generic_string_ascii(x, y, str);
 }
 
 /**

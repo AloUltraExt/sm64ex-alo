@@ -6,12 +6,17 @@
 
 #include "types.h"
 
-#define MENU_LAYER_MAIN 1
-#define MENU_LAYER_SUBMENU 2
+enum MenuLayers {
+    MENU_LAYER_NONE,
+    MENU_LAYER_MAIN,
+    MENU_LAYER_SUBMENU
+};
 
-#define MENU_ERASE_HOVER_NONE 0
-#define MENU_ERASE_HOVER_YES 1
-#define MENU_ERASE_HOVER_NO 2
+enum MenuEraseButtonHoverStates {
+    MENU_ERASE_HOVER_NONE,
+    MENU_ERASE_HOVER_YES,
+    MENU_ERASE_HOVER_NO
+};
 
 enum MainMenuButtonStates {
     MENU_BUTTON_STATE_DEFAULT,
@@ -71,20 +76,15 @@ enum MenuButtonTypes {
     MENU_BUTTON_ERASE_MAX,
 
     // Sound Mode Menu (SOUND SELECT)
-    // This menu includes language settings on EU
+    // This menu includes language settings with multilang
     MENU_BUTTON_SOUND_MODE = MENU_BUTTON_ERASE_MAX,
     MENU_BUTTON_OPTION_MIN,
     MENU_BUTTON_STEREO = MENU_BUTTON_OPTION_MIN,
     MENU_BUTTON_MONO,
     MENU_BUTTON_HEADSET,
 
-#ifdef VERSION_EU
-    // Language Menu
-    MENU_BUTTON_LANGUAGE_MIN,
-    MENU_BUTTON_LANGUAGE_ENGLISH = MENU_BUTTON_LANGUAGE_MIN,
-    MENU_BUTTON_LANGUAGE_FRENCH,
-    MENU_BUTTON_LANGUAGE_GERMAN,
-    MENU_BUTTON_LANGUAGE_RETURN,
+#ifdef MULTILANG
+    MENU_BUTTON_OPTION_RETURN,
 #endif
 
     MENU_BUTTON_OPTION_MAX
