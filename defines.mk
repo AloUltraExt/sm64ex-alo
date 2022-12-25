@@ -11,7 +11,7 @@ EXT_DEBUG_MENU ?= 0
 # Enable better camera (Puppycam 2)
 BETTERCAMERA ?= 1
 # Enable cheats
-CHEATS_ACTIONS ?= 0
+CHEATS_ACTIONS ?= 1
 # Enable rumble functions (Originally in Shindou)
 RUMBLE_FEEDBACK ?= 1
 # Disable no drawing distance by default

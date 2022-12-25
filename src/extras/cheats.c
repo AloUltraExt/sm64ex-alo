@@ -1,7 +1,6 @@
 #ifdef CHEATS_ACTIONS
 
 #include "sm64.h"
-#include "text_strings.h"
 #include "gfx_dimensions.h"
 
 #include "audio/external.h"
@@ -23,63 +22,63 @@
 
 struct CheatList Cheats;
 
-const u8 optCheatMenuStr[][32] = {
-    { TEXT_OPT_CHEATS },
-    { TEXT_OPT_CHEATS_WALKON },
-    { TEXT_OPT_CHEATS_BLJANY },
+char optCheatMenuStr[][32] = {
+    "CHEATS",
+    "WALK ON SURFACE",
+    "BLJ ANYWHERE",
 };
 
-static const u8 optsCheatsStr[][64] = {
-    { TEXT_OPT_CHEAT0 },
-    { TEXT_OPT_CHEAT1 },
-    { TEXT_OPT_CHEAT2 },
-    { TEXT_OPT_CHEAT3 },
-    { TEXT_OPT_CHEAT4 },
-    { TEXT_OPT_CHEAT5 },
-    { TEXT_OPT_CHEAT6 },
-    { TEXT_OPT_CHEAT7 },
-    { TEXT_OPT_CHEAT8 },
-    { TEXT_OPT_CHEAT9 },
-    { TEXT_OPT_CHEAT10 },
-    { TEXT_OPT_CHEAT11 },
+static char optsCheatsStr[][64] = {
+    "Enable cheats",
+    "Moon-jump (Press L)",
+    "Infinite health",
+    "Infinite lives",
+    "Invincible player",
+    "Super speed",
+    "Super responsive controls",
+    "Exit course at any time",
+    "No fall damage",
+    "Player size",
+    "BLJ anywhere",
+    "Walk on surface",
 };
 
-static const u8 optsMarioSizeCheatStr[][64] = {
-    { TEXT_CHEAT_MSIZE0 },
-    { TEXT_CHEAT_MSIZE1 },
-    { TEXT_CHEAT_MSIZE2 },
+static char optsMarioSizeCheatStr[][64] = {
+    "Normal",
+    "Tiny",
+    "Huge",
 };
 
-static const u8 *cheatChoicesMarioSize[] = {
+static char *cheatChoicesMarioSize[] = {
     optsMarioSizeCheatStr[0],
     optsMarioSizeCheatStr[1],
     optsMarioSizeCheatStr[2],
 };
 
-static const u8 optsWalkOnCheatStr[][64] = {
-    { TEXT_CHEAT_WALKON0 },
-    { TEXT_CHEAT_WALKON1 },
-    { TEXT_CHEAT_WALKON2 },
-    { TEXT_CHEAT_WALKON3 },
-    { TEXT_CHEAT_WALKON4 },
-    { TEXT_CHEAT_WALKON5 },
+static char optsWalkOnCheatStr[][64] = {
+    "Walk on lava",
+    "Walk on quicksand",
+    "Walk on water",
+    "Walk on gas",
+    "Walk on slope",
+    "Walk on death barrier",
 };
 
-static const u8 optsBljOptAnyCheatStr[][64] = {
-    { TEXT_CHEAT_BLJOPT0 },
-    { TEXT_CHEAT_BLJOPT1 },
-    { TEXT_CHEAT_BLJOPT2 },
+static char optsBljOptAnyCheatStr[][64] = {
+    "Disabled",
+    "Pressing",
+    "Holding",
 };
 
-static const u8 *cheatChoicesBljOptAny[] = {
+static char *cheatChoicesBljOptAny[] = {
     optsBljOptAnyCheatStr[0],
     optsBljOptAnyCheatStr[1],
     optsBljOptAnyCheatStr[2],
 };
 
-static const u8 optsBljAnyCheatStr[][64] = {
-    { TEXT_CHEAT_BLJANY0 },
-    { TEXT_CHEAT_BLJANY1 },
+static char optsBljAnyCheatStr[][64] = {
+    "BLJ toggle",
+    "BLJ start speed",
 };
 
 static struct Option optWalkOnCheats[] = {
@@ -94,7 +93,7 @@ static struct Option optWalkOnCheats[] = {
 static struct SubMenu menuCheatWalkOn = DEF_SUBMENU( optCheatMenuStr[1], optWalkOnCheats );
 
 static struct Option optBljAnyCheats[] = {
-    DEF_OPT_CHOICE( optsCheatsStr[10], &Cheats.BljAny.Mode, cheatChoicesBljOptAny ),
+    DEF_OPT_CHOICE( optsBljAnyCheatStr[0], &Cheats.BljAny.Mode, cheatChoicesBljOptAny ),
     DEF_OPT_SCROLL( optsBljAnyCheatStr[1], &Cheats.BljAny.VelForce, 0, 10, 1 ),
 };
 
