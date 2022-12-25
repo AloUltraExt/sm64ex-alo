@@ -18,7 +18,6 @@
 #include "game/print.h"
 #include "engine/surface_collision.h"
 #include "engine/surface_load.h"
-#include "include/text_strings.h"
 #include "game/segment2.h"
 #include "game/ingame_menu.h"
 #include "game/memory.h"
@@ -86,40 +85,40 @@ static inline float softClamp(float x, float a, float b) {
 
 /// CONFIG
 
-const u8 optsPuppyCamStr[][32] = {
-    { TEXT_OPT_PUPPYCAM },
-    { TEXT_OPT_PUPPYON },
-    { TEXT_OPT_ANALOGUE },
-    { TEXT_OPT_CAMMOUSE },
-    { TEXT_OPT_INVERTX },
-    { TEXT_OPT_INVERTY },
-    { TEXT_OPT_CAMX },
-    { TEXT_OPT_CAMY },
-    { TEXT_OPT_CAMC },
-    { TEXT_OPT_CAMSCHEME },
-    { TEXT_OPT_OPA_TYPE },
-    { TEXT_OPT_DBG_CAM },
+char optsPuppyCamStr[][32] = {
+    "PUPPY CAMERA",
+    "PuppyCam 2",
+    "Analogue Camera",
+    "Camera Mouse Control",
+    "Invert X Axis",
+    "Invert Y Axis",
+    "Camera X Sensitivity",
+    "Camera Y Sensitivity",
+    "Camera Center Speed",
+    "Control Scheme",
+    "Opacity Type",
+    "Debug Camera",
 };
 
-static const u8 optsPuppyCamSchemeStr[][64] = {
-    { TEXT_OPT_CAM_SCH1 },
-    { TEXT_OPT_CAM_SCH2 },
-    { TEXT_OPT_CAM_SCH3 },
+static char optsPuppyCamSchemeStr[][64] = {
+    "Double Tap",
+    "Single Press",
+    "Classic",
 };
 
-static const u8 *puppycamChoicesScheme[] = {
+static char *puppycamChoicesScheme[] = {
     optsPuppyCamSchemeStr[0],
     optsPuppyCamSchemeStr[1],
     optsPuppyCamSchemeStr[2],
 };
 
-static const u8 optsPuppyCamOpacityStr[][64] = {
-    { TEXT_OPT_OPA_T1 },
-    { TEXT_OPT_OPA_T2 },
-    { TEXT_OPT_OPA_T3 },
+static char optsPuppyCamOpacityStr[][64] = {
+    "None",
+    "Fade In-Out",
+    "Pop In-Out",
 };
 
-static const u8 *puppycamChoicesOpacity[] = {
+static char *puppycamChoicesOpacity[] = {
     optsPuppyCamOpacityStr[0],
     optsPuppyCamOpacityStr[1],
     optsPuppyCamOpacityStr[2],
@@ -141,7 +140,6 @@ static struct Option optsPuppyCam[] = {
 };
 
 struct SubMenu menuPuppyCam = DEF_SUBMENU( optsPuppyCamStr[0], optsPuppyCam );
-
 
 void puppycam_default_config(void) {
     gPuppyCam.enabled = configPuppyCam.enable;
