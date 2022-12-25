@@ -122,7 +122,7 @@ endif # !TARGET_N64
 ifeq ($(DEBUG),1)
   CUSTOM_C_DEFINES += -DDEBUG
   COMPILER_OPT := debug
-  #EXT_DEBUG_MENU := 1
+  EXT_DEBUG_MENU := 1
 endif
 
 # Check for Debug Menu option

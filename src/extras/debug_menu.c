@@ -3,7 +3,6 @@
 #include <stdio.h>
 
 #include "sm64.h"
-#include "text_strings.h"
 #include "gfx_dimensions.h"
 #include "seq_ids.h"
 
@@ -31,7 +30,7 @@ extern bool gShowDebugText;
 extern bool gDebugLevelSelect;
 extern bool gShowProfiler;
 extern s16 gMenuMode;
-extern s8 gMenuState;
+extern s8 gDialogBoxState;
 extern struct CreditsEntry sCreditsSequence[];
 extern void try_modify_debug_controls(void);
 extern void try_change_debug_page(void);
@@ -40,35 +39,35 @@ extern void set_play_mode(s16 playMode);
 
 struct DebugOptList DebugOpt;
 
-const u8 optDebugMenuStr[][32] = {
-    { TEXT_OPT_DEBUG },
-    { TEXT_OPT_DEBUG_WARP },
+char optDebugMenuStr[][32] = {
+    "DEBUG",
+    "WARP DEBUG",
 };
 
-static const u8 optsDebugStr[][64] = {
-    { TEXT_OPT_DEBUG0 },
-    { TEXT_OPT_DEBUG1 },
-    { TEXT_OPT_DEBUG2 },
-    { TEXT_OPT_DEBUG3 },
-    { TEXT_OPT_DEBUG4 },
-    { TEXT_OPT_DEBUG5 },
-    { TEXT_OPT_DEBUG6 },
-    { TEXT_OPT_DEBUG7 },
-    { TEXT_OPT_DEBUG8 },
+static char optsDebugStr[][64] = {
+    "Simple Debug Display",
+    "Complex Debug Display",
+    "Level Select",
+    "Free Movement (Press L)",
+    "Debug Cap Changer",
+    "Show Profiler",
+    "Show FPS",
+    "Complete Save",
+    "Warp Debug",
 };
 
-static const u8 optsDebugWarpDestStr[][64] = {
-    { TEXT_DEBUG_WARP0 },
-    { TEXT_DEBUG_WARP1 },
-    { TEXT_DEBUG_WARP2 },
-    { TEXT_DEBUG_WARP3 },
+static char optsDebugWarpDestStr[][64] = {
+    "Warp to Ending",
+    "Warp to Credits",
+    "Warp to Level Success",
+    "Warp to Level Failure",
 };
 
 static void force_quit_pause_debug(void) {
     level_set_transition(0, NULL);
     optmenu_open = 0;
     gMenuMode = -1;
-    gMenuState = 0;
+    gDialogBoxState = 0;
     raise_background_noise(1);
     gCameraMovementFlags &= ~CAM_MOVE_PAUSE_SCREEN;
     set_play_mode(0);
