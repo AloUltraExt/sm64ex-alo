@@ -8,6 +8,7 @@ extern Gfx dl_texture_rect_ex_end[];
 extern Gfx dl_tri_quad_ex_start[];
 extern Gfx dl_tri_quad_ex_end[];
 
+void print_generic_string_detail_aligned(s16 x, s16 y, u8 *str, u8 r, u8 g, u8 b, u8 a, s8 hasShadow, s8 shadowPad, u32 alignment);
 void print_generic_string_detail(s16 x, s16 y, u8 *text, u8 r, u8 g, u8 b, u8 a, s8 hasShadow, s8 shadowPad);
 
 void print_solid_color_quad(s16 x1, s16 y1, s16 x2, s16 y2, u8 r, u8 g, u8 b, u8 a);

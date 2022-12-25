@@ -25,6 +25,10 @@
 #include "main.h" // n64
 #include <stdio.h> // non-n64
 
+#ifdef EXT_OPTIONS_MENU
+#include "extras/options_menu.h"
+#endif
+
 u16 gDialogColorFadeTimer;
 s8 gLastDialogLineNum;
 DialogVariable gDialogVariable;
@@ -1864,6 +1868,9 @@ s8 gHudFlash = HUD_FLASH_NONE;
 s32 render_pause_courses_and_castle(void) {
     s16 index;
 
+#ifdef EXT_OPTIONS_MENU
+    if (optmenu_open == 0) {
+#endif
     switch (gDialogBoxState) {
         case DIALOG_STATE_OPENING:
             gDialogLineNum = MENU_OPT_DEFAULT;
@@ -1932,6 +1939,14 @@ s32 render_pause_courses_and_castle(void) {
     if (gDialogTextAlpha < 250) {
         gDialogTextAlpha += 25;
     }
+#ifdef EXT_OPTIONS_MENU
+    } else {
+        shade_screen();
+        optmenu_draw();
+    }
+    optmenu_check_buttons();
+    optmenu_draw_prompt();
+#endif
 
     return MENU_OPT_NONE;
 }

@@ -1,7 +1,6 @@
 #ifdef EXT_OPTIONS_MENU
 
 #include "sm64.h"
-#include "text_strings.h"
 #include "gfx_dimensions.h"
 #include "engine/math_util.h"
 #include "audio/external.h"
@@ -18,6 +17,8 @@
 #include "draw_util.h"
 
 #include "pc/configfile.h"
+
+#include <stdio.h> // non-n64
 
 #ifndef TARGET_N64
 #include "pc/pc_main.h"
@@ -50,95 +51,94 @@ static u8 optmenu_bind_idx = 0;
 static s32 l_counter = 0;
 
 // How to add stuff:
-// strings: add them to include/text_strings.h.in
-//          and to optMainStr[] / opts*Str[]
+// strings: add them to optMainStr[] / opts*Str[]
 // options: add them to the relevant options list
 // menus:   add a new submenu definition and a new
 //          option to the optsMain list
 
-static const u8 toggleStr[][16] = {
-    { TEXT_OPT_DISABLED },
-    { TEXT_OPT_ENABLED },
+static char toggleStr[][16] = {
+    "Disabled",
+    "Enabled",
 };
 
-static const u8 optSmallStr[][32] = {
-    { TEXT_OPT_BUTTON1 },
-    { TEXT_OPT_BUTTON2 },
-    { TEXT_OPT_L_HIGHLIGHT },
-    { TEXT_OPT_R_HIGHLIGHT },
+static char optSmallStr[][32] = {
+    "Ⓡ Options",
+    "Ⓡ Return",
+    "▶",
+    "◀",
 };
 
-static const u8 optMainStr[][32] = {
-    { TEXT_OPT_OPTIONS },
-    { TEXT_OPT_CAMERA },
-    { TEXT_OPT_CONTROLS },
-    { TEXT_OPT_VIDEO },
-    { TEXT_OPT_AUDIO },
-    { TEXT_OPT_SETTINGS },
-    { TEXT_EXIT_GAME },
+static char optMainStr[][32] = {
+    "OPTIONS",
+    "CAMERA",
+    "CONTROLS",
+    "DISPLAY",
+    "SOUND",
+    "SETTINGS",
+    "EXIT GAME",
 };
 
-const u8 optsCameraStr[][32] = {
-    { TEXT_OPT_VANILLA_CAM },
-    { TEXT_OPT_LAKITU_PARALLEL },
-    { TEXT_OPT_SR_MARIO_CAM },
-    { TEXT_OPT_CAM_C_UP_SOUNDS },
-    { TEXT_OPT_CAM_PARALLEL_COL },
+char optsCameraStr[][32] = {
+    "VANILLA CAMERA",
+    "Parallel Lakitu Cam",
+    "Star Road Mario Cam",
+    "Camera Sound Effects",
+    "Parallel Cam Collision",
 };
 
 #ifndef TARGET_N64
-static const u8 optsVideoStr[][32] = {
-    { TEXT_OPT_FSCREEN },
-    { TEXT_OPT_TEXFILTER },
-    { TEXT_OPT_NEAREST },
-    { TEXT_OPT_LINEAR },
-    { TEXT_OPT_RESETWND },
-    { TEXT_OPT_VSYNC },
-    { TEXT_OPT_APPLY },
+static char optsVideoStr[][32] = {
+    "Fullscreen",
+    "Texture Filtering",
+    "Nearest",
+    "Linear",
+    "Reset Window",
+    "Vertical Sync",
+    "Apply",
 };
 #endif
 
-static const u8 optsAudioStr[][32] = {
-    { TEXT_OPT_MVOLUME },
-    { TEXT_OPT_MUSVOLUME },
-    { TEXT_OPT_SFXVOLUME },
-    { TEXT_OPT_ENVVOLUME },
+static char optsAudioStr[][32] = {
+    "Master Volume",
+    "Music Volume",
+    "Sfx Volume",
+    "Env Volume",
 };
 
-static const u8 optsSettingsStr[][32] = {
-    { TEXT_OPT_HUD },
-    { TEXT_OPT_MOUSE },
+static char optsSettingsStr[][32] = {
+    "HUD",
+    "Mouse",
 };
 
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
-static const u8 optBindStr[][32] = {
-    { TEXT_OPT_UNBOUND },
-    { TEXT_OPT_PRESSKEY },
-    { TEXT_BIND_A },
-    { TEXT_BIND_B },
-    { TEXT_BIND_START },
-    { TEXT_BIND_L },
-    { TEXT_BIND_R },
-    { TEXT_BIND_Z },
-    { TEXT_BIND_C_UP },
-    { TEXT_BIND_C_DOWN },
-    { TEXT_BIND_C_LEFT },
-    { TEXT_BIND_C_RIGHT },
-    { TEXT_BIND_D_UP },
-    { TEXT_BIND_D_DOWN },
-    { TEXT_BIND_D_LEFT },
-    { TEXT_BIND_D_RIGHT },
-    { TEXT_BIND_UP },
-    { TEXT_BIND_DOWN },
-    { TEXT_BIND_LEFT },
-    { TEXT_BIND_RIGHT },
-    { TEXT_OPT_DEADZONE },
-    { TEXT_OPT_RUMBLE },
+static char optBindStr[][32] = {
+    "NONE",
+    "・・・",
+    "A Button",
+    "B Button",
+    "Start Button",
+    "L Trigger",
+    "R Trigger",
+    "Z Trigger",
+    "C-Up",
+    "C-Down",
+    "C-Left",
+    "C-Right",
+    "D-Up",
+    "D-Down",
+    "D-Left",
+    "D-Right",
+    "Stick Up",
+    "Stick Down",
+    "Stick Left",
+    "Stick Right",
+    "Stick Deadzone",
+    "Rumble Strength",
 };
 #endif
 
 #ifndef TARGET_N64
-static const u8 *filterChoices[] = {
+static char *filterChoices[] = {
     optsVideoStr[2],
     optsVideoStr[3],
 };
@@ -315,26 +315,15 @@ static inline s32 wrap_add(s32 a, const s32 b, const s32 min, const s32 max) {
     return a;
 }
 
-static void uint_to_hex(u32 num, u8 *dst) {
-    u8 places = 4;
-    while (places--) {
-        const u32 digit = num & 0xF;
-        dst[places] = digit;
-        num >>= 4;
-    }
-    dst[4] = DIALOG_CHAR_TERMINATOR;
-}
-
-static void optmenu_draw_text(s16 x, s16 y, const u8 str[], u8 col) {
-    u8 textX = get_str_x_pos_from_center(x, (u8 *) str, 10.0f);
+static void optmenu_draw_text(s16 x, s16 y, char *str, u8 col) {
     gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
-    print_generic_string(textX + 1, y - 1, str);
+    print_generic_string_aligned(x + 1, y - 1, str, TEXT_ALIGN_CENTER);
     if (col == 0) {
         gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
     } else {
         gDPSetEnvColor(gDisplayListHead++, 255, 32, 32, 255);
     }
-    print_generic_string(textX, y, str);
+    print_generic_string_aligned(x, y, str, TEXT_ALIGN_CENTER);
 }
 
 // TODO: Fix the hardcoded values
@@ -388,7 +377,7 @@ static void optmenu_draw_opt(const struct Option *opt, s16 x, s16 y, u8 sel, s16
                     else
                         optmenu_draw_text(x, y-13, optBindStr[0], white);
                 } else {
-                    uint_to_hex(opt->uval[i], buf);
+                    sprintf(buf, "%04x", opt->uval[i]);
                     optmenu_draw_text(x, y-13, buf, white);
                 }
             }
@@ -442,15 +431,6 @@ static void optmenu_opt_change(struct Option *opt, s32 val) {
     }
 }
 
-#define STRIDE (HUD_LUT_STRIDE_GLOBAL / 2) // stride is 12 (14 in JP)
-static inline s16 get_hudstr_centered_x(const s16 sx, const u8 *str) {
-    const u8 *chr = str;
-    s16 len = 0;
-    while (*chr != GLOBAL_CHAR_TERMINATOR) ++chr, ++len;
-    return sx - len * STRIDE;
-}
-#undef STRIDE
-
 //Options menu
 void optmenu_draw(void) {
     u8 i;
@@ -466,10 +446,9 @@ void optmenu_draw(void) {
 
     print_solid_color_quad(48, 84, 272, 218, 0x0, 0x0, 0x0, 0x50);
 
-    const s16 labelX = get_hudstr_centered_x(SCREEN_WIDTH / 2, currentMenu->label);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
-    print_hud_lut_string(HUD_LUT_GLOBAL, labelX, 40, currentMenu->label);
+    print_hud_lut_string_aligned(SCREEN_CENTER_X, 40, currentMenu->label, TEXT_ALIGN_CENTER);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
 
     if (currentMenu->numOpts > 4)
@@ -499,13 +478,12 @@ void optmenu_draw(void) {
 
 //This has been separated for interesting reasons. Don't question it.
 void optmenu_draw_prompt(void) {
-    u8 *str = (u8 *) optSmallStr[optmenu_open];
-    s16 strW = get_string_width(str);
+    char *str = (char *) optSmallStr[optmenu_open];
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
 
-    print_generic_string_detail(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(57 + strW), 212, str, 255, 255, 255, 255, TRUE, 1);
-    
+    print_generic_string_detail_aligned(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(57), 212, str, 255, 255, 255, gDialogTextAlpha, TRUE, 1, TEXT_ALIGN_CENTER);
+
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 }
 

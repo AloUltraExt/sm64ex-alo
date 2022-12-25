@@ -149,17 +149,21 @@ static void allocate_quad_vertices(Gfx *dlHead, u16 w, u16 h) {
  ******************/
 
 /**
- * An detailed version of print_generic_string that let's you
+ * A detailed version of print_generic_string that let's you
  * color the font and add shadow to it.
  */
-void print_generic_string_detail(s16 x, s16 y, u8 *str, u8 r, u8 g, u8 b, u8 a, s8 hasShadow, s8 shadowPad) {
+void print_generic_string_detail_aligned(s16 x, s16 y, u8 *str, u8 r, u8 g, u8 b, u8 a, s8 hasShadow, s8 shadowPad, u32 alignment) {
     if (hasShadow) {
-        gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
-        print_generic_string(x + shadowPad, y - shadowPad, str);
+        gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, a);
+        print_generic_string_aligned(x + shadowPad, y - shadowPad, str, alignment);
     }
 
     gDPSetEnvColor(gDisplayListHead++, r, g, b, a);
-    print_generic_string(x, y, str);
+    print_generic_string_aligned(x, y, str, alignment);
+}
+
+void print_generic_string_detail(s16 x, s16 y, u8 *str, u8 r, u8 g, u8 b, u8 a, s8 hasShadow, s8 shadowPad) {
+    print_generic_string_detail_aligned(x, y, str, r, g, b, a, hasShadow, shadowPad, TEXT_ALIGN_LEFT);
 }
 
 /**

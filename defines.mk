@@ -5,7 +5,7 @@
 # Build debug version
 DEBUG ?= 0
 # Enable extended options menu by default
-EXT_OPTIONS_MENU ?= 0
+EXT_OPTIONS_MENU ?= 1
 # Enable debug options menu (Enabled if DEBUG=1)
 EXT_DEBUG_MENU ?= 0
 # Enable better camera (Puppycam 2)
