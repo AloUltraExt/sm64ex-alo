@@ -161,11 +161,12 @@ extern s8  gRedCoinsCollected;
 /*
  * Regarding get_str_x_pos_from_center / get_str_x_pos_from_center_scale:
  * They cannot use a macro due to the new print_generic_string function.
- * Instead as a replacement you can  use print_generic_string_aligned and
+ * Instead as a replacement you can use print_generic_string_aligned and
  * set TEXT_ALIGN_CENTER as it's alignment value.
 */
 
 u8 check_number_string_in_course_name(char *courseName);
+void captialize_first_character_only(char *str);
 
 void create_dl_identity_matrix(void);
 void create_dl_translation_matrix(s8 pushOp, f32 x, f32 y, f32 z);

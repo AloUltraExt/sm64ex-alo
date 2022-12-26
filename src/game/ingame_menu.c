@@ -123,18 +123,65 @@ static u8 sGenericFontLineHeight = 0;
 static u8 sGenericFontLineAlignment = TEXT_ALIGN_LEFT;
 
 /**************************************************
- *                  COMPATIBILITY                 *
+ *                  MISCELLANEOUS                 *
  **************************************************/
 
+/* 
+ * Vanilla course names has the course number on the same string.
+ * Since the course number is now rendered separately,
+ * there's no need to do that anymore.
+ * This function checks if the number is still part of the name, it's
+ * mostly used just so the strings are displayed using &courseName[3]
+ */
 u8 check_number_string_in_course_name(char *courseName) {
-    // TODO JP Support
-    if ((courseName[0] == 0x20 || courseName[0] == 0x31) &&
-        (courseName[1] == 0x20 || courseName[1] >= 0x30 && courseName[1] <= 0x39) &&
-        courseName[2] == 0x20) {
+    // TODO: Add Japanese char Support
+    if ((courseName[0] == ' ' || courseName[0] == '1') &&
+        (courseName[1] == ' ' || courseName[1] >= '0' && courseName[1] <= '9') &&
+         courseName[2] == ' ') {
         return TRUE;
     }
 
     return FALSE;
+}
+
+// From https://www.includehelp.com/c-programs/capitalize-first-character-of-each-word-in-string.aspx
+/*
+ * Only makes the first letter of each word separated by a space and
+ * also checks the first character of a strings.
+ * This could be used for vanilla course names and acts since they are all uppercase.
+*/
+void captialize_first_character_only(char *str)
+{
+	int i;
+	
+	//capitalize first character of words
+	for(i=0; str[i]!='\0'; i++)
+	{
+		//check first character is lowercase alphabet
+		if(i==0)
+		{
+			if((str[i]>='a' && str[i]<='z'))
+				str[i]=str[i]-32; //subtract 32 to make it capital
+			continue; //continue to the loop
+		}
+		if(str[i]==' ')//check space
+		{
+			//if space is are found, check next character
+			++i;
+			//check next character is lowercase alphabet
+			if(str[i]>='a' && str[i]<='z')
+			{
+				str[i]=str[i]-32; //subtract 32 to make it capital
+				continue; //continue to the loop
+			}
+		}
+		else
+		{
+			//all other uppercase characters should be in lowercase
+			if(str[i]>='A' && str[i]<='Z')
+				str[i]=str[i]+32; //subtract 32 to make it small/lowercase
+		}
+	}
 }
 
 /**************************************************
