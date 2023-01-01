@@ -101,13 +101,9 @@ static void set_details(void) {
                     break;
             }
 #endif
-            char *courseName = segmented_to_virtual(courseNameTbl[gCurrCourseNum - 1]);
+            u8 *courseName = segmented_to_virtual(courseNameTbl[gCurrCourseNum - 1]);
             
-            if (check_number_string_in_course_name(courseName)) {
-                strcpy(stage, &courseName[3]);
-            } else {
-                strcpy(stage, courseName);
-            }
+            strcpy(stage, check_number_string_in_course_name(courseName));
             captialize_first_character_only(stage);
         } else {
             strcpy(stage, "Peach's Castle");

@@ -33,12 +33,16 @@ enum HUDFlashModes {
 extern s8 gHudFlash;
 
 extern s8 gDialogCourseActNum;
+#ifdef MULTILANG
 extern u8 gInGameLanguage;
+#else
+#define gInGameLanguage 0
+#endif
 extern void *languageTable[][3];
 
 struct AsciiCharLUTEntry {
     const Texture *texture;
-    const s8 kerning;
+    u16 kerning; // can support flags if desired
 };
 
 // Convert an ASCII char to the index in the ASCII LUT. ASCII LUTs start at the space character.
@@ -87,7 +91,7 @@ enum TextDiacriticMarks {
     TEXT_DIACRITIC_UMLAUT,
     TEXT_DIACRITIC_UMLAUT_UPPERCASE,
     TEXT_DIACRITIC_CEDILLA,
-#ifdef JAPANESE_CHARACTERS
+#if JAPANESE_CHARACTERS
     TEXT_DIACRITIC_DAKUTEN,
     TEXT_DIACRITIC_HANDAKUTEN,
 #endif
@@ -99,9 +103,12 @@ enum TextAlignments {
     TEXT_ALIGN_RIGHT,
 };
 
+//#define TEXT_FLAG_PACKED_IA4 0x4000 // EU, has fonts flipped (Converts from IA1 to IA4)
+//#define TEXT_FLAG_PACKED_IA8 0x8000 // JP, no fonts flipped (Converts from IA1 to IA8)
+//#define TEXT_FLAG_PACKED_MASK (TEXT_FLAG_PACKED_IA4 | TEXT_FLAG_PACKED_IA8)
 #define TEXT_FLAG_PACKED 0x8000
 #define TEXT_DIACRITIC_MASK 0x00FF
-// bits 0x0100 through 0x4000 are free for use, and the mask can be reduced if necessary
+// bits 0x0100 through 0x2000 are free for use, and the mask can be reduced if necessary
 
 struct DialogEntry {
     /*0x00*/ s32 voice;
@@ -136,13 +143,14 @@ typedef char * LangArray[LANGUAGE_COUNT];
 #define DEFINE_LANGUAGE_ARRAY(english, french, german, japanese) {english, french, german, japanese}
 
 #else
-
-// If multilang is off, ignore all other languages and only include English.
-#define LANGUAGE_ENGLISH 0
-
 typedef char * LangArray;
 #define LANG_ARRAY(cmd) (cmd)
+
+#if defined(VERSION_JP) || defined(VERSION_SH)
+#define DEFINE_LANGUAGE_ARRAY(english, french, german, japanese) japanese
+#else
 #define DEFINE_LANGUAGE_ARRAY(english, french, german, japanese) english
+#endif
 
 #endif
 
@@ -165,7 +173,7 @@ extern s8  gRedCoinsCollected;
  * set TEXT_ALIGN_CENTER as it's alignment value.
 */
 
-u8 check_number_string_in_course_name(char *courseName);
+char *check_number_string_in_course_name(u8 *str);
 void captialize_first_character_only(char *str);
 
 void create_dl_identity_matrix(void);

@@ -42,8 +42,8 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
     s32 courseNum;
     u8 *courseName;
     char *chrTemp;
-    u8 levelNumStr[4];
-    u8 courseNumStr[4];
+    u8 levelNumStr[9];
+    u8 courseNumStr[9];
 
     gDPSetEnvColor(gDisplayListHead++, 255, 155, 150, 255);
     chrTemp = "SUPER MARIO LEVEL SELECT";
@@ -73,8 +73,8 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
 
     for (i = 0; i < MAX_PAGE_STRINGS; i++) {
         scene = (this->topDisplayedScene + i + this->count) % this->count;
-        int_to_str(scene + 1, levelNumStr);
-
+        format_int_to_string(levelNumStr, scene + 1);
+        
         if (scene == this->currentScene) {
             gDPSetEnvColor(gDisplayListHead++, 255, 126, 0, 255);
         } else {
@@ -88,6 +88,7 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
         courseNum = gLevelToCourseNumTable[scene];
         courseName = segmented_to_virtual(courseNameTbl[courseNum - 1]);
         int_to_str(courseNum, courseNumStr);
+        format_int_to_string(courseNumStr, courseNum);
 
         if (this->toggleCourseLevelView) {
             chrTemp = "LEVEL    NAME";
@@ -97,11 +98,7 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
             chrTemp = "COURSE   NAME";
             print_generic_string(72, 180 - i * 11, courseNumStr);
             if (courseName != NULL && courseNum >= COURSE_MIN && courseNum <= COURSE_MAX) {
-                if (check_number_string_in_course_name(courseName)) {
-                    print_generic_string(100, 180 - i * 11, &courseName[3]);
-                } else {
-                    print_generic_string(100, 180 - i * 11, courseName);
-                }
+                print_generic_string(100, 180 - i * 11, check_number_string_in_course_name(courseName));
             }
         }
         gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);

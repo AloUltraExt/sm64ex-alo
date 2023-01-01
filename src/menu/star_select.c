@@ -266,7 +266,7 @@ LangArray textActMyScore = DEFINE_LANGUAGE_ARRAY(
  */
 void print_act_selector_strings(void) {
     char **levelNameTbl = segmented_to_virtual(languageTable[gInGameLanguage][1]);
-    char *currLevelName = segmented_to_virtual(levelNameTbl[COURSE_NUM_TO_INDEX(gCurrCourseNum)]);
+    u8 *courseName = segmented_to_virtual(levelNameTbl[COURSE_NUM_TO_INDEX(gCurrCourseNum)]);
     char **actNameTbl = segmented_to_virtual(languageTable[gInGameLanguage][2]);
     char *selectedActName;
     s8 i;
@@ -287,7 +287,7 @@ void print_act_selector_strings(void) {
         print_generic_string_aligned(145, 118, LANG_ARRAY(textActMyScore), TEXT_ALIGN_RIGHT);
     }
 
-    print_generic_string_aligned(SCREEN_CENTER_X, 33, currLevelName, TEXT_ALIGN_CENTER);
+    print_generic_string_aligned(SCREEN_CENTER_X, 33, check_number_string_in_course_name(courseName), TEXT_ALIGN_CENTER);
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 

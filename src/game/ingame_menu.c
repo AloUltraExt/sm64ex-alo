@@ -35,8 +35,10 @@ DialogVariable gDialogVariable;
 u16 gDialogTextAlpha;
 s8 gRedCoinsCollected;
 
+#ifdef MULTILANG
 // The language to display the game's text in.
 u8 gInGameLanguage = LANGUAGE_ENGLISH;
+#endif
 
 extern u8 dialog_table_en[];
 extern u8 course_name_table_en[];
@@ -127,31 +129,59 @@ static u8 sGenericFontLineAlignment = TEXT_ALIGN_LEFT;
  **************************************************/
 
 /* 
+ * JP, EU and SH likes to use texture conversions from ia1 to ia8/ia4 respectively.
+ * To still support these without altering the AsciiCharLUTEntry struct,
+ * this look up table exists so that specific chars are only converted.
+ */
+
+#if (defined(VERSION_JP) || defined(VERSION_EU) || defined(VERSION_SH)) && !defined(MULTILANG)
+u8 gCharTextureConvBool[] = {
+    0,  1,  0,  0,  0,  1,  0,  0,  1,  1,  0,  0,  1,  1,  1,  0,
+    1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  1,
+    0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,
+    0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+    1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  1,  0,
+};
+#endif
+
+/* 
  * Vanilla course names has the course number on the same string.
  * Since the course number is now rendered separately,
  * there's no need to do that anymore.
- * This function checks if the number is still part of the name, it's
- * mostly used just so the strings are displayed using &courseName[3]
+ * This function checks if the number is still part of the name.
  */
-u8 check_number_string_in_course_name(char *courseName) {
-    // TODO: Add Japanese char Support
-    if ((courseName[0] == ' ' || courseName[0] == '1') &&
-        (courseName[1] == ' ' || courseName[1] >= '0' && courseName[1] <= '9') &&
-         courseName[2] == ' ') {
-        return TRUE;
+char *check_number_string_in_course_name(u8 *str) {
+#if JAPANESE_CHARACTERS
+    // Make assumptions of specific char values in Japanese.
+    #ifdef ENABLE_JAPANESE
+    if (gInGameLanguage == LANGUAGE_JAPANESE) {
+    #endif
+    if ((str[2] == 0x80 || str[2] == 0x91) &&
+        (str[5] == 0x80 || str[5] >= 0x90 && str[5] <= 0x99) &&
+         str[8] == 0x80) {
+        return &str[9];
     }
-
-    return FALSE;
+    #ifdef ENABLE_JAPANESE
+    }
+    #endif
+#endif
+    if ((str[0] == ' ' || str[0] == '1') &&
+        (str[1] == ' ' || str[1] >= '0' && str[1] <= '9') &&
+         str[2] == ' ') {
+        return &str[3];
+    }
+    
+    return str;
 }
 
 // From https://www.includehelp.com/c-programs/capitalize-first-character-of-each-word-in-string.aspx
 /*
  * Only makes the first letter of each word separated by a space and
- * also checks the first character of a strings.
- * This could be used for vanilla course names and acts since they are all uppercase.
+ * also checks the first character of a string.
+ * This could be used for course names and acts since they are all uppercase.
 */
-void captialize_first_character_only(char *str)
-{
+void captialize_first_character_only(char *str) {
 	int i;
 	
 	//capitalize first character of words
@@ -272,6 +302,10 @@ void create_dl_ortho_matrix(void) {
     gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(matrix), G_MTX_PROJECTION | G_MTX_MUL | G_MTX_NOPUSH);
 }
 
+/**************************************************
+ *                ASCII/UTF-8 UTILS               *
+ **************************************************/
+ 
 /**
  * Determine which UTF-8 character to render, given a string and the current position in the string.
  * Returns the table entry of the relevant character.
@@ -410,8 +444,11 @@ static s32 get_alignment_x_offset(char *str, u32 alignment, struct AsciiCharLUTE
  * If the language is set to Japanese, the number is written in full-width digits.
  */
 void format_int_to_string(char *buf, s32 value) {
-#ifdef ENABLE_JAPANESE
-    if (gInGameLanguage == LANGUAGE_JAPANESE) {
+#if JAPANESE_CHARACTERS
+    #ifdef ENABLE_JAPANESE
+    if (gInGameLanguage == LANGUAGE_JAPANESE)
+    #endif
+    {
         u8 digits[10];
         s32 numDigits = 0;
         // Minus sign
@@ -435,10 +472,14 @@ void format_int_to_string(char *buf, s32 value) {
         return;
     }
 #endif
-
+    // This is unreachable if JP or SH are defined
     sprintf(buf, "%d", value);
 }
 
+/**************************************************
+ *               TEXTURE CONVERSION               *
+ **************************************************/
+ 
 /**
  * Unpacks a packed I1 character texture into a usable IA8 texture when TEXT_FLAG_PACKED is used.
  * By default this is used for all the Japanese characters.
@@ -446,6 +487,7 @@ void format_int_to_string(char *buf, s32 value) {
 static u8 *alloc_ia8_text_from_i1(u16 *in, s16 width, s16 height) {
     s32 inPos;
     u16 bitMask;
+    u16 inWord;
     u8 *out;
     s16 outPos = 0;
 
@@ -456,10 +498,11 @@ static u8 *alloc_ia8_text_from_i1(u16 *in, s16 width, s16 height) {
     }
 
     for (inPos = 0; inPos < (width * height) / 16; inPos++) {
+        inWord = BE_TO_HOST16(in[inPos]);
         bitMask = 0x8000;
 
         while (bitMask != 0) {
-            if (in[inPos] & bitMask) {
+            if (inWord & bitMask) {
                 out[outPos] = 0xFF;
             } else {
                 out[outPos] = 0x00;
@@ -482,6 +525,15 @@ static u32 render_generic_ascii_char(char c) {
 
     if (texture != NULL) {
         gDPPipeSync(gDisplayListHead++);
+
+#if (defined(VERSION_JP) || defined(VERSION_EU) || defined(VERSION_SH)) && !defined(MULTILANG)
+        if (gCharTextureConvBool[ASCII_LUT_INDEX(c)]) {
+            void *unpackedTexture = alloc_ia8_text_from_i1(segmented_to_virtual(texture), 8, 16);
+            gDPSetTextureImage(gDisplayListHead++, G_IM_FMT_IA, G_IM_SIZ_8b, 1, unpackedTexture);
+            gSPDisplayList(gDisplayListHead++, dl_ia_text_tex_settings_packed);
+            return fontLUT[ASCII_LUT_INDEX(c)].kerning;
+        }
+#endif
         gDPSetTextureImage(gDisplayListHead++, G_IM_FMT_IA, G_IM_SIZ_16b, 1, texture);
         gSPDisplayList(gDisplayListHead++, dl_ia_text_tex_settings);
     }
@@ -1448,7 +1500,9 @@ void print_peach_letter_message(void) {
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
     gDPSetEnvColor(gDisplayListHead++, 200, 80, 120, gDialogTextAlpha);
+#ifndef VERSION_JP
     gSPDisplayList(gDisplayListHead++, castle_grounds_seg7_us_dl_0700F2E8);
+#endif
 
     // at the start/end of message, reset the fade.
     if (gCutsceneMsgTimer == 0) {
@@ -1612,7 +1666,7 @@ void render_pause_my_score_coins(void) {
 
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, gDialogTextAlpha);
 
-    char *courseName = segmented_to_virtual(courseNameTbl[courseIndex]);
+    u8 *courseName = segmented_to_virtual(courseNameTbl[courseIndex]);
 
     if (courseIndex <= COURSE_NUM_TO_INDEX(COURSE_STAGES_MAX)) {
         char courseNumText[8];
@@ -1629,11 +1683,7 @@ void render_pause_my_score_coins(void) {
         }
 
         print_generic_string(PAUSE_MENU_RIGHT_X, PAUSE_MENU_ACT_Y,    actName);
-        if (check_number_string_in_course_name(courseName)) {
-            print_generic_string(PAUSE_MENU_RIGHT_X, PAUSE_MENU_COURSE_Y, &courseName[3]);
-        } else {
-            print_generic_string(PAUSE_MENU_RIGHT_X, PAUSE_MENU_COURSE_Y, courseName);
-        }
+        print_generic_string(PAUSE_MENU_RIGHT_X, PAUSE_MENU_COURSE_Y, check_number_string_in_course_name(courseName));
 
         if (save_file_get_course_star_count(gCurrSaveFileNum - 1, courseIndex) != 0) {
             print_generic_string_aligned(PAUSE_MENU_LEFT_X + 3, PAUSE_MENU_MY_SCORE_Y, LANG_ARRAY(textMyScore), TEXT_ALIGN_RIGHT);
@@ -1838,7 +1888,7 @@ LangArray textStarX = DEFINE_LANGUAGE_ARRAY(
 void render_pause_castle_main_strings(s16 x, s16 y) {
     void **courseNameTbl = segmented_to_virtual(languageTable[gInGameLanguage][1]);
 
-    char *courseName;
+    u8 *courseName;
 
     char str[8];
     char countText[10];
@@ -1879,11 +1929,7 @@ void render_pause_castle_main_strings(s16 x, s16 y) {
 
     if (gDialogLineNum <= COURSE_NUM_TO_INDEX(COURSE_STAGES_MAX)) { // Main courses
         courseName = segmented_to_virtual(courseNameTbl[gDialogLineNum]);
-        if (check_number_string_in_course_name(courseName)) {
-            print_generic_string(x - 50, y + 35, &courseName[3]);
-        } else {
-            print_generic_string(x - 50, y + 35, courseName);
-        }
+        print_generic_string(x - 50, y + 35, check_number_string_in_course_name(courseName));
 
         render_pause_castle_course_stars(x - 65, y, gCurrSaveFileNum - 1, gDialogLineNum);
 

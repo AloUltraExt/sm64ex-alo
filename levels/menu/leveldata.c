@@ -619,7 +619,7 @@ const Gfx dl_menu_grabbing_hand[] = {
     gsSPBranchList(dl_menu_hand),
 };
 
-#ifdef JAPANESE_CHARACTERS
+#if JAPANESE_CHARACTERS
 // 0x0700AC48
 ALIGNED8 static const Texture texture_menu_font_char_jp_0[] = {
 #include "levels/menu/main_menu_seg7.0AC48.ia8.inc.c"
@@ -1597,7 +1597,7 @@ const struct DiacriticLUTEntry menu_font_diacritic_lut[] = {
     [TEXT_DIACRITIC_TILDE_UPPERCASE]      = { 0,  5, "˜"},
     [TEXT_DIACRITIC_UMLAUT_UPPERCASE]     = { 0,  4, "¨"},
     [TEXT_DIACRITIC_CEDILLA]              = { 0, -2, "¸"},
-#ifdef JAPANESE_CHARACTERS
+#if JAPANESE_CHARACTERS
     [TEXT_DIACRITIC_DAKUTEN]              = { 6,  7, "゛"},
     [TEXT_DIACRITIC_HANDAKUTEN]           = { 6,  7, "゜"},
 #endif
@@ -1750,7 +1750,7 @@ const struct Utf8CharLUTEntry menu_font_utf8_3byte_lut[] = {
     {0x2605, 10, 0, texture_menu_font_char_star_filled}, // ★
     {0x272A, 8, 0, texture_menu_font_char_coin}, // ✪
 
-#ifdef JAPANESE_CHARACTERS
+#if JAPANESE_CHARACTERS
     {0x3000, 9, 0, NULL}, // "　" (ideographic space)
     {0x3041, 9, 0, texture_menu_font_char_jp_hiragana_small_a}, // ぁ
     {0x3042, 9, 0, texture_menu_font_char_jp_hiragana_a}, // あ

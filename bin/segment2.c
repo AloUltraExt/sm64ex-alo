@@ -488,6 +488,112 @@ ALIGNED8 static const Texture texture_font_char_jp_Z[] = {
 #include "textures/segment2/segment2.07330.ia1.inc.c"
 };
 
+#if (defined(VERSION_JP) || defined(VERSION_SH)) && !defined(MULTILANG)
+ALIGNED8 static const Texture texture_font_char_jp_a[] = {
+#include "textures/segment2/custom/font_graphics_jp.a.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_b[] = {
+#include "textures/segment2/custom/font_graphics_jp.b.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_c[] = {
+#include "textures/segment2/custom/font_graphics_jp.c.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_d[] = {
+#include "textures/segment2/custom/font_graphics_jp.d.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_e[] = {
+#include "textures/segment2/custom/font_graphics_jp.e.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_f[] = {
+#include "textures/segment2/custom/font_graphics_jp.f.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_g[] = {
+#include "textures/segment2/custom/font_graphics_jp.g.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_h[] = {
+#include "textures/segment2/custom/font_graphics_jp.h.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_i[] = {
+#include "textures/segment2/custom/font_graphics_jp.i.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_j[] = {
+#include "textures/segment2/custom/font_graphics_jp.j.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_k[] = {
+#include "textures/segment2/custom/font_graphics_jp.k.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_l[] = {
+#include "textures/segment2/custom/font_graphics_jp.l.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_m[] = {
+#include "textures/segment2/custom/font_graphics_jp.m.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_n[] = {
+#include "textures/segment2/custom/font_graphics_jp.n.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_o[] = {
+#include "textures/segment2/custom/font_graphics_jp.o.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_p[] = {
+#include "textures/segment2/custom/font_graphics_jp.p.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_q[] = {
+#include "textures/segment2/custom/font_graphics_jp.q.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_r[] = {
+#include "textures/segment2/custom/font_graphics_jp.r.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_s[] = {
+#include "textures/segment2/custom/font_graphics_jp.s.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_t[] = {
+#include "textures/segment2/custom/font_graphics_jp.t.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_u[] = {
+#include "textures/segment2/custom/font_graphics_jp.u.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_v[] = {
+#include "textures/segment2/custom/font_graphics_jp.v.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_w[] = {
+#include "textures/segment2/custom/font_graphics_jp.w.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_x[] = {
+#include "textures/segment2/custom/font_graphics_jp.x.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_y[] = {
+#include "textures/segment2/custom/font_graphics_jp.y.ia1.inc.c"
+};
+
+ALIGNED8 static const Texture texture_font_char_jp_z[] = {
+#include "textures/segment2/custom/font_graphics_jp.z.ia1.inc.c"
+};
+#endif
+
 ALIGNED8 static const Texture texture_font_char_jp_long_vowel[] = {
 #include "textures/segment2/segment2.07340.ia1.inc.c"
 };
@@ -1978,15 +2084,15 @@ ALIGNED8 static const Texture texture_hud_char_kana_dakuten_do[] = {
 };
 
 ALIGNED8 static const Texture texture_hud_char_katakana_ra[] = {
-#include "levels/menu/main_menu_seg7.katakana_ra.rgba16.inc.c"
+#include "levels/menu/custom/main_menu_seg7.katakana_ra.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_kana_dakuten_ge[] = {
-#include "levels/menu/main_menu_seg7.kana_dakuten_ge.rgba16.inc.c"
+#include "levels/menu/custom/main_menu_seg7.kana_dakuten_ge.rgba16.inc.c"
 };
 
 ALIGNED8 static const Texture texture_hud_char_kana_dakuten_ji[] = {
-#include "levels/menu/main_menu_seg7.kana_dakuten_ji.rgba16.inc.c"
+#include "levels/menu/custom/main_menu_seg7.kana_dakuten_ji.rgba16.inc.c"
 };
 #endif
 
@@ -2174,13 +2280,121 @@ const struct DiacriticLUTEntry main_font_diacritic_lut[] = {
     [TEXT_DIACRITIC_UMLAUT]               = { 0,  0, "¨"},
     [TEXT_DIACRITIC_UMLAUT_UPPERCASE]     = { 1,  4, "¨"},
     [TEXT_DIACRITIC_CEDILLA]              = { 0,  0, "¸"},
-#ifdef JAPANESE_CHARACTERS
+#if JAPANESE_CHARACTERS
     [TEXT_DIACRITIC_DAKUTEN]              = { 4,  6, "゛"},
     [TEXT_DIACRITIC_HANDAKUTEN]           = { 7, 10, "゜"},
 #endif
 };
 
+// If you build JP or SH without multilanguage, textures for these versions are used instead
+#if !defined(MULTILANG)
+#if defined(VERSION_JP) || defined(VERSION_SH)
+#define EXCLUSIVE_TEXTURE_FONT 1
+#else
+#define EXCLUSIVE_TEXTURE_FONT 0
+#endif
+#endif
+
+#if EXCLUSIVE_TEXTURE_FONT == 1
 // ASCII lookup table for the generic white font
+const struct AsciiCharLUTEntry main_font_lut[] = {
+    {NULL, 5}, // 32 " "
+    {texture_font_char_jp_exclamation, 8}, // 33 "!"
+    {texture_font_char_us_double_quote_open, 6}, // 34 "\""
+    {NULL, 0}, // 35 "#" (Unimplemented)
+    {NULL, 0}, // 36 "$" (Unimplemented)
+    {texture_font_char_jp_percent, 10}, // 37 "%"
+    {texture_font_char_us_ampersand, 8}, // 38 "&"
+    {texture_font_char_us_apostrophe, 4}, // 39 "'"
+    {texture_font_char_jp_open_parentheses, 10}, // 40 "("
+    {texture_font_char_jp_close_parentheses, 10}, // 41 ")"
+    {NULL, 0}, // 42 "*" (Unimplemented)
+    {texture_font_char_plus, 7}, // 43 "+"
+    {texture_font_char_jp_comma, 6}, // 44 ","
+    {texture_font_char_jp_long_vowel, 10}, // 45 "-"
+    {texture_font_char_jp_period, 7}, // 46 "."
+    {texture_font_char_slash, 5}, // 47 "/"
+    {texture_font_char_jp_0, 10}, // 48 "0"
+    {texture_font_char_jp_1, 10}, // 49 "1"
+    {texture_font_char_jp_2, 10}, // 50 "2"
+    {texture_font_char_jp_3, 10}, // 51 "3"
+    {texture_font_char_jp_4, 10}, // 52 "4"
+    {texture_font_char_jp_5, 10}, // 53 "5"
+    {texture_font_char_jp_6, 10}, // 54 "6"
+    {texture_font_char_jp_7, 10}, // 55 "7"
+    {texture_font_char_jp_8, 10}, // 56 "8"
+    {texture_font_char_jp_9, 10}, // 57 "9"
+    {texture_font_char_us_colon, 4}, // 58 ":"
+    {NULL, 0}, // 59 ";" (Unimplemented)
+    {NULL, 0}, // 60 "<" (Unimplemented)
+    {NULL, 0}, // 61 "=" (Unimplemented)
+    {NULL, 0}, // 62 ">" (Unimplemented)
+    {texture_font_char_jp_question, 10}, // 63 "?"
+    {NULL, 0}, // 64 "@" (Unimplemented, used for color codes by default)
+    {texture_font_char_jp_A, 10}, // 65 "A"
+    {texture_font_char_jp_B, 10}, // 66 "B"
+    {texture_font_char_jp_C, 10}, // 67 "C"
+    {texture_font_char_jp_D, 10}, // 68 "D"
+    {texture_font_char_jp_E, 10}, // 69 "E"
+    {texture_font_char_jp_F, 10}, // 70 "F"
+    {texture_font_char_jp_G, 10}, // 71 "G"
+    {texture_font_char_jp_H, 10}, // 72 "H"
+    {texture_font_char_jp_I, 10}, // 73 "I"
+    {texture_font_char_jp_J, 10}, // 74 "J"
+    {texture_font_char_jp_K, 10}, // 75 "K"
+    {texture_font_char_jp_L, 10}, // 76 "L"
+    {texture_font_char_jp_M, 10}, // 77 "M"
+    {texture_font_char_jp_N, 10}, // 78 "N"
+    {texture_font_char_jp_O, 10}, // 79 "O"
+    {texture_font_char_jp_P, 10}, // 80 "P"
+    {texture_font_char_jp_Q, 10}, // 81 "Q"
+    {texture_font_char_jp_R, 10}, // 82 "R"
+    {texture_font_char_jp_S, 10}, // 83 "S"
+    {texture_font_char_jp_T, 10}, // 84 "T"
+    {texture_font_char_jp_U, 10}, // 85 "U"
+    {texture_font_char_jp_V, 10}, // 86 "V"
+    {texture_font_char_jp_W, 10}, // 87 "W"
+    {texture_font_char_jp_X, 10}, // 88 "X"
+    {texture_font_char_jp_Y, 10}, // 89 "Y"
+    {texture_font_char_jp_Z, 10}, // 90 "Z"
+    {NULL, 0}, // 91 "[" (Unimplemented)
+    {texture_font_char_backslash, 6}, // 92 "\\"
+    {NULL, 0}, // 93 "]" (Unimplemented)
+    {NULL, 0}, // 94 "^" (Unimplemented)
+    {NULL, 0}, // 95 "_" (Unimplemented)
+    {NULL, 0}, // 96 "`" (Unimplemented)
+    {texture_font_char_jp_a, 9}, // 97 "a"
+    {texture_font_char_jp_b, 8}, // 98 "b"
+    {texture_font_char_jp_c, 8}, // 99 "c"
+    {texture_font_char_jp_d, 8}, // 100 "d"
+    {texture_font_char_jp_e, 8}, // 101 "e"
+    {texture_font_char_jp_f, 8}, // 102 "f"
+    {texture_font_char_jp_g, 9}, // 103 "g"
+    {texture_font_char_jp_h, 8}, // 104 "h"
+    {texture_font_char_jp_i, 6}, // 105 "i"
+    {texture_font_char_jp_j, 8}, // 106 "j"
+    {texture_font_char_jp_k, 8}, // 107 "k"
+    {texture_font_char_jp_l, 4}, // 108 "l"
+    {texture_font_char_jp_m, 10}, // 109 "m"
+    {texture_font_char_jp_n, 8}, // 110 "n"
+    {texture_font_char_jp_o, 8}, // 111 "o"
+    {texture_font_char_jp_p, 8}, // 112 "p"
+    {texture_font_char_jp_q, 9}, // 113 "q"
+    {texture_font_char_jp_r, 8}, // 114 "r"
+    {texture_font_char_jp_s, 8}, // 115 "s"
+    {texture_font_char_jp_t, 8}, // 116 "t"
+    {texture_font_char_jp_u, 8}, // 117 "u"
+    {texture_font_char_jp_v, 8}, // 118 "v"
+    {texture_font_char_jp_w, 10}, // 119 "w"
+    {texture_font_char_jp_x, 9}, // 120 "x"
+    {texture_font_char_jp_y, 8}, // 121 "y"
+    {texture_font_char_jp_z, 8}, // 122 "z"
+    {NULL, 0}, // 123 "{" (Unimplemented)
+    {NULL, 0}, // 124 "|" (Unimplemented)
+    {NULL, 0}, // 125 "}" (Unimplemented)
+    {texture_font_char_jp_tilde, 10}, // 126 "~"
+};
+#else
 const struct AsciiCharLUTEntry main_font_lut[] = {
     {NULL, 5}, // 32 " "
     {texture_font_char_us_exclamation, 5}, // 33 "!"
@@ -2215,6 +2429,7 @@ const struct AsciiCharLUTEntry main_font_lut[] = {
     {NULL, 0}, // 62 ">" (Unimplemented)
     {texture_font_char_us_question, 7}, // 63 "?"
     {NULL, 0}, // 64 "@" (Unimplemented, used for color codes by default)
+
     {texture_font_char_us_A, 6}, // 65 "A"
     {texture_font_char_us_B, 6}, // 66 "B"
     {texture_font_char_us_C, 6}, // 67 "C"
@@ -2241,12 +2456,14 @@ const struct AsciiCharLUTEntry main_font_lut[] = {
     {texture_font_char_us_X, 7}, // 88 "X"
     {texture_font_char_us_Y, 6}, // 89 "Y"
     {texture_font_char_us_Z, 6}, // 90 "Z"
+
     {NULL, 0}, // 91 "[" (Unimplemented)
     {texture_font_char_backslash, 6}, // 92 "\\"
     {NULL, 0}, // 93 "]" (Unimplemented)
     {NULL, 0}, // 94 "^" (Unimplemented)
     {NULL, 0}, // 95 "_" (Unimplemented)
     {NULL, 0}, // 96 "`" (Unimplemented)
+
     {texture_font_char_us_a, 6}, // 97 "a"
     {texture_font_char_us_b, 5}, // 98 "b"
     {texture_font_char_us_c, 5}, // 99 "c"
@@ -2273,11 +2490,13 @@ const struct AsciiCharLUTEntry main_font_lut[] = {
     {texture_font_char_us_x, 7}, // 120 "x"
     {texture_font_char_us_y, 5}, // 121 "y"
     {texture_font_char_us_z, 5}, // 122 "z"
+
     {NULL, 0}, // 123 "{" (Unimplemented)
     {NULL, 0}, // 124 "|" (Unimplemented)
     {NULL, 0}, // 125 "}" (Unimplemented)
     {texture_font_char_us_tilde, 8}, // 126 "~"
 };
+#endif
 
 /* 
  * This struct defines the UTF-8 characters supported by the main white font!
@@ -2395,7 +2614,7 @@ const struct Utf8CharLUTEntry main_font_utf8_3byte_lut[] = {
     {0x2606, 10, 0, texture_font_char_us_star_hollow}, // ☆
     {0x272A, 8, 0, texture_font_char_us_coin}, // ✪
 
-#ifdef JAPANESE_CHARACTERS
+#if JAPANESE_CHARACTERS
     {0x3000, 10, 0, NULL}, // "　" (ideographic space)
     {0x3001, 10, TEXT_FLAG_PACKED, texture_font_char_jp_comma}, // 、
     {0x3002, 10, TEXT_FLAG_PACKED, texture_font_char_jp_period}, // 。
@@ -2748,8 +2967,13 @@ const Texture *const main_hud_camera_lut[] = {
 #define ACT_NAME_TABLE seg2_act_name_table
 #define DIALOG_TABLE seg2_dialog_table
 
+#if defined(VERSION_JP) || defined(VERSION_SH)
+#define DIALOG_FILE "jp/dialogs.h"
+#define COURSE_FILE "jp/courses.h"
+#else
 #define DIALOG_FILE "us/dialogs.h"
 #define COURSE_FILE "us/courses.h"
+#endif
 #include "text/define_text.inc.c"
 #undef DIALOG_FILE
 #undef COURSE_FILE

@@ -15,7 +15,7 @@
  * This define enables support for Japanese characters even when multilang or Japanese is not enabled.
  * Requires a Japanese baserom.
  */
-// #define JAPANESE_CHARACTERS
+#define JAPANESE_CHARACTERS (0 || VERSION_JP || VERSION_SH || ENABLE_JAPANESE)
 
 /**
  * This replaces translation specific defines to general ones to be used for more languages.
@@ -27,7 +27,3 @@
     #undef ENABLE_GERMAN
     #undef ENABLE_JAPANESE
 #endif // !MULTILANG
-
-#ifdef ENABLE_JAPANESE
-    #define JAPANESE_CHARACTERS
-#endif // ENABLE_JAPANESE
