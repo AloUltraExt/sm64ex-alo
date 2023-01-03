@@ -2282,7 +2282,7 @@ const struct DiacriticLUTEntry main_font_diacritic_lut[] = {
     [TEXT_DIACRITIC_CEDILLA]              = { 0,  0, "¸"},
 #if JAPANESE_CHARACTERS
     [TEXT_DIACRITIC_DAKUTEN]              = { 4,  6, "゛"},
-    [TEXT_DIACRITIC_HANDAKUTEN]           = { 7, 10, "゜"},
+    [TEXT_DIACRITIC_HANDAKUTEN]           = { 7,  6, "゜"},
 #endif
 };
 

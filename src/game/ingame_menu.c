@@ -128,7 +128,7 @@ static u8 sGenericFontLineAlignment = TEXT_ALIGN_LEFT;
  *                  MISCELLANEOUS                 *
  **************************************************/
 
-/* 
+/*
  * JP, EU and SH likes to use texture conversions from ia1 to ia8/ia4 respectively.
  * To still support these without altering the AsciiCharLUTEntry struct,
  * this look up table exists so that specific chars are only converted.
@@ -145,7 +145,7 @@ u8 gCharTextureConvBool[] = {
 };
 #endif
 
-/* 
+/*
  * Vanilla course names has the course number on the same string.
  * Since the course number is now rendered separately,
  * there's no need to do that anymore.
@@ -171,7 +171,7 @@ char *check_number_string_in_course_name(u8 *str) {
          str[2] == ' ') {
         return &str[3];
     }
-    
+
     return str;
 }
 
@@ -183,7 +183,7 @@ char *check_number_string_in_course_name(u8 *str) {
 */
 void captialize_first_character_only(char *str) {
 	int i;
-	
+
 	//capitalize first character of words
 	for(i=0; str[i]!='\0'; i++)
 	{
@@ -305,7 +305,7 @@ void create_dl_ortho_matrix(void) {
 /**************************************************
  *                ASCII/UTF-8 UTILS               *
  **************************************************/
- 
+
 /**
  * Determine which UTF-8 character to render, given a string and the current position in the string.
  * Returns the table entry of the relevant character.
@@ -425,6 +425,27 @@ s32 get_string_width(char *str, struct AsciiCharLUTEntry *asciiLut, struct Utf8L
 }
 
 /**
+ * Get the exact width of the line of a string of any font in pixels,
+ * using presets that give fixed ASCII and UTF-8 tables.
+ */
+s32 get_string_width_preset(char *str, u16 preset) {
+    switch (preset) {
+        case STR_PRESET_HUD_FONT:
+            return get_string_width(str, main_hud_lut, &main_hud_utf8_lut);
+        case STR_PRESET_MAIN_FONT:
+            return get_string_width(str, main_font_lut, &main_font_utf8_lut);
+        case STR_PRESET_MENU_FONT:
+            return get_string_width(str, menu_font_lut, &menu_font_utf8_lut);
+#if !CREDITS_TEXT_STRING_FONT
+        case STR_PRESET_CREDIT_FONT:
+            return get_string_width(str, main_credits_font_lut, NULL);
+#endif
+        default:
+            return get_string_width(str, main_font_lut, &main_font_utf8_lut);
+    }
+}
+
+/**
  * Get the value to shift the X position of a string by, given a specific alignment.
  */
 static s32 get_alignment_x_offset(char *str, u32 alignment, struct AsciiCharLUTEntry *asciiLut, struct Utf8LUT *utf8LUT) {
@@ -472,14 +493,14 @@ void format_int_to_string(char *buf, s32 value) {
         return;
     }
 #endif
-    // This is unreachable if JP or SH are defined
+
     sprintf(buf, "%d", value);
 }
 
 /**************************************************
  *               TEXTURE CONVERSION               *
  **************************************************/
- 
+
 /**
  * Unpacks a packed I1 character texture into a usable IA8 texture when TEXT_FLAG_PACKED is used.
  * By default this is used for all the Japanese characters.
@@ -565,7 +586,7 @@ static u32 render_generic_unicode_char(char *str, s32 *strPos) {
     if (utf8Entry->flags & TEXT_DIACRITIC_MASK) {
         struct DiacriticLUTEntry *diacriticLUT = segmented_to_virtual(&main_font_diacritic_lut);
         struct DiacriticLUTEntry *diacritic = &diacriticLUT[utf8Entry->flags & TEXT_DIACRITIC_MASK];
-        
+
         if (diacritic->xOffset | diacritic->yOffset) {
             create_dl_translation_matrix(MENU_MTX_PUSH, diacritic->xOffset, diacritic->yOffset, 0.0f);
         }
@@ -607,8 +628,8 @@ static u32 render_generic_unicode_char(char *str, s32 *strPos) {
  * Prints a generic white string. Used for both dialog entries and regular prints.
  * Only prints a total of maxLines lines of text. If maxLines is -1, it will print
  * until the end of the string.
- * 
- * Uses the global variables sGenericFontLineHeight and sGenericFontLineAlignment 
+ *
+ * Uses the global variables sGenericFontLineHeight and sGenericFontLineAlignment
  * to control printing.
  */
 static s32 render_main_font_text(s16 x, s16 y, char *str, s32 maxLines) {
@@ -674,14 +695,14 @@ static s32 render_main_font_text(s16 x, s16 y, char *str, s32 maxLines) {
                     strPos++;
                     format_int_to_string(dialogVarText, gDialogVariable.asInt);
                     render_main_font_text(0, 0, dialogVarText, -1);
-                    kerning = get_string_width(dialogVarText, main_font_lut, &main_font_utf8_lut);
+                    kerning = get_string_width_preset(dialogVarText, STR_PRESET_MAIN_FONT);
                     create_dl_translation_matrix(MENU_MTX_NOPUSH, kerning, 0.0f, 0.0f);
                     break;
                 // %s: Display dialog var as a pointer to a string.
                 } else if (str[strPos + 1] == 's') {
                     strPos++;
                     render_main_font_text(0, 0, gDialogVariable.asStr, -1);
-                    kerning = get_string_width(gDialogVariable.asStr, main_font_lut, &main_font_utf8_lut);
+                    kerning = get_string_width_preset(gDialogVariable.asStr, STR_PRESET_MAIN_FONT);
                     create_dl_translation_matrix(MENU_MTX_NOPUSH, kerning, 0.0f, 0.0f);
                     break;
                 // %%: Special case, print only a single %.
@@ -2171,7 +2192,7 @@ void render_course_complete_lvl_info_and_hud_str(void) {
         gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
     } else if (gLastCompletedCourseNum == COURSE_BITDW || gLastCompletedCourseNum == COURSE_BITFS) { // Bowser courses
         name = segmented_to_virtual(courseNameTbl[COURSE_NUM_TO_INDEX(gLastCompletedCourseNum)]);
-        u32 clearX = get_string_width(name, main_font_lut, &main_font_utf8_lut) + COURSE_COMPLETE_COURSE_X + 16;
+        u32 clearX = get_string_width_preset(name, STR_PRESET_MAIN_FONT) + COURSE_COMPLETE_COURSE_X + 16;
 
         // Print course name and clear text
         gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
@@ -2255,7 +2276,7 @@ void render_save_confirmation(s16 x, s16 y, s8 *index, s16 yPos) {
 
 // Save option strings are longer in French, so render them further to the left.
 #define SAVE_CONFIRMATION_X_EN  100
-#define SAVE_CONFIRMATION_X_FR  80  
+#define SAVE_CONFIRMATION_X_FR  80
 
 #ifdef ENABLE_FRENCH
 #define SAVE_CONFIRMATION_X ((gInGameLanguage == LANGUAGE_FRENCH) ? SAVE_CONFIRMATION_X_FR : SAVE_CONFIRMATION_X_EN)

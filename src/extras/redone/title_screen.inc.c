@@ -74,7 +74,7 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
     for (i = 0; i < MAX_PAGE_STRINGS; i++) {
         scene = (this->topDisplayedScene + i + this->count) % this->count;
         format_int_to_string(levelNumStr, scene + 1);
-        
+
         if (scene == this->currentScene) {
             gDPSetEnvColor(gDisplayListHead++, 255, 126, 0, 255);
         } else {
@@ -150,7 +150,7 @@ void print_debug_level_select_settings(struct ZDebugLevelSelect *this) {
     print_generic_string(20, 28, str);
 
     if (actName != NULL && courseNum >= COURSE_MIN && courseNum <= COURSE_STAGES_MAX) {
-        print_generic_string(100, 28, actName);
+        print_generic_string(20 + 8 + get_string_width_preset(chrTemp, STR_PRESET_MAIN_FONT), 28, actName);
     }
 
     chrTemp = "(C Down) - Show-Hide Controls";

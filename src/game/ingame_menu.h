@@ -103,12 +103,16 @@ enum TextAlignments {
     TEXT_ALIGN_RIGHT,
 };
 
-//#define TEXT_FLAG_PACKED_IA4 0x4000 // EU, has fonts flipped (Converts from IA1 to IA4)
-//#define TEXT_FLAG_PACKED_IA8 0x8000 // JP, no fonts flipped (Converts from IA1 to IA8)
-//#define TEXT_FLAG_PACKED_MASK (TEXT_FLAG_PACKED_IA4 | TEXT_FLAG_PACKED_IA8)
+enum StringWidthPresets {
+    STR_PRESET_HUD_FONT,
+    STR_PRESET_MAIN_FONT,
+    STR_PRESET_MENU_FONT,
+    STR_PRESET_CREDIT_FONT,
+};
+
 #define TEXT_FLAG_PACKED 0x8000
 #define TEXT_DIACRITIC_MASK 0x00FF
-// bits 0x0100 through 0x2000 are free for use, and the mask can be reduced if necessary
+// bits 0x0100 through 0x4000 are free for use, and the mask can be reduced if necessary
 
 struct DialogEntry {
     /*0x00*/ s32 voice;
@@ -182,6 +186,7 @@ void create_dl_ortho_matrix(void);
 void create_dl_scale_matrix(s8 pushOp, f32 x, f32 y, f32 z);
 
 s32 get_string_width(char *str, struct AsciiCharLUTEntry *asciiLut, struct Utf8LUT *utf8LUT);
+s32 get_string_width_preset(char *str, u16 preset);
 void format_int_to_string(char *buf, s32 value);
 #define int_to_str(int, str)    format_int_to_string(str, int); // backwards compatibility
 void print_generic_string(s16 x, s16 y, char *str);

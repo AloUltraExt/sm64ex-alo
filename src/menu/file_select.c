@@ -1195,8 +1195,11 @@ void print_menu_cursor(void) {
  */
 void string_format_file_letter(char *buf, char *str, s32 fileIndex) {
     char letterBuf[4];
-#ifdef ENABLE_JAPANESE
-    if (gInGameLanguage == LANGUAGE_JAPANESE) {
+#if JAPANESE_CHARACTERS
+    #ifdef ENABLE_JAPANESE
+    if (gInGameLanguage == LANGUAGE_JAPANESE)
+    #endif
+    {
         // The UTF-8 encoding of "Ａ" is 0xEF, 0xBC, 0xA1
         letterBuf[0] = 0xEF;
         letterBuf[1] = 0xBC;
