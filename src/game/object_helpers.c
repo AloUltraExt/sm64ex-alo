@@ -1624,8 +1624,8 @@ static void cur_obj_update_floor(void) {
             #endif
                 o->oMoveFlags |= OBJ_MOVE_ABOVE_DEATH_BARRIER;
                 break;
-        }
 #endif
+        }
     }
 }
 

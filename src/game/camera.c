@@ -127,7 +127,6 @@ u8 sFramesPaused;
 extern struct CameraFOVStatus sFOVState;
 extern struct TransitionInfo sModeTransition;
 extern struct PlayerGeometry sMarioGeometry;
-extern s16 unusedFreeRoamWallYaw;
 extern s16 sAvoidYawVel;
 extern s16 sCameraYawAfterDoorCutscene;
 extern struct HandheldShakePoint sHandheldShakeSpline[4];
@@ -137,17 +136,12 @@ extern f32 sHandheldShakeInc;
 extern s16 sHandheldShakePitch;
 extern s16 sHandheldShakeYaw;
 extern s16 sHandheldShakeRoll;
-extern u32 unused8033B30C;
-extern u32 unused8033B310;
 extern s16 sSelectionFlags;
-extern s16 unused8033B316;
 extern s16 s2ndRotateFlags;
-extern s16 unused8033B31A;
 extern s16 sCameraSoundFlags;
 extern u16 sCButtonsPressed;
 extern s16 sCutsceneDialogID;
 extern struct LakituState gLakituState;
-extern s16 unused8033B3E8;
 extern s16 sAreaYaw;
 extern s16 sAreaYawChange;
 extern s16 sLakituDist;
@@ -176,7 +170,6 @@ extern struct CutsceneSplinePoint sCurCreditsSplinePos[32];
 extern struct CutsceneSplinePoint sCurCreditsSplineFocus[32];
 extern s16 sCutsceneSplineSegment;
 extern f32 sCutsceneSplineSegmentProgress;
-extern s16 unused8033B6E8;
 extern s16 sCutsceneShot;
 extern s16 gCutsceneTimer;
 extern struct CutsceneVariable sCutsceneVars[10];
@@ -193,7 +186,6 @@ struct CameraFOVStatus sFOVState;
 struct TransitionInfo sModeTransition;
 struct PlayerGeometry sMarioGeometry;
 struct Camera *gCamera;
-s16 unusedFreeRoamWallYaw;
 s16 sAvoidYawVel;
 s16 sCameraYawAfterDoorCutscene;
 /**
@@ -216,7 +208,6 @@ f32 sCutsceneSplineSegmentProgress;
  * The current segment of the CutsceneSplinePoint[] being used.
  */
 s16 sCutsceneSplineSegment;
-s16 unused8033B6E8;
 
 // Shaky Hand-held Camera effect variables
 struct HandheldShakePoint sHandheldShakeSpline[4];
@@ -237,9 +228,6 @@ u32 gCutsceneObjSpawn;
  */
 s32 gObjCutsceneDone;
 
-u32 unused8033B30C;
-u32 unused8033B310;
-
 /**
  * Determines which R-Trigger mode is selected in the pause menu.
  */
@@ -249,7 +237,6 @@ s16 sSelectionFlags;
  * Flags that determine what movements the camera should start / do this frame.
  */
 u16 gCameraMovementFlags;
-s16 unused8033B316;
 
 /**
  * Flags that change how modes operate and how Lakitu moves.
@@ -262,7 +249,6 @@ s16 sStatusFlags;
  * determine whether to rotate all the way, or just to 60 degrees.
  */
 s16 s2ndRotateFlags;
-s16 unused8033B31A;
 /**
  * Flags that control buzzes and sounds that play, mostly for C-button input.
  */
@@ -283,10 +269,6 @@ s16 sCutsceneShot;
  * The current frame of the cutscene shot.
  */
 s16 gCutsceneTimer;
-s16 unused8033B3E8;
-#if defined(VERSION_EU) || defined(VERSION_SH)
-s16 unused8033B3E82;
-#endif
 /**
  * The angle of the direction vector from the area's center to Mario's position.
  */
@@ -401,11 +383,7 @@ struct CameraStoredInfo sCameraStoreCUp;
 struct CameraStoredInfo sCameraStoreCutscene;
 
 // first iteration of data
-u32 unused8032CFC0 = 0;
 struct Object *gCutsceneFocus = NULL;
-
-u32 unused8032CFC8 = 0;
-u32 unused8032CFCC = 0;
 
 /**
  * The information of a second focus camera used by some objects
@@ -419,9 +397,6 @@ s16 sYawSpeed = 0x400;
 s32 gCurrLevelArea = 0;
 u32 gPrevLevel = 0;
 
-f32 unused8032CFE0 = 1000.0f;
-f32 unused8032CFE4 = 800.0f;
-u32 unused8032CFE8 = 0;
 f32 gCameraZoomDist = 800.0f;
 
 /**
@@ -2309,7 +2284,6 @@ s16 update_default_camera(struct Camera *c) {
     avoidStatus = rotate_camera_around_walls(c, cPos, &avoidYaw, 0x600);
     // If a wall is blocking the view of Mario, then rotate in the calculated direction
     if (avoidStatus == 3) {
-        unusedFreeRoamWallYaw = avoidYaw;
         sAvoidYawVel = yaw;
         sStatusFlags |= CAM_FLAG_COLLIDED_WITH_WALL;
         //! Does nothing
@@ -2974,7 +2948,7 @@ void transition_to_camera_mode(struct Camera *c, s16 newMode, s16 numFrames) {
         c->mode = sModeInfo.newMode;
 
         // Clear movement flags that would affect the transition
-        gCameraMovementFlags &= (CAM_MOVE_RESTRICT | CAM_MOVE_ROTATE);
+        gCameraMovementFlags &= ~(CAM_MOVE_RESTRICT | CAM_MOVE_ROTATE);
         if (!(sStatusFlags & CAM_FLAG_FRAME_AFTER_CAM_INIT)) {
             transition_next_state(c, numFrames);
             sCUpCameraPitch = 0;
@@ -3004,57 +2978,58 @@ void set_camera_mode(struct Camera *c, s16 mode, s16 frames) {
     struct LinearTransitionPoint *end = &sModeInfo.transitionEnd;
 
 #if CAMERA_VANILLA_DEFINES
-    if (mode != CAMERA_MODE_WATER_SURFACE || gCurrLevelArea != AREA_TTM_OUTSIDE)
-#endif        
-    {
-        // Clear movement flags that would affect the transition
-        gCameraMovementFlags &= (CAM_MOVE_RESTRICT | CAM_MOVE_ROTATE);
-        gCameraMovementFlags |= CAM_MOVING_INTO_MODE;
-        if (mode == CAMERA_MODE_NONE) {
-            mode = CAMERA_MODE_CLOSE;
-        }
-        sCUpCameraPitch = 0;
-        sModeOffsetYaw = 0;
-        sLakituDist = 0;
-        sLakituPitch = 0;
-        sAreaYawChange = 0;
-
-        sModeInfo.newMode = (mode != -1) ? mode : sModeInfo.lastMode;
-        sModeInfo.lastMode = c->mode;
-        sModeInfo.max = frames;
-        sModeInfo.frame = 1;
-
-        c->mode = sModeInfo.newMode;
-        gLakituState.mode = c->mode;
-
-        vec3f_copy(end->focus, c->focus);
-        vec3f_sub(end->focus, sMarioCamState->pos);
-
-        vec3f_copy(end->pos, c->pos);
-        vec3f_sub(end->pos, sMarioCamState->pos);
-
-#if MORE_VANILLA_CAM_STUFF
-        if (mode == CAMERA_MODE_8_DIRECTIONS) {
-            // Helps transition from any camera mode to 8dir
-            s8DirModeYawOffset = 0;
-        }
+    if (mode == CAMERA_MODE_WATER_SURFACE || gCurrLevelArea == AREA_TTM_OUTSIDE) {
+        return;
+    }
 #endif
 
-        sAreaYaw = sModeTransitions[sModeInfo.newMode](c, end->focus, end->pos);
-
-        // End was updated by sModeTransitions
-        vec3f_sub(end->focus, sMarioCamState->pos);
-        vec3f_sub(end->pos, sMarioCamState->pos);
-
-        vec3f_copy(start->focus, gLakituState.curFocus);
-        vec3f_sub(start->focus, sMarioCamState->pos);
-
-        vec3f_copy(start->pos, gLakituState.curPos);
-        vec3f_sub(start->pos, sMarioCamState->pos);
-
-        vec3f_get_dist_and_angle(start->focus, start->pos, &start->dist, &start->pitch, &start->yaw);
-        vec3f_get_dist_and_angle(end->focus, end->pos, &end->dist, &end->pitch, &end->yaw);
+    // Clear movement flags that would affect the transition
+    gCameraMovementFlags &= ~(CAM_MOVE_RESTRICT | CAM_MOVE_ROTATE);
+    gCameraMovementFlags |= CAM_MOVING_INTO_MODE;
+    if (mode == CAMERA_MODE_NONE) {
+        mode = CAMERA_MODE_CLOSE;
     }
+    sCUpCameraPitch = 0;
+    sModeOffsetYaw = 0;
+    sLakituDist = 0;
+    sLakituPitch = 0;
+    sAreaYawChange = 0;
+
+    sModeInfo.newMode = (mode != -1) ? mode : sModeInfo.lastMode;
+    sModeInfo.lastMode = c->mode;
+    sModeInfo.max = frames;
+    sModeInfo.frame = 1;
+
+    c->mode = sModeInfo.newMode;
+    gLakituState.mode = c->mode;
+
+    vec3f_copy(end->focus, c->focus);
+    vec3f_sub(end->focus, sMarioCamState->pos);
+
+    vec3f_copy(end->pos, c->pos);
+    vec3f_sub(end->pos, sMarioCamState->pos);
+
+#if MORE_VANILLA_CAM_STUFF
+    if (mode == CAMERA_MODE_8_DIRECTIONS) {
+        // Helps transition from any camera mode to 8dir
+        s8DirModeYawOffset = 0;
+    }
+#endif
+
+    sAreaYaw = sModeTransitions[sModeInfo.newMode](c, end->focus, end->pos);
+
+    // End was updated by sModeTransitions
+    vec3f_sub(end->focus, sMarioCamState->pos);
+    vec3f_sub(end->pos, sMarioCamState->pos);
+
+    vec3f_copy(start->focus, gLakituState.curFocus);
+    vec3f_sub(start->focus, sMarioCamState->pos);
+
+    vec3f_copy(start->pos, gLakituState.curPos);
+    vec3f_sub(start->pos, sMarioCamState->pos);
+
+    vec3f_get_dist_and_angle(start->focus, start->pos, &start->dist, &start->pitch, &start->yaw);
+    vec3f_get_dist_and_angle(end->focus, end->pos, &end->dist, &end->pitch, &end->yaw);
 }
 
 /**
@@ -3069,20 +3044,10 @@ void update_lakitu(struct Camera *c) {
     s16 newYaw;
     UNUSED u8 filler2[8];
 
-    if (gCameraMovementFlags & CAM_MOVE_PAUSE_SCREEN) {
-    } else {
-        if (c->cutscene) {
-        }
-        if (TRUE) {
-            newYaw = next_lakitu_state(newPos, newFoc, c->pos, c->focus, sOldPosition, sOldFocus,
-                                       c->nextYaw);
-            set_or_approach_s16_symmetric(&c->yaw, newYaw, sYawSpeed);
-            sStatusFlags &= ~CAM_FLAG_UNUSED_CUTSCENE_ACTIVE;
-        } else {
-            //! dead code, moved to next_lakitu_state()
-            vec3f_copy(newPos, c->pos);
-            vec3f_copy(newFoc, c->focus);
-        }
+    if (!(gCameraMovementFlags & CAM_MOVE_PAUSE_SCREEN)) {
+        newYaw = next_lakitu_state(newPos, newFoc, c->pos, c->focus, sOldPosition, sOldFocus, c->nextYaw);
+        set_or_approach_s16_symmetric(&c->yaw, newYaw, sYawSpeed);
+        sStatusFlags &= ~CAM_FLAG_UNUSED_CUTSCENE_ACTIVE;
 
         // Update old state
         vec3f_copy(sOldPosition, newPos);
@@ -3510,14 +3475,8 @@ void update_camera(struct Camera *c) {
 /**
  * Reset all the camera variables to their arcane defaults
  */
-void reset_camera(struct Camera *c) {
-    UNUSED s32 unused = 0;
-    UNUSED u8 filler[16];
-    UNUSED struct LinearTransitionPoint *start = &sModeInfo.transitionStart;
-    UNUSED struct LinearTransitionPoint *end = &sModeInfo.transitionEnd;
-
+void reset_camera(struct Camera *c) {                                           
     gCamera = c;
-    gCameraMovementFlags = 0;
     s2ndRotateFlags = 0;
     sStatusFlags = 0;
     gCutsceneTimer = 0;
@@ -3525,19 +3484,11 @@ void reset_camera(struct Camera *c) {
     gCutsceneObjSpawn = 0;
     gObjCutsceneDone = FALSE;
     gCutsceneFocus = NULL;
-    unused8032CFC8 = 0;
-    unused8032CFCC = 0;
     gSecondCameraFocus = NULL;
     sCButtonsPressed = 0;
     vec3f_copy(sModeTransition.marioPos, sMarioCamState->pos);
     sModeTransition.framesLeft = 0;
-    unused8032CFCC = -1;
-    unused8032CFC8 = -1;
-    gCameraMovementFlags = 0;
-    gCameraMovementFlags |= CAM_MOVE_INIT_CAMERA;
-    unused8033B316 = 0;
-    sStatusFlags = 0;
-    unused8033B31A = 0;
+    gCameraMovementFlags = CAM_MOVE_INIT_CAMERA;
     sCameraSoundFlags = 0;
     sCUpCameraPitch = 0;
     sModeOffsetYaw = 0;
@@ -3557,8 +3508,8 @@ void reset_camera(struct Camera *c) {
     c->doorStatus = DOOR_DEFAULT;
     sMarioCamState->headRotation[0] = 0;
     sMarioCamState->headRotation[1] = 0;
-    sLuigiCamState->headRotation[0] = 0;
-    sLuigiCamState->headRotation[1] = 0;
+    //sLuigiCamState->headRotation[0] = 0;
+    //sLuigiCamState->headRotation[1] = 0;
     sMarioCamState->cameraEvent = 0;
     sMarioCamState->usedObj = NULL;
     gLakituState.shakeMagnitude[0] = 0;
@@ -3579,8 +3530,6 @@ void reset_camera(struct Camera *c) {
     sFOVState.shakePhase = 0;
     sObjectCutscene = 0;
     gRecentCutscene = 0;
-    unused8033B30C = 0;
-    unused8033B310 = 0;
 }
 
 void init_camera(struct Camera *c) {
@@ -3589,8 +3538,8 @@ void init_camera(struct Camera *c) {
 
     sCreditsPlayer2Pitch = 0;
     sCreditsPlayer2Yaw = 0;
-    gPrevLevel = gCurrLevelArea / 16;
-    gCurrLevelArea = gCurrLevelNum * 16 + gCurrentArea->index;
+    gPrevLevel = (gCurrLevelArea >> 4);
+    gCurrLevelArea = ((gCurrLevelNum << 4) | gCurrentArea->index);
     sSelectionFlags &= CAM_MODE_MARIO_SELECTED;
     sFramesPaused = 0;
     gLakituState.mode = c->mode;
@@ -3598,7 +3547,7 @@ void init_camera(struct Camera *c) {
     gLakituState.posHSpeed = 0.3f;
     gLakituState.posVSpeed = 0.3f;
     gLakituState.focHSpeed = 0.8f;
-    gLakituState.focHSpeed = 0.3f; // @bug set focHSpeed back-to-back
+    gLakituState.focVSpeed = 0.3f; // Vanilla has focHSpeed defined twice
     gLakituState.roll = 0;
     gLakituState.keyDanceRoll = 0;
     gLakituState.unused = 0;
@@ -3606,17 +3555,16 @@ void init_camera(struct Camera *c) {
     vec3f_set(sCastleEntranceOffset, 0.f, 0.f, 0.f);
     vec3f_set(sPlayer2FocusOffset, 0.f, 0.f, 0.f);
     update_mario_geometry_info(&sMarioGeometry);
-    for (i = 0; i < 32; i++) {
+    for (i = 0; i < ARRAY_COUNT(sCurCreditsSplinePos); i++) {
         sCurCreditsSplinePos[i].index = -1;
         sCurCreditsSplineFocus[i].index = -1;
     }
     sCutsceneSplineSegment = 0;
     sCutsceneSplineSegmentProgress = 0.f;
-    unused8033B6E8 = 0;
     sHandheldShakeInc = 0.f;
     sHandheldShakeTimer = 0.f;
     sHandheldShakeMag = 0;
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < ARRAY_COUNT(sHandheldShakeSpline); i++) {
         sHandheldShakeSpline[i].index = -1;
     }
     sHandheldShakePitch = 0;
@@ -3759,7 +3707,7 @@ void zoom_out_if_paused_and_outside(struct GraphNodeCamera *camera) {
     s16 yaw;
     UNUSED u8 filler2[4];
     s32 areaMaskIndex = gCurrLevelArea / 32;
-    s32 areaBit = 1 << (((gCurrLevelArea & 0x10) / 4) + (((gCurrLevelArea & 0xF) - 1) & 3));
+    s32 areaBit = 1 << (((gCurrLevelArea & 0x10) >> 2) + (((gCurrLevelArea & 0xF) - 1) & 3));
 
     if (areaMaskIndex >= LEVEL_MAX / 2) {
         areaMaskIndex = 0;
@@ -5351,7 +5299,7 @@ void warp_camera(f32 displacementX, f32 displacementY, f32 displacementZ) {
     struct LinearTransitionPoint *start = &sModeInfo.transitionStart;
     struct LinearTransitionPoint *end = &sModeInfo.transitionEnd;
 
-    gCurrLevelArea = gCurrLevelNum * 16 + gCurrentArea->index;
+    gCurrLevelArea = ((gCurrLevelNum << 4) | gCurrentArea->index);
     displacement[0] = displacementX;
     displacement[1] = displacementY;
     displacement[2] = displacementZ;

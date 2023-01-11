@@ -95,21 +95,22 @@ void bhv_spawned_coin_loop(void) {
 
 #if QOL_FEATURE_COIN_LAVA_FLICKER
     if (o->oMoveFlags & OBJ_MOVE_LANDED) {
+    #ifndef VERSION_JP
         if (o->oMoveFlags & OBJ_MOVE_ABOVE_DEATH_BARRIER) {
             obj_mark_for_deletion(o);
         }
-
+    #endif
         if (o->oMoveFlags & OBJ_MOVE_ABOVE_LAVA && cur_obj_wait_then_blink(0, 20)) {
             obj_mark_for_deletion(o);
         }
     }
 #else
     if (o->oMoveFlags & OBJ_MOVE_LANDED) {
-#ifndef VERSION_JP
+    #ifndef VERSION_JP
         if (o->oMoveFlags & (OBJ_MOVE_ABOVE_DEATH_BARRIER | OBJ_MOVE_ABOVE_LAVA))
-#else
+    #else
         if (o->oMoveFlags & OBJ_MOVE_ABOVE_LAVA)
-#endif
+    #endif
         {
             obj_mark_for_deletion(o);
         }
