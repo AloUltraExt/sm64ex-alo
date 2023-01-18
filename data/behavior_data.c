@@ -353,7 +353,7 @@ const BehaviorScript bhvStarDoor[] = {
     SET_INT(oIntangibleTimer, 0),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_star_door_loop),
-#if !QOL_FIX_STAR_DOOR_ROOM_RENDER
+#if !FIX_STAR_DOOR_ROOM_RENDER
         CALL_NATIVE(bhv_star_door_loop_2),
         CALL_NATIVE(load_object_collision_model),
 #endif
@@ -6048,7 +6048,7 @@ const BehaviorScript bhvRedCoinStarMarker[] = {
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
     SCALE(/*Unused*/ 0, /*Field*/ 150),
     SET_INT(oFaceAnglePitch, 0x4000),
-#if QOL_FEATURE_BETTER_REDS_STAR_MARKER
+#if BETTER_REDS_STAR_MARKER
     SET_HOME(),
 #else
     DROP_TO_FLOOR(),
@@ -6057,7 +6057,7 @@ const BehaviorScript bhvRedCoinStarMarker[] = {
     CALL_NATIVE(bhv_red_coin_star_marker_init),
     BEGIN_LOOP(),
         ADD_INT(oFaceAngleYaw, 0x100),
-        #if QOL_FEATURE_BETTER_REDS_STAR_MARKER
+        #if BETTER_REDS_STAR_MARKER
         CALL_NATIVE(bhv_red_coin_star_marker_loop),
         #endif
     END_LOOP(),

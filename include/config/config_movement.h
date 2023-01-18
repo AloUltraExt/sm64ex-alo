@@ -28,6 +28,12 @@
 /// Fixes slideVel position being slightly off/asymmetric
 #define FIX_SLIDE_VEL_UPDATE_SLIDING (0 || QOL_FIXES)
 
+/// Fixes cutscenes where Mario goes out of camera view on moving platforms (PD2 already has this)
+#define FIX_CAMERA_CUTSCENE_MOVING_PLATFORMS (0 || QOL_FIXES)
+
+/// Fixes find_floor_slope so it handles OOB slopes
+#define FIX_FLOOR_SLOPE_OOB (0 || QOL_FIXES || COLLISION_FIXES)
+
 /// Fixes water upwarp, enables with collision fixes due to water surfaces
 #define FIX_WATER_PLUNGE_UPWARP (0 || QOL_FIXES || COLLISION_FIXES)
 
@@ -40,18 +46,15 @@
 /// Improves hanging so you don't need to hold A to stay hanging, adjusts speed and position.
 #define BETTER_HANGING (0 || QOL_FEATURES)
 
-/// Hold A when bouncing on an enemy to go higher like in classic games.
-#define JUMP_ENEMY_BOUNCE_BOOST (0 || QOL_FEATURES)
-
 /// Makes turning walking speed based of velocity.
 #define VELOCITY_BASED_TURN_SPEED (0 || QOL_FEATURES)
 
 // If A and Z are pressed on the same frame while running, Mario will long jump instead of ground pound.
 #define EASIER_LONG_JUMPS (0 || QOL_FEATURES)
 
-/*********************
+/*******************
  * ACTION SETTINGS *
- *********************/
+ *******************/
 
 /// Fixes open door key cutscene on 90-270 degrees
 #define FIX_DOOR_KEY_CUTSCENE (0 || QOL_FIXES)

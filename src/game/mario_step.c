@@ -285,11 +285,6 @@ s32 stationary_ground_step(struct MarioState *m) {
 }
 
 extern s32 analog_stick_held_back(struct MarioState *m);
-#if QOL_FIX_SHELL_SPEED_NEGATIVE_OFFSET
-#define NEGATIVE(val) -val
-#else
-#define NEGATIVE(val) val
-#endif
 
 static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
 #if BETTER_RESOLVE_WALL_COLLISION
@@ -303,9 +298,6 @@ static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
 #endif
     struct Surface *ceil;
     struct Surface *floor;
-    f32 ceilHeight;
-    f32 floorHeight;
-    f32 waterLevel;
 
 #if BETTER_RESOLVE_WALL_COLLISION
     resolve_and_return_wall_collisions_data(nextPos, 30.0f, 24.0f, &lowerWall);
@@ -315,10 +307,10 @@ static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
     upperWall = resolve_and_return_wall_collisions(nextPos, 60.0f, 50.0f);
 #endif
 
-    floorHeight = find_floor(nextPos[0], nextPos[1], nextPos[2], &floor);
-    ceilHeight = vec3f_find_ceil(nextPos, floorHeight, &ceil);
+    f32 floorHeight = find_floor(nextPos[0], nextPos[1], nextPos[2], &floor);
+    f32 ceilHeight = vec3f_find_ceil(nextPos, floorHeight, &ceil);
 
-    waterLevel = find_water_level(nextPos[0], nextPos[2]);
+    f32 waterLevel = find_water_level(nextPos[0], nextPos[2]);
 
 #if !BETTER_RESOLVE_WALL_COLLISION
     m->wall = upperWall;
@@ -331,7 +323,9 @@ static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
     if ((m->action & ACT_FLAG_RIDING_SHELL) && floorHeight < waterLevel) {
         floorHeight = waterLevel;
         floor = &gWaterSurfacePseudoFloor;
-        floor->originOffset = NEGATIVE(floorHeight);
+        // ex-alo change
+        // make floorHeight originOffset negative
+        floor->originOffset = -floorHeight;
     }
 
     if (nextPos[1] > floorHeight + 100.0f) {
@@ -643,7 +637,9 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
     if ((m->action & ACT_FLAG_RIDING_SHELL) && floorHeight < waterLevel) {
         floorHeight = waterLevel;
         floor = &gWaterSurfacePseudoFloor;
-        floor->originOffset = NEGATIVE(floorHeight);
+        // ex-alo change
+        // make floorHeight originOffset negative
+        floor->originOffset = -floorHeight;
     }
 
     if (nextPos[1] <= floorHeight) {

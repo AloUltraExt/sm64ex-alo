@@ -222,12 +222,12 @@ static void goomba_act_walk(void) {
 static void goomba_act_attacked_mario(void) {
     if (o->oGoombaSize == GOOMBA_SIZE_TINY) {
         mark_goomba_as_dead();
-#if !QOL_FEATURE_TINY_GOOMBA_DROP_COIN
+#if !TINY_GOOMBA_DROP_COIN
         o->oNumLootCoins = 0;
 #endif
         obj_die_if_health_non_positive();
     } else {
-#if QOL_FIX_GOOMBA_JUMP_AIR
+#if FIX_GOOMBA_JUMP_AIR
         if (o->oPosY <= o->oFloorHeight) {
             goomba_begin_jump();
         }
@@ -317,7 +317,7 @@ void bhv_goomba_update(void) {
         // even though the goomba isn't actually dead.
         if (obj_handle_attacks(&sGoombaHitbox, GOOMBA_ACT_ATTACKED_MARIO,
             sGoombaAttackHandlers[o->oGoombaSize & 1])
-#if QOL_FIX_GOOMBA_DEAD_ATTACKED_MARIO
+#if FIX_GOOMBA_DEAD_ATTACKED_MARIO
         && (o->oAction != GOOMBA_ACT_ATTACKED_MARIO)
 #endif
             ) {

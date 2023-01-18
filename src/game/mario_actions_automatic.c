@@ -37,8 +37,8 @@ void add_tree_leaf_particles(struct MarioState *m) {
 
     if (m->usedObj->behavior == segmented_to_virtual(bhvTree)) {
         // make leaf effect spawn higher on the Shifting Sand Land palm tree
-#if QOL_FIX_PALM_TREE_LEAF_HEIGHT
-        if (m->usedObj->header.gfx.sharedChild == gLoadedGraphNodes[MODEL_SSL_PALM_TREE])
+#if FIX_PALM_TREE_LEAF_HEIGHT
+        if (obj_has_model(m->usedObj, MODEL_SSL_PALM_TREE))
 #else
         if (gCurrLevelNum == LEVEL_SSL)
 #endif
@@ -80,7 +80,7 @@ s32 set_pole_position(struct MarioState *m, f32 offsetY) {
 
     // Get the relative top and bottom of the pole.
     f32 poleTop = poleObj->hitboxHeight - 100.0f;
-#if QOL_FIX_POLE_BOTTOM_GRAB
+#if FIX_POLE_BOTTOM_GRAB
     f32 poleBottom = -poleObj->hitboxDownOffset - 100.0f;
 #else
     f32 poleBottom = -poleObj->hitboxDownOffset;
@@ -194,7 +194,7 @@ s32 act_holding_pole(struct MarioState *m) {
 
         m->faceAngle[1] += marioObj->oMarioPoleYawVel;
         marioObj->oMarioPolePos -= marioObj->oMarioPoleYawVel / 0x100;
-#if QOL_FIX_PALM_TREE_LEAF_HEIGHT
+#if FIX_PALM_TREE_LEAF_HEIGHT
         add_tree_leaf_particles(m);
 #else
         if (m->usedObj->behavior == segmented_to_virtual(bhvTree)) {

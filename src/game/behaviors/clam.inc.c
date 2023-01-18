@@ -13,14 +13,14 @@ struct ObjectHitbox sClamShellHitbox = {
 };
 
 void clam_act_0(void) {
-#if QOL_FEATURE_CLAMS_ONLY_HURT_WHEN_MOVING
+#if CLAMS_ONLY_HURT_WHEN_MOVING
     o->oDamageOrCoinValue = 0;
 #endif
     if (cur_obj_init_anim_check_frame(0, 25)) {
         cur_obj_play_sound_2(SOUND_GENERAL_CLAM_SHELL3);
         spawn_mist_from_global();
         cur_obj_become_tangible();
-#if QOL_FEATURE_CLAMS_ONLY_HURT_WHEN_MOVING
+#if CLAMS_ONLY_HURT_WHEN_MOVING
         o->oDamageOrCoinValue = 2;
 #endif
         o->oClamUnkF4 = 10;
@@ -36,7 +36,7 @@ void clam_act_0(void) {
 
 void clam_act_1(void) {
     s16 val06;
-#if QOL_FEATURE_CLAMS_ONLY_HURT_WHEN_MOVING
+#if CLAMS_ONLY_HURT_WHEN_MOVING
     o->oDamageOrCoinValue = 0;
 #endif
 

@@ -746,7 +746,7 @@ f32 find_floor_height_relative_polar(struct MarioState *m, s16 angleFromMario, f
     return floorY;
 }
 
-#if QOL_FIX_FLOOR_SLOPE_OOB
+#if FIX_FLOOR_SLOPE_OOB
 #define CHECK(set)    set
 #else
 #define CHECK(set)
@@ -768,19 +768,18 @@ s16 find_floor_slope(struct MarioState *m, s16 yawOffset) {
     if (absf(m->forwardVel) > FAST_FLOOR_ALIGN_VALUE) {
         forwardFloorY  = get_surface_height_at_pos((m->pos[0] + x), (m->pos[2] + z), floor);
         backwardFloorY = get_surface_height_at_pos((m->pos[0] - x), (m->pos[2] - z), floor);
-    } else {
-#endif    
+    } else
+#endif
+    {
     forwardFloorY = find_floor(m->pos[0] + x, m->pos[1] + 100.0f, m->pos[2] + z, &floor);
     CHECK(if (floor == NULL) forwardFloorY = m->floorHeight); // handle OOB slopes
     backwardFloorY = find_floor(m->pos[0] - x, m->pos[1] + 100.0f, m->pos[2] - z, &floor);
     CHECK(if (floor == NULL) backwardFloorY = m->floorHeight); // handle OOB slopes
-#if FAST_FLOOR_ALIGN
     }
-#endif
 
     //! If Mario is near OOB, these floorY's can sometimes be -11000.
     //  This will cause these to be off and give improper slopes.
-    //  QOL_FIX_FLOOR_SLOPE_OOB fixes it
+    //  FIX_FLOOR_SLOPE_OOB fixes it
     forwardYDelta = forwardFloorY - m->pos[1];
     backwardYDelta = m->pos[1] - backwardFloorY;
 
@@ -1945,9 +1944,6 @@ s32 execute_mario_action(UNUSED struct Object *o) {
  **************************************************/
 
 void init_mario(void) {
-    Vec3s capPos;
-    struct Object *capObject;
-
     unused80339F10 = 0;
 
     gMarioState->actionTimer = 0;
@@ -2014,12 +2010,13 @@ void init_mario(void) {
     vec3f_copy(gMarioState->marioObj->header.gfx.pos, gMarioState->pos);
     vec3s_set(gMarioState->marioObj->header.gfx.angle, 0, gMarioState->faceAngle[1], 0);
 
+    Vec3s capPos;
     if (save_file_get_cap_pos(capPos)
-#if QOL_FIX_HAT_CLONE_FADE
-    && (count_objects_with_behavior(bhvNormalCap) > 1)
+#if FIX_HAT_CLONE_FADE
+    && (count_objects_with_behavior(bhvNormalCap) < 1)
 #endif
     ) {
-        capObject = spawn_object(gMarioState->marioObj, MODEL_MARIOS_CAP, bhvNormalCap);
+        struct Object *capObject = spawn_object(gMarioState->marioObj, MODEL_MARIOS_CAP, bhvNormalCap);
 
         capObject->oPosX = capPos[0];
         capObject->oPosY = capPos[1];

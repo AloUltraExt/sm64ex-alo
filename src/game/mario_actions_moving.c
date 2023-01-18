@@ -380,12 +380,6 @@ s32 apply_landing_accel(struct MarioState *m, f32 frictionFactor) {
     return stopped;
 }
 
-#if QOL_FIX_SHELL_SPEED_NEGATIVE_OFFSET
-#define NEGATIVE(val) -val
-#else
-#define NEGATIVE(val) val
-#endif
-
 void update_shell_speed(struct MarioState *m) {
     f32 maxTargetSpeed;
     f32 targetSpeed;
@@ -393,7 +387,9 @@ void update_shell_speed(struct MarioState *m) {
     if (m->floorHeight < m->waterLevel) {
         m->floorHeight = m->waterLevel;
         m->floor = &gWaterSurfacePseudoFloor;
-        m->floor->originOffset = NEGATIVE(m->waterLevel);
+        // ex-alo change
+        // make waterLevel originOffset negative
+        m->floor->originOffset = -m->waterLevel;
     }
 
     if (m->floor != NULL && m->floor->type == SURFACE_SLOW) {
@@ -428,8 +424,6 @@ void update_shell_speed(struct MarioState *m) {
 
     apply_slope_accel(m);
 }
-
-#undef NEGATIVE
 
 s32 apply_slope_decel(struct MarioState *m, f32 decelCoef) {
     f32 decel;

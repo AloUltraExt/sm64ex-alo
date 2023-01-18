@@ -61,7 +61,7 @@ void bhv_star_door_loop(void) {
             break;
     }
 
-#if QOL_FIX_STAR_DOOR_ROOM_RENDER
+#if FIX_STAR_DOOR_ROOM_RENDER
     if (o->oAction != 2) {
         load_object_collision_model();
     }

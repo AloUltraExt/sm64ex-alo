@@ -20,7 +20,7 @@ void bhv_unused_poundable_platform(void) {
         if (cur_obj_is_mario_ground_pounding_platform()) {
             spawn_mist_particles();
             spawn_triangle_break_particles(20, MODEL_SL_CRACKED_ICE_CHUNK, 3.0f, 0);
-#if QOL_FEATURE_SSL_CRACKED_ICE
+#if SNOWMAN_LAND_CRACKED_ICE_ACT
             create_sound_spawner(SOUND_GENERAL_BREAK_BOX);
 #endif
             o->oAction++;

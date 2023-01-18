@@ -25,7 +25,7 @@ static const LevelScript script_func_local_1[] = {
 
 static const LevelScript script_func_local_2[] = {
     OBJECT(/*model*/ MODEL_NONE,           /*pos*/  977, 1024, 2075, /*angle*/ 0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvSnowMoundSpawn),
-#if QOL_FEATURE_SSL_CRACKED_ICE
+#if SNOWMAN_LAND_CRACKED_ICE_ACT
     OBJECT(/*model*/ MODEL_SL_CRACKED_ICE, /*pos*/ 4377, 1843, 4361, /*angle*/ 0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvUnusedPoundablePlatform),
 #endif
     RETURN(),

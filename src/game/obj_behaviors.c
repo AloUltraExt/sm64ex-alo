@@ -175,12 +175,9 @@ s8 turn_obj_away_from_steep_floor(struct Surface *objFloor, f32 floorY, f32 objV
     f32 floor_nX, floor_nY, floor_nZ, objVelXCopy, objVelZCopy, objYawX, objYawZ;
 
     if (objFloor == NULL) {
-#if QOL_FIX_OOB_OBJ_CRASH_OVERFLOW
+        // ex-alo change
+        // replaces weird trunc value to an actual degree value (originally 32767.999200000002)
         o->oMoveAngleYaw += 0x8000;
-#else
-        //! (OOB Object Crash) TRUNC overflow exception after 36 minutes
-        o->oMoveAngleYaw += 32767.999200000002; /* ¯\_(ツ)_/¯ */
-#endif
         return FALSE;
     }
 
@@ -719,7 +716,7 @@ void obj_check_floor_death(s16 collisionFlags, struct Surface *floor) {
                 break;
             //! @BUG Doesn't check for the vertical wind death floor.
             case SURFACE_DEATH_PLANE:
-            #if QOL_FIX_OBJ_FLOOR_WIND_DEATH
+            #if FIX_OBJ_FLOOR_WIND_DEATH
             case SURFACE_VERTICAL_WIND:
             #endif
                 o->oAction = OBJ_ACT_DEATH_PLANE_DEATH;

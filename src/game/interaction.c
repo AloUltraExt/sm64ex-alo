@@ -623,9 +623,7 @@ void push_mario_out_of_object(struct MarioState *m, struct Object *o, f32 paddin
     f32 offsetX = m->pos[0] - o->oPosX;
     f32 offsetZ = m->pos[2] - o->oPosZ;
     f32 distance = sqrtf(offsetX * offsetX + offsetZ * offsetZ);
-#if QOL_FIX_PUSH_MARIO_OUT_OF_OBJECT_FLOOR
-    f32 floorHeight;
-#endif
+
     if (distance < minDistance) {
         struct Surface *floor;
         s16 pushAngle;
@@ -643,8 +641,8 @@ void push_mario_out_of_object(struct MarioState *m, struct Object *o, f32 paddin
 
         f32_find_wall_collision(&newMarioX, &m->pos[1], &newMarioZ, 60.0f, 50.0f);
 
-#if QOL_FIX_PUSH_MARIO_OUT_OF_OBJECT_FLOOR
-        floorHeight =
+#if FIX_PUSH_MARIO_OUT_OF_OBJECT_FLOOR
+        f32 floorHeight =
 #endif
         find_floor(newMarioX, m->pos[1], newMarioZ, &floor);
         if (floor != NULL) {
@@ -652,7 +650,7 @@ void push_mario_out_of_object(struct MarioState *m, struct Object *o, f32 paddin
             // an object pushes you into a steep slope while in a ground action)
             m->pos[0] = newMarioX;
             m->pos[2] = newMarioZ;
-#if QOL_FIX_PUSH_MARIO_OUT_OF_OBJECT_FLOOR
+#if FIX_PUSH_MARIO_OUT_OF_OBJECT_FLOOR
             m->floor       = floor;
             m->floorHeight = floorHeight;
 #endif
@@ -897,17 +895,11 @@ u32 interact_warp(struct MarioState *m, UNUSED u32 interactType, struct Object *
             // ex-alo change
             // replaces check to behavior so collision can be freely replaced
             // without changing pipe sound effect
-            if (o->behavior == segmented_to_virtual(bhvWarpPipe)) {
-                play_sound(SOUND_MENU_ENTER_PIPE, m->marioObj->header.gfx.cameraToObject);
+            u32 isWarpPipe = obj_has_behavior(o, bhvWarpPipe);
+            play_sound(isWarpPipe ? SOUND_MENU_ENTER_PIPE : SOUND_MENU_ENTER_HOLE, m->marioObj->header.gfx.cameraToObject);
 #ifdef RUMBLE_FEEDBACK           
-                queue_rumble_data(15, 80);
+            queue_rumble_data(isWarpPipe ? 15 : 12, 80);
 #endif
-            } else {
-                play_sound(SOUND_MENU_ENTER_HOLE, m->marioObj->header.gfx.cameraToObject);
-#ifdef RUMBLE_FEEDBACK
-                queue_rumble_data(12, 80);
-#endif
-            }
 
             mario_stop_riding_object(m);
             return set_mario_action(m, ACT_DISAPPEARED, (WARP_OP_WARP_OBJECT << 16) + 2);
@@ -1498,12 +1490,8 @@ u32 interact_koopa_shell(struct MarioState *m, UNUSED u32 interactType, struct O
             play_shell_music();
             mario_drop_held_object(m);
 
-#if QOL_FIX_MARIO_KOOPA_SHELL_ACTION
-            if (m->action & ACT_FLAG_AIR) {
-                return set_mario_action(m, ACT_RIDING_SHELL_FALL, 0);
-            } else {
-                return set_mario_action(m, ACT_RIDING_SHELL_GROUND, 0);
-            }
+#if FIX_MARIO_KOOPA_SHELL_ACTION
+            return set_mario_action(m, (m->action & ACT_FLAG_AIR) ? ACT_RIDING_SHELL_FALL : ACT_RIDING_SHELL_GROUND, 0);
 #else            
             //! Puts Mario in ground action even when in air, making it easy to
             // escape air actions into crouch slide (shell cancel)
@@ -1562,7 +1550,7 @@ u32 interact_pole(struct MarioState *m, UNUSED u32 interactType, struct Object *
             m->vel[1] = 0.0f;
             m->forwardVel = 0.0f;
 
-#if QOL_FIX_POLE_BOTTOM_GRAB
+#if FIX_POLE_BOTTOM_GRAB
             // Check for a floor on the pole.
             f32 height = find_floor(o->oPosX, m->pos[1], o->oPosZ, &o->oFloor);
             o->oFloorHeight = height;

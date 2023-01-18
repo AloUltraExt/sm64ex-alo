@@ -142,6 +142,21 @@ void bhv_coin_formation_spawn_loop(void) {
         bhv_init_room();
 
         if (o->oCoinOnGround) {
+#if BETTER_COIN_FORMATION_GROUND
+            // Get initial coin floor height
+            cur_obj_update_floor_height();
+            // Rise the coin y position if is below it's height, and update it's floor height again
+            if (find_floor_height(o->oPosX, o->oPosY + FIND_SURFACE_BUFFER, o->oPosZ) > o->oFloorHeight) {
+                o->oPosY += FIND_SURFACE_BUFFER;
+                cur_obj_update_floor_height();
+            }
+            // Delete if the coin is out of bounds
+            if (o->oFloorHeight < FLOOR_LOWER_LIMIT_MISC) {
+                obj_mark_for_deletion(o);
+            }
+            // Set it's final y position with it's proper floor height
+            o->oPosY = o->oFloorHeight;
+#else
             o->oPosY += 300.0f;
             cur_obj_update_floor_height();
 
@@ -150,6 +165,7 @@ void bhv_coin_formation_spawn_loop(void) {
             } else {
                 o->oPosY = o->oFloorHeight;
             }
+#endif
         } else {
             cur_obj_update_floor_height();
 
@@ -224,6 +240,18 @@ void spawn_coin_in_formation(s32 coinIndex, s32 coinFormationFlags) {
     if (coinFormationFlags & COIN_FORMATION_BP_FLAG_FLYING) {
         onGround = FALSE;
     }
+
+#if BETTER_COIN_FORMATION_GROUND
+    if (onGround) {
+        // Originally coins created by the spawner gets it's y position raised by 300
+        // In our case we instead raise the spawner by 250, the remaining values
+        // are set depending on where the coin is located
+        f32 nextHeight = find_floor_height(o->oPosX, o->oPosY + 250.0f, o->oPosZ);
+        if (o->oPosY < nextHeight) {
+            o->oPosY = nextHeight;
+        }
+    }
+#endif
 
     if (setSpawner) {
         coinSpawner = spawn_object_relative(coinIndex, pos[0], pos[1], pos[2], o,

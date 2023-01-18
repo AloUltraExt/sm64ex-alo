@@ -40,3 +40,6 @@
 
 /// If Mario is high enough above the ground or above an unsafe floor, he will perform the star dance in midair instead of falling.
 #define MIDAIR_STAR_DANCE (0 || QOL_FEATURES)
+
+/// Makes cutscene object camera correctly focus an object in a room
+#define ROOM_OBJECT_CAMERA_FOCUS (0 || QOL_FEATURES || !VANILLA_CHECKS)

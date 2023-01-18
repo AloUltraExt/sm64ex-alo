@@ -171,7 +171,7 @@ void apply_mario_platform_displacement(void) {
     struct Object *platform = gMarioPlatform;
 
     if (!(gTimeStopState & TIME_STOP_ACTIVE) && gMarioObject != NULL && platform != NULL
-#if QOL_FIX_CAMERA_CUTSCENE_MOVING_PLATFORMS
+#if FIX_CAMERA_CUTSCENE_MOVING_PLATFORMS
     && !(gMarioStates[0].action & ACT_FLAG_INTANGIBLE)
 #endif
     ) {

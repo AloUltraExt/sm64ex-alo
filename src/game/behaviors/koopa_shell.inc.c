@@ -12,7 +12,7 @@ struct ObjectHitbox sKoopaShellHitbox = {
     /* hurtboxHeight:     */ 50,
 };
 
-#if QOL_FEATURE_KOOPA_SHELL_BOXES_RESPAWN
+#if KOOPA_SHELL_BOXES_RESPAWN
 void shell_despawn(void) {
     extern s8 obj_flicker_and_disappear(struct Object *obj, s16 lifeSpan);
     if (o->oTimer > 300) {
@@ -85,7 +85,7 @@ void bhv_koopa_shell_loop(void) {
             o->oFaceAngleYaw += 0x1000;
             cur_obj_move_standard(-20);
             koopa_shell_spawn_sparkles(10.0f);
-#if QOL_FEATURE_KOOPA_SHELL_BOXES_RESPAWN
+#if KOOPA_SHELL_BOXES_RESPAWN
             shell_despawn();
 #endif
             break;
@@ -109,8 +109,7 @@ void bhv_koopa_shell_loop(void) {
             o->oFaceAngleYaw = gMarioObject->oMoveAngleYaw;
 
             if (o->oInteractStatus & INT_STATUS_STOP_RIDING) {
-                obj_mark_for_deletion(o);
-                spawn_mist_particles();
+                SWAP_PARTICLE_CALL(obj_mark_for_deletion(o), spawn_mist_particles());
                 o->oAction = 0;
             }
             break;

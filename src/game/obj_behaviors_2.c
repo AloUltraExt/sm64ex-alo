@@ -159,7 +159,7 @@ static void platform_on_track_update_pos_or_spawn_ball(s32 ballIndex, f32 x, f32
     f32 distToNextWaypoint;
 
     if (ballIndex == 0 ||
-#if QOL_FIX_PLATFORM_TRACK_CHECKERED
+#if FIX_PLATFORM_TRACK_CHECKERED
     (!o->oPlatformOnTrackIsNotHMC)
 #else
     ((u16)(o->oBhvParams >> 16) & 0x0080)
@@ -552,7 +552,7 @@ static void obj_update_blinking(s32 *blinkTimer, s16 baseCycleLength, s16 cycleL
     }
 }
 
-#if QOL_FEATURE_BETTER_OBJ_COLLISIONS
+#if BETTER_RESOLVE_OBJ_COLLISIONS
 #define INTERACT_MASK_NO_OBJ_COLLISIONS (INTERACT_COIN | INTERACT_CAP | INTERACT_STRONG_WIND | INTERACT_STAR_OR_KEY | INTERACT_WARP | INTERACT_WATER_RING | INTERACT_FLAME)
 #endif
 
@@ -564,7 +564,7 @@ static s32 obj_resolve_object_collisions(s32 *targetYaw) {
     f32 radius;
     f32 otherRadius;
     f32 relativeRadius;
-#if QOL_FEATURE_BETTER_OBJ_COLLISIONS
+#if BETTER_RESOLVE_OBJ_COLLISIONS
     s32 i;
     f32 distance;
 

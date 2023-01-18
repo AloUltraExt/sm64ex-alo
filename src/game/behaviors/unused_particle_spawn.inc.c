@@ -16,10 +16,12 @@ void bhv_unused_particle_spawn_loop(void) {
     }
 
     if (obj_check_if_collided_with_object(o, gMarioObject)) {
+    SWAP_PARTICLE_CALL(
         obj_mark_for_deletion(o);
-
+        ,
         for (i = 0; i < 10; i++) {
             spawn_object(o, MODEL_PURPLE_MARBLE, bhvPurpleParticle);
         }
+    )
     }
 }

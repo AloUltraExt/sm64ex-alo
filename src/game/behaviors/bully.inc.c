@@ -130,7 +130,7 @@ void bully_act_back_up(void) {
     //  conditions are activated. However because its angle is set to its facing angle,
     //  it will walk forward instead of backing up.
 
-#if QOL_FIX_BULLY_BACK_UP_TIMER
+#if FIX_BULLY_BACK_UP_TIMER
     if (o->oTimer >= 15)
 #else
     if (o->oTimer == 15)
@@ -354,7 +354,7 @@ void bhv_big_bully_with_minions_loop(void) {
 
                 if (o->oTimer > 90) {
                     o->oAction = BULLY_ACT_ACTIVATE_AND_FALL;
-#if QOL_FIX_BULLY_KNOCKBACK_TIMER
+#if FIX_BULLY_KNOCKBACK_TIMER
                     o->oBullyKBTimerAndMinionKOCounter = 0;
 #endif
                 }

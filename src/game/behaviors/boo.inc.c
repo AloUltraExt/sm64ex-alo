@@ -182,7 +182,7 @@ static void boo_move_during_hit(s32 roll, f32 fVel) {
     s32 oscillationVel = o->oTimer * 0x800 + 0x800;
 
     o->oForwardVel = fVel;
-#if QOL_FIX_BOO_MOVE_HIT_VELOCITY
+#if FIX_BOO_MOVE_HIT_VELOCITY
     o->oVelY = coss(oscillationVel) * 5;
 #else
     o->oVelY = coss(oscillationVel);

@@ -198,7 +198,7 @@ void king_bobomb_act_6(void) {
     }
 }
 
-#if QOL_FIX_MARIO_LOOK_HEAD_BOSSES
+#if FIX_MARIO_LOOK_HEAD_BOSSES
 #define MARIO_DIALOG_LOOK_BOSS MARIO_DIALOG_LOOK_FRONT
 #else
 #define MARIO_DIALOG_LOOK_BOSS MARIO_DIALOG_LOOK_UP
@@ -266,7 +266,7 @@ void king_bobomb_act_4(void) { // bobomb been thrown
 
         o->oSubAction++;
 
-#if QOL_FIX_KING_BOBOMB_MUSIC_THROWN_OFF
+#if FIX_KING_BOBOMB_MUSIC_THROWN_OFF
         if (o->oDistanceToMario > 2000.0f) {
             stop_background_music(SEQUENCE_ARGS(4, SEQ_EVENT_BOSS));
         }
@@ -320,7 +320,7 @@ void king_bobomb_act_5(void) { // bobomb returns home
             break;
 
         case 3:
-#if QOL_FIX_KING_BOBOMB_MUSIC_THROWN_OFF
+#if FIX_KING_BOBOMB_MUSIC_THROWN_OFF
             if (o->oDistanceToMario > 2000.0f)
 #else
             if (mario_is_far_below_object(1200.0f))

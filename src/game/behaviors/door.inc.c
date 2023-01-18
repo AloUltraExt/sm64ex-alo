@@ -27,23 +27,31 @@ void set_door_camera_event(void) {
     gPlayerCameraState->usedObj = o;
 }
 
+#if FIX_METAL_DOOR_CASTLE_SOUND
+#define METAL_DOOR_CHECK(x, y) cur_obj_has_model(x) || cur_obj_has_model(y)
+#else
+#define METAL_DOOR_CHECK(x, y) cur_obj_has_model(x)
+#endif
+
 void play_door_open_noise(void) {
-    s32 sp1C = cur_obj_has_model(MODEL_HMC_METAL_DOOR);
+    s32 isMetalDoor = METAL_DOOR_CHECK(MODEL_HMC_METAL_DOOR, MODEL_CASTLE_METAL_DOOR);
     if (o->oTimer == 0) {
-        cur_obj_play_sound_2(sDoorOpenSounds[sp1C]);
+        cur_obj_play_sound_2(sDoorOpenSounds[isMetalDoor]);
         gTimeStopState |= TIME_STOP_MARIO_OPENED_DOOR;
     }
     if (o->oTimer == 70) {
-        cur_obj_play_sound_2(sDoorCloseSounds[sp1C]);
+        cur_obj_play_sound_2(sDoorCloseSounds[isMetalDoor]);
     }
 }
 
 void play_warp_door_open_noise(void) {
-    s32 sp1C = cur_obj_has_model(MODEL_HMC_METAL_DOOR);
+    s32 isMetalDoor = METAL_DOOR_CHECK(MODEL_HMC_METAL_DOOR, MODEL_CASTLE_METAL_DOOR);
     if (o->oTimer == 30) {
-        cur_obj_play_sound_2(sDoorCloseSounds[sp1C]);
+        cur_obj_play_sound_2(sDoorCloseSounds[isMetalDoor]);
     }
 }
+
+#undef METAL_DOOR_CHECK
 
 void bhv_door_loop(void) {
     s32 sp1C = 0;
@@ -59,7 +67,7 @@ void bhv_door_loop(void) {
     switch (o->oAction) {
         case 0:
             cur_obj_init_animation_with_sound(0);
-#if QOL_FIX_STAR_DOOR_ROOM_RENDER
+#if FIX_STAR_DOOR_ROOM_RENDER
             load_object_collision_model();
 #endif
             break;
@@ -81,7 +89,7 @@ void bhv_door_loop(void) {
             break;
     }
 
-#if !QOL_FIX_STAR_DOOR_ROOM_RENDER
+#if !FIX_STAR_DOOR_ROOM_RENDER
     if (o->oAction == 0) {
         load_object_collision_model();
     }
@@ -90,7 +98,7 @@ void bhv_door_loop(void) {
     bhv_star_door_loop_2();
 }
 
-#if QOL_FEATURE_BETTER_ROOM_CHECKS
+#if BETTER_ROOM_CHECKS
 #define FIND_FLOOR_DOOR find_room_floor
 #else
 #define FIND_FLOOR_DOOR find_floor

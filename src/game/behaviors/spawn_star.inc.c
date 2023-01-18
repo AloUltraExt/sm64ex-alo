@@ -34,7 +34,7 @@ void bhv_collect_star_loop(void) {
     }
 }
 
-#if QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS
+#if ROOM_OBJECT_CAMERA_FOCUS
 #define CHECK(cond, set)
 #else
 #define CHECK(cond, set)    if (cond) { set; }
@@ -152,7 +152,7 @@ void spawn_no_exit_star(f32 homeX, f32 homeY, f32 homeZ) {
     star->oInteractionSubtype |= INT_SUBTYPE_NO_EXIT;
 }
 
-#if QOL_FEATURE_BETTER_REDS_STAR_MARKER
+#if BETTER_REDS_STAR_MARKER
 #define CHECK(cond, set)    set
 #else
 #define CHECK(cond, set)    if (cond) { set; }

@@ -14,11 +14,9 @@ void bhv_seaweed_bundle_init(void) {
     seaweed->header.gfx.scale[0] = 1.0;
     seaweed->header.gfx.scale[1] = 1.0;
     seaweed->header.gfx.scale[2] = 1.0;
-#if QOL_FIX_MISSING_SEAWEED_ANIMFRAME
+    // ex-alo change
+    // vanilla missed this animFrame
     seaweed->header.gfx.animInfo.animFrame = random_float() * 80.0f;
-#else
-    //! gfx.animFrame uninitialized
-#endif
 
     seaweed = spawn_object(o, MODEL_SEAWEED, bhvSeaweed);
     seaweed->oFaceAngleYaw = 41800;
