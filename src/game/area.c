@@ -190,7 +190,7 @@ void load_obj_warp_nodes(void) {
 }
 
 void clear_areas(void) {
-    s32 i;
+    s32 i, j;
 
     gCurrentArea = NULL;
     gWarpTransition.isActive = FALSE;
@@ -211,8 +211,9 @@ void clear_areas(void) {
         gAreaData[i].objectSpawnInfos = NULL;
         gAreaData[i].camera = NULL;
         gAreaData[i].unused = NULL;
-        gAreaData[i].whirlpools[0] = NULL;
-        gAreaData[i].whirlpools[1] = NULL;
+        for (j = 0; j < ARRAY_COUNT(gAreaData[i].whirlpools); j++) {
+            gAreaData[i].whirlpools[i] = NULL;
+        }
         gAreaData[i].dialog[0] = DIALOG_NONE;
         gAreaData[i].dialog[1] = DIALOG_NONE;
         gAreaData[i].musicParam = 0;

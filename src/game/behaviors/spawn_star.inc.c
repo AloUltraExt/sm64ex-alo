@@ -13,7 +13,7 @@ static struct ObjectHitbox sCollectStarHitbox = {
 };
 
 void bhv_collect_star_init(void) {
-    s8 starIndex = (o->oBhvParams >> 24) & 0xFF;
+    u8 starIndex = (o->oBhvParams >> 24) & 0xFF;
     u8 currentLevelStarFlags = save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum));
 
     if (currentLevelStarFlags & (1 << starIndex)) {

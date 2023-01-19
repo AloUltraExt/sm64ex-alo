@@ -67,9 +67,7 @@ Gfx *geo_snufit_scale_body(s32 callContext, struct GraphNode *node, UNUSED Mat4 
  * then prepares to shoot after a period.
  */
 void snufit_act_idle(void) {
-    // This line would could cause a crash in certain PU situations,
-    // if the game would not have already crashed.
-    s32 marioDist = (s32)(o->oDistanceToMario / 10.0f);
+    f32 marioDist = (o->oDistanceToMario / 10.0f);
 
     if (o->oTimer > marioDist && o->oDistanceToMario < 800.0f) {
 

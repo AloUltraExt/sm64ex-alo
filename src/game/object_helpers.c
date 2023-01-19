@@ -1859,22 +1859,15 @@ void cur_obj_set_face_angle_to_move_angle(void) {
     o->oFaceAngleRoll = o->oMoveAngleRoll;
 }
 
-s32 cur_obj_follow_path(UNUSED s32 unusedArg) {
-    struct Waypoint *startWaypoint;
-    struct Waypoint *lastWaypoint;
-    struct Waypoint *targetWaypoint;
-    f32 prevToNextX, prevToNextY, prevToNextZ;
-    UNUSED u8 filler[4];
-    f32 objToNextXZ;
-    f32 objToNextX, objToNextY, objToNextZ;
-
+s32 cur_obj_follow_path(void) {
     if (o->oPathedPrevWaypointFlags == 0) {
         o->oPathedPrevWaypoint = o->oPathedStartWaypoint;
         o->oPathedPrevWaypointFlags = WAYPOINT_FLAGS_INITIALIZED;
     }
 
-    startWaypoint = o->oPathedStartWaypoint;
-    lastWaypoint = o->oPathedPrevWaypoint;
+    struct Waypoint *startWaypoint = o->oPathedStartWaypoint;
+    struct Waypoint *lastWaypoint  = o->oPathedPrevWaypoint;
+    struct Waypoint *targetWaypoint;
 
     if ((lastWaypoint + 1)->flags != WAYPOINT_FLAGS_END) {
         targetWaypoint = lastWaypoint + 1;
@@ -1884,14 +1877,14 @@ s32 cur_obj_follow_path(UNUSED s32 unusedArg) {
 
     o->oPathedPrevWaypointFlags = lastWaypoint->flags | WAYPOINT_FLAGS_INITIALIZED;
 
-    prevToNextX = targetWaypoint->pos[0] - lastWaypoint->pos[0];
-    prevToNextY = targetWaypoint->pos[1] - lastWaypoint->pos[1];
-    prevToNextZ = targetWaypoint->pos[2] - lastWaypoint->pos[2];
+    f32 prevToNextX = targetWaypoint->pos[0] - lastWaypoint->pos[0];
+    f32 prevToNextY = targetWaypoint->pos[1] - lastWaypoint->pos[1];
+    f32 prevToNextZ = targetWaypoint->pos[2] - lastWaypoint->pos[2];
 
-    objToNextX = targetWaypoint->pos[0] - o->oPosX;
-    objToNextY = targetWaypoint->pos[1] - o->oPosY;
-    objToNextZ = targetWaypoint->pos[2] - o->oPosZ;
-    objToNextXZ = sqrtf(sqr(objToNextX) + sqr(objToNextZ));
+    f32 objToNextX = targetWaypoint->pos[0] - o->oPosX;
+    f32 objToNextY = targetWaypoint->pos[1] - o->oPosY;
+    f32 objToNextZ = targetWaypoint->pos[2] - o->oPosZ;
+    f32 objToNextXZ = sqrtf(sqr(objToNextX) + sqr(objToNextZ));
 
     o->oPathedTargetYaw = atan2s(objToNextZ, objToNextX);
     o->oPathedTargetPitch = atan2s(objToNextXZ, -objToNextY);

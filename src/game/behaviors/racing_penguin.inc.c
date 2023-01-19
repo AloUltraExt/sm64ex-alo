@@ -65,7 +65,7 @@ static void racing_penguin_act_prepare_for_race(void) {
 }
 
 static void racing_penguin_act_race(void) {
-    if (cur_obj_follow_path(0) == PATH_REACHED_END) {
+    if (cur_obj_follow_path() == PATH_REACHED_END) {
         o->oRacingPenguinReachedBottom = TRUE;
         o->oAction = RACING_PENGUIN_ACT_FINISH_RACE;
     } else {

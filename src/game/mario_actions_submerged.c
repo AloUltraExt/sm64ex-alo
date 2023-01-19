@@ -128,7 +128,7 @@ static void apply_water_current(struct MarioState *m, Vec3f step) {
         step[2] += currentSpeed * coss(currentAngle);
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < ARRAY_COUNT(gAreaData[i].whirlpools); i++) {
         struct Whirlpool *whirlpool = gCurrentArea->whirlpools[i];
         if (whirlpool != NULL) {
             f32 strength = 0.0f;
@@ -146,10 +146,11 @@ static void apply_water_current(struct MarioState *m, Vec3f step) {
             yawToWhirlpool -= (s16)(0x2000 * 1000.0f / (distance + 1000.0f));
 
             if (whirlpool->strength >= 0) {
+#ifdef VANILLA_CHECKS
                 if (gCurrLevelNum == LEVEL_DDD && gCurrAreaIndex == 2) {
                     whirlpoolRadius = 4000.0f;
                 }
-
+#endif
                 if (distance >= 26.0f && distance < whirlpoolRadius) {
                     strength = whirlpool->strength * (1.0f - distance / whirlpoolRadius);
                 }

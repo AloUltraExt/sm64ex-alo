@@ -59,7 +59,6 @@ void bhv_cannon_closed_init(void);
 void cannon_door_act_opening(void);
 void bhv_cannon_closed_loop(void);
 void bhv_whirlpool_init(void);
-void whirlpool_set_hitbox(void);
 void bhv_whirlpool_loop(void);
 void bhv_jet_stream_loop(void);
 void bhv_homing_amp_init(void);
