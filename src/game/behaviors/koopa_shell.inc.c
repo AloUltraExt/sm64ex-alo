@@ -86,7 +86,9 @@ void bhv_koopa_shell_loop(void) {
             cur_obj_move_standard(-20);
             koopa_shell_spawn_sparkles(10.0f);
 #if KOOPA_SHELL_BOXES_RESPAWN
-            shell_despawn();
+            if (o->oSubAction == 1) {
+                shell_despawn();
+            }
 #endif
             break;
 

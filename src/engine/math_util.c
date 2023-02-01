@@ -317,12 +317,20 @@ void vec3f_cross(Vec3f dest, const Vec3f a, const Vec3f b) {
 }
 
 /// Scale vector 'dest' so it has length 1.
-void vec3f_normalize(Vec3f dest) {
+Bool32 vec3f_normalize_check(Vec3f dest) {
     f32 mag = vec3_sumsq(dest);
-    if (mag > (NEAR_ZERO)) {
-        f32 invsqrt = ((1.0f) / sqrtf(mag));
+    if (mag > NEAR_ZERO) {
+        f32 invsqrt = (1.0f / sqrtf(mag));
         vec3_mul_val(dest, invsqrt);
-    } else {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/// Scale vector 'dest' so it has length 1. Set to vertical vector if magnitude is zero.
+void vec3f_normalize(Vec3f dest) {
+    s32 ret = vec3f_normalize_check(dest);
+    if (!ret) {
         // Default to up vector.
         dest[0] = 0;
         ((u32 *) dest)[1] = FLOAT_ONE;
@@ -330,12 +338,14 @@ void vec3f_normalize(Vec3f dest) {
     }
 }
 
-/// Scale vector 'dest' and returns TRUE if is a valid value.
-Bool32 vec3f_normalize_bool(Vec3f dest) {
+/// Scale vector 'dest' so it has length at most 'max'.
+Bool32 vec3f_normalize_max(Vec3f dest, f32 max) {
     f32 mag = vec3_sumsq(dest);
-    if (mag > (NEAR_ZERO)) {
-        f32 invsqrt = ((1.0f) / sqrtf(mag));
-        vec3_mul_val(dest, invsqrt);
+    if (mag > NEAR_ZERO) {
+        if (mag > sqr(max)) {
+            f32 invsqrt = max / sqrtf(mag);
+            vec3_mul_val(dest, invsqrt);
+        }
         return TRUE;
     }
     return FALSE;

@@ -138,7 +138,6 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
     struct SurfaceNode *newNode = alloc_surface_node(dynamic);
     struct SurfaceNode *list;
     s32 surfacePriority;
-    s32 priority;
     s32 sortDir = 1; // highest to lowest, then insertion order (water and floors)
     s32 listIndex;
 
@@ -162,18 +161,6 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
 #endif
     }
 
-#if COLLISION_IMPROVEMENTS
-    surfacePriority = surface->upperY * sortDir;
-#else
-    //! (Surface Cucking) Surfaces are sorted by the height of their first
-    //  vertex. Since vertices aren't ordered by height, this causes many
-    //  lower triangles to be sorted higher. This worsens surface cucking since
-    //  many functions only use the first triangle in surface order that fits,
-    //  missing higher surfaces.
-    //  upperY would be a better sort method.
-    surfacePriority = surface->vertex1[1] * sortDir;
-#endif
-
     newNode->surface = surface;
 
     if (dynamic) {
@@ -194,20 +181,39 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
         list = &gStaticSurfacePartition[cellZ][cellX][listIndex];
     }
 
-    // Loop until we find the appropriate place for the surface in the list.
-    while (list->next != NULL) {
-#if COLLISION_IMPROVEMENTS
-        priority = list->next->surface->upperY * sortDir;
-#else
-        priority = list->next->surface->vertex1[1] * sortDir;
+#if !NO_SURFACE_PRIORITY_REORDER || WATER_SURFACES
+#if WATER_SURFACES
+    if (listIndex == SPATIAL_PARTITION_WATER)
 #endif
+    {
+    #if COLLISION_IMPROVEMENTS
+        s32 surfacePriority = surface->upperY * sortDir;
+    #else
+        //! (Surface Cucking) Surfaces are sorted by the height of their first
+        //  vertex. Since vertices aren't ordered by height, this causes many
+        //  lower triangles to be sorted higher. This worsens surface cucking since
+        //  many functions only use the first triangle in surface order that fits,
+        //  missing higher surfaces.
+        //  upperY would be a better sort method.
+        s32 surfacePriority = surface->vertex1[1] * sortDir;
+    #endif
+        s32 priority;
+        // Loop until we find the appropriate place for the surface in the list.
+        while (list->next != NULL) {
+        #if COLLISION_IMPROVEMENTS
+            priority = list->next->surface->upperY * sortDir;
+        #else
+            priority = list->next->surface->vertex1[1] * sortDir;
+        #endif
 
-        if (surfacePriority > priority) {
-            break;
+            if (surfacePriority > priority) {
+                break;
+            }
+
+            list = list->next;
         }
-
-        list = list->next;
     }
+#endif
 
     newNode->next = list->next;
     list->next = newNode;
@@ -327,7 +333,7 @@ static struct Surface *read_surface_data(TerrainData *vertexData, TerrainData **
 
     find_vector_perpendicular_to_plane(n, v[0], v[1], v[2]);
 
-    if (!vec3f_normalize_bool(n)) return NULL;
+    if (!vec3f_normalize_check(n)) return NULL;
 
     struct Surface *surface = alloc_surface(dynamic);
 
@@ -803,12 +809,12 @@ static f32 get_optimal_collision_distance(struct Object *obj) {
 }
 #endif
 
+static TerrainData sVertexData[600];
+
 /**
  * Transform an object's vertices, reload them, and render the object.
  */
 void load_object_collision_model(void) {
-    TerrainData vertexData[600];
-
     TerrainData *collisionData = gCurrentObject->collisionData;
     f32 marioDist = gCurrentObject->oDistanceToMario;
 
@@ -862,11 +868,11 @@ void load_object_collision_model(void) {
     if (!(gTimeStopState & TIME_STOP_ACTIVE) && marioDist < colDist
         && !(gCurrentObject->activeFlags & ACTIVE_FLAG_IN_DIFFERENT_ROOM)) {
         collisionData++;
-        transform_object_vertices(&collisionData, vertexData);
+        transform_object_vertices(&collisionData, sVertexData);
 
         // TERRAIN_LOAD_CONTINUE acts as an "end" to the terrain data.
         while (*collisionData != TERRAIN_LOAD_CONTINUE) {
-            load_object_surfaces(&collisionData, vertexData, TRUE);
+            load_object_surfaces(&collisionData, sVertexData, TRUE);
         }
     }
 
@@ -888,7 +894,6 @@ void load_object_collision_model(void) {
  * Transform an object's vertices and add them to the static surface pool.
  */
 void load_object_static_model(void) {
-    TerrainData vertexData[600];
     TerrainData *collisionData = gCurrentObject->collisionData;
 #ifndef USE_SYSTEM_MALLOC
     u32 surfacePoolData;
@@ -901,11 +906,11 @@ void load_object_static_model(void) {
     gSurfacesAllocated = gNumStaticSurfaces;
 
     collisionData++;
-    transform_object_vertices(&collisionData, vertexData);
+    transform_object_vertices(&collisionData, sVertexData);
 
     // TERRAIN_LOAD_CONTINUE acts as an "end" to the terrain data.
     while (*collisionData != TERRAIN_LOAD_CONTINUE) {
-        load_object_surfaces(&collisionData, vertexData, FALSE);
+        load_object_surfaces(&collisionData, sVertexData, FALSE);
     }
 #ifndef USE_SYSTEM_MALLOC
     surfacePoolData = (uintptr_t)gCurrStaticSurfacePoolEnd - (uintptr_t)gCurrStaticSurfacePool;

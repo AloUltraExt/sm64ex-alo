@@ -49,7 +49,11 @@ void n64_system_device_checks(void) {
     if (IO_READ(DPC_PIPEBUSY_REG) == 0) {
         gIsConsole = FALSE;
         gIsWiiVC = IS_WII_VC();
-        check_cache_emulation();
+        if (!gIsWiiVC) {
+            check_cache_emulation();
+        } else {
+            gCacheEmulated = FALSE;
+        }
     } else {
         gIsConsole = TRUE;
     }

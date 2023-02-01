@@ -155,8 +155,7 @@ s32 correct_lava_shadow_height(f32 *floorHeight) {
             *floorHeight = 3492;
             return FALSE;
         }
-    } else if (gCurrLevelNum == LEVEL_LLL
-               && gCurrAreaIndex == 1) {
+    } else if (gCurrLevelNum == LEVEL_LLL && gCurrAreaIndex == 1) {
         *floorHeight = 5;
         return FALSE;
     }
@@ -207,8 +206,6 @@ static Gfx *shadow_display_list(s8 shadowType, u8 solidity, s8 isDecal) {
  * Return a pointer to the display list representing the shadow.
  */
 Gfx *create_shadow_below_xyz(Vec3f pos, Vec3f floorNormal, Vec3f scaleVec, s16 shadowScale, u8 solidity, s8 shadowType, s8 shifted, s8 *isDecal) {
-    const f32 floorLowerLimitMisc = FLOOR_LOWER_LIMIT_MISC;
-
     struct Object *obj = ((struct Object *)gCurGraphNodeObject);
 
     // Check if the object exists.
@@ -219,7 +216,8 @@ Gfx *create_shadow_below_xyz(Vec3f pos, Vec3f floorNormal, Vec3f scaleVec, s16 s
     // The floor underneath the object.
     struct Surface *floor = NULL;
     // The y-position of the floor (or water or lava) underneath the object.
-    f32 floorHeight = floorLowerLimitMisc;
+    f32 floorHeight = FLOOR_LOWER_LIMIT_MISC;
+    f32 heightOffset = 0;
     f32 x = pos[0];
     f32 y = pos[1];
     f32 z = pos[2];
@@ -269,7 +267,7 @@ Gfx *create_shadow_below_xyz(Vec3f pos, Vec3f floorNormal, Vec3f scaleVec, s16 s
     // Whether the floor is an environment box rather than an actual surface.
     s32 isEnvBox = FALSE;
 
-    if (waterLevel > floorLowerLimitMisc
+    if (waterLevel > FLOOR_LOWER_LIMIT_MISC
         && y >= waterLevel
         && floorHeight <= waterLevel) {
         // Skip shifting the shadow height later, since the find_water_level_and_floor call above uses the already shifted position.
@@ -307,8 +305,8 @@ Gfx *create_shadow_below_xyz(Vec3f pos, Vec3f floorNormal, Vec3f scaleVec, s16 s
             if (obj != NULL
              && obj->behavior == segmented_to_virtual(bhvPlatformOnTrack)
              && obj->oPlatformOnTrackType == PLATFORM_ON_TRACK_TYPE_CARPET) {
-                // Raise the shadow 5 units so the shadow doesn't clip into the flying carpet.
-                floorHeight += 5;
+                // Raise the shadow 5 units on the flying carpet to avoid clipping issues.
+                heightOffset += 5;
                 // The flying carpet is transparent.
                 *isDecal = FALSE;
             }
@@ -340,10 +338,13 @@ Gfx *create_shadow_below_xyz(Vec3f pos, Vec3f floorNormal, Vec3f scaleVec, s16 s
         }
     }
 
+    // Apply y offset.
+    floorHeight += heightOffset;
+
     // -- Height checks --
 
     // No shadow if the floor is lower than expected possible,
-    if (floorHeight < floorLowerLimitMisc) {
+    if (floorHeight < FLOOR_LOWER_LIMIT_MISC) {
         return NULL;
     }
 

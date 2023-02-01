@@ -140,6 +140,11 @@ void exclamation_box_spawn_contents(struct ExclamationBoxContents *contentsList,
     if (contents->model == MODEL_STAR) {
         o->oFlags |= OBJ_FLAG_PERSISTENT_RESPAWN;
     }
+#if KOOPA_SHELL_BOXES_RESPAWN
+    if (contents->model == MODEL_KOOPA_SHELL) {
+        contentsObj->oSubAction = 1;
+    }
+#endif
 }
 
 void exclamation_box_act_4(void) {
