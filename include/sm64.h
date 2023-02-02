@@ -57,15 +57,23 @@ int strcmp(char *s, char *t);
 #define SET_HIGH_S16_OF_32(var, x) ((((s16 *)&(var))[0]) = (x))
 #endif
 
-// Layers
-#define LAYER_FORCE             0
-#define LAYER_OPAQUE            1
-#define LAYER_OPAQUE_DECAL      2
-#define LAYER_OPAQUE_INTER      3
-#define LAYER_ALPHA             4
-#define LAYER_TRANSPARENT       5
-#define LAYER_TRANSPARENT_DECAL 6
-#define LAYER_TRANSPARENT_INTER 7
+// Render layer defines (see graph_node and rendering_graph_node).
+enum RenderLayers {
+    LAYER_FORCE,
+    LAYER_OPAQUE,
+    LAYER_OPAQUE_DECAL,
+    LAYER_OPAQUE_INTER,
+    LAYER_ALPHA,
+    LAYER_TRANSPARENT,
+    LAYER_TRANSPARENT_DECAL,
+    LAYER_TRANSPARENT_INTER,
+    LAYER_COUNT
+};
+
+#define LAYER_FIRST                         LAYER_FORCE
+#define LAYER_LAST                          (LAYER_COUNT - 1)
+
+#define LAYER_ZB_FIRST                      LAYER_OPAQUE
 
 #define INPUT_NONZERO_ANALOG         0x0001
 #define INPUT_A_PRESSED              0x0002

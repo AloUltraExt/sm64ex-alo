@@ -619,15 +619,21 @@ struct GraphNode *geo_make_first_child(struct GraphNode *newFirstChild) {
  */
 void geo_call_global_function_nodes_helper(struct GraphNode *graphNode, s32 callContext) {
     struct GraphNode **globalPtr;
-    struct GraphNode *curNode;
+    struct GraphNode *curNode = graphNode;
     struct FnGraphNode *asFnNode;
-
-    curNode = graphNode;
+    s16 type;
 
     do {
         asFnNode = (struct FnGraphNode *) curNode;
+        type = curNode->type;
 
-        if (curNode->type & GRAPH_NODE_TYPE_FUNCTIONAL) {
+        // Whether the type's corresponding struct has a FnGraphNode fnNode struct.
+        if (type == GRAPH_NODE_TYPE_PERSPECTIVE
+         || type == GRAPH_NODE_TYPE_SWITCH_CASE
+         || type == GRAPH_NODE_TYPE_CAMERA
+         || type == GRAPH_NODE_TYPE_GENERATED_LIST
+         || type == GRAPH_NODE_TYPE_BACKGROUND
+         || type == GRAPH_NODE_TYPE_HELD_OBJ) {
             if (asFnNode->func != NULL) {
                 asFnNode->func(callContext, curNode, NULL);
             }
@@ -680,7 +686,7 @@ void geo_call_global_function_nodes(struct GraphNode *graphNode, s32 callContext
             geo_call_global_function_nodes_helper(graphNode->children, callContext);
         }
 
-        gCurGraphNodeRoot = 0;
+        gCurGraphNodeRoot = NULL;
     }
 }
 
