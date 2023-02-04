@@ -261,7 +261,7 @@ void spawn_coin_in_formation(s32 coinIndex, s32 coinFormationFlags) {
 }
 
 void bhv_coin_formation_init(void) {
-    o->oCoinCollectedFlags = (o->oBhvParams >> 8) & 0xFF;
+    o->oCoinCollectedFlags = o->respawnInfo;
 }
 
 void bhv_coin_formation_loop(void) {
@@ -295,7 +295,7 @@ void bhv_coin_formation_loop(void) {
             break;
     }
 
-    set_object_respawn_info_bits(o, o->oCoinCollectedFlags & 0xFF);
+    set_object_respawn_info_bits(o, o->oCoinCollectedFlags);
 }
 
 void coin_inside_boo_act_1(void) {

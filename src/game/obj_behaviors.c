@@ -811,6 +811,7 @@ UNUSED s8 debug_sequence_tracker(s16 debugInputSequence[]) {
 #include "behaviors/water_wave.inc.c"
 #include "behaviors/explosion.inc.c"
 #include "behaviors/corkbox.inc.c"
+#include "behaviors/respawner.inc.c"
 #include "behaviors/bully.inc.c"
 #include "behaviors/water_ring.inc.c"
 #include "behaviors/bowser_bomb.inc.c"

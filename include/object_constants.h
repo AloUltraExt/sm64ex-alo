@@ -18,11 +18,6 @@
 #define ACTIVE_FLAG_UNK9                   (1 <<  9) // 0x0200
 #define ACTIVE_FLAG_UNK10                  (1 << 10) // 0x0400
 
-/* respawnInfoType */
-#define RESPAWN_INFO_TYPE_NULL 0
-#define RESPAWN_INFO_TYPE_32   1
-#define RESPAWN_INFO_TYPE_16   2
-
 /* respawnInfo */
 #define RESPAWN_INFO_DONT_RESPAWN 0xFF
 
@@ -721,10 +716,6 @@
 /* Chain Chomp Chain Part */
     /* oBhvParams2ndByte */
     #define CHAIN_CHOMP_CHAIN_PART_BP_PIVOT 0
-
-/* Wooden Post */
-    /* oBhvParams */
-    #define WOODEN_POST_BP_NO_COINS_MASK 0x0000FF00
 
 /* Wiggler */
     /* oAction */

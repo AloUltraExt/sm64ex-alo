@@ -311,8 +311,8 @@ struct Object *allocate_object(struct ObjectNode *objList) {
 
     mtxf_identity(obj->transform);
 
-    obj->respawnInfoType = RESPAWN_INFO_TYPE_NULL;
-    obj->respawnInfo = NULL;
+    obj->respawnInfo = 0;
+    obj->respawnInfoPointer = NULL;
 
     obj->oDistanceToMario = F32_MAX;
     obj->oRoom = -1;

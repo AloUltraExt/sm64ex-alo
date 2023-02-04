@@ -84,14 +84,14 @@ void bhv_goomba_triplet_spawner_update(void) {
                 0x10000
                 / (((o->oBhvParams2ndByte & GOOMBA_TRIPLET_SPAWNER_BP_EXTRA_GOOMBAS_MASK) >> 2) + 3);
 
-            for (angle = 0, goombaFlag = 1 << 8; angle < 0xFFFF; angle += dAngle, goombaFlag <<= 1) {
+            for (angle = 0, goombaFlag = 1; angle < 0xFFFF; angle += dAngle, goombaFlag <<= 1) {
                 // Only spawn goombas which haven't been killed yet
-                if (!(o->oBhvParams & goombaFlag)) {
+                if (!(o->respawnInfo & goombaFlag)) {
                     s16 dx = 500.0f * coss(angle);
                     s16 dz = 500.0f * sins(angle);
 
                     spawn_object_relative((o->oBhvParams2ndByte & GOOMBA_BP_SIZE_MASK)
-                                           | (goombaFlag >> 6), dx, 0, dz, o, MODEL_GOOMBA, bhvGoomba);
+                                           | (goombaFlag << 2), dx, 0, dz, o, MODEL_GOOMBA, bhvGoomba);
                 }
             }
 
@@ -143,9 +143,6 @@ static void mark_goomba_as_dead(void) {
     if (o->parentObj != o) {
         set_object_respawn_info_bits(
             o->parentObj, (o->oBhvParams2ndByte & GOOMBA_BP_TRIPLET_RESPAWN_FLAG_MASK) >> 2);
-
-        o->parentObj->oBhvParams =
-            o->parentObj->oBhvParams | (o->oBhvParams2ndByte & GOOMBA_BP_TRIPLET_RESPAWN_FLAG_MASK) << 6;
     }
 }
 
