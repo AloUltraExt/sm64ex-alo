@@ -10,10 +10,6 @@
 #include "segment2.h"
 #include "sm64.h"
 
-#ifndef TARGET_N64
-#define BETTER_SKYBOX_POSITION_PRECISION
-#endif
-
 #ifdef TARGET_N3DS
 #include "pc/gfx/gfx_3ds.h"
 bool is3D;
@@ -72,9 +68,49 @@ struct Skybox {
 #endif
 };
 
+/**
+ * Constant used to scale the skybox horizontally to a multiple of the screen's width
+ */
+#define SKYBOX_WIDTH (4 * SCREEN_WIDTH)
+/**
+ * Constant used to scale the skybox vertically to a multiple of the screen's height
+ */
+#define SKYBOX_HEIGHT (4 * SCREEN_HEIGHT)
+
+/**
+ * The tile's width in world space.
+ * By default, two full tiles can fit in the screen.
+ */
+#define SKYBOX_TILE_WIDTH (SCREEN_WIDTH / 2)
+/**
+ * The tile's height in world space.
+ * By default, two full tiles can fit in the screen.
+ */
+#define SKYBOX_TILE_HEIGHT (SCREEN_HEIGHT / 2)
+
+/**
+ * The horizontal length of the skybox tilemap in tiles.
+ */
+#define SKYBOX_COLS (10)
+/**
+ * The vertical length of the skybox tilemap in tiles.
+ */
+#define SKYBOX_ROWS (8)
+
 struct Skybox sSkyBoxInfo[2];
 
-typedef const u8 *const SkyboxTexture[80];
+typedef const u8 *const SkyboxTexture[SKYBOX_ROWS * SKYBOX_COLS]; // originally 80
+
+#if QOL_FEATURE_BETTER_SKYBOX
+// 0 fov would crash because division by zero so we add a check to prevent it
+#define SKYBOX_FOV_X(fov) (FLT_IS_NONZERO(fov) ? degrees_to_angle(fov) : 1)
+#define SKYBOX_FOV_Y(fov) (FLT_IS_NONZERO(fov) ? fov : 1)
+typedef f32 SkyboxType;
+#else
+#define SKYBOX_FOV_X(fov) degrees_to_angle(fov)
+#define SKYBOX_FOV_Y(fov) fov
+typedef s32 SkyboxType;
+#endif
 
 extern SkyboxTexture bbh_skybox_ptrlist;
 extern SkyboxTexture bidw_skybox_ptrlist;
@@ -123,36 +159,6 @@ u8 sSkyboxColors[][3] = {
 };
 
 /**
- * Constant used to scale the skybox horizontally to a multiple of the screen's width
- */
-#define SKYBOX_WIDTH (4 * SCREEN_WIDTH)
-/**
- * Constant used to scale the skybox vertically to a multiple of the screen's height
- */
-#define SKYBOX_HEIGHT (4 * SCREEN_HEIGHT)
-
-/**
- * The tile's width in world space.
- * By default, two full tiles can fit in the screen.
- */
-#define SKYBOX_TILE_WIDTH (SCREEN_WIDTH / 2)
-/**
- * The tile's height in world space.
- * By default, two full tiles can fit in the screen.
- */
-#define SKYBOX_TILE_HEIGHT (SCREEN_HEIGHT / 2)
-
-/**
- * The horizontal length of the skybox tilemap in tiles.
- */
-#define SKYBOX_COLS (10)
-/**
- * The vertical length of the skybox tilemap in tiles.
- */
-#define SKYBOX_ROWS (8)
-
-
-/**
  * Convert the camera's yaw into an x position into the scaled skybox image.
  *
  * fov is always 90 degrees, set in draw_skybox_facing_camera.
@@ -162,18 +168,12 @@ u8 sSkyboxColors[][3] = {
  *                 (how far is the camera rotated from 0, scaled 0 to 1)   *
  *                 (the screen width)
  */
-#ifdef BETTER_SKYBOX_POSITION_PRECISION
-f32
-#else
-s32
-#endif
-calculate_skybox_scaled_x(s8 player, f32 fov) {
+SkyboxType calculate_skybox_scaled_x(s8 player, f32 fov) {
     f32 yaw = sSkyBoxInfo[player].yaw;
 
-    //! double literals are used instead of floats
-    f32 yawScaled = SCREEN_WIDTH * 360.0 * yaw / (fov * 65536.0);
+    f32 yawScaled = ((SCREEN_WIDTH * yaw) / SKYBOX_FOV_X(fov));
 
-#ifdef BETTER_SKYBOX_POSITION_PRECISION
+#if QOL_FEATURE_BETTER_SKYBOX
     f32 scaledX = yawScaled;
 
     if (scaledX > SKYBOX_WIDTH) {
@@ -181,7 +181,7 @@ calculate_skybox_scaled_x(s8 player, f32 fov) {
     }
 #else
     // Round the scaled yaw. Since yaw is a u16, it doesn't need to check for < 0
-    s32 scaledX = yawScaled + 0.5;
+    s32 scaledX = yawScaled + 0.5f;
 
     if (scaledX > SKYBOX_WIDTH) {
         scaledX -= scaledX / SKYBOX_WIDTH * SKYBOX_WIDTH;
@@ -197,19 +197,14 @@ calculate_skybox_scaled_x(s8 player, f32 fov) {
  * fov may have been used in an earlier version, but the developers changed the function to always use
  * 90 degrees.
  */
-#ifdef BETTER_SKYBOX_POSITION_PRECISION
-f32
-#else
-s32
-#endif
-calculate_skybox_scaled_y(s8 player, UNUSED f32 fov) {
+SkyboxType calculate_skybox_scaled_y(s8 player, f32 fov) {
     // Convert pitch to degrees. Pitch is bounded between -90 (looking down) and 90 (looking up).
-    f32 pitchInDegrees = (f32) sSkyBoxInfo[player].pitch * 360.0 / 65535.0;
+    f32 pitchInDegrees = angle_to_degrees(sSkyBoxInfo[player].pitch);
 
     // Scale by 360 / fov
-    f32 degreesToScale = 360.0f * pitchInDegrees / 90.0;
+    f32 degreesToScale = pitchInDegrees * (360.0f / SKYBOX_FOV_Y(fov));
 
-#ifdef BETTER_SKYBOX_POSITION_PRECISION
+#if QOL_FEATURE_BETTER_SKYBOX
     f32 scaledY = degreesToScale + 5 * SKYBOX_TILE_HEIGHT;
 #else
     s32 roundedY = round_float(degreesToScale);
@@ -328,9 +323,13 @@ void draw_skybox_tile_grid(Gfx **dlist, s8 background, s8 player, s8 colorIndex)
 
 #ifdef TARGET_N3DS
     s16 grid = (is3D) ? 5 : 3; // 5x5 only if 3D is on
+#else
+    s16 grid = 3;
+#endif
     for (row = 0; row < grid; row++) { 
-        for (col = 0; col < grid; col++) { 
+        for (col = 0; col < grid; col++) {
             s32 tileIndex;
+#ifdef TARGET_N3DS
             if (is3D) {
                 sSkyBoxInfo[player].tileColCur = col; // tracking the position in the current 5x5 grid
                 sSkyBoxInfo[player].tileRowCur = row;
@@ -339,17 +338,21 @@ void draw_skybox_tile_grid(Gfx **dlist, s8 background, s8 player, s8 colorIndex)
                 if (tileColTotal > 7) tileColTotal = tileColTotal - 8; // check wrap around 
                 if (tileRowTotal > 7) tileRowTotal = 7; // check for bottom
                 tileIndex = tileColTotal + tileRowTotal * SKYBOX_COLS; // 5x5 index value
+            } else
+#endif
+            {
+                tileIndex = sSkyBoxInfo[player].upperLeftTile + row * SKYBOX_COLS + col;
+#ifdef AVOID_UB
+                if (tileIndex >= SKYBOX_ROWS * SKYBOX_COLS) {
+                    continue;
+                }
+#endif
             }
-            else tileIndex = sSkyBoxInfo[player].upperLeftTile + row * SKYBOX_COLS + col; // original index value
             const u8 *const texture =
                 (*(SkyboxTexture *) segmented_to_virtual(sSkyboxTextures[background]))[tileIndex];
+#ifdef TARGET_N3DS
             Vtx *vertices = make_skybox_rect(tileIndex, colorIndex, player);
 #else
-    for (row = 0; row < 3; row++) {
-        for (col = 0; col < 3; col++) {
-            s32 tileIndex = sSkyBoxInfo[player].upperLeftTile + row * SKYBOX_COLS + col;
-            const u8 *const texture =
-                (*(SkyboxTexture *) segmented_to_virtual(sSkyboxTextures[background]))[tileIndex];
             Vtx *vertices = make_skybox_rect(tileIndex, colorIndex);
 #endif
             gLoadBlockTexture((*dlist)++, 32, 32, G_IM_FMT_RGBA, texture);
@@ -441,9 +444,11 @@ Gfx *create_skybox_facing_camera(s8 player, s8 background, f32 fov,
         colorIndex = 0;
     }
 
+#if !QOL_FEATURE_BETTER_SKYBOX
     //! fov is always set to 90.0f. If this line is removed, then the game crashes because fov is 0 on
     //! the first frame, which causes a floating point divide by 0
     fov = 90.0f;
+#endif
     sSkyBoxInfo[player].yaw = atan2s(cameraFaceZ, cameraFaceX);
     sSkyBoxInfo[player].pitch = atan2s(sqrtf(cameraFaceX * cameraFaceX + cameraFaceZ * cameraFaceZ), cameraFaceY);
     sSkyBoxInfo[player].scaledX = calculate_skybox_scaled_x(player, fov);
