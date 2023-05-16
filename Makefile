@@ -498,6 +498,7 @@ BIN_DIRS := bin bin/$(VERSION)
 
 ULTRA_SRC_DIRS := lib/src lib/src/math lib/asm lib/data
 ULTRA_BIN_DIRS := lib/bin
+LIBGCC_SRC_DIRS := lib/gcc
 
 ifeq ($(GODDARD_MFACE),1)
   GODDARD_SRC_DIRS := src/goddard src/goddard/dynlists
@@ -585,6 +586,7 @@ S_FILES       := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.s))
 ifeq ($(TARGET_N64),1)
   ULTRA_C_FILES := $(foreach dir,$(ULTRA_SRC_DIRS),$(wildcard $(dir)/*.c))
   ULTRA_S_FILES := $(foreach dir,$(ULTRA_SRC_DIRS),$(wildcard $(dir)/*.s))
+  LIBGCC_C_FILES := $(foreach dir,$(LIBGCC_SRC_DIRS),$(wildcard $(dir)/*.c))
 endif
 ifeq ($(GODDARD_MFACE),1)
   GODDARD_C_FILES := $(foreach dir,$(GODDARD_SRC_DIRS),$(wildcard $(dir)/*.c))
@@ -648,6 +650,10 @@ ifeq ($(GODDARD_MFACE),1)
   GODDARD_O_FILES := $(foreach file,$(GODDARD_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
 endif
 
+ifeq ($(TARGET_N64),1)
+  LIBGCC_O_FILES := $(foreach file,$(LIBGCC_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
+endif
+
 RPC_LIBS :=
 ifeq ($(TARGET_PORT_CONSOLE),0)
   ifeq ($(DISCORDRPC),1)
@@ -664,6 +670,9 @@ endif
 
 # Automatic dependency files
 DEP_FILES := $(O_FILES:.o=.d) $(ULTRA_O_FILES:.o=.d) $(GODDARD_O_FILES:.o=.d) $(BUILD_DIR)/$(LD_SCRIPT).d
+ifeq ($(TARGET_N64),1)
+  DEP_FILES += $(LIBGCC_O_FILES:.o=.d)
+endif
 
 #==============================================================================#
 # Compiler Options                                                             #
@@ -781,8 +790,8 @@ ASFLAGS := -march=vr4300 -mabi=32 $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach 
 RSPASMFLAGS := $(foreach d,$(DEFINES),-definelabel $(subst =, ,$(d)))
 
 OBJCOPYFLAGS := --pad-to=0x800000 --gap-fill=0xFF
-SYMBOL_LINKING_FLAGS := $(addprefix -R ,$(SEG_FILES))
-LDFLAGS := -T undefined_syms.txt -T $(BUILD_DIR)/$(LD_SCRIPT) -Map $(BUILD_DIR)/sm64.$(VERSION).map --no-check-sections $(SYMBOL_LINKING_FLAGS)
+SYMBOL_LINKING_FLAGS := --no-check-sections $(addprefix -R ,$(SEG_FILES))
+LDFLAGS := -T undefined_syms.txt -T $(BUILD_DIR)/$(LD_SCRIPT) -Map $(BUILD_DIR)/sm64.$(VERSION).map $(SYMBOL_LINKING_FLAGS)
 
 CFLAGS += $(CUSTOM_C_DEFINES)
 
@@ -1259,7 +1268,7 @@ ifeq ($(TARGET_N64),1)
   $(BUILD_DIR)/levels/%.o: OPT_FLAGS := -Ofast -mlong-calls
   $(BUILD_DIR)/src/audio/heap.o: OPT_FLAGS := -Os -fno-jump-tables
   $(BUILD_DIR)/src/audio/synthesis.o: OPT_FLAGS := -Os -fno-jump-tables
-  $(BUILD_DIR)/lib/src/%.o: OPT_FLAGS := -O3
+  $(BUILD_DIR)/lib/src/%.o: OPT_FLAGS := -O2
 
   ifeq ($(COMPILER_TYPE),gcc)
     $(BUILD_DIR)/src/engine/surface_collision.o: OPT_FLAGS += --param case-values-threshold=20 --param max-completely-peeled-insns=100 --param max-unrolled-insns=100 -finline-limit=0 -fno-inline -freorder-blocks-algorithm=simple -falign-functions=32
@@ -1273,7 +1282,7 @@ endif
 ALL_DIRS := $(BUILD_DIR) $(addprefix $(BUILD_DIR)/,$(SRC_DIRS) $(GODDARD_SRC_DIRS) $(ULTRA_SRC_DIRS) $(ULTRA_BIN_DIRS) $(BIN_DIRS) $(TEXTURE_DIRS) $(TEXT_DIRS) $(SOUND_SAMPLE_DIRS) $(addprefix levels/,$(LEVEL_DIRS)) include) $(MIO0_DIR) $(addprefix $(MIO0_DIR)/,$(VERSION)) $(SOUND_BIN_DIR) $(SOUND_BIN_DIR)/sequences/$(VERSION)
 
 ifeq ($(TARGET_N64),1)
-  ALL_DIRS += $(RSP_DIR)
+  ALL_DIRS += $(RSP_DIR) $(BUILD_DIR)/$(LIBGCC_SRC_DIRS)
 endif
 
 ifeq ($(EXTERNAL_DATA),1)
@@ -1558,6 +1567,14 @@ endif
 
 ifeq ($(TARGET_N64),1)
 
+# Link libgcc
+$(BUILD_DIR)/libgcc.a: $(LIBGCC_O_FILES)
+	@$(PRINT) "$(GREEN)Linking libgcc:  $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(AR) rcs -o $@ $(LIBGCC_O_FILES)
+
+LIB_GCC_FILE := $(BUILD_DIR)/libgcc.a
+LIB_GCC_FLAG := -lgcc
+
 ifeq ($(GODDARD_MFACE),1)
   GODDARD_TXT_INC := $(BUILD_DIR)/goddard.txt
 endif
@@ -1583,14 +1600,14 @@ LIB_GD_FILE := $(BUILD_DIR)/libgoddard.a
 LIB_GD_FLAG := -lgoddard
 
 # SS2: Goddard rules to get size
-$(BUILD_DIR)/sm64_prelim.ld: $(LD_SCRIPT) $(O_FILES) $(MIO0_OBJ_FILES) $(SEG_FILES) undefined_syms.txt $(BUILD_DIR)/libultra.a $(LIB_GD_FILE)
+$(BUILD_DIR)/sm64_prelim.ld: $(LD_SCRIPT) $(O_FILES) $(MIO0_OBJ_FILES) $(SEG_FILES) undefined_syms.txt $(BUILD_DIR)/libultra.a $(LIB_GD_FILE) $(LIB_GCC_FILE)
 	$(call print,Preprocessing preliminary linker script:,$<,$@)
 	$(V)$(CPP) $(CPPFLAGS) -DPRELIMINARY=1 -DBUILD_DIR=$(BUILD_DIR) -MMD -MP -MT $@ -MF $@.d -o $@ $<
 
 $(BUILD_DIR)/sm64_prelim.elf: $(BUILD_DIR)/sm64_prelim.ld
 	@$(PRINT) "$(GREEN)Linking Preliminary ELF file: $(BLUE)$@ $(NO_COL)\n"
     # Slightly edited version of LDFLAGS
-	$(V)$(LD) -L $(BUILD_DIR) -T undefined_syms.txt -T $< -Map $(BUILD_DIR)/sm64_prelim.map --no-check-sections $(SYMBOL_LINKING_FLAGS) -o $@ $(O_FILES) $(LIBS) -lultra $(LIB_GD_FLAG)
+	$(V)$(LD) -L $(BUILD_DIR) -T undefined_syms.txt -T $< -Map $(BUILD_DIR)/sm64_prelim.map $(SYMBOL_LINKING_FLAGS) -o $@ $(O_FILES) -lultra $(LIB_GD_FLAG) $(LIB_GCC_FLAG)
 
 $(BUILD_DIR)/goddard.txt: $(BUILD_DIR)/sm64_prelim.elf
 	$(call print,Getting Goddard size...)
@@ -1601,9 +1618,9 @@ LIB_GD_PRE_ELF := $(BUILD_DIR)/sm64_prelim.elf
 endif # GODDARD_MFACE
 
 # Link SM64 ELF file
-$(ELF): $(LIB_GD_PRE_ELF) $(O_FILES) $(MIO0_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) undefined_syms.txt $(BUILD_DIR)/libultra.a $(LIB_GD_FILE)
+$(ELF): $(LIB_GD_PRE_ELF) $(O_FILES) $(MIO0_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) undefined_syms.txt $(BUILD_DIR)/libultra.a $(LIB_GD_FILE) $(LIB_GCC_FILE)
 	@$(PRINT) "$(GREEN)Linking ELF file: $(BLUE)$@ $(NO_COL)\n"
-	$(V)$(LD) -L $(BUILD_DIR) $(LDFLAGS) $(GODDARD_TXT_INC) -o $@ $(O_FILES) $(LIBS) -lultra $(LIB_GD_FLAG)
+	$(V)$(LD) -L $(BUILD_DIR) $(LDFLAGS) $(GODDARD_TXT_INC) -o $@ $(O_FILES) -lultra $(LIB_GD_FLAG) $(LIB_GCC_FLAG)
 
 # Build ROM
 $(ROM): $(ELF)
