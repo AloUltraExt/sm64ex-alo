@@ -2,7 +2,7 @@
 import sys
 import os
 import json
-
+import platform
 
 def read_asset_map():
     with open("assets.json") as f:
@@ -156,13 +156,21 @@ def main():
 
     make = "make"
 
+    # FreeBSD and macOS uses an updated make
     for path in os.environ["PATH"].split(os.pathsep):
         if os.path.isfile(os.path.join(path, "gmake")):
             make = "gmake"
 
-    # Make sure tools exist
+    # Explicitly set file extension on Windows
+    if platform.system() == "Windows":
+        winext = ".exe"
+
     subprocess.check_call(
-        [make, "-s", "-C", "tools/", "n64graphics", "skyconv", "mio0", "aifc_decode"]
+        ["make", "-s", "-C", "tools/sm64tools/", "n64graphics" + winext, "mio0" + winext]
+    )
+
+    subprocess.check_call(
+        ["make", "-s", "-C", "tools/", "skyconv" + winext, "aifc_decode" + winext]
     )
 
     # Go through the assets in roughly alphabetical order (but assets in the same
@@ -201,7 +209,7 @@ def main():
         if mio0 is not None:
             image = subprocess.run(
                 [
-                    "./tools/mio0",
+                    "./tools/sm64tools/mio0" + winext,
                     "-d",
                     "-o",
                     str(mio0),
@@ -231,7 +239,7 @@ def main():
                             imagetype =  "cake" + ("-eu" if "eu" in asset else "")
                         subprocess.run(
                             [
-                                "./tools/skyconv",
+                                "./tools/skyconv" + winext,
                                 "--type",
                                 imagetype,
                                 "--combine",
@@ -245,7 +253,7 @@ def main():
                         fmt = asset.split(".")[-2]
                         subprocess.run(
                             [
-                                "./tools/n64graphics",
+                                "./tools/sm64tools/n64graphics" + winext,
                                 "-e",
                                 png_file.name,
                                 "-g",
@@ -287,4 +295,4 @@ def main():
         f.write(output)
 
 
-main()
+main() if __name__ == "__main__" else None

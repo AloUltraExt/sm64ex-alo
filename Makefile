@@ -390,7 +390,16 @@ ifeq ($(filter clean distclean print-%,$(MAKECMDGOALS)),)
 ifeq ($(TARGET_PORT_CONSOLE),0)
   DUMMY != CC=$(CC) CXX=$(CXX) $(MAKE) -s -C $(TOOLS_DIR) >&2 || echo FAIL
 else
-  DUMMY != $(MAKE) -s -C tools >&2 || echo FAIL
+  DUMMY != $(MAKE) -s -C $(TOOLS_DIR) >&2 || echo FAIL
+endif
+    ifeq ($(DUMMY),FAIL)
+      $(error Failed to build tools)
+    endif
+  $(info Building sm64tools...)
+ifeq ($(TARGET_PORT_CONSOLE),0)
+  DUMMY != CC=$(CC) CXX=$(CXX) $(MAKE) -s -C $(TOOLS_DIR)/sm64tools >&2 || echo FAIL
+else
+  DUMMY != $(MAKE) -s -C $(TOOLS_DIR)/sm64tools >&2 || echo FAIL
 endif
     ifeq ($(DUMMY),FAIL)
       $(error Failed to build tools)
@@ -756,7 +765,7 @@ CC_CFLAGS := -fno-builtin
 
 
 # Check code syntax with host compiler
-CFLAGS := -G 0 $(OPT_FLAGS) $(N64_CFLAGS) $(MIPSISET) $(DEF_INC_CFLAGS)
+CFLAGS := -G 0 $(N64_CFLAGS) $(MIPSISET) $(DEF_INC_CFLAGS)
 
 ifeq ($(COMPILER_TYPE),gcc)
   CFLAGS += -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra
@@ -942,15 +951,15 @@ endif
 endif
 
 ifeq ($(WINDOWS_BUILD),1)
-  CFLAGS := $(OPT_FLAGS) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -fwrapv
+  CFLAGS := $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -fwrapv
   ifeq ($(TARGET_BITS), 32)
     BACKEND_LDFLAGS += -ldbghelp
   endif
 else ifeq ($(TARGET_WEB),1)
-  CFLAGS := $(OPT_FLAGS) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -fwrapv -s USE_SDL=2
+  CFLAGS := $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -fwrapv -s USE_SDL=2
 # Linux / Other builds below
 else
-  CFLAGS := $(OPT_FLAGS) $(PLATFORM_CFLAGS) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -fwrapv
+  CFLAGS := $(PLATFORM_CFLAGS) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -fwrapv
 endif
 
 ifeq ($(TARGET_WII_U),1)
@@ -972,7 +981,7 @@ ifeq ($(TARGET_N3DS),1)
 endif
 
 ifeq ($(TARGET_SWITCH),1)
-  CFLAGS := $(NXARCH) $(OPT_FLAGS) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -ftls-model=local-exec -fPIC -fwrapv -D__SWITCH__=1
+  CFLAGS := $(NXARCH) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -ftls-model=local-exec -fPIC -fwrapv -D__SWITCH__=1
 endif
 
 CFLAGS += $(CUSTOM_C_DEFINES)
@@ -997,7 +1006,7 @@ else ifeq ($(TARGET_N3DS),1)
 LDFLAGS := $(LIBPATHS) -lcitro3d -lctru -lm -specs=3dsx.specs -g -marm -mthumb-interwork -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft # -Wl,-Map,$(notdir $*.map)
 
 else ifeq ($(TARGET_SWITCH),1)
-  LDFLAGS := -specs=$(LIBNX)/switch.specs $(NXARCH) $(OPT_FLAGS) $(BACKEND_LDFLAGS) -lstdc++ -lm
+  LDFLAGS := -specs=$(LIBNX)/switch.specs $(NXARCH) $(BACKEND_LDFLAGS) -lstdc++ -lm
 
 else ifeq ($(WINDOWS_BUILD),1)
   LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -Llib -lpthread $(BACKEND_LDFLAGS) -static
@@ -1009,7 +1018,7 @@ else ifeq ($(WINDOWS_BUILD),1)
   endif
 
 else ifeq ($(TARGET_RPI),1)
-  LDFLAGS := $(OPT_FLAGS) -lm $(BACKEND_LDFLAGS) -no-pie
+  LDFLAGS := -lm $(BACKEND_LDFLAGS) -no-pie
 
 else ifeq ($(TARGET_ANDROID),1)
   ifneq ($(shell uname -m | grep "i.86"),)
@@ -1048,25 +1057,25 @@ endif
 #==============================================================================#
 
 ifeq ($(HOST_OS),Windows)
-EXT_PREFIX := .exe
+WINEXT := .exe
 else
-EXT_PREFIX :=
+WINEXT :=
 endif
 
 # Executable tools
-MIO0TOOL              := $(TOOLS_DIR)/mio0$(EXT_PREFIX)
-N64CKSUM              := $(TOOLS_DIR)/n64cksum$(EXT_PREFIX)
-N64GRAPHICS           := $(TOOLS_DIR)/n64graphics$(EXT_PREFIX)
-N64GRAPHICS_CI        := $(TOOLS_DIR)/n64graphics_ci$(EXT_PREFIX)
-TEXTCONV              := $(TOOLS_DIR)/textconv$(EXT_PREFIX)
-AIFF_EXTRACT_CODEBOOK := $(TOOLS_DIR)/aiff_extract_codebook$(EXT_PREFIX)
-VADPCM_ENC            := $(TOOLS_DIR)/vadpcm_enc$(EXT_PREFIX)
-EXTRACT_DATA_FOR_MIO  := $(TOOLS_DIR)/extract_data_for_mio$(EXT_PREFIX)
-SKYCONV               := $(TOOLS_DIR)/skyconv$(EXT_PREFIX)
+MIO0TOOL              := $(TOOLS_DIR)/sm64tools/mio0$(WINEXT)
+N64CKSUM              := $(TOOLS_DIR)/sm64tools/n64cksum$(WINEXT)
+N64GRAPHICS           := $(TOOLS_DIR)/sm64tools/n64graphics$(WINEXT)
+N64GRAPHICS_CI        := $(TOOLS_DIR)/sm64tools/n64graphics_ci$(WINEXT)
+TEXTCONV              := $(TOOLS_DIR)/textconv$(WINEXT)
+AIFF_EXTRACT_CODEBOOK := $(TOOLS_DIR)/aiff_extract_codebook$(WINEXT)
+VADPCM_ENC            := $(TOOLS_DIR)/vadpcm_enc$(WINEXT)
+EXTRACT_DATA_FOR_MIO  := $(TOOLS_DIR)/extract_data_for_mio$(WINEXT)
+SKYCONV               := $(TOOLS_DIR)/skyconv$(WINEXT)
 ifneq (,$(call find-command,armips))
   RSPASM = armips
 else
-  RSPASM := $(TOOLS_DIR)/armips$(EXT_PREFIX)
+  RSPASM := $(TOOLS_DIR)/armips$(WINEXT)
 endif
 
 # Python tools
@@ -1179,9 +1188,10 @@ endif
 clean:
 	$(RM) -r $(BUILD_DIR_BASE)
 
-distclean:
-	$(RM) -r $(BUILD_DIR_BASE)
+distclean: clean
 	$(PYTHON) ./extract_assets.py --clean
+	$(MAKE) -C $(TOOLS_DIR) clean
+	$(MAKE) -C $(TOOLS_DIR)/sm64tools clean
 
 test: $(ROM)
 	$(EMULATOR) $(EMU_FLAGS) $<
@@ -1243,24 +1253,20 @@ else
   endif
 endif
 
-# File specific opt flags for N64
-# TODO: I need help with this, they don't get set even though they were copy-pasted from HackerSM64
-# If someone with more Makefile knowledge can fix it, i would really appreciate it
-# To test if these work or not, set VERBOSE=1 and look at the OPT_FLAGS of these files
-
+# N64 specific optimization files
 ifeq ($(TARGET_N64),1)
-  $(BUILD_DIR)/actors/%.o: OPT_FLAGS = -Ofast -mlong-calls
-  $(BUILD_DIR)/levels/%.o: OPT_FLAGS = -Ofast -mlong-calls
-  $(BUILD_DIR)/src/audio/heap.o: OPT_FLAGS = -Os -fno-jump-tables
-  $(BUILD_DIR)/src/audio/synthesis.o: OPT_FLAGS = -Os -fno-jump-tables
-  $(BUILD_DIR)/lib/src/%.o: OPT_FLAGS = -O3
+  $(BUILD_DIR)/actors/%.o: OPT_FLAGS := -Ofast -mlong-calls
+  $(BUILD_DIR)/levels/%.o: OPT_FLAGS := -Ofast -mlong-calls
+  $(BUILD_DIR)/src/audio/heap.o: OPT_FLAGS := -Os -fno-jump-tables
+  $(BUILD_DIR)/src/audio/synthesis.o: OPT_FLAGS := -Os -fno-jump-tables
+  $(BUILD_DIR)/lib/src/%.o: OPT_FLAGS := -O3
 
   ifeq ($(COMPILER_TYPE),gcc)
-    $(BUILD_DIR)/src/engine/surface_collision.o: OPT_FLAGS = -Ofast --param case-values-threshold=20 --param max-completely-peeled-insns=100 --param max-unrolled-insns=100 -finline-limit=0 -fno-inline -freorder-blocks-algorithm=simple -falign-functions=32
+    $(BUILD_DIR)/src/engine/surface_collision.o: OPT_FLAGS += --param case-values-threshold=20 --param max-completely-peeled-insns=100 --param max-unrolled-insns=100 -finline-limit=0 -fno-inline -freorder-blocks-algorithm=simple -falign-functions=32
     # Setting any sort of -finline-limit has shown to worsen performance with math_util.c,
     # lower values were the worst, the higher you go - the closer performance gets to not setting it at all
-    $(BUILD_DIR)/src/engine/math_util.o: OPT_FLAGS = -Ofast -fno-unroll-loops -fno-peel-loops --param case-values-threshold=20 -falign-functions=32
-    $(BUILD_DIR)/src/game/rendering_graph_node.o: OPT_FLAGS = -Ofast --param case-values-threshold=20 --param max-completely-peeled-insns=100 --param max-unrolled-insns=100 -finline-limit=0 -freorder-blocks-algorithm=simple -falign-functions=32
+    $(BUILD_DIR)/src/engine/math_util.o: OPT_FLAGS +=-fno-unroll-loops -fno-peel-loops --param case-values-threshold=20 -falign-functions=32
+    $(BUILD_DIR)/src/game/rendering_graph_node.o: OPT_FLAGS += --param case-values-threshold=20 --param max-completely-peeled-insns=100 --param max-unrolled-insns=100 -finline-limit=0 -freorder-blocks-algorithm=simple -falign-functions=32
   endif
 endif
 
@@ -1377,9 +1383,10 @@ ifeq ($(TARGET_N64),1)
 $(BUILD_DIR)/%.elf: $(BUILD_DIR)/%.o
 	$(call print,Linking ELF file:,$<,$@)
 	$(V)$(LD) -e 0 -Ttext=$(SEGMENT_ADDRESS) -Map $@.map -o $@ $<
-# Override for leveldata.elf, which otherwise matches the above pattern
+# Override for leveldata.elf, which otherwise matches the above pattern.
+# Has to be a static pattern rule for make-4.4 and above to trigger the second expansion.
 .SECONDEXPANSION:
-$(BUILD_DIR)/levels/%/leveldata.elf: $(BUILD_DIR)/levels/%/leveldata.o $(BUILD_DIR)/bin/$$(TEXTURE_BIN).elf
+$(LEVEL_ELF_FILES): $(BUILD_DIR)/levels/%/leveldata.elf: $(BUILD_DIR)/levels/%/leveldata.o $(BUILD_DIR)/bin/$$(TEXTURE_BIN).elf
 	$(call print,Linking level ELF file:,$<,$@)
 	$(V)$(LD) -e 0 -Ttext=$(SEGMENT_ADDRESS) -Map $@.map --just-symbols=$(BUILD_DIR)/bin/$(TEXTURE_BIN).elf -o $@ $<
 
@@ -1518,15 +1525,15 @@ $(BUILD_DIR)/include/level_headers.h: levels/level_headers.h.in
 # Compile C code
 $(BUILD_DIR)/%.o: %.c
 	$(call print,Compiling:,$<,$@)
-	$(V)$(CC) -c $(CFLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
+	$(V)$(CC) -c $(CFLAGS) $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
 	$(call print,Compiling:,$<,$@)
-	$(V)$(CC) -c $(CFLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
+	$(V)$(CC) -c $(CFLAGS) $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
 
 # Compile C++ code
 $(BUILD_DIR)/%.o: %.cpp
 	$(call print,Compiling:,$<,$@)
-	$(V)$(CXX) -c $(CFLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
+	$(V)$(CXX) -c $(CFLAGS) $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
 
 # Assemble assembly code
 $(BUILD_DIR)/%.o: %.s
@@ -1715,13 +1722,19 @@ $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(
 	$(V)$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
 endif
 
-# Phony targets
-.PHONY: all clean distclean default diff test load libultra res
+# Remove built-in rules, to improve performance
+MAKEFLAGS += -r 
+
 # with no prerequisites, .SECONDARY causes no intermediate target to be removed
 .SECONDARY:
 
-# Remove built-in rules, to improve performance
-MAKEFLAGS += --no-builtin-rules
+# Disable built-in rules
+.SUFFIXES:
+
+# Phony targets
+.PHONY: all clean distclean default diff test load libultra res
+ 
+# General Dependencies
 
 -include $(DEP_FILES)
 
