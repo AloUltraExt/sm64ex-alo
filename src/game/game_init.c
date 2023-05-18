@@ -22,7 +22,7 @@
 #include "rumble_init.h"
 
 #ifdef TARGET_N64
-#include "extras/n64/system_checks.h"
+#include "boot/system_checks.h"
 #endif
 
 #ifdef BETTERCAMERA

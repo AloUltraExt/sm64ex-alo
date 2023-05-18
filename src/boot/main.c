@@ -3,17 +3,17 @@
 
 #include "sm64.h"
 #include "audio/external.h"
-#include "game_init.h"
-#include "memory.h"
-#include "sound_init.h"
-#include "profiler.h"
+#include "game/game_init.h"
+#include "game/memory.h"
+#include "game/sound_init.h"
+#include "game/profiler.h"
 #include "buffers/buffers.h"
 #include "segments.h"
-#include "main.h"
-#include "rumble_init.h"
-#include "extras/n64/system_checks.h"
+#include "game/main.h"
+#include "game/rumble_init.h"
+#include "system_checks.h"
 #ifdef N64_USE_EXTENDED_RAM
-#include "extras/n64/ext_mem_screen.h"
+#include "ext_mem_screen.h"
 #endif
 
 /**

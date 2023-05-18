@@ -6,6 +6,7 @@
 #include "heap.h"
 #include "load.h"
 #include "seqplayer.h"
+#include "segment_symbols.h"
 
 #ifdef EXTERNAL_DATA
 #include "pc/platform.h"
@@ -106,9 +107,6 @@ s16 gTempoInternalToExternal;
 s8 gSoundMode;
 
 s8 gAudioUpdatesPerFrame;
-
-extern u64 gAudioGlobalsStartMarker;
-extern u64 gAudioGlobalsEndMarker;
 
 ALSeqFile *get_audio_file_header(s32 arg0);
 
@@ -1038,27 +1036,17 @@ extern u8 gShindouSampleBanksHeader[]; // tbl_header
 void audio_init() {
     UNUSED s8 pad[16]; // SH - 52
     s32 i, j, UNUSED k; // unused on PC
-#ifdef TARGET_N64
-    s32 lim;
-    u64 *ptr64;
-#endif
+
     void *data;
     UNUSED u8 pad2[4];
     s32 seqCount;
 
     gAudioLoadLockSH = 0;
 
-    for (i = 0; i < gAudioHeapSize / 8; i++) {
-        ((u64 *) gAudioHeap)[i] = 0;
-    }
-
+    bzero(&gAudioHeap, gAudioHeapSize);
 #ifdef TARGET_N64
-    // It seems boot.s doesn't clear the .bss area for audio, so do it here.
-    lim = ((uintptr_t) &gAudioGlobalsEndMarker - (uintptr_t) &gAudioGlobalsStartMarker) / 8;
-    ptr64 = &gAudioGlobalsStartMarker;
-    for (k = lim; k >= 0; k--) {
-        *ptr64++ = 0;
-    }
+    // Audio bss is located differently, so clean it here
+    bzero((void *) _audioSegmentBssStart, (uintptr_t) _audioSegmentBssEnd - (uintptr_t) _audioSegmentBssStart);
 #endif
 
     D_EU_802298D0 = 16.713f;

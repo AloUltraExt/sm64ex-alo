@@ -22,13 +22,6 @@
 #define DMA_BUF_SIZE_1 (160 * 9)
 #endif
 
-// Debug?
-#if defined(VERSION_EU) || defined(VERSION_SH)
-#define UNUSED_COUNT_80333EE8 24
-#else
-#define UNUSED_COUNT_80333EE8 16
-#endif
-
 #if EXPAND_AUDIO_HEAP
 #define PERSISTENT_SEQ_MEM 0x8200
 #define PERSISTENT_BANK_MEM 0xDC00

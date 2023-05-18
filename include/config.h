@@ -46,11 +46,6 @@
 /// Fixes bug where the angle speed isn't preserved while in a pole
 #define BUGFIX_PRESERVE_VEL_POLE (0 || VERSION_SH || QOL_FIXES)
 
-// N64 Only Settings
-/// Enables extended ram on N64
-#define N64_USE_EXTENDED_RAM
-/// Enables crash screen on N64
-#define N64_CRASH_SCREEN
 
 // Misc Settings
 /// Sets a key combo to skip Peach cutscene during file select
@@ -64,6 +59,7 @@
 #include "config/config_collision.h"
 #include "config/config_graphics.h"
 #include "config/config_movement.h"
+#include "config/config_n64.h"
 #include "config/config_objects.h"
 
 // Screen Size Defines

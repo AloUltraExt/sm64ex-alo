@@ -17,7 +17,7 @@
 #include "system_checks.h"
 
 u8 gIsConsole = TRUE; // Needs to be initialized before audio_reset_session is called
-u8 gIsWiiVC = FALSE;
+u8 gIsWiiVC = TRUE;
 u8 gCacheEmulated = TRUE;
 
 void check_cache_emulation() {

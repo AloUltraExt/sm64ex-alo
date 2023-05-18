@@ -6,6 +6,7 @@
 #include "heap.h"
 #include "load.h"
 #include "seqplayer.h"
+#include "segment_symbols.h"
 
 #ifdef EXTERNAL_DATA
 #include "pc/platform.h"
@@ -99,9 +100,6 @@ s8 gSoundMode;
 #if defined(VERSION_EU)
 s8 gAudioUpdatesPerFrame;
 #endif
-
-extern u64 gAudioGlobalsStartMarker;
-extern u64 gAudioGlobalsEndMarker;
 
 extern u8 gSoundDataADSR[]; // sound_data.ctl
 extern u8 gSoundDataRaw[];  // sound_data.tbl
@@ -918,18 +916,10 @@ static inline void *load_sound_res(const char *path) {
 // (void) must be omitted from parameters to fix stack with -framepointer
 void audio_init() {
     UNUSED s8 pad[16]; // EU: 16 - US: 32
-
-#if defined(VERSION_JP) || defined(VERSION_US)
     UNUSED u8 buf[0x10]; // buf unused in EXTERNAL_DATA
-#endif
+
     s32 i, j, UNUSED k;
-    UNUSED s32 lim1; // lim1 unused in EU
-#if defined(VERSION_EU)
-    UNUSED u8 buf[0x10];
-    s32 UNUSED lim2, lim3;
-#else
-    s32 lim2, UNUSED lim3;
-#endif
+
     UNUSED u32 size;
     UNUSED u64 *ptr64;
     void *data;
@@ -937,43 +927,13 @@ void audio_init() {
 
     gAudioLoadLock = AUDIO_LOCK_UNINITIALIZED;
 
-#if defined(VERSION_JP) || defined(VERSION_US)
-    lim1 = gUnusedCount80333EE8;
-    for (i = 0; i < lim1; i++) {
-        gUnused80226E58[i] = 0;
-        gUnused80226E98[i] = 0;
-    }
-
-    lim2 = gAudioHeapSize;
-    for (i = 0; i <= lim2 / 8 - 1; i++) {
-        ((u64 *) gAudioHeap)[i] = 0;
-    }
-
+    bzero(&gAudioHeap, gAudioHeapSize);
 #ifdef TARGET_N64
-    // It seems boot.s doesn't clear the .bss area for audio, so do it here.
-    i = 0;
-    lim3 = ((uintptr_t) &gAudioGlobalsEndMarker - (uintptr_t) &gAudioGlobalsStartMarker) / 8;
-    ptr64 = &gAudioGlobalsStartMarker;
-    for (k = lim3; k >= 0; k--) {
-        ptr64[i] = 0;
-        i++;
-    }
+    // Audio bss is located differently, so clean it here
+    bzero((void *) _audioSegmentBssStart, (uintptr_t) _audioSegmentBssEnd - (uintptr_t) _audioSegmentBssStart);
 #endif
 
-#else
-    for (i = 0; i < gAudioHeapSize / 8; i++) {
-        ((u64 *) gAudioHeap)[i] = 0;
-    }
-
-#ifdef TARGET_N64
-    // It seems boot.s doesn't clear the .bss area for audio, so do it here.
-    lim3 = ((uintptr_t) &gAudioGlobalsEndMarker - (uintptr_t) &gAudioGlobalsStartMarker) / 8;
-    ptr64 = &gAudioGlobalsStartMarker;
-    for (k = lim3; k >= 0; k--) {
-        *ptr64++ = 0;
-    }
-#endif
-
+#ifdef VERSION_EU
     D_EU_802298D0 = 20.03042f;
     gRefreshRate = 50;
     port_eu_init();

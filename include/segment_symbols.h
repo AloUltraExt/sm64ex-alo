@@ -57,6 +57,8 @@ extern u8 _engineSegmentStart[];
 extern u8 _engineSegmentEnd[];
 extern u8 _engineSegmentBssStart[];
 extern u8 _engineSegmentBssEnd[];
+extern u8 _audioSegmentBssStart[];
+extern u8 _audioSegmentBssEnd[];
 extern u8 _framebuffersSegmentBssEnd[];
 
 DECLARE_LEVEL_SEGMENT(menu)

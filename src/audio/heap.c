@@ -7,7 +7,7 @@
 #include "seqplayer.h"
 #include "effects.h"
 #ifdef TARGET_N64
-#include "extras/n64/system_checks.h"
+#include "boot/system_checks.h"
 #endif
 
 struct PoolSplit {

@@ -1,5 +1,4 @@
 #include <PR/ultratypes.h>
-#include <prevent_bss_reordering.h>
 #include "sm64.h"
 
 #include "geo_layout.h"

@@ -507,6 +507,7 @@ LEVEL_DIRS := $(patsubst levels/%,%,$(dir $(wildcard levels/*/header.h)))
 
 # Directories containing source files
 SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers src/extras actors levels bin bin/$(VERSION) data assets sound
+BOOT_DIR := src/boot
 ifeq ($(TARGET_N64),1)
   SRC_DIRS += asm lib src/extras/n64
 else
@@ -626,6 +627,9 @@ C_FILES       := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c)) $(LEVEL_C_FIL
 CXX_FILES     := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 S_FILES       := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.s))
 ifeq ($(TARGET_N64),1)
+  C_FILES += $(foreach dir,$(BOOT_DIR),$(wildcard $(dir)/*.c))
+  S_FILES += $(foreach dir,$(BOOT_DIR),$(wildcard $(dir)/*.s))
+  
   ULTRA_C_FILES := $(foreach dir,$(ULTRA_SRC_DIRS),$(wildcard $(dir)/*.c))
   ULTRA_S_FILES := $(foreach dir,$(ULTRA_SRC_DIRS),$(wildcard $(dir)/*.s))
   LIBGCC_C_FILES := $(foreach dir,$(LIBGCC_SRC_DIRS),$(wildcard $(dir)/*.c))
@@ -654,9 +658,9 @@ ULTRA_C_FILES := \
   gu/translate.c \
   libc/ldiv.c
 
-C_FILES := $(filter-out src/game/main.c,$(C_FILES))
-
 ULTRA_C_FILES := $(addprefix lib/ultra/,$(ULTRA_C_FILES))
+
+C_FILES += $(addprefix src/boot/,memory.c)
 endif
 
 # "If we're not N64, use the above"
@@ -1254,7 +1258,7 @@ $(BUILD_DIR)/$(RPC_LIBS):
 # Extra object file dependencies
 ifeq ($(TARGET_N64),1)
   $(BUILD_DIR)/asm/boot.o: $(IPL3_RAW_FILES)
-  $(BUILD_DIR)/src/extras/n64/crash_screen.o: $(CRASH_TEXTURE_C_FILES)
+  $(BUILD_DIR)/src/boot/crash_screen.o: $(CRASH_TEXTURE_C_FILES)
   $(CRASH_TEXTURE_C_FILES): TEXTURE_ENCODING := u32
 
   RSP_DIR := $(BUILD_DIR)/rsp
@@ -1318,7 +1322,7 @@ ifeq ($(TARGET_N64),1)
   endif
 endif
 
-ALL_DIRS := $(BUILD_DIR) $(addprefix $(BUILD_DIR)/,$(SRC_DIRS) $(GODDARD_SRC_DIRS) $(ULTRA_SRC_DIRS) $(ULTRA_BIN_DIRS) $(BIN_DIRS) $(TEXTURE_DIRS) $(TEXT_DIRS) $(SOUND_SAMPLE_DIRS) $(addprefix levels/,$(LEVEL_DIRS)) include) $(MIO0_DIR) $(addprefix $(MIO0_DIR)/,$(VERSION)) $(SOUND_BIN_DIR) $(SOUND_BIN_DIR)/sequences/$(VERSION)
+ALL_DIRS := $(BUILD_DIR) $(addprefix $(BUILD_DIR)/,$(SRC_DIRS) $(BOOT_DIR) $(GODDARD_SRC_DIRS) $(ULTRA_SRC_DIRS) $(ULTRA_BIN_DIRS) $(BIN_DIRS) $(TEXTURE_DIRS) $(TEXT_DIRS) $(SOUND_SAMPLE_DIRS) $(addprefix levels/,$(LEVEL_DIRS)) include) $(MIO0_DIR) $(addprefix $(MIO0_DIR)/,$(VERSION)) $(SOUND_BIN_DIR) $(SOUND_BIN_DIR)/sequences/$(VERSION)
 
 ifeq ($(TARGET_N64),1)
   ALL_DIRS += $(RSP_DIR) $(BUILD_DIR)/$(LIBGCC_SRC_DIRS)
@@ -1361,7 +1365,7 @@ $(BUILD_DIR)/src/menu/star_select.o:    $(BUILD_DIR)/include/text_strings.h $(LA
 $(BUILD_DIR)/src/game/ingame_menu.o:    $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
 
 ifeq ($(TARGET_N64),1)
-  $(BUILD_DIR)/src/extras/n64/ext_mem_screen.o: $(BUILD_DIR)/include/text_strings.h
+  $(BUILD_DIR)/src/boot/ext_mem_screen.o: $(BUILD_DIR)/include/text_strings.h
 endif
 
 ifeq ($(EXT_OPTIONS_MENU),1)

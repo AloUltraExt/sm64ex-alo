@@ -6,10 +6,10 @@
 #define INCLUDED_FROM_MEMORY_C
 
 #include "buffers/buffers.h"
-#include "decompress.h"
-#include "game_init.h"
-#include "main.h"
-#include "memory.h"
+#include "game/decompress.h"
+#include "game/game_init.h"
+#include "game/main.h"
+#include "game/memory.h"
 #include "segment_symbols.h"
 #include "segments.h"
 #include "platform_info.h"
@@ -474,12 +474,21 @@ void *load_segment_decompress_heap(u32 segment, u8 *srcStart, u8 *srcEnd) {
     return gDecompressionHeap;
 }
 
+/**
+ * Loads the engine segment defined in the linker.
+ * Cleans up the main segment to ensure we don't load garbage code.
+ * New: In addition we also clean up it's bss segment so we don't load garbage values.
+ * This allows additional code (game, extras, etc) to properly function in the segment.
+ * Note: Needed for GCC, IDO could have zero those out, which is why it wasn't caught.
+ */
 void load_engine_code_segment(void) {
     void *startAddr = (void *) _engineSegmentStart;
     u32 totalSize = _engineSegmentEnd - _engineSegmentStart;
-    UNUSED u32 alignedSize = ALIGN16(_engineSegmentRomEnd - _engineSegmentRomStart);
-
+    void *startBssAddr = (void *) _engineSegmentBssStart;
+    u32 totalBssSize = _engineSegmentBssEnd - _engineSegmentBssStart;
+    
     bzero(startAddr, totalSize);
+    bzero(startBssAddr, totalBssSize);
     osWritebackDCacheAll();
     dma_read(startAddr, _engineSegmentRomStart, _engineSegmentRomEnd);
     osInvalICache(startAddr, totalSize);

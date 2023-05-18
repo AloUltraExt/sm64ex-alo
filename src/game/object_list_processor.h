@@ -7,8 +7,6 @@
 #include "macros.h"
 #include "types.h"
 
-#include <prevent_bss_reordering.h>
-
 /**
  * Flags for gTimeStopState. These control which objects are processed each frame
  * and also track some miscellaneous info.

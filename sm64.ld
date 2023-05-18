@@ -105,217 +105,44 @@ SECTIONS
     BEGIN_NOLOAD(buffers)
     {
         BUILD_DIR/src/buffers/buffers.o(.bss*);
-        BUILD_DIR/src/audio/globals_start.o(.bss*);
-#ifdef VERSION_SH
-        BUILD_DIR/src/audio/port_sh.o(.bss*);
-#else
-        BUILD_DIR/src/audio/synthesis.o(.bss*);
-        BUILD_DIR/src/audio/heap.o(.bss*);
-        BUILD_DIR/src/audio/load.o(.bss*);
-        BUILD_DIR/src/audio/data.o(.bss*);
-#endif
-        BUILD_DIR/src/audio*.o(.bss*);
-        . = ALIGN(0x100);
+        . = ALIGN(0x10);
         BUILD_DIR/src/buffers/gfx_output_buffer.o(.bss*);
     }
     END_NOLOAD(buffers)
 
     . = _buffersSegmentBssEnd;
 
+    // The way audio bss is cleared in vanilla is weird.
+    // Originally they used "start and end markers" defined on specific audio files and
+    // they get cleaned using a weird for loop that could break if you move audio bss order.
+    // Now we move audio bss into it's own segment to clean those properly using bzero.
+    BEGIN_NOLOAD(audio)
+    {
+        BUILD_DIR/src/audio*.o(.bss*);
+        . = ALIGN(0x10);
+    }
+    END_NOLOAD(audio)
+
+    . = _audioSegmentBssEnd;
+
     BEGIN_SEG(main, .)
     {
         BUILD_DIR/asm/entry.o(.text);
-        BUILD_DIR/src/extras/n64*.o(.text);
-        BUILD_DIR/src/game/main.o(.text);
-        BUILD_DIR/src/game/game_init.o(.text);
-        BUILD_DIR/src/game/sound_init.o(.text);
-#ifdef RUMBLE_FEEDBACK
-        BUILD_DIR/src/game/rumble_init.o(.text);
-#endif
-#ifndef GODDARD_MFACE
-        BUILD_DIR/src/menu*.o(.text);
-#endif
-        BUILD_DIR/src/game/level_update.o(.text);
-        BUILD_DIR/src/game/interaction.o(.text);
-        BUILD_DIR/src/game/mario.o(.text);
-        BUILD_DIR/src/game/mario_step.o(.text);
-        BUILD_DIR/src/game/mario_actions_cutscene.o(.text);
-        BUILD_DIR/src/game/mario_actions_automatic.o(.text);
-        BUILD_DIR/src/game/mario_actions_stationary.o(.text);
-        BUILD_DIR/src/game/mario_actions_moving.o(.text);
-        BUILD_DIR/src/game/mario_actions_airborne.o(.text);
-        BUILD_DIR/src/game/mario_actions_submerged.o(.text);
-        BUILD_DIR/src/game/mario_actions_object.o(.text);
-        BUILD_DIR/src/game/level_geo.o(.text);
-        BUILD_DIR/src/game/mario_misc.o(.text);
-        BUILD_DIR/src/game/memory.o(.text);
-        BUILD_DIR/src/game/save_file.o(.text);
-        BUILD_DIR/src/game/area.o(.text);
-        BUILD_DIR/src/game/rendering_graph_node.o(.text);
-        BUILD_DIR/src/game/profiler.o(.text);
-        BUILD_DIR/asm/decompress.o(.text);
-        BUILD_DIR/src/game/camera.o(.text);
-        BUILD_DIR/src/game/debug_course.o(.text);
-        BUILD_DIR/src/game/object_list_processor.o(.text);
-#ifndef VERSION_EU
-        BUILD_DIR/src/game/object_helpers.o(.text);
-#endif
-        BUILD_DIR/src/game/behavior_actions.o(.text);
-        BUILD_DIR/src/game/platform_displacement.o(.text);
-#ifndef VERSION_EU
-        BUILD_DIR/src/game/object_collision.o(.text);
-        BUILD_DIR/src/game/spawn_object.o(.text);
-#endif
-        BUILD_DIR/src/game/spawn_sound.o(.text);
-        BUILD_DIR/src/game/debug.o(.text);
-        BUILD_DIR/src/game/screen_transition.o(.text);
-        BUILD_DIR/src/game/shadow.o(.text);
-        BUILD_DIR/src/game/skybox.o(.text);
-        BUILD_DIR/src/game/moving_texture.o(.text);
-        BUILD_DIR/src/game/geo_misc.o(.text);
-        BUILD_DIR/src/game/paintings.o(.text);
-        BUILD_DIR/src/game/print.o(.text);
-        BUILD_DIR/src/game/ingame_menu.o(.text);
-        BUILD_DIR/src/game/envfx_snow.o(.text);
-        BUILD_DIR/src/game/envfx_bubbles.o(.text);
-        BUILD_DIR/src/game/macro_special_objects.o(.text);
-        BUILD_DIR/src/game/hud.o(.text);
-        BUILD_DIR/src/game/obj_behaviors.o(.text);
-        BUILD_DIR/src/game/obj_behaviors_2.o(.text);
-        BUILD_DIR/src/extras*.o(.text);
-#ifdef VERSION_SH
-        BUILD_DIR/src/audio/synthesis_sh.o(.text);
-#else
-        BUILD_DIR/src/audio/synthesis.o(.text);
-#endif
-        BUILD_DIR/src/audio/heap.o(.text);
-        BUILD_DIR/src/audio/load.o(.text);
-#ifdef VERSION_SH
-        BUILD_DIR/src/audio/load_sh.o(.text);
-        BUILD_DIR/src/audio/port_sh.o(.text);
-#endif
-        BUILD_DIR/src/audio/playback.o(.text);
-        BUILD_DIR/src/audio/effects.o(.text);
-        BUILD_DIR/src/audio/seqplayer.o(.text);
-        BUILD_DIR/src/audio/external.o(.text);
-        BUILD_DIR/src/audio/port_eu.o(.text);
-
-        BUILD_DIR/src/game*.o(.text);
+        BUILD_DIR/src/boot*.o(.text);
         BUILD_DIR/src/audio*.o(.text);
         BUILD_DIR/libultra.a:*.o(.text);
         BUILD_DIR/libgcc.a:*.o(.text);
         BUILD_DIR/lib/rsp.o(.text);
 
         /* data */
-        BUILD_DIR/src/extras/n64*.o(.data*);
-        BUILD_DIR/src/game/main.o(.data*);
-        BUILD_DIR/src/game/game_init.o(.data*);
-        BUILD_DIR/src/game/sound_init.o(.data*);
-#ifdef RUMBLE_FEEDBACK
-        BUILD_DIR/src/game/rumble_init.o(.data*);
-#endif
-#ifndef GODDARD_MFACE
-        BUILD_DIR/src/menu*.o(.data*);
-#endif
-        BUILD_DIR/src/game/level_update.o(.data*);
-        BUILD_DIR/src/game/interaction.o(.data*);
-        BUILD_DIR/src/game/mario.o(.data*);
-        BUILD_DIR/src/game/mario_step.o(.data*);
-        BUILD_DIR/src/game/mario_actions_cutscene.o(.data*);
-        BUILD_DIR/src/game/mario_actions_moving.o(.data*);
-        BUILD_DIR/src/game/mario_actions_submerged.o(.data*);
-        BUILD_DIR/src/game/mario_actions_object.o(.data*);
-        BUILD_DIR/src/game/mario_misc.o(.data*);
-        BUILD_DIR/src/game/memory.o(.data*);
-        BUILD_DIR/src/game/save_file.o(.data*);
-        BUILD_DIR/src/game/area.o(.data*);
-        BUILD_DIR/src/game/rendering_graph_node.o(.data*);
-        BUILD_DIR/src/game/profiler.o(.data*);
-        BUILD_DIR/src/game/camera.o(.data*);
-        BUILD_DIR/src/game/object_list_processor.o(.data*);
-#ifndef VERSION_EU
-        BUILD_DIR/src/game/object_helpers.o(.data*);
-#endif
-        BUILD_DIR/src/game/behavior_actions.o(.data*);
-        BUILD_DIR/src/game/platform_displacement.o(.data*);
-        BUILD_DIR/src/game/spawn_sound.o(.data*);
-        BUILD_DIR/src/game/debug.o(.data*);
-        BUILD_DIR/src/game/screen_transition.o(.data*);
-        BUILD_DIR/src/game/shadow.o(.data*);
-        BUILD_DIR/src/game/skybox.o(.data*);
-        BUILD_DIR/src/game/moving_texture.o(.data*);
-        BUILD_DIR/src/game/geo_misc.o(.data*);
-        BUILD_DIR/src/game/paintings.o(.data*);
-        BUILD_DIR/src/game/print.o(.data*);
-        BUILD_DIR/src/game/ingame_menu.o(.data*);
-        BUILD_DIR/src/game/envfx_snow.o(.data*);
-        BUILD_DIR/src/game/envfx_bubbles.o(.data*);
-        BUILD_DIR/src/game/macro_special_objects.o(.data*);
-        BUILD_DIR/src/game/hud.o(.data*);
-        BUILD_DIR/src/game/obj_behaviors.o(.data*);
-        BUILD_DIR/src/game/obj_behaviors_2.o(.data*);
-#ifndef VERSION_EU
-        /* wildcard doesn't match on EU due to files being moved to engine/ */
-        BUILD_DIR/src/game*.o(.data*);
-#endif
-        BUILD_DIR/src/extras*.o(.data*);
+        BUILD_DIR/src/boot*.o(.data*);
         BUILD_DIR/src/audio*.o(.data*);
         BUILD_DIR/libultra.a:*.o(.data*);
+        BUILD_DIR/libgcc.a:*.o(.data*);
         BUILD_DIR/lib/rsp.o(.data*);
 
         /* rodata */
-        BUILD_DIR/src/extras/n64*.o(.rodata*);
-        BUILD_DIR/src/game/main.o(.rodata*);
-        BUILD_DIR/src/game/game_init.o(.rodata*);
-        BUILD_DIR/src/game/sound_init.o(.rodata*);
-#ifndef GODDARD_MFACE
-        BUILD_DIR/src/menu*.o(.rodata*);
-#endif
-        BUILD_DIR/src/game/level_update.o(.rodata*);
-        BUILD_DIR/src/game/interaction.o(.rodata*);
-        BUILD_DIR/src/game/mario.o(.rodata*);
-        BUILD_DIR/src/game/mario_step.o(.rodata*);
-        BUILD_DIR/src/game/mario_actions_cutscene.o(.rodata*);
-        BUILD_DIR/src/game/mario_actions_automatic.o(.rodata*);
-        BUILD_DIR/src/game/mario_actions_stationary.o(.rodata*);
-        BUILD_DIR/src/game/mario_actions_moving.o(.rodata*);
-        BUILD_DIR/src/game/mario_actions_airborne.o(.rodata*);
-        BUILD_DIR/src/game/mario_actions_submerged.o(.rodata*);
-        BUILD_DIR/src/game/mario_actions_object.o(.rodata*);
-        BUILD_DIR/src/game/mario_misc.o(.rodata*);
-        BUILD_DIR/src/game/area.o(.rodata*);
-        BUILD_DIR/src/game/rendering_graph_node.o(.rodata*);
-        BUILD_DIR/src/game/camera.o(.rodata*);
-        BUILD_DIR/src/game/object_list_processor.o(.rodata*);
-#ifndef VERSION_EU
-        BUILD_DIR/src/game/object_helpers.o(.rodata*);
-#endif
-        BUILD_DIR/src/game/behavior_actions.o(.rodata*);
-        BUILD_DIR/src/game/platform_displacement.o(.rodata*);
-#ifndef VERSION_EU
-        BUILD_DIR/src/game/object_collision.o(.rodata*);
-        BUILD_DIR/src/game/spawn_object.o(.rodata*);
-#endif
-        BUILD_DIR/src/game/spawn_sound.o(.rodata*);
-        BUILD_DIR/src/game/debug.o(.rodata*);
-        BUILD_DIR/src/game/screen_transition.o(.rodata*);
-        BUILD_DIR/src/game/shadow.o(.rodata*);
-        BUILD_DIR/src/game/skybox.o(.rodata*);
-        BUILD_DIR/src/game/moving_texture.o(.rodata*);
-        BUILD_DIR/src/game/geo_misc.o(.rodata*);
-        BUILD_DIR/src/game/paintings.o(.rodata*);
-        BUILD_DIR/src/game/print.o(.rodata*);
-        BUILD_DIR/src/game/ingame_menu.o(.rodata*);
-        BUILD_DIR/src/game/envfx_snow.o(.rodata*);
-        BUILD_DIR/src/game/envfx_bubbles.o(.rodata*);
-        BUILD_DIR/src/game/macro_special_objects.o(.rodata*);
-        BUILD_DIR/src/game/hud.o(.rodata*);
-        BUILD_DIR/src/game/obj_behaviors.o(.rodata*);
-        BUILD_DIR/src/game/obj_behaviors_2.o(.rodata*);
-#if defined(VERSION_JP) || defined(VERSION_US)
-        BUILD_DIR/src/game*.o(.rodata*);
-#endif
-        BUILD_DIR/src/extras*.o(.rodata*);
+        BUILD_DIR/src/boot*.o(.rodata*);
         BUILD_DIR/src/audio*.o(.rodata*);
         BUILD_DIR/libultra.a:*.o(.rodata*);
         BUILD_DIR/libgcc.a:*.o(.rodata*);
@@ -327,54 +154,8 @@ SECTIONS
     #endif
     BEGIN_NOLOAD(main)
     {
-        BUILD_DIR/src/extras/n64*.o(.bss*);
-        BUILD_DIR/src/game/main.o(.bss*);
-        BUILD_DIR/src/game/game_init.o(.bss*);
-        BUILD_DIR/src/game/sound_init.o(.bss*);
-#ifdef RUMBLE_FEEDBACK
-        BUILD_DIR/src/game/rumble_init.o(.bss*);
-#endif
-#ifndef GODDARD_MFACE
-        BUILD_DIR/src/menu*.o(.bss*);
-#endif
-        BUILD_DIR/src/game/level_update.o(.bss*);
-        BUILD_DIR/src/game/interaction.o(.bss*);
-        BUILD_DIR/src/game/mario.o(.bss*);
-        BUILD_DIR/src/game/mario_actions_cutscene.o(.bss*);
-        BUILD_DIR/src/game/mario_actions_moving.o(.bss*);
-        BUILD_DIR/src/game/mario_actions_submerged.o(.bss*);
-        BUILD_DIR/src/game/mario_misc.o(.bss*);
-        BUILD_DIR/src/game/memory.o(.bss*);
-        BUILD_DIR/src/game/save_file.o(.bss*);
-        BUILD_DIR/src/game/area.o(.bss*);
-        BUILD_DIR/src/game/rendering_graph_node.o(.bss*);
-        BUILD_DIR/src/game/profiler.o(.bss*);
-        BUILD_DIR/src/game/camera.o(.bss*);
-        BUILD_DIR/src/game/object_list_processor.o(.bss*);
-#ifndef VERSION_EU
-        BUILD_DIR/src/game/object_helpers.o(.bss*);
-#endif
-        BUILD_DIR/src/game/behavior_actions.o(.bss*);
-        BUILD_DIR/src/game/platform_displacement.o(.bss*);
-        BUILD_DIR/src/game/debug.o(.bss*);
-        BUILD_DIR/src/game/screen_transition.o(.bss*);
-        BUILD_DIR/src/game/shadow.o(.bss*);
-        BUILD_DIR/src/game/skybox.o(.bss*);
-        BUILD_DIR/src/game/moving_texture.o(.bss*);
-        BUILD_DIR/src/game/geo_misc.o(.bss*);
-        BUILD_DIR/src/game/paintings.o(.bss*);
-        BUILD_DIR/src/game/print.o(.bss*);
-        BUILD_DIR/src/game/ingame_menu.o(.bss*);
-        BUILD_DIR/src/game/envfx_snow.o(.bss*);
-        BUILD_DIR/src/game/envfx_bubbles.o(.bss*);
-        BUILD_DIR/src/game/macro_special_objects.o(.bss*);
-        BUILD_DIR/src/game/hud.o(.bss*);
-        BUILD_DIR/src/game/obj_behaviors.o(.bss*);
-        BUILD_DIR/src/game/obj_behaviors_2.o(.bss*);
-#ifndef VERSION_EU
-        BUILD_DIR/src/game*.o(.bss*);
-#endif
-        BUILD_DIR/src/extras*.o(.bss*);
+        BUILD_DIR/src/boot*.o(.*bss*);
+        BUILD_DIR/src/game*.o(.*bss*);
         BUILD_DIR/libultra.a:*.o(.*bss*);
         BUILD_DIR/lib/rsp.o(.*bss*);
         . = ALIGN(0x10);
@@ -385,61 +166,52 @@ SECTIONS
 
     BEGIN_SEG(engine, .)
     {
-        BUILD_DIR/src/engine/math_util.o(.text);
-        BUILD_DIR/src/engine/graph_node.o(.text);
-        BUILD_DIR/src/engine/graph_node_manager.o(.text);
-        BUILD_DIR/src/engine/geo_layout.o(.text);
-        BUILD_DIR/src/engine/level_script.o(.text);
-        BUILD_DIR/src/engine/surface_collision.o(.text);
-        BUILD_DIR/src/engine/surface_load.o(.text);
-        BUILD_DIR/src/engine/behavior_script.o(.text);
-#ifdef VERSION_EU
-        BUILD_DIR/src/game/object_collision.o(.text);
-        BUILD_DIR/src/game/spawn_object.o(.text);
-        BUILD_DIR/src/game/object_helpers.o(.text);
+      BUILD_DIR/src/game*.o(.text*);
+      BUILD_DIR/src/game/behavior_actions.o(.text*);
+      BUILD_DIR/src/game/obj_behaviors_2.o(.text*);
+      BUILD_DIR/src/game/obj_behaviors.o(.text*);
+      BUILD_DIR/src/game/object_helpers.o(.text*);
+      BUILD_DIR/src/game/rendering_graph_node.o(.text*);
+      BUILD_DIR/src/engine/math_util.o(.text*);
+      BUILD_DIR/src/engine/surface_collision.o(.text*);
+      BUILD_DIR/src/engine/surface_load.o(.text*);
+      BUILD_DIR/src/engine/graph_node.o(.text*);
+      BUILD_DIR/src/engine*.o(.text*);
+#ifndef GODDARD_MFACE
+      BUILD_DIR/src/menu*.o(.text);
 #endif
-        BUILD_DIR/src/engine*.o(.text);
-        /* data */
-        BUILD_DIR/src/engine/graph_node.o(.data*);
-        BUILD_DIR/src/engine/graph_node_manager.o(.data*);
-        BUILD_DIR/src/engine/math_util.o(.data*);
-        BUILD_DIR/src/engine/geo_layout.o(.data*);
-        BUILD_DIR/src/engine/level_script.o(.data*);
-        BUILD_DIR/src/engine/behavior_script.o(.data*);
-#ifdef VERSION_EU
-        BUILD_DIR/src/game/object_collision.o(.data*);
-        BUILD_DIR/src/game/spawn_object.o(.data*);
-        BUILD_DIR/src/game/object_helpers.o(.data*);
+      BUILD_DIR/src/extras*.o(.text);
+
+      /* data */
+      BUILD_DIR/src/game*.o(.data*);
+      BUILD_DIR/src/engine*.o(.data*);
+#ifndef GODDARD_MFACE
+      BUILD_DIR/src/menu*.o(.data*);
 #endif
-        BUILD_DIR/src/engine*.o(.data*);
-        /* rodata */
-        BUILD_DIR/src/engine/math_util.o(.rodata*);
-        BUILD_DIR/src/engine/level_script.o(.rodata*);
-        BUILD_DIR/src/engine/surface_collision.o(.rodata*);
-        BUILD_DIR/src/engine/surface_load.o(.rodata*);
-#ifdef VERSION_EU
-        BUILD_DIR/src/game/object_collision.o(.rodata*);
-        BUILD_DIR/src/game/spawn_object.o(.rodata*);
-        BUILD_DIR/src/game/object_helpers.o(.rodata*);
+      BUILD_DIR/src/extras*.o(.data*);
+
+      /* rodata */
+      BUILD_DIR/src/game*.o(.rodata*);
+      BUILD_DIR/src/engine*.o(.rodata*);
+#ifndef GODDARD_MFACE
+      BUILD_DIR/src/menu*.o(.rodata*);
 #endif
-        BUILD_DIR/src/engine*.o(.rodata*);
+      BUILD_DIR/src/extras*.o(.rodata*);
+      . = ALIGN(0x10);
     }
     END_SEG(engine)
+    
+    // load_engine_code_segment had to be modified to clear bss section.
+    // Without it, any code you add in would get garbage data, causing a crash on boot.
     BEGIN_NOLOAD(engine)
     {
-        BUILD_DIR/src/engine/math_util.o(.bss*);
-        BUILD_DIR/src/engine/geo_layout.o(.bss*);
-        BUILD_DIR/src/engine/level_script.o(.bss*);
-        BUILD_DIR/src/engine/surface_collision.o(.bss*);
-        BUILD_DIR/src/engine/surface_load.o(.bss*);
-        BUILD_DIR/src/engine/behavior_script.o(.bss*);
-#ifdef VERSION_EU
-        BUILD_DIR/src/game/object_collision.o(.bss*);
-        BUILD_DIR/src/game/spawn_object.o(.bss*);
-        BUILD_DIR/src/game/object_helpers.o(.bss*);
+      BUILD_DIR/src/game*.o(.*bss*);
+      BUILD_DIR/src/engine*.o(.bss*);
+#ifndef GODDARD_MFACE
+      BUILD_DIR/src/menu*.o(.bss*);
 #endif
-        BUILD_DIR/src/engine*.o(.bss*);
-        . = ALIGN(0x100);
+      BUILD_DIR/src/extras*.o(.bss*);
+      . = ALIGN(0x40);
     }
     END_NOLOAD(engine)
 
@@ -447,7 +219,6 @@ SECTIONS
     BEGIN_NOLOAD(framebuffers)
     {
         BUILD_DIR/src/buffers/framebuffers.o(.bss*);
-        . = ALIGN(0x100);
     }
     END_NOLOAD(framebuffers)
 
