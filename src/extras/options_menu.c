@@ -532,7 +532,7 @@ void optmenu_toggle(void) {
         l_counter = 0;
     } else {
         #ifndef nosound
-        play_sound(SOUND_MENU_MARIO_CASTLE_WARP2, gGlobalSoundSource);
+        play_sound(SOUND_MENU_HIGH_SCORE, gGlobalSoundSource);
         #endif
         optmenu_open = 0;
 #ifndef TARGET_N64

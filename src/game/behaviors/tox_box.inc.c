@@ -98,7 +98,7 @@ void tox_box_move(f32 forwardVel, f32 upVel, s16 deltaPitch, s16 deltaRoll) {
 
     if (o->oTimer == 7) {
         o->oAction = cur_obj_progress_action_table();
-        cur_obj_play_sound_2(SOUND_GENERAL_UNK46);
+        cur_obj_play_sound_2(SOUND_GENERAL_TOX_BOX_MOVE);
     }
 }
 

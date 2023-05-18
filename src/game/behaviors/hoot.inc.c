@@ -70,7 +70,7 @@ void hoot_free_step(s16 fastOscY, s32 speed) {
     }
 
     if (animFrame == 0) {
-        cur_obj_play_sound_2(SOUND_GENERAL_SWISH_WATER);
+        cur_obj_play_sound_2(SOUND_GENERAL_WING_FLAP);
     }
 }
 
@@ -111,7 +111,7 @@ void hoot_carry_step(s32 speed, UNUSED f32 xPrev, UNUSED f32 zPrev) {
     o->oPosZ += o->oVelZ;
 
     if (animFrame == 0) {
-        cur_obj_play_sound_2(SOUND_GENERAL_SWISH_WATER);
+        cur_obj_play_sound_2(SOUND_GENERAL_WING_FLAP);
     }
 }
 

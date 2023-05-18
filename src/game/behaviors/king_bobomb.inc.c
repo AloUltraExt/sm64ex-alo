@@ -101,7 +101,7 @@ void king_bobomb_act_3(void) {
         o->oKingBobombUnkFC = 0;
 
         if (o->oTimer == 0) {
-            cur_obj_play_sound_2(SOUND_OBJ_UNKNOWN3);
+            cur_obj_play_sound_2(SOUND_OBJ_GRAB_MARIO);
         }
 
         if (cur_obj_init_animation_and_check_if_near_end(0)) {
@@ -134,7 +134,7 @@ void king_bobomb_act_3(void) {
 
         if (cur_obj_check_anim_frame(31)) {
             o->oKingBobombUnk88 = 2;
-            cur_obj_play_sound_2(SOUND_OBJ_UNKNOWN4);
+            cur_obj_play_sound_2(SOUND_OBJ_RELEASE_MARIO);
         } else if (cur_obj_check_if_near_animation_end()) {
             o->oAction = 1;
             o->oInteractStatus &= ~INT_STATUS_GRABBED_MARIO;
@@ -356,17 +356,17 @@ void (*sKingBobombActions[])(void) = {
 };
 struct SoundState sKingBobombSoundStates[] = {
     { 0, 0, 0, NO_SOUND },
-    { 1, 1, 20, SOUND_OBJ_POUNDING1_HIGHPRIO },
+    { 1, 1, 20, SOUND_OBJ_KING_BOBOMB_POUNDING1_HIGHPRIO },
     { 0, 0, 0, NO_SOUND },
     { 0, 0, 0, NO_SOUND },
-    { 1, 15, -1, SOUND_OBJ_POUNDING1_HIGHPRIO },
+    { 1, 15, -1, SOUND_OBJ_KING_BOBOMB_POUNDING1_HIGHPRIO },
     { 0, 0, 0, NO_SOUND },
     { 0, 0, 0, NO_SOUND },
     { 0, 0, 0, NO_SOUND },
     { 0, 0, 0, NO_SOUND },
-    { 1, 33, -1, SOUND_OBJ_POUNDING1_HIGHPRIO },
+    { 1, 33, -1, SOUND_OBJ_KING_BOBOMB_POUNDING1_HIGHPRIO },
     { 0, 0, 0, NO_SOUND },
-    { 1, 1, 15, SOUND_OBJ_POUNDING1_HIGHPRIO },
+    { 1, 1, 15, SOUND_OBJ_KING_BOBOMB_POUNDING1_HIGHPRIO },
 };
 
 void king_bobomb_move(void) {

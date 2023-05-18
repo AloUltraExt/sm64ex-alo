@@ -36,7 +36,7 @@ void bhv_bowser_key_loop(void) {
         if (o->oMoveFlags & OBJ_MOVE_ON_GROUND) {
             o->oAction++;
         } else if (o->oMoveFlags & OBJ_MOVE_LANDED) {
-            cur_obj_play_sound_2(SOUND_GENERAL_UNKNOWN3);
+            cur_obj_play_sound_2(SOUND_GENERAL_BOWSER_KEY_LAND);
         }
     } else {
         obj_set_hitbox(o, &sBowserKeyHitbox);
