@@ -458,22 +458,6 @@ void *load_segment_decompress(s32 segment, u8 *srcStart, u8 *srcEnd) {
     return dest;
 }
 
-void *load_segment_decompress_heap(u32 segment, u8 *srcStart, u8 *srcEnd) {
-    UNUSED void *dest = NULL;
-    u32 compSize = ALIGN16(srcEnd - srcStart);
-    u8 *compressed = main_pool_alloc(compSize, MEMORY_POOL_RIGHT);
-    UNUSED u32 *pUncSize = (u32 *) (compressed + 4);
-
-    if (compressed != NULL) {
-        dma_read(compressed, srcStart, srcEnd);
-        decompress(compressed, gDecompressionHeap);
-        set_segment_base_addr(segment, gDecompressionHeap);
-        main_pool_free(compressed);
-    } else {
-    }
-    return gDecompressionHeap;
-}
-
 /**
  * Loads the engine segment defined in the linker.
  * Cleans up the main segment to ensure we don't load garbage code.

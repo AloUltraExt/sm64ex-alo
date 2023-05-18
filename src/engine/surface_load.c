@@ -137,7 +137,6 @@ static void clear_static_surfaces(void) {
 static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surface *surface) {
     struct SurfaceNode *newNode = alloc_surface_node(dynamic);
     struct SurfaceNode *list;
-    s32 surfacePriority;
     s32 sortDir = 1; // highest to lowest, then insertion order (water and floors)
     s32 listIndex;
 

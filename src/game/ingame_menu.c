@@ -1773,13 +1773,10 @@ s8 gDialogCourseActNum = 1;
 #endif
 
 void render_dialog_entries(void) {
-#ifdef VERSION_EU
-    s8 lowerBound;
-#endif
     void **dialogTable;
     struct DialogEntry *dialog;
-#if defined(VERSION_US) || defined(VERSION_SH)
-    s8 lowerBound;
+#if defined(VERSION_US) || defined(VERSION_EU) || defined(VERSION_SH)
+    s8 lowerBound = 0;
 #endif
 
 #ifdef VERSION_EU

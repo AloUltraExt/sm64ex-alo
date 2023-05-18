@@ -509,7 +509,7 @@ void warp_level(void) {
 }
 
 void warp_credits(void) {
-    s32 marioAction;
+    s32 marioAction = ACT_UNINITIALIZED;
 
     switch (sWarpDest.nodeId) {
         case WARP_NODE_CREDITS_START:

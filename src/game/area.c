@@ -211,10 +211,11 @@ void clear_areas(void) {
         gAreaData[i].camera = NULL;
         gAreaData[i].unused = NULL;
         for (j = 0; j < ARRAY_COUNT(gAreaData[i].whirlpools); j++) {
-            gAreaData[i].whirlpools[i] = NULL;
+            gAreaData[i].whirlpools[j] = NULL;
         }
-        gAreaData[i].dialog[0] = DIALOG_NONE;
-        gAreaData[i].dialog[1] = DIALOG_NONE;
+        for (j = 0; j < ARRAY_COUNT(gAreaData[i].dialog); j++) {
+            gAreaData[i].dialog[j] = DIALOG_NONE;
+        }
         gAreaData[i].musicParam = 0;
         gAreaData[i].musicParam2 = 0;
     }

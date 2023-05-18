@@ -108,7 +108,7 @@ void bhv_bowling_ball_roll_loop(void) {
 void bhv_bowling_ball_initialize_loop(void) {
     bowling_ball_set_waypoints();
 
-    f32 followStatus = cur_obj_follow_path();
+    cur_obj_follow_path();
 
     o->oMoveAngleYaw = o->oPathedTargetYaw;
 
