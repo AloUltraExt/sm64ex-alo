@@ -346,16 +346,14 @@ void thread3_main(UNUSED void *arg) {
     load_engine_code_segment();
     n64_system_device_checks();
 
-    create_thread(&gSoundThread, 4, thread4_sound, NULL, gThread4Stack + 0x2000, 20);
+    create_thread(&gSoundThread, 4, thread4_sound, NULL, &gThread4Stack[STACKSIZE], 20);
     osStartThread(&gSoundThread);
 
 #ifdef N64_USE_EXTENDED_RAM
-    if (!gNotEnoughMemory)
-        create_thread(&gGameLoopThread, 5, thread5_game_loop, NULL, gThread5Stack + 0x2000, 10);
-    else
-        create_thread(&gGameLoopThread, 5, thread5_mem_error_message_loop, NULL, gThread5Stack + 0x2000, 10);
+    create_thread(&gGameLoopThread, 5, 
+        gNotEnoughMemory ? thread5_mem_error_message_loop : thread5_game_loop, NULL, &gThread5Stack[STACKSIZE], 10);
 #else
-    create_thread(&gGameLoopThread, 5, thread5_game_loop, NULL, gThread5Stack + 0x2000, 10);
+    create_thread(&gGameLoopThread, 5, thread5_game_loop, NULL, &gThread5Stack[STACKSIZE], 10);
 #endif
 
     osStartThread(&gGameLoopThread);
@@ -464,7 +462,7 @@ void thread1_idle(UNUSED void *arg) {
     extern void crash_screen_init(void);
     crash_screen_init();
 #endif
-    create_thread(&gMainThread, 3, thread3_main, NULL, gThread3Stack + 0x2000, 100);
+    create_thread(&gMainThread, 3, thread3_main, NULL, &gThread3Stack[STACKSIZE], 100);
     if (D_8032C650 == 0) {
         osStartThread(&gMainThread);
     }
@@ -481,6 +479,6 @@ void main_func(void) {
 
     osInitialize();
     stub_main_1();
-    create_thread(&gIdleThread, 1, thread1_idle, NULL, gIdleThreadStack + 0x800, 100);
+    create_thread(&gIdleThread, 1, thread1_idle, NULL, &gIdleThreadStack[IDLE_STACKSIZE], 100);
     osStartThread(&gIdleThread);
 }

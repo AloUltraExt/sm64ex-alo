@@ -1154,7 +1154,7 @@ u32 interact_strong_wind(struct MarioState *m, UNUSED u32 interactType, struct O
         m->usedObj = o;
 
         m->faceAngle[1] = o->oMoveAngleYaw + 0x8000;
-        m->unkC4 = 0.4f;
+        m->gettingBlownGravity = 0.4f;
         m->forwardVel = -24.0f;
         m->vel[1] = 12.0f;
 

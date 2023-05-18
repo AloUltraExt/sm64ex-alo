@@ -68,4 +68,8 @@
 
 #define BORDER_HEIGHT 0
 
+// Stack Size Defines
+#define IDLE_STACKSIZE 0x800
+#define STACKSIZE 0x2000
+
 #endif // CONFIG_H

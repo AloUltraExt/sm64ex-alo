@@ -746,13 +746,15 @@ void mem_pool_free(struct MemoryPool *pool, void *addr) {
                 }
                 freeList = freeList->next;
             }
-            if ((u8 *) freeList + freeList->size == (u8 *) block) {
+
+            if (block == (struct MemoryBlock *) ((u8 *) freeList + freeList->size)) {
                 freeList->size += block->size;
                 block = freeList;
             } else {
                 block->next = freeList->next;
                 freeList->next = block;
             }
+
             if (block->next != NULL && (u8 *) block->next == (u8 *) block + block->size) {
                 block->size = block->size + block->next->size;
                 block->next = block->next->next;
@@ -802,7 +804,7 @@ s32 load_patchable_table(struct DmaHandlerList *list, s32 index) {
         u8 *addr = table->srcAddr + table->anim[index].offset;
         s32 size = table->anim[index].size;
 
-        if (list->currentAddr != addr) {
+        if (addr != list->currentAddr) {
             dma_read(list->bufTarget, addr, addr + size);
             list->currentAddr = addr;
             ret = TRUE;
