@@ -1,5 +1,9 @@
 // Assembly Macros
 
+#ifdef _LANGUAGE_ASSEMBLY
+#undef _LANGUAGE_C
+#endif
+
 #if defined(__APPLE__)
 .macro .section label
     \label
@@ -10,10 +14,6 @@
 #else
 #    define cdecl(s) s
 #endif
-
-.set K0BASE, 0x80000000
-.set K1BASE, 0xA0000000
-.set K2BASE, 0xC0000000
 
 .macro glabel label
     .global cdecl(\label)

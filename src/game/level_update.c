@@ -32,7 +32,6 @@
 #include "level_table.h"
 #include "course_table.h"
 #include "rumble_init.h"
-#include "../../include/libc/stdlib.h"
 
 #ifndef TARGET_N64
 #include "pc/pc_main.h"

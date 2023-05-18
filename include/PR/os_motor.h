@@ -17,7 +17,7 @@ extern "C" {
 #include <PR/ultratypes.h>
 #include "os_message.h"
 #include "os_pfs.h"
-
+#include "os_version.h"
 
 #if defined(_LANGUAGE_C) || defined(_LANGUAGE_C_PLUS_PLUS)
 
@@ -60,11 +60,17 @@ extern "C" {
  */
 
 /* Rumble PAK interface */
-
 extern s32 osMotorInit(OSMesgQueue *, OSPfs *, int);
+#define MOTOR_START		1
+#define MOTOR_STOP		0
+extern s32 __osMotorAccess(OSPfs *, s32);
+#if LIBULTRA_VERSION > OS_VER_I && !defined(BBPLAYER) && defined(TARGET_N64)
+#define	osMotorStart(x)		__osMotorAccess((x), MOTOR_START)
+#define	osMotorStop(x)		__osMotorAccess((x), MOTOR_STOP)
+#else
 extern s32 osMotorStop(OSPfs *);
 extern s32 osMotorStart(OSPfs *);
-
+#endif
 
 #endif  /* defined(_LANGUAGE_C) || defined(_LANGUAGE_C_PLUS_PLUS) */
 

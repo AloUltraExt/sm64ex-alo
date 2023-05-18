@@ -1,6 +1,7 @@
 #pragma once
+
 #include <ultra64.h>
-#include "lib/src/libultra_internal.h"
+#include "PR/os_internal.h"
 #include "PR/rcp.h"
 
 extern u8 gIsConsole;

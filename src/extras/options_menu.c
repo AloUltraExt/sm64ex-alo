@@ -24,7 +24,6 @@
 #include "pc/controller/controller_api.h"
 
 #include <stdbool.h>
-#include "../../include/libc/stdlib.h"
 #endif
 
 #ifdef BETTERCAMERA

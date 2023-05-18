@@ -7,7 +7,7 @@ OUTPUT_ARCH (mips)
 #define BEGIN_SEG(name, addr) \
      _##name##SegmentStart = ADDR(.name); \
      _##name##SegmentRomStart = __romPos; \
-     .name addr : AT(__romPos)
+     .name (addr) : AT(__romPos)
 
 #define END_SEG(name) \
      _##name##SegmentEnd = ADDR(.name) + SIZEOF(.name); \
@@ -15,11 +15,12 @@ OUTPUT_ARCH (mips)
      __romPos += SIZEOF(.name);
 
 #define BEGIN_NOLOAD(name) \
-     _##name##SegmentNoloadStart = ADDR(.name.noload); \
+     _##name##SegmentBssStart = ADDR(.name.noload); \
      .name.noload (NOLOAD) :
 
 #define END_NOLOAD(name) \
-     _##name##SegmentNoloadEnd = ADDR(.name.noload) + SIZEOF(.name.noload);
+     _##name##SegmentBssEnd = ADDR(.name.noload) + SIZEOF(.name.noload); \
+     _##name##SegmentBssSize = SIZEOF(.name.noload);
 
 #define MIO0_SEG(name, segAddr) \
     BEGIN_SEG(name##_mio0, segAddr) \
@@ -89,16 +90,18 @@ SECTIONS
     {
         BUILD_DIR/asm/rom_header.o(.text);
         BUILD_DIR/asm/boot.o(.text);
+        BUILD_DIR/asm/ipl3_font.o(.text);
     }
     END_SEG(boot)
 
     . = 0x80000400;
-    BEGIN_NOLOAD(zbuffer) {
+    BEGIN_NOLOAD(zbuffer) 
+    {
         BUILD_DIR/src/buffers/zbuffer.o(.bss*);
     }
     END_NOLOAD(zbuffer)
 
-    . = _zbufferSegmentNoloadEnd;
+    . = _zbufferSegmentBssEnd;
     BEGIN_NOLOAD(buffers)
     {
         BUILD_DIR/src/buffers/buffers.o(.bss*);
@@ -117,7 +120,7 @@ SECTIONS
     }
     END_NOLOAD(buffers)
 
-    /*ASSERT((. <= SEG_MAIN), "Error: buffers segment extended into main")*/
+    . = _buffersSegmentBssEnd;
 
     BEGIN_SEG(main, .)
     {
@@ -377,10 +380,8 @@ SECTIONS
         . = ALIGN(0x10);
     }
     END_NOLOAD(main)
-    _mainSegmentNoloadSizeLo = SIZEOF (.main.noload) & 0xffff;
-    _mainSegmentNoloadSizeHi = SIZEOF (.main.noload) >> 16;
 
-    . = _mainSegmentNoloadEnd;
+    . = _mainSegmentBssEnd;
 
     BEGIN_SEG(engine, .)
     {
@@ -442,7 +443,7 @@ SECTIONS
     }
     END_NOLOAD(engine)
 
-    . = _engineSegmentNoloadEnd;
+    . = _engineSegmentBssEnd;
     BEGIN_NOLOAD(framebuffers)
     {
         BUILD_DIR/src/buffers/framebuffers.o(.bss*);
@@ -505,40 +506,14 @@ SECTIONS
 
 #ifdef GODDARD_MFACE
     /* 0x8016F000 21D7D0-255EC0 [386F0] */
-    BEGIN_SEG(goddard, RAM_END - GODDARD_SIZE)
+    BEGIN_SEG(goddard, (SEG_RAM_END - GODDARD_SIZE))
     {
-        BUILD_DIR/src/menu/title_screen.o(.text);
-        BUILD_DIR/src/menu/intro_geo.o(.text);
-        BUILD_DIR/src/menu/file_select.o(.text);
-        BUILD_DIR/src/menu/star_select.o(.text);
         BUILD_DIR/src/menu*.o(.text);
-        BUILD_DIR/libgoddard.a:gd_main.o(.text);
-        BUILD_DIR/libgoddard.a:gd_memory.o(.text);
-        BUILD_DIR/libgoddard.a:sfx.o(.text);
-        BUILD_DIR/libgoddard.a:draw_objects.o(.text);
-        BUILD_DIR/libgoddard.a:objects.o(.text);
-        BUILD_DIR/libgoddard.a:skin_movement.o(.text);
-        BUILD_DIR/libgoddard.a:particles.o(.text);
-        BUILD_DIR/libgoddard.a:dynlist_proc.o(.text);
-        BUILD_DIR/libgoddard.a:old_menu.o(.text);
-        BUILD_DIR/libgoddard.a:debug_utils.o(.text);
-        BUILD_DIR/libgoddard.a:joints.o(.text);
-        BUILD_DIR/libgoddard.a:skin.o(.text);
-        BUILD_DIR/libgoddard.a:gd_math.o(.text);
-        BUILD_DIR/libgoddard.a:shape_helper.o(.text);
-        BUILD_DIR/libgoddard.a:renderer.o(.text);
-        BUILD_DIR/libgoddard.a:*.o(.text);
-
-        /* data, rodata, per file */
-        BUILD_DIR/src/menu/title_screen.o(.data*);
-        BUILD_DIR/src/menu/title_screen.o(.rodata*);
-        BUILD_DIR/src/menu/intro_geo.o(.data*);
-        BUILD_DIR/src/menu/file_select.o(.data*);
-        BUILD_DIR/src/menu/file_select.o(.rodata*);
-        BUILD_DIR/src/menu/star_select.o(.data*);
-        BUILD_DIR/src/menu/star_select.o(.rodata*);
         BUILD_DIR/src/menu*.o(.data*);
         BUILD_DIR/src/menu*.o(.rodata*);
+
+        BUILD_DIR/libgoddard.a:*.o(.text);
+
         /* goddard subsystem data */
         BUILD_DIR/libgoddard.a:gd_main.o(.data*);
         BUILD_DIR/libgoddard.a:draw_objects.o(.data*);
@@ -568,24 +543,8 @@ SECTIONS
     END_SEG(goddard)
     BEGIN_NOLOAD(goddard)
     {
-        BUILD_DIR/src/menu/intro_geo.o(.bss*);
-        BUILD_DIR/src/menu/file_select.o(.bss*);
-        BUILD_DIR/src/menu/star_select.o(.bss*);
         BUILD_DIR/src/menu*.o(.bss*);
-        BUILD_DIR/libgoddard.a:gd_main.o(.bss*);
-        BUILD_DIR/libgoddard.a:gd_memory.o(.bss*);
-        BUILD_DIR/libgoddard.a:sfx.o(.bss*);
-        BUILD_DIR/libgoddard.a:draw_objects.o(.bss*);
-        BUILD_DIR/libgoddard.a:objects.o(.bss*);
-        BUILD_DIR/libgoddard.a:skin_movement.o(.bss*);
-        BUILD_DIR/libgoddard.a:particles.o(.bss*);
-        BUILD_DIR/libgoddard.a:dynlist_proc.o(.bss*);
-        BUILD_DIR/libgoddard.a:old_menu.o(.bss*);
-        BUILD_DIR/libgoddard.a:debug_utils.o(.bss*);
-        BUILD_DIR/libgoddard.a:joints.o(.bss*);
-        BUILD_DIR/libgoddard.a:skin.o(.bss*);
-        BUILD_DIR/libgoddard.a:shape_helper.o(.bss*);
-        BUILD_DIR/libgoddard.a:renderer.o(.bss*);
+
         BUILD_DIR/libgoddard.a:*.o(.bss*);
     }
     END_NOLOAD(goddard)
@@ -599,7 +558,7 @@ SECTIONS
     #endif
 
     __mainPoolStart = .;
-    __mainPoolSize = RAM_END - .;
+    __mainPoolSize = SEG_RAM_END - .;
 
     /* 0x268020 0x268020-0 [0] */
     BEGIN_SEG(intro, 0x14000000)

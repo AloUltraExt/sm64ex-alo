@@ -5,7 +5,6 @@
 
 #include "macros.inc"
 
-
 .section .text, "ax"
 
 // This file is handwritten.

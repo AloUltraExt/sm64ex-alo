@@ -10,9 +10,10 @@
 #include <string.h>
 #include "buffers/framebuffers.h"
 #include "sm64.h"
-#include "lib/src/printf.h"
 
 #ifdef N64_CRASH_SCREEN
+#include "PR/os_internal.h"
+#include "lib/ultra/libc/xstdio.h"
 
 #define CRASH_BG_COLOR      GPACK_RGBA5551(0, 0, 0, 1)
 #define CRASH_CH_COLOR      GPACK_RGBA5551(255, 255, 255, 1)

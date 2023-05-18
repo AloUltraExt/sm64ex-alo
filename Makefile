@@ -266,14 +266,16 @@ VERSION ?= us
 $(eval $(call validate-option,VERSION,jp us eu sh))
 
 ifeq      ($(VERSION),jp)
-  DEFINES   += VERSION_JP=1
+  VER_DEFINES   += VERSION_JP=1
 else ifeq ($(VERSION),us)
-  DEFINES   += VERSION_US=1
+  VER_DEFINES   += VERSION_US=1
 else ifeq ($(VERSION),eu)
-  DEFINES   += VERSION_EU=1
+  VER_DEFINES   += VERSION_EU=1
 else ifeq ($(VERSION),sh)
-  DEFINES   += VERSION_SH=1
+  VER_DEFINES   += VERSION_SH=1
 endif
+
+DEFINES += $(VER_DEFINES)
 
 TARGET := sm64.$(VERSION).$(GRUCODE)
 
@@ -289,29 +291,31 @@ TARGET := sm64.$(VERSION).$(GRUCODE)
 $(eval $(call validate-option,GRUCODE,f3d_old f3dex f3dex2 f3dex2e f3dex2pl f3d_new f3dzex super3d l3dex2))
 
 ifeq      ($(GRUCODE),f3d_old)
-  DEFINES += F3D_OLD=1
+  GRU_DEFINES += F3D_OLD=1
 else ifeq ($(GRUCODE),f3d_new) # Fast3D 2.0H
-  DEFINES += F3D_NEW=1
+  GRU_DEFINES += F3D_NEW=1
 else ifeq ($(GRUCODE),f3dex) # Fast3DEX
-  DEFINES += F3DEX_GBI=1 F3DEX_GBI_SHARED=1
+  GRU_DEFINES += F3DEX_GBI=1 F3DEX_GBI_SHARED=1
 else ifeq ($(GRUCODE),f3dex2) # Fast3DEX2
-  DEFINES += F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
+  GRU_DEFINES += F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
 else ifeq ($(GRUCODE),l3dex2) # Line3DEX2
-  DEFINES += L3DEX2_GBI=1 L3DEX2_ALONE=1 F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
+  GRU_DEFINES += L3DEX2_GBI=1 L3DEX2_ALONE=1 F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
 else ifeq ($(GRUCODE),f3dex2pl) # Fast3DEX2_PosLight
-  DEFINES += F3DEX2PL_GBI=1 F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
+  GRU_DEFINES += F3DEX2PL_GBI=1 F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
 else ifeq ($(GRUCODE),f3dzex) # Fast3DZEX (2.08J / Animal Forest - Dōbutsu no Mori)
-  DEFINES += F3DZEX_GBI_2=1 F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
+  GRU_DEFINES += F3DZEX_GBI_2=1 F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
 else ifeq ($(GRUCODE),super3d) # Super3D
   $(warning Super3D is experimental. Try at your own risk.)
-  DEFINES += SUPER3D_GBI=1 F3D_NEW=1
+  GRU_DEFINES += SUPER3D_GBI=1 F3D_NEW=1
 else ifeq ($(GRUCODE),f3dex2e) # Fast3DEX2 Extended (PC Only)
   ifeq ($(TARGET_N64),1)
     $(error f3dex2e is only supported on PC Port)
   else
-    DEFINES += F3DEX_GBI_2E=1
+    GRU_DEFINES += F3DEX_GBI_2E=1
   endif
 endif
+
+DEFINES += $(GRU_DEFINES)
 
 # Specify target defines
 ifeq ($(TARGET_RPI),1) # Define RPi to change SDL2 title & GLES2 hints
@@ -330,10 +334,40 @@ else ifeq ($(TARGET_SWITCH),1)
   DEFINES += TARGET_SWITCH=1 USE_GLES=1
 endif
 
+# Libultra defines
+LIBULTRA ?= L
+
+# Libultra number revision (only used on 2.0D)
+LIBULTRA_REVISION ?= 0
+
+# LIBULTRA - sets the libultra OS version to use
+$(eval $(call validate-option,LIBULTRA,D F H I K L BB))
+
+# Libultra number revision (only used on 2.0D)
+LIBULTRA_REVISION ?= 0
+
+ULTRA_VER_D := 1
+ULTRA_VER_E := 2
+ULTRA_VER_F := 3
+ULTRA_VER_G := 4
+ULTRA_VER_H := 5
+ULTRA_VER_I := 6
+ULTRA_VER_J := 7
+ULTRA_VER_K := 8
+ULTRA_VER_L := 9
+
+ifeq ($(LIBULTRA),BB)
+  ULTRA_VER_DEF  := LIBULTRA_VERSION=$(ULTRA_VER_L) BBPLAYER LIBULTRA_STR_VER=\"L\"
+else
+  ULTRA_VER_DEF  := LIBULTRA_VERSION=$(ULTRA_VER_$(LIBULTRA)) LIBULTRA_REVISION=$(LIBULTRA_REVISION) LIBULTRA_STR_VER=\"$(LIBULTRA)\"
+endif
+
+DEFINES += $(ULTRA_VER_DEF)
+
 # Important defines
 
 # Mandatory defines to ensture correct compilation
-DEFINES += NON_MATCHING=1 AVOID_UB=1 _LANGUAGE_C=1
+DEFINES += NON_MATCHING=1 AVOID_UB=1
 
 # Check for no bzero/bcopy workaround option
 ifeq ($(NO_BZERO_BCOPY),1)
@@ -345,6 +379,10 @@ ifeq ($(NO_LDIV),1)
   DEFINES += NO_LDIV=1
 endif
 
+ifeq ($(TARGET_N64),1)
+  DEFINES += TARGET_N64=1 _FINALROM=1
+endif  
+ 
 #==============================================================================#
 # Universal Dependencies                                                       #
 #==============================================================================#
@@ -496,7 +534,11 @@ endif
 
 BIN_DIRS := bin bin/$(VERSION)
 
-ULTRA_SRC_DIRS := lib/src lib/src/math lib/asm lib/data
+ifeq ($(LIBULTRA),BB)
+  ULTRA_SRC_DIRS := $(shell find lib/ultra -type d)
+else
+  ULTRA_SRC_DIRS := $(shell find lib/ultra -type d -not -path "lib/ultra/bb/*")
+endif
 ULTRA_BIN_DIRS := lib/bin
 LIBGCC_SRC_DIRS := lib/gcc
 
@@ -601,20 +643,20 @@ ifneq ($(TARGET_N64),1)
 GENERATED_C_FILES += $(addprefix $(BUILD_DIR)/bin/,$(addsuffix _skybox.c,$(notdir $(basename $(wildcard textures/skyboxes/*.png)))))
 
 ULTRA_C_FILES := \
-  alBnkfNew.c \
-  guLookAtRef.c \
-  guMtxF2L.c \
-  guNormalize.c \
-  guOrthoF.c \
-  guPerspectiveF.c \
-  guRotateF.c \
-  guScaleF.c \
-  guTranslateF.c \
-  ldiv.c
+  audio/bnkf.c \
+  gu/lookatref.c \
+  gu/mtxutil.c \
+  gu/normalize.c \
+  gu/ortho.c \
+  gu/perspective.c \
+  gu/rotate.c \
+  gu/scale.c \
+  gu/translate.c \
+  libc/ldiv.c
 
 C_FILES := $(filter-out src/game/main.c,$(C_FILES))
 
-ULTRA_C_FILES := $(addprefix lib/src/,$(ULTRA_C_FILES))
+ULTRA_C_FILES := $(addprefix lib/ultra/,$(ULTRA_C_FILES))
 endif
 
 # "If we're not N64, use the above"
@@ -680,7 +722,7 @@ endif
 
 INCLUDE_DIRS := include $(BUILD_DIR) $(BUILD_DIR)/include src .
 ifeq ($(TARGET_N64),1)
-  INCLUDE_DIRS += include/libc
+  INCLUDE_DIRS += include/gcc
 endif
 ifeq ($(TARGET_ANDROID),1)
   INCLUDE_DIRS += $(PLATFORM_DIR)/SDL/include
@@ -769,29 +811,27 @@ AR        := $(CROSS)ar
 OBJDUMP   := $(CROSS)objdump
 OBJCOPY   := $(CROSS)objcopy
 
-N64_CFLAGS := -nostdinc -DTARGET_N64
-CC_CFLAGS := -fno-builtin
-
-
 # Check code syntax with host compiler
-CFLAGS := -G 0 $(N64_CFLAGS) $(MIPSISET) $(DEF_INC_CFLAGS)
+CFLAGS := -G 0 -nostdinc $(MIPSISET) $(DEF_INC_CFLAGS)
 
 ifeq ($(COMPILER_TYPE),gcc)
   CFLAGS += -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra
   CFLAGS += -Wno-missing-braces
 else ifeq ($(COMPILER_TYPE),clang)
-  CFLAGS += -mfpxx -target mips -mabi=32 -G 0 -mhard-float -fomit-frame-pointer -fno-stack-protector -fno-common -I include -I src/ -I $(BUILD_DIR)/include -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra
+  CFLAGS += -mfpxx -target mips -mabi=32 -mhard-float -fomit-frame-pointer -fno-stack-protector -fno-common -I include -I src/ -I $(BUILD_DIR)/include -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra
   CFLAGS += -Wno-missing-braces
 else
   CFLAGS += -non_shared -Wab,-r4300_mul -Xcpluscomm -Xfullwarn -signed -32
 endif
 
-ASFLAGS := -march=vr4300 -mabi=32 $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(DEFINES),--defsym $(d))
-RSPASMFLAGS := $(foreach d,$(DEFINES),-definelabel $(subst =, ,$(d)))
+ASMFLAGS = -G 0 $(DEF_INC_CFLAGS) -w -nostdinc -c -march=vr4300 -mfix4300 -mno-abicalls -DMIPSEB -D_LANGUAGE_ASSEMBLY -D_MIPS_SIM=1 -D_MIPS_SZLONG=32
+
+RSPDEFINES := $(VER_DEFINES) $(GRU_DEFINES)
+RSPASMFLAGS := $(foreach d,$(RSPDEFINES),-definelabel $(subst =, ,$(d)))
 
 OBJCOPYFLAGS := --pad-to=0x800000 --gap-fill=0xFF
 SYMBOL_LINKING_FLAGS := --no-check-sections $(addprefix -R ,$(SEG_FILES))
-LDFLAGS := -T undefined_syms.txt -T $(BUILD_DIR)/$(LD_SCRIPT) -Map $(BUILD_DIR)/sm64.$(VERSION).map $(SYMBOL_LINKING_FLAGS)
+LDFLAGS := -T $(BUILD_DIR)/$(LD_SCRIPT) -Map $(BUILD_DIR)/sm64.$(VERSION).map $(SYMBOL_LINKING_FLAGS)
 
 CFLAGS += $(CUSTOM_C_DEFINES)
 
@@ -1213,8 +1253,6 @@ $(BUILD_DIR)/$(RPC_LIBS):
 
 # Extra object file dependencies
 ifeq ($(TARGET_N64),1)
-  libultra: $(BUILD_DIR)/libultra.a
-
   $(BUILD_DIR)/asm/boot.o: $(IPL3_RAW_FILES)
   $(BUILD_DIR)/src/extras/n64/crash_screen.o: $(CRASH_TEXTURE_C_FILES)
   $(CRASH_TEXTURE_C_FILES): TEXTURE_ENCODING := u32
@@ -1268,7 +1306,8 @@ ifeq ($(TARGET_N64),1)
   $(BUILD_DIR)/levels/%.o: OPT_FLAGS := -Ofast -mlong-calls
   $(BUILD_DIR)/src/audio/heap.o: OPT_FLAGS := -Os -fno-jump-tables
   $(BUILD_DIR)/src/audio/synthesis.o: OPT_FLAGS := -Os -fno-jump-tables
-  $(BUILD_DIR)/lib/src/%.o: OPT_FLAGS := -O2
+  $(BUILD_DIR)/lib/ultra/%.o: OPT_FLAGS := -O2
+  $(BUILD_DIR)/lib/gcc/%.o: OPT_FLAGS := -O2
 
   ifeq ($(COMPILER_TYPE),gcc)
     $(BUILD_DIR)/src/engine/surface_collision.o: OPT_FLAGS += --param case-values-threshold=20 --param max-completely-peeled-insns=100 --param max-unrolled-insns=100 -finline-limit=0 -fno-inline -freorder-blocks-algorithm=simple -falign-functions=32
@@ -1534,25 +1573,33 @@ $(BUILD_DIR)/include/level_headers.h: levels/level_headers.h.in
 # Compile C code
 $(BUILD_DIR)/%.o: %.c
 	$(call print,Compiling:,$<,$@)
-	$(V)$(CC) -c $(CFLAGS) $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
+	$(V)$(CC) -c $(CFLAGS) -D_LANGUAGE_C=1 $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
+
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
 	$(call print,Compiling:,$<,$@)
-	$(V)$(CC) -c $(CFLAGS) $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
+	$(V)$(CC) -c $(CFLAGS) -D_LANGUAGE_C=1 $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
 
 # Compile C++ code
 $(BUILD_DIR)/%.o: %.cpp
 	$(call print,Compiling:,$<,$@)
 	$(V)$(CXX) -c $(CFLAGS) $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
 
+ifeq ($(TARGET_N64),1)
 # Assemble assembly code
 $(BUILD_DIR)/%.o: %.s
 	$(call print,Assembling:,$<,$@)
-	$(V)$(CPP) $(CPPFLAGS) $< | $(AS) $(ASFLAGS) -MD $(BUILD_DIR)/$*.d -o $@
+	$(V)$(CC) -c $(ASMFLAGS) -x assembler-with-cpp -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
 
 # Assemble RSP assembly code
 $(BUILD_DIR)/rsp/%.bin $(BUILD_DIR)/rsp/%_data.bin: rsp/%.s
 	$(call print,Assembling:,$<,$@)
 	$(V)$(RSPASM) -sym $@.sym $(RSPASMFLAGS) -strequ CODE_FILE $(BUILD_DIR)/rsp/$*.bin -strequ DATA_FILE $(BUILD_DIR)/rsp/$*_data.bin $<
+else
+# Assemble assembly code
+$(BUILD_DIR)/%.o: %.s
+	$(call print,Assembling:,$<,$@)
+	$(V)$(CPP) $(CPPFLAGS) $< | $(AS) $(ASFLAGS) -MD $(BUILD_DIR)/$*.d -o $@
+endif
 
 # Compile Windows icon
 ifeq ($(WINDOWS_BUILD),1)
@@ -1588,7 +1635,6 @@ $(BUILD_DIR)/$(LD_SCRIPT): $(LD_SCRIPT) $(GODDARD_TXT_INC)
 $(BUILD_DIR)/libultra.a: $(ULTRA_O_FILES)
 	@$(PRINT) "$(GREEN)Linking libultra: $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(AR) rcs -o $@ $(ULTRA_O_FILES)
-	$(V)$(TOOLS_DIR)/patch_elf_32bit $@
 
 ifeq ($(GODDARD_MFACE),1)
 # Link libgoddard
@@ -1600,14 +1646,14 @@ LIB_GD_FILE := $(BUILD_DIR)/libgoddard.a
 LIB_GD_FLAG := -lgoddard
 
 # SS2: Goddard rules to get size
-$(BUILD_DIR)/sm64_prelim.ld: $(LD_SCRIPT) $(O_FILES) $(MIO0_OBJ_FILES) $(SEG_FILES) undefined_syms.txt $(BUILD_DIR)/libultra.a $(LIB_GD_FILE) $(LIB_GCC_FILE)
+$(BUILD_DIR)/sm64_prelim.ld: $(LD_SCRIPT) $(O_FILES) $(MIO0_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/libultra.a $(LIB_GD_FILE) $(LIB_GCC_FILE)
 	$(call print,Preprocessing preliminary linker script:,$<,$@)
 	$(V)$(CPP) $(CPPFLAGS) -DPRELIMINARY=1 -DBUILD_DIR=$(BUILD_DIR) -MMD -MP -MT $@ -MF $@.d -o $@ $<
 
 $(BUILD_DIR)/sm64_prelim.elf: $(BUILD_DIR)/sm64_prelim.ld
 	@$(PRINT) "$(GREEN)Linking Preliminary ELF file: $(BLUE)$@ $(NO_COL)\n"
     # Slightly edited version of LDFLAGS
-	$(V)$(LD) -L $(BUILD_DIR) -T undefined_syms.txt -T $< -Map $(BUILD_DIR)/sm64_prelim.map $(SYMBOL_LINKING_FLAGS) -o $@ $(O_FILES) -lultra $(LIB_GD_FLAG) $(LIB_GCC_FLAG)
+	$(V)$(LD) -L $(BUILD_DIR) -T $< -Map $(BUILD_DIR)/sm64_prelim.map $(SYMBOL_LINKING_FLAGS) -o $@ $(O_FILES) -lultra $(LIB_GD_FLAG) $(LIB_GCC_FLAG)
 
 $(BUILD_DIR)/goddard.txt: $(BUILD_DIR)/sm64_prelim.elf
 	$(call print,Getting Goddard size...)
@@ -1618,7 +1664,7 @@ LIB_GD_PRE_ELF := $(BUILD_DIR)/sm64_prelim.elf
 endif # GODDARD_MFACE
 
 # Link SM64 ELF file
-$(ELF): $(LIB_GD_PRE_ELF) $(O_FILES) $(MIO0_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) undefined_syms.txt $(BUILD_DIR)/libultra.a $(LIB_GD_FILE) $(LIB_GCC_FILE)
+$(ELF): $(LIB_GD_PRE_ELF) $(O_FILES) $(MIO0_OBJ_FILES) $(SEG_FILES) $(BUILD_DIR)/$(LD_SCRIPT) $(BUILD_DIR)/libultra.a $(LIB_GD_FILE) $(LIB_GCC_FILE)
 	@$(PRINT) "$(GREEN)Linking ELF file: $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(LD) -L $(BUILD_DIR) $(LDFLAGS) $(GODDARD_TXT_INC) -o $@ $(O_FILES) -lultra $(LIB_GD_FLAG) $(LIB_GCC_FLAG)
 

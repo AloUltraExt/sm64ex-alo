@@ -77,10 +77,6 @@ void *gDemoInputsMemAlloc;
 struct DmaHandlerList gMarioAnimsBuf;
 struct DmaHandlerList gDemoInputsBuf;
 
-// fillers
-UNUSED static u8 sfillerGameInit[0x90];
-UNUSED static s32 sUnusedGameInitValue = 0;
-
 // General timer that runs as the game starts
 u32 gGlobalTimer = 0;
 

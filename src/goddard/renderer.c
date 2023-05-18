@@ -2,6 +2,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include <prevent_bss_reordering.h>
+
 #include "debug_utils.h"
 #include "draw_objects.h"
 #include "dynlist_proc.h"

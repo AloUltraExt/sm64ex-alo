@@ -8,13 +8,9 @@
 .word  entry_point              /* Entrypoint */
 
 /* Revision */
-#ifdef VERSION_SH
-    .word  0x00001448
-#elif defined(VERSION_EU)
-    .word  0x00001446
-#else /* NTSC-U and NTSC-J 1.0 */
-    .word  0x00001444
-#endif
+.half 0x0000
+.byte 20 /* Major version 2.0 */
+.ascii LIBULTRA_STR_VER /* Minor Version */
 
 .word  0x4EAA3D0E               /* Checksum 1 */
 .word  0x74757C24               /* Checksum 2 */

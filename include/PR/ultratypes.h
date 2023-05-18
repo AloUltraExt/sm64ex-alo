@@ -1,8 +1,7 @@
-#ifndef _ULTRA64_TYPES_H_
-#define _ULTRA64_TYPES_H_
+#ifndef _ULTRATYPES_H_
+#define _ULTRATYPES_H_
 
-#define TRUE 1
-#define FALSE 0
+#ifndef _LANGUAGE_ASSEMBLY
 
 typedef float  f32;
 typedef double f64;
@@ -61,4 +60,18 @@ typedef ptrdiff_t ssize_t;
 typedef ptrdiff_t ssize_t;
 #endif
 
-#endif // _ULTRA64_TYPES_H_
+#endif
+
+#ifndef TRUE
+#define TRUE    1
+#endif
+
+#ifndef FALSE
+#define FALSE   0
+#endif
+ 
+#ifndef NULL
+#define NULL    (void *)0
+#endif
+
+#endif // _ULTRATYPES_H_

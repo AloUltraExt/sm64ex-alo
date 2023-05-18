@@ -1,6 +1,5 @@
 #include <PR/ultratypes.h>
 
-#include "prevent_bss_reordering.h"
 #include "area.h"
 #include "sm64.h"
 #include "gfx_dimensions.h"

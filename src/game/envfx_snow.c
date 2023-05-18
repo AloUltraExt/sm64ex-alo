@@ -1,4 +1,5 @@
 #include <ultra64.h>
+#include <prevent_bss_reordering.h>
 
 #include "sm64.h"
 #include "dialog_ids.h"

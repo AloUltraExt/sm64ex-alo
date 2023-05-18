@@ -54,9 +54,10 @@ DECLARE_SEGMENT(framebuffers)
 extern u8 _goddardSegmentStart[];
 #endif
 extern u8 _engineSegmentStart[];
-extern u8 _engineSegmentNoloadEnd[];
 extern u8 _engineSegmentEnd[];
-extern u8 _framebuffersSegmentNoloadEnd[];
+extern u8 _engineSegmentBssStart[];
+extern u8 _engineSegmentBssEnd[];
+extern u8 _framebuffersSegmentBssEnd[];
 
 DECLARE_LEVEL_SEGMENT(menu)
 DECLARE_LEVEL_SEGMENT(intro)

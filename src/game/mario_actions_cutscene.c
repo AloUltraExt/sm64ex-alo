@@ -1,6 +1,5 @@
 #include <PR/ultratypes.h>
 
-#include "prevent_bss_reordering.h"
 #include "sm64.h"
 #include "area.h"
 #include "audio/external.h"
@@ -15,7 +14,6 @@
 #include "gfx_dimensions.h"
 #include "ingame_menu.h"
 #include "interaction.h"
-#include "level_table.h"
 #include "level_update.h"
 #include "mario.h"
 #include "mario_actions_cutscene.h"
@@ -28,7 +26,6 @@
 #include "save_file.h"
 #include "seq_ids.h"
 #include "sound_init.h"
-#include "../../include/libc/stdlib.h"
 #include "pc/pc_main.h"
 
 #ifdef CHEATS_ACTIONS
@@ -38,15 +35,6 @@
 #ifdef EXT_DEBUG_MENU
 #include "extras/debug_menu.h"
 #endif
-
-static struct Object *sIntroWarpPipeObj;
-static struct Object *sEndPeachObj;
-static struct Object *sEndRightToadObj;
-static struct Object *sEndLeftToadObj;
-static struct Object *sEndJumboStarObj;
-static UNUSED s32 sUnused;
-static s16 sEndPeachAnimation;
-static s16 sEndToadAnims[2];
 
 static Vp sEndCutsceneVp = { { { 640, 480, 511, 0 }, { 640, 480, 511, 0 } } };
 static struct CreditsEntry *sDispCreditsEntry = NULL;
@@ -61,6 +49,15 @@ static u8 sStarsNeededForDialog[] = { STAR_MILESTONES };
 #else
 static u8 sStarsNeededForDialog[] = { 1, 3, 8, 30, 50, 70 };
 #endif
+
+struct Object *sIntroWarpPipeObj;
+struct Object *sEndPeachObj;
+struct Object *sEndRightToadObj;
+struct Object *sEndLeftToadObj;
+struct Object *sEndJumboStarObj;
+struct Object *sEndUnusedObj;
+s16 sEndPeachAnimation;
+s16 sEndToadAnims[2];
 
 /**
  * Data for the jumbo star cutscene. It specifies the flight path after triple
