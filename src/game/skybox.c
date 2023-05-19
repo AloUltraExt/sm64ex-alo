@@ -102,15 +102,12 @@ struct Skybox sSkyBoxInfo[2];
 typedef const u8 *const SkyboxTexture[SKYBOX_ROWS * SKYBOX_COLS]; // originally 80
 
 #if QOL_FEATURE_BETTER_SKYBOX
-// 0 fov would crash because division by zero so we add a check to prevent it
-#define SKYBOX_FOV_X(fov) (FLT_IS_NONZERO(fov) ? degrees_to_angle(fov) : 1)
-#define SKYBOX_FOV_Y(fov) (FLT_IS_NONZERO(fov) ? fov : 1)
 typedef f32 SkyboxType;
 #else
-#define SKYBOX_FOV_X(fov) degrees_to_angle(fov)
-#define SKYBOX_FOV_Y(fov) fov
 typedef s32 SkyboxType;
 #endif
+#define SKYBOX_FOV_X(fov) degrees_to_angle(fov)
+#define SKYBOX_FOV_Y(fov) fov
 
 extern SkyboxTexture bbh_skybox_ptrlist;
 extern SkyboxTexture bidw_skybox_ptrlist;
@@ -444,11 +441,12 @@ Gfx *create_skybox_facing_camera(s8 player, s8 background, f32 fov,
         colorIndex = 0;
     }
 
-#if !QOL_FEATURE_BETTER_SKYBOX
-    //! fov is always set to 90.0f. If this line is removed, then the game crashes because fov is 0 on
-    //! the first frame, which causes a floating point divide by 0
+    // fov is always set to 90.0f. If this line is removed, then the game crashes because fov is 0 on
+    // the first frame, which causes a floating point divide by 0.
+    // Also due to primitive code, actually using fov causes some bad zooming on the skybox during cutscenes
+    // which is probably why they just made them use a fixed value instead.
     fov = 90.0f;
-#endif
+
     sSkyBoxInfo[player].yaw = atan2s(cameraFaceZ, cameraFaceX);
     sSkyBoxInfo[player].pitch = atan2s(sqrtf(cameraFaceX * cameraFaceX + cameraFaceZ * cameraFaceZ), cameraFaceY);
     sSkyBoxInfo[player].scaledX = calculate_skybox_scaled_x(player, fov);

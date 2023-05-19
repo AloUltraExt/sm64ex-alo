@@ -45,12 +45,14 @@ static struct AllocOnlyPool *sDynamicSurfacePool;
 #else
 void *gCurrStaticSurfacePool;
 void *gDynamicSurfacePool;
+void *gDynamicSurfaceNodePool;
 
 /**
  * The end of the data currently allocated to the surface pools.
  */
 void *gCurrStaticSurfacePoolEnd;
 void *gDynamicSurfacePoolEnd;
+void *gDynamicSurfaceNodePoolEnd;
 
 /**
  * The amount of data currently allocated to static surfaces.
@@ -66,7 +68,7 @@ static struct SurfaceNode *alloc_surface_node(u32 dynamic) {
     struct AllocOnlyPool *pool = dynamic ? sDynamicSurfaceNodePool : sStaticSurfaceNodePool;
     struct SurfaceNode *node = alloc_only_pool_alloc(pool, sizeof(struct SurfaceNode));
 #else
-    struct SurfaceNode **poolEnd = (struct SurfaceNode **)(dynamic ? &gDynamicSurfacePoolEnd : &gCurrStaticSurfacePoolEnd);
+    struct SurfaceNode **poolEnd = (struct SurfaceNode **)(dynamic ? &gDynamicSurfaceNodePoolEnd : &gCurrStaticSurfacePoolEnd);
     struct SurfaceNode *node = (*poolEnd)++;
 #endif
     gSurfaceNodesAllocated++;
@@ -499,7 +501,10 @@ void alloc_surface_pools(void) {
     sDynamicSurfaceNodePool = alloc_only_pool_init();
     sDynamicSurfacePool = alloc_only_pool_init();
 #else
-    gDynamicSurfacePool = main_pool_alloc(DYNAMIC_SURFACE_POOL_SIZE, MEMORY_POOL_LEFT);
+    // Single define for memory, and split it into thirds, giving 1 to the poolsize and 2 to the nodesize.
+    gDynamicSurfacePool = main_pool_alloc(DYNAMIC_SURFACE_POOL_SIZE * 0.33f, MEMORY_POOL_LEFT);
+    gDynamicSurfaceNodePool = main_pool_alloc(DYNAMIC_SURFACE_POOL_SIZE * 0.66f, MEMORY_POOL_LEFT);
+    gDynamicSurfaceNodePoolEnd = gDynamicSurfaceNodePool;
     gDynamicSurfacePoolEnd = gDynamicSurfacePool;
 #endif
 }
@@ -651,12 +656,15 @@ void clear_dynamic_surfaces(void) {
         if (gSurfaceNodesAllocated > gNumStaticSurfaceNodes) {
             alloc_only_pool_clear(sDynamicSurfaceNodePool);
         }
+#else
+        clear_dynamic_surface_references();
 #endif
 
         gSurfacesAllocated = gNumStaticSurfaces;
         gSurfaceNodesAllocated = gNumStaticSurfaceNodes;
 #ifndef USE_SYSTEM_MALLOC
         gDynamicSurfacePoolEnd = gDynamicSurfacePool;
+        gDynamicSurfaceNodePoolEnd = gDynamicSurfaceNodePool;
 #endif
 #if BETTER_DYNAMIC_CELLS
         if (sClearAllCells) {
@@ -808,7 +816,7 @@ static f32 get_optimal_collision_distance(struct Object *obj) {
 }
 #endif
 
-static TerrainData sVertexData[600];
+TerrainData sDynamicVertices[900];
 
 /**
  * Transform an object's vertices, reload them, and render the object.
@@ -816,7 +824,6 @@ static TerrainData sVertexData[600];
 void load_object_collision_model(void) {
     TerrainData *collisionData = gCurrentObject->collisionData;
     f32 marioDist = gCurrentObject->oDistanceToMario;
-
 
     // On an object's first frame, the distance is set to F32_MAX.
     // If the distance hasn't been updated, update it now.
@@ -867,11 +874,11 @@ void load_object_collision_model(void) {
     if (!(gTimeStopState & TIME_STOP_ACTIVE) && marioDist < colDist
         && !(gCurrentObject->activeFlags & ACTIVE_FLAG_IN_DIFFERENT_ROOM)) {
         collisionData++;
-        transform_object_vertices(&collisionData, sVertexData);
+        transform_object_vertices(&collisionData, sDynamicVertices);
 
         // TERRAIN_LOAD_CONTINUE acts as an "end" to the terrain data.
         while (*collisionData != TERRAIN_LOAD_CONTINUE) {
-            load_object_surfaces(&collisionData, sVertexData, TRUE);
+            load_object_surfaces(&collisionData, sDynamicVertices, TRUE);
         }
     }
 
@@ -905,11 +912,11 @@ void load_object_static_model(void) {
     gSurfacesAllocated = gNumStaticSurfaces;
 
     collisionData++;
-    transform_object_vertices(&collisionData, sVertexData);
+    transform_object_vertices(&collisionData, sDynamicVertices);
 
     // TERRAIN_LOAD_CONTINUE acts as an "end" to the terrain data.
     while (*collisionData != TERRAIN_LOAD_CONTINUE) {
-        load_object_surfaces(&collisionData, sVertexData, FALSE);
+        load_object_surfaces(&collisionData, sDynamicVertices, FALSE);
     }
 #ifndef USE_SYSTEM_MALLOC
     surfacePoolData = (uintptr_t)gCurrStaticSurfacePoolEnd - (uintptr_t)gCurrStaticSurfacePool;

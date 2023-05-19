@@ -510,8 +510,31 @@ void spawn_objects_from_info(UNUSED s32 unused, struct SpawnInfo *spawnInfo) {
     }
 }
 
-void stub_obj_list_processor_1(void) {
+#ifndef USE_SYSTEM_MALLOC
+void clear_dynamic_surface_references(void) {
+    s32 listIndex;
+    s32 i = 0;
+    struct Object *obj;
+    struct ObjectNode *objNode;
+    struct ObjectNode *objList;
+
+    while ((listIndex = sObjectListUpdateOrder[i]) != -1) {
+        objList = &gObjectLists[listIndex];
+        objNode = objList->next;
+
+        while (objList != objNode) {
+            obj = (struct Object *) objNode;
+            objNode = objNode->next;
+
+            if (obj->oFloor && obj->oFloor->flags & SURFACE_FLAG_DYNAMIC) {
+                obj->oFloor = NULL;
+            }
+        }
+
+        i++;
+    }
 }
+#endif
 
 /**
  * Clear objects, dynamic surfaces, and some miscellaneous level data used by objects.
@@ -537,7 +560,6 @@ void clear_objects(void) {
     clear_object_lists(gObjectListArray);
 
     stub_behavior_script_2();
-    stub_obj_list_processor_1();
 
 #ifndef USE_SYSTEM_MALLOC
     for (i = 0; i < OBJECT_POOL_CAPACITY; i++) {
