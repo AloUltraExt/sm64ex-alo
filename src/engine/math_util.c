@@ -1622,3 +1622,24 @@ s32 anim_spline_poll(Vec3f result) {
 
     return hasEnded;
 }
+
+s16 lenght_sins(s16 length, s16 direction) {
+    return (length * sins(direction));
+}
+s16 lenght_coss(s16 length, s16 direction) {
+    return (length * coss(direction));
+}
+
+static inline float smooth(float x) {
+    x = CLAMP(x, 0, 1);
+    return x * x * (3.f - 2.f * x);
+}
+
+float soft_clamp(float x, float a, float b) {
+    return smooth((2.f / 3.f) * (x - a) / (b - a) + (1.f / 6.f)) * (b - a) + a;
+}
+
+float smooth_step(float edge0, float edge1, float x) {
+    float t = MIN(MAX((x - edge0) / (edge1 - edge0), 0.0f), 1.0f);
+    return t * t * (3.0f - 2.0f * t);
+}

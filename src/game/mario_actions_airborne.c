@@ -126,8 +126,15 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
 }
 
 s32 check_kick_or_dive_in_air(struct MarioState *m) {
+#ifdef EASIER_JUMP_KICKS 
+    float directionFactor = (MAX(-1.0f, MIN(1.0f, sqrtf(2) * coss(m->faceAngle[1] - m->intendedYaw))));
+    float intendedMagFactor = MIN(32.f, m->intendedMag * sqrtf(2)) / (32.0f);
+    float velocityThreshhold = 38.0f - directionFactor * intendedMagFactor * 10.0f;
+#else
+    float velocityThreshhold = 28.0f;
+#endif
     if (m->input & INPUT_B_PRESSED) {
-        return set_mario_action(m, m->forwardVel > 28.0f ? ACT_DIVE : ACT_JUMP_KICK, 0);
+        return set_mario_action(m, m->forwardVel > velocityThreshhold ? ACT_DIVE : ACT_JUMP_KICK, 0);
     }
     return FALSE;
 }
@@ -352,6 +359,28 @@ void update_flying_pitch(struct MarioState *m) {
     }
 }
 
+#if BETTER_FLYING
+void update_flying_face_angle(struct MarioState *m) {
+    if (m->forwardVel < 4.0f) {
+        m->faceAngle[0] -= 1024.0f;
+    } else if (m->forwardVel <= 16.0f) {
+        m->faceAngle[0] += -1024.f + smooth_step(4.0f, 16.0f, m->forwardVel) * 1024.0f;
+    } else {
+        m->faceAngle[0] += (m->forwardVel - 16.0f) * 6.0f * smooth_step(16.0f, 100.0f, m->forwardVel);
+    }
+}
+#else
+void update_flying_face_angle(struct MarioState *m) {
+    if (m->forwardVel > 16.0f) {
+        m->faceAngle[0] += (m->forwardVel - 32.0f) * 6.0f;
+    } else if (m->forwardVel > 4.0f) {
+        m->faceAngle[0] += (m->forwardVel - 32.0f) * 10.0f;
+    } else {
+        m->faceAngle[0] -= 1024.0f;
+    }
+}
+#endif
+
 void update_flying(struct MarioState *m) {
     UNUSED u8 filler[4];
 
@@ -365,14 +394,7 @@ void update_flying(struct MarioState *m) {
         m->forwardVel = 0.0f;
     }
 
-    if (m->forwardVel > 16.0f) {
-        m->faceAngle[0] += (m->forwardVel - 32.0f) * 6.0f;
-    } else if (m->forwardVel > 4.0f) {
-        m->faceAngle[0] += (m->forwardVel - 32.0f) * 10.0f;
-    } else {
-        m->faceAngle[0] -= 0x400;
-    }
-
+    update_flying_face_angle(m);
     m->faceAngle[0] += m->angleVel[0];
 
     if (m->faceAngle[0] > 0x2AAA) {

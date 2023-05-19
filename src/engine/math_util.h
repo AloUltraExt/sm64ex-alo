@@ -700,5 +700,10 @@ void evaluate_cubic_spline(f32 progress, Vec3f pos, Vec3f spline1, Vec3f spline2
 void spline_get_weights(Vec4f result, f32 t, UNUSED s32 c);
 void anim_spline_init(Vec4s *keyFrames);
 s32  anim_spline_poll(Vec3f result);
+// Misc
+s16 lenght_sins(s16 length, s16 direction);
+s16 lenght_coss(s16 length, s16 direction);
+float smooth_step(float edge0, float edge1, float x);
+float soft_clamp(float x, float a, float b);
 
 #endif // MATH_UTIL_H
