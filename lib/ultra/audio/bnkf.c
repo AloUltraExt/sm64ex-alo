@@ -1,30 +1,28 @@
 #include "PR/os_internal.h"
 #include "PR/libaudio.h"
 
-static void _bnkfPatchBank(ALBank *bank, s32 offset, s32 table);
-static void _bnkfPatchInst(ALInstrument *i, s32 offset, s32 table);
-static void _bnkfPatchSound(ALSound *s, s32 offset, s32 table);
-static void _bnkfPatchWaveTable(ALWaveTable *w, s32 offset, s32 table);
+static void _bnkfPatchBank(ALBank *bank, ALBankFile *file, s32 table);
+static void _bnkfPatchInst(ALInstrument *inst, ALBankFile *file, s32 table);
+static void _bnkfPatchSound(ALSound *sound, ALBankFile *file, s32 table);
+static void _bnkfPatchWaveTable(ALWaveTable *wvtbl, ALBankFile *file, s32 table);
 
 void alSeqFileNew(ALSeqFile *file, u8 *base)
 {
-    s32 offset = (intptr_t) base;
-    s32 i;
+    uintptr_t b = (uintptr_t) base;
+    int i;
 
     /*
      * patch the file so that offsets are pointers
      */
     for (i = 0; i < file->seqCount; i++) {
-        file->seqArray[i].offset = ALBnkfPatch(file->seqArray[i].offset, offset, u8 *);
+        file->seqArray[i].offset = ALBnkfPatch(file->seqArray[i].offset, b, u8 *);
     }
 }
 
 void alBnkfNew(ALBankFile *file, u8 *table)
 {
-    s32 offset = (intptr_t) file;
-    s32 woffset = (intptr_t) table;
-
-    s32 i;
+    uintptr_t t = (uintptr_t) table;
+    int i;
 
     /*
      * check the file format revision in debug libraries
@@ -35,15 +33,15 @@ void alBnkfNew(ALBankFile *file, u8 *table)
      * patch the file so that offsets are pointers
      */
     for (i = 0; i < file->bankCount; i++) {
-        file->bankArray[i] = ALBnkfPatch(file->bankArray[i], offset, ALBank *);
+        file->bankArray[i] = ALBnkfPatch(file->bankArray[i], file, ALBank *);
         if(file->bankArray[i])
-            _bnkfPatchBank(file->bankArray[i], offset, woffset);
+            _bnkfPatchBank(file->bankArray[i], file, t);
     }
 }
 
-void _bnkfPatchBank(ALBank *bank, s32 offset, s32 table)
+void _bnkfPatchBank(ALBank *bank, ALBankFile *file, s32 table)
 {
-    s32 i;
+    int i;
 
     if (bank->flags)
         return;
@@ -51,20 +49,20 @@ void _bnkfPatchBank(ALBank *bank, s32 offset, s32 table)
     bank->flags = 1;
 
     if (bank->percussion) {
-        bank->percussion = ALBnkfPatch(bank->percussion, offset, ALInstrument *);
-        _bnkfPatchInst(bank->percussion, offset, table);
+        bank->percussion = ALBnkfPatch(bank->percussion, file, ALInstrument *);
+        _bnkfPatchInst(bank->percussion, file, table);
     }
 
     for (i = 0; i < bank->instCount; i++) {
-        bank->instArray[i] = ALBnkfPatch(bank->instArray[i], offset, ALInstrument *);
+        bank->instArray[i] = ALBnkfPatch(bank->instArray[i], file, ALInstrument *);
         if(bank->instArray[i])
-            _bnkfPatchInst(bank->instArray[i], offset, table);
+            _bnkfPatchInst(bank->instArray[i], file, table);
     }
 }
 
-void _bnkfPatchInst(ALInstrument *inst, s32 offset, s32 table)
+void _bnkfPatchInst(ALInstrument *inst, ALBankFile *file, s32 table)
 {
-    s32 i;
+    int i;
 
     if (inst->flags)
         return;
@@ -72,45 +70,45 @@ void _bnkfPatchInst(ALInstrument *inst, s32 offset, s32 table)
     inst->flags = 1;
 
     for (i = 0; i < inst->soundCount; i++) {
-        inst->soundArray[i] = ALBnkfPatch(inst->soundArray[i], offset, ALSound *);
-        _bnkfPatchSound(inst->soundArray[i], offset, table);
+        inst->soundArray[i] = ALBnkfPatch(inst->soundArray[i], file, ALSound *);
+        _bnkfPatchSound(inst->soundArray[i], file, table);
 
     }
 }
 
-void _bnkfPatchSound(ALSound *s, s32 offset, s32 table)
+void _bnkfPatchSound(ALSound *sound, ALBankFile *file, s32 table)
 {
-    if (s->flags)
+    if (sound->flags)
         return;
 
-    s->flags = 1;
+    sound->flags = 1;
 
-    s->envelope  = ALBnkfPatch(s->envelope, offset, ALEnvelope *);
-    s->keyMap    = ALBnkfPatch(s->keyMap, offset, ALKeyMap *);
+    sound->envelope  = ALBnkfPatch(sound->envelope, file, ALEnvelope *);
+    sound->keyMap    = ALBnkfPatch(sound->keyMap, file, ALKeyMap *);
 
-    s->wavetable = ALBnkfPatch(s->wavetable, offset, ALWaveTable *);
-    _bnkfPatchWaveTable(s->wavetable, offset, table);
+    sound->wavetable = ALBnkfPatch(sound->wavetable, file, ALWaveTable *);
+    _bnkfPatchWaveTable(sound->wavetable, file, table);
 }
 
-void _bnkfPatchWaveTable(ALWaveTable *w, s32 offset, s32 table)
+void _bnkfPatchWaveTable(ALWaveTable *wvtbl, ALBankFile *file, s32 table)
 {
-    if (w->flags)
+    if (wvtbl->flags)
         return;
 
-    w->flags = 1;
+    wvtbl->flags = 1;
 
-    w->base += table;
+    wvtbl->base += table;
 
     /* sct 2/14/96 - patch wavetable loop info based on type. */
-    if (w->type == AL_ADPCM_WAVE)
+    if (wvtbl->type == AL_ADPCM_WAVE)
     {
-	w->waveInfo.adpcmWave.book  = ALBnkfPatch(w->waveInfo.adpcmWave.book, offset, ALADPCMBook *);
-	if (w->waveInfo.adpcmWave.loop)
-	    w->waveInfo.adpcmWave.loop = ALBnkfPatch(w->waveInfo.adpcmWave.loop, offset, ALADPCMloop *);
+	wvtbl->waveInfo.adpcmWave.book  = ALBnkfPatch(wvtbl->waveInfo.adpcmWave.book, file, ALADPCMBook *);
+	if (wvtbl->waveInfo.adpcmWave.loop)
+	    wvtbl->waveInfo.adpcmWave.loop = ALBnkfPatch(wvtbl->waveInfo.adpcmWave.loop, file, ALADPCMloop *);
     }
-    else if (w->type == AL_RAW16_WAVE)
+    else if (wvtbl->type == AL_RAW16_WAVE)
     {
-	if (w->waveInfo.rawWave.loop)
-	    w->waveInfo.rawWave.loop = ALBnkfPatch(w->waveInfo.rawWave.loop, offset, ALRawLoop *);
+	if (wvtbl->waveInfo.rawWave.loop)
+	    wvtbl->waveInfo.rawWave.loop = ALBnkfPatch(wvtbl->waveInfo.rawWave.loop, file, ALRawLoop *);
     }
 }

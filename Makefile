@@ -1047,7 +1047,7 @@ ifeq ($(EXTERNAL_DATA),1)
   SKYCONV_ARGS := --store-names --write-tiles "$(SKYTILE_DIR)"
 endif
 
-ASFLAGS := $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(DEFINES),--defsym $(d))
+ASMFLAGS = $(DEF_INC_CFLAGS) -D_LANGUAGE_ASSEMBLY
 
 ifeq ($(TARGET_WEB),1)
 LDFLAGS := -lm -lGL -lSDL2 -no-pie -s TOTAL_MEMORY=64MB -g4 --source-map-base http://localhost:8080/ -s "EXTRA_EXPORTED_RUNTIME_METHODS=['callMain']"
@@ -1588,21 +1588,16 @@ $(BUILD_DIR)/%.o: %.cpp
 	$(call print,Compiling:,$<,$@)
 	$(V)$(CXX) -c $(CFLAGS) $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
 
-ifeq ($(TARGET_N64),1)
 # Assemble assembly code
 $(BUILD_DIR)/%.o: %.s
 	$(call print,Assembling:,$<,$@)
 	$(V)$(CC) -c $(ASMFLAGS) -x assembler-with-cpp -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
 
+ifeq ($(TARGET_N64),1)
 # Assemble RSP assembly code
 $(BUILD_DIR)/rsp/%.bin $(BUILD_DIR)/rsp/%_data.bin: rsp/%.s
 	$(call print,Assembling:,$<,$@)
 	$(V)$(RSPASM) -sym $@.sym $(RSPASMFLAGS) -strequ CODE_FILE $(BUILD_DIR)/rsp/$*.bin -strequ DATA_FILE $(BUILD_DIR)/rsp/$*_data.bin $<
-else
-# Assemble assembly code
-$(BUILD_DIR)/%.o: %.s
-	$(call print,Assembling:,$<,$@)
-	$(V)$(CPP) $(CPPFLAGS) $< | $(AS) $(ASFLAGS) -MD $(BUILD_DIR)/$*.d -o $@
 endif
 
 # Compile Windows icon
