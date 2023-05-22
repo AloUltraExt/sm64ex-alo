@@ -8,8 +8,9 @@ clear
 echo "This script will assist with compiling Super Mario 64 on Raspbian 10"
 echo "Note that accelerated OpenGL (vc4_drm) is required for maximum performance"
 echo "Checking Raspberry Pi model..."
+origdir=$PWD
 lowmem=0
-pi=0
+pi=1
 pimodel=$(uname -m 2>/dev/null || echo unknown)
 pitype=$(tr -d '\0' < /sys/firmware/devicetree/base/model)
 repo_url="https://github.com/sm64pc/sm64ex"
@@ -23,25 +24,32 @@ then
    exp=1;
 fi
 
-if [[ $pimodel =~ "armv7" ]]
+if [[ $pimodel =~ "armv7" && $pitype =~ "Pi 2" || $pitype =~ "Pi 3" ]]
 then
    echo -e "\nRaspberry Pi Model 2/3/4 detected (32bit)"
    pi=2;
    lowmem=0;
 fi
 
-if [[ $pimodel =~ "aarch64" && $pitype =~ "4" ]]
+if [[ $pimodel =~ "aarch64" ]]
+   then
+   pi=4;
+   exp=1;
+   lowmem=0;
+   echo -e "64bit Raspbian / Pi detected. Pi model defaulted to Pi 4"
+fi
+
+if [[ $pitype =~ "Model 4" ]]
 then
    echo -e "\nRaspberry Pi Model 4 (64 bits) detected"
-   echo "Audio errors reported"
-   echo "Fixing audio config, reboot after compilation completes to activate"
-   sudo sed -i 's/load-module module-udev-detect/load-module module-udev-detect tsched=0/' /etc/pulse/default.pa
-	#load-module module-udev-detect tsched=0
+   echo "Audio errors reported for Pulseaudio users. Fix by adding tsched=0 to module-udev-detect in /etc/pulse/default.pa"
+   #echo "Fixing audio config, reboot after compilation completes to activate"
+   #sudo sed -i 's/load-module module-udev-detect/load-module module-udev-detect tsched=0/' /etc/pulse/default.pa
+   #load-module module-udev-detect tsched=0
    pi=4;
    lowmem=0;
    exp=1;
 fi
-
 
 if [[ $exp == 1 ]]
 then
@@ -54,6 +62,7 @@ then
 	then
         echo ""
         else
+	echo "Y not entered. Exiting."
  	exit
 	fi
 
@@ -66,12 +75,9 @@ fi
 #//////////////////////////////////////////////////////////////////////////////////////////////////////////
 clear
 echo "Super Mario 64 RPi Initial Setup"
+# On Pi Pi4 only enable FKMS.
 
-if [[ $pi != 4 ]]
-then #Dumb idea, but quick hack. 
-     #We CANNOT enable VC4 for Pi4 as it uses VC6
-
-inxinf=$(inxi -Gx)
+inxinf=$(inxi -Gx 2>&1)
 echo "Checking for pre-enabled VC4 acceleration (inxi -Gx)"
 
 if [[ $inxinf =~ "not found" ]]
@@ -79,12 +85,14 @@ then
 echo "Error: inxi not installed. Installing..."
 sudo apt-get update
 sudo apt-get install -y inxi
-inxi=$(inxi -Gx)
+sync
+sleep 1
+inxi=$(bash inxi -Gx 2>&1)
+sleep 1
 
 	if [[ $inxinf =~ "not found" ]]
 	then
-	echo "Warning: Setup will not continue unless inxi is installed"
-	echo "Please ensure your Pi is in a state to download and install packages"
+	echo -e "Please reload the script to detect installed inxi"
 	sleep 3
 	exit
 	fi
@@ -99,15 +107,27 @@ sleep 4
 	else
 	echo ""
 	echo "OpenGL driver not found. opening Raspi-Config..."
-	echo "Please enable raspi-config -> ADV Opt -> OpenGL -> Enable FullKMS Renderer"
+	if [[ $pi == 4 ]]
+	then
+	echo "Please enable raspi-config -> ADV Opt -> OpenGL -> Enable FAKE KMS Renderer"
+	else
+	echo "Please enable raspi-config -> ADV Opt -> OpenGL -> Enable Full KMS Renderer"
+	fi
 	echo ""
 	sleep 5
 	sudo raspi-config
+	sync
+	if [[ $pi == 4 ]]
+	then
+        vc4add=$(cat /boot/config.txt | grep -e "dtoverlay=vc4-fkms-v3d")
+	else
 	vc4add=$(cat /boot/config.txt | grep -e "dtoverlay=vc4-kms-v3d")
-
+        fi
 		if [[ $vc4add =~ "vc4" ]]
 		then
 		echo "OGL driver now enabled on reboot"
+		else
+		echo "OGL driver not detected / enabled in /boot/config.txt"
 		fi
 fi
 
@@ -156,8 +176,6 @@ read -p "Reboot to enable changes? (Y/N): " fixstart
 	echo "Rebooting RasPi in 4 seconds! Press Control-C to cancel."
 	sleep 4
 	sudo reboot
-	fi
-	fi
 fi # "Should never run on a Pi 4" part ends here
 
 #--------------------------------------------------------------------------------
@@ -197,9 +215,12 @@ then
 echo ""
 echo "Installing dependencies for SDL2 compilation"
 
-sudo sed -i '/^#\sdeb-src /s/^#//' "/etc/apt/sources.list"
-sudo apt build-dep libsdl2
-sudo apt install -y libdrm-dev libgbm-dev
+sudo sed -i -- 's/#deb-src/deb-src/g' /etc/apt/sources.list && sudo sed -i -- 's/# deb-src/deb-src/g' /etc/apt/sources.list
+sync
+sudo apt-get update
+sync
+sudo apt-get build-dep libsdl2
+sudo apt-get install libdrm-dev libgbm-dev
 sync
 
 echo ""
@@ -210,20 +231,22 @@ mkdir $HOME/src
 cd $HOME/src
 mkdir $HOME/src/sdl2
 cd $HOME/src/sdl2
-sleep 2
+sleep 1
 
 echo "Downloading SDL2 from libsdl.org and unzipping to HOME/src/sdl2/SDL2"
-wget https://www.libsdl.org/release/SDL2-2.0.10.tar.gz
+wget https://www.libsdl.org/release/SDL2-2.0.12.tar.gz -O sdl2.tar.gz
 sync
-tar xzf ./SDL2*.gz
+tar xzf ./sdl2.tar.gz
 sync
-cd ./SDL2*
+cd SDL2*/
 
 echo "Configuring SDL2 library to enable KMSDRM (Xorg free rendering)"
 ./configure --enable-video-kmsdrm
 echo "Compiling modified SDL2 and installing."
-make
+make -j$pi
 sudo make install
+sync
+cd $origdir
 fi
 
 #----------------------------------------------------------------------
@@ -238,13 +261,25 @@ echo ""
 sm64dircur=$(ls ./Makefile)
 sm64dir=$(ls $HOME/src/sm64pc/sm64ex/Makefile)
 
+if [[ $sm64dircur =~ "access" ]]
+then
+echo ""
+sm64dircur=0;
+else
 if [[ $sm64dircur =~ "Makefile" ]] #If current directory has a makefile
 then
 sm64dir=$sm64dircur
 curdir=1; #If current directory has a Makefile or is git zip
 fi
+fi
 
-if [[ $sm64dir =~ "Makefile" ]];
+if [[ $sm64dir =~ "access" ]]
+then
+echo ""
+sm64dir=0;
+curdir=0;
+else
+if [[ $sm64dir =~ "Makefile" ]]
 then
     echo "Existing Super Mario 64 PC port files found!"
     echo "Redownload files (fresh compile)?"
@@ -253,17 +288,18 @@ then
     if [[ $sm64git =~ "N" ]] # Do NOT redownload, USE current directory for compile
     then
     sm64dir=1; # Don't redownload files , use current directory (has sm64 files)
-    curdir=1 
+    curdir=1;
     fi
 
 else #Do a fresh compile in HOME/src/sm64pc/sm64ex/
     sm64dir=0;
     curdir=0;
 fi
+fi
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-
+echo ""
 if [[ $sm64git =~ [Yy] || $sm64dir == 0 || $curdir == 0 ]]  #If user wants to redownload or NOT git-zip execution
 then
 echo "Step 2. Super Mario 64 PC-Port will now be downloaded from github"
@@ -307,7 +343,7 @@ fi
 
 if [[ $curdir == 1 ]]
 then
-sm64z64=$(find ./* | grep baserom) #See if current directory is prepped
+sm64z64=$(find ./* -maxdepth 1 | grep baserom) #See if current directory is prepped
 else
 sm64z64=$(find $HOME/src/sm64pc/sm64ex/* | grep baserom) #see if fresh compile directory is prepped
 fi
@@ -357,12 +393,7 @@ echo "At least 300MB of free storage AND RAM is recommended"
 echo ""
 make clean
 sync
-if [[ $pimodel =~ "armv6" ]]
-then
-make TARGET_RPI=1
-else
-make TARGET_RPI=1 -j4
-fi
+make -j$pi TARGET_RPI=1
 sync
 
 
@@ -371,7 +402,7 @@ sync
 
 if [[ $curdir == 1 ]]
 then
-sm64done=$(find ./build/*/* | grep .arm)
+sm64done=$(find $PWD/build/*/* | grep .arm)
 else
 sm64done=$(find $HOME/src/sm64pc/sm64ex/build/*/* | grep .arm)
 fi
@@ -384,7 +415,7 @@ echo "You may find it in"
 
 if [[ $curdir == 1 ]]
 then
-$sm64loc=$(ls ./build/*pc/*.arm)
+$sm64loc=$(ls $PWD/build/*pc/*.arm)
 else
 $sm64loc=$(ls $HOME/src/sm64pc/sm64ex/build/*pc/*.arm)
 fi

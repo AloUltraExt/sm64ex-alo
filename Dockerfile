@@ -5,9 +5,11 @@ RUN apt-get update && \
         binutils-mips-linux-gnu \
         bsdmainutils \
         build-essential \
-        libcapstone-dev \
-        pkgconf \
-        python3
+        git \
+        libsdl2-dev \
+        pkg-config \
+        python3 \
+        wget
 
 RUN mkdir /sm64
 WORKDIR /sm64

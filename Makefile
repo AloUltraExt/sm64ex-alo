@@ -381,8 +381,8 @@ endif
 
 ifeq ($(TARGET_N64),1)
   DEFINES += TARGET_N64=1 _FINALROM=1
-endif  
- 
+endif
+
 #==============================================================================#
 # Universal Dependencies                                                       #
 #==============================================================================#
@@ -629,7 +629,7 @@ S_FILES       := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.s))
 ifeq ($(TARGET_N64),1)
   C_FILES += $(foreach dir,$(BOOT_DIR),$(wildcard $(dir)/*.c))
   S_FILES += $(foreach dir,$(BOOT_DIR),$(wildcard $(dir)/*.s))
-  
+
   ULTRA_C_FILES := $(foreach dir,$(ULTRA_SRC_DIRS),$(wildcard $(dir)/*.c))
   ULTRA_S_FILES := $(foreach dir,$(ULTRA_SRC_DIRS),$(wildcard $(dir)/*.s))
   LIBGCC_C_FILES := $(foreach dir,$(LIBGCC_SRC_DIRS),$(wildcard $(dir)/*.c))
@@ -1785,7 +1785,7 @@ $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(
 endif
 
 # Remove built-in rules, to improve performance
-MAKEFLAGS += -r 
+MAKEFLAGS += -r
 
 # with no prerequisites, .SECONDARY causes no intermediate target to be removed
 .SECONDARY:
@@ -1795,7 +1795,7 @@ MAKEFLAGS += -r
 
 # Phony targets
 .PHONY: all clean distclean default diff test load libultra res
- 
+
 # General Dependencies
 
 -include $(DEP_FILES)

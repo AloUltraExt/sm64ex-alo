@@ -155,6 +155,7 @@ def main():
             sys.exit(1)
 
     make = "make"
+    winext = ""
 
     # FreeBSD and macOS uses an updated make
     for path in os.environ["PATH"].split(os.pathsep):
