@@ -1,6 +1,10 @@
 #ifdef USE_SYSTEM_MALLOC
 #include <stdlib.h>
+#ifdef __APPLE__
+// No malloc on mac
+#else
 #include <malloc.h>
+#endif
 #endif
 #include <PR/ultratypes.h>
 

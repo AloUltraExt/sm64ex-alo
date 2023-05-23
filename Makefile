@@ -188,23 +188,23 @@ endif
 # macOS overrides
 ifeq ($(HOST_OS),Darwin)
   OSX_BUILD := 1
-  # Using MacPorts?
-  ifeq ($(shell test -d /opt/local/lib && echo y),y)
-    OSX_GCC_VER = $(shell find /opt/local/bin/gcc* | grep -oE '[[:digit:]]+' | sort -n | uniq | tail -1)
-    CC := gcc-mp-$(OSX_GCC_VER)
-    CXX := g++-mp-$(OSX_GCC_VER)
-    CPP := cpp-mp-$(OSX_GCC_VER) -P
-    PLATFORM_CFLAGS := -I /opt/local/include
-    PLATFORM_LDFLAGS := -L /opt/local/lib
+  # Using Homebrew?
+  ifeq ($(shell which brew >/dev/null 2>&1 && echo y),y)
+    OSX_GCC_VER = $(shell find `brew --prefix`/bin/gcc* | grep -oE '[[:digit:]]+' | sort -n | uniq | tail -1)
+    CC := gcc-$(OSX_GCC_VER)
+    CXX := g++-$(OSX_GCC_VER)
+    CPP := cpp-$(OSX_GCC_VER)
+    PLATFORM_CFLAGS := -I $(shell brew --prefix)/include
+    PLATFORM_LDFLAGS := -L $(shell brew --prefix)/lib
   else
-    # Using Homebrew?
-    ifeq ($(shell which brew >/dev/null 2>&1 && echo y),y)
-      OSX_GCC_VER = $(shell find `brew --prefix`/bin/gcc* | grep -oE '[[:digit:]]+' | sort -n | uniq | tail -1)
-      CC := gcc-$(OSX_GCC_VER)
-      CXX := g++-$(OSX_GCC_VER)
-      CPP := cpp-$(OSX_GCC_VER) -P
-      PLATFORM_CFLAGS := -I /usr/local/include
-      PLATFORM_LDFLAGS := -L /usr/local/lib
+    # Using MacPorts?
+    ifeq ($(shell test -d /opt/local/lib && echo y),y)
+      OSX_GCC_VER = $(shell find /opt/local/bin/gcc* | grep -oE '[[:digit:]]+' | sort -n | uniq | tail -1)
+      CC := gcc-mp-$(OSX_GCC_VER)
+      CXX := g++-mp-$(OSX_GCC_VER)
+      CPP := cpp-mp-$(OSX_GCC_VER)
+      PLATFORM_CFLAGS := -I /opt/local/include
+      PLATFORM_LDFLAGS := -L /opt/local/lib
     else
       $(error No suitable macOS toolchain found, have you installed Homebrew?)
     endif
@@ -429,15 +429,6 @@ ifeq ($(TARGET_PORT_CONSOLE),0)
   DUMMY != CC=$(CC) CXX=$(CXX) $(MAKE) -s -C $(TOOLS_DIR) >&2 || echo FAIL
 else
   DUMMY != $(MAKE) -s -C $(TOOLS_DIR) >&2 || echo FAIL
-endif
-    ifeq ($(DUMMY),FAIL)
-      $(error Failed to build tools)
-    endif
-  $(info Building sm64tools...)
-ifeq ($(TARGET_PORT_CONSOLE),0)
-  DUMMY != CC=$(CC) CXX=$(CXX) $(MAKE) -s -C $(TOOLS_DIR)/sm64tools >&2 || echo FAIL
-else
-  DUMMY != $(MAKE) -s -C $(TOOLS_DIR)/sm64tools >&2 || echo FAIL
 endif
     ifeq ($(DUMMY),FAIL)
       $(error Failed to build tools)
@@ -870,7 +861,7 @@ SDLCROSS ?= $(CROSS)
 AS := $(CROSS)as
 
 ifeq ($(OSX_BUILD),1)
-AS := i686-w64-mingw32-as
+  AS := i686-w64-mingw32-as
 endif
 
 ifneq ($(TARGET_WEB),1) # As in, not-web PC port
@@ -991,6 +982,7 @@ ifneq ($(SDL1_USED)$(SDL2_USED),00)
     # on OSX at least the homebrew version of sdl-config gives include path as `.../include/SDL2` instead of `.../include`
     OSX_PREFIX := $(shell $(SDLCONFIG) --prefix)
     BACKEND_CFLAGS += -I$(OSX_PREFIX)/include $(shell $(SDLCONFIG) --cflags)
+    BACKEND_LDFLAGS += $(shell $(SDLCONFIG) --libs)
   else
     BACKEND_CFLAGS += $(shell $(SDLCONFIG) --cflags)
     ifeq ($(WINDOWS_BUILD),1)
@@ -1244,7 +1236,6 @@ clean:
 distclean: clean
 	$(PYTHON) ./extract_assets.py --clean
 	$(MAKE) -C $(TOOLS_DIR) clean
-	$(MAKE) -C $(TOOLS_DIR)/sm64tools clean
 
 test: $(ROM)
 	$(EMULATOR) $(EMU_FLAGS) $<

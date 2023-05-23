@@ -5,10 +5,13 @@ HOST_ENV := $(patsubst MINGW%,MinGW,$(HOST_ENV))
 
 CC           ?= gcc
 CXX          ?= g++
-CFLAGS       := -I. -I sm64tools -O2 -s
+CFLAGS       := -I. -O2 -s
 LDFLAGS      := -lm
 ALL_PROGRAMS := armips textconv patch_elf_32bit aifc_decode aiff_extract_codebook vadpcm_enc tabledesign extract_data_for_mio skyconv
+# From audiofile make
 LIBAUDIOFILE := audiofile/libaudiofile.a
+# From sm64tools make
+SM64TOOLSFILES := sm64tools/%.o
 
 # Only build armips from tools if it is not found on the system
 ifeq ($(call find-command,armips),)
@@ -38,6 +41,7 @@ vadpcm_enc_CFLAGS  := -Wno-unused-result -Wno-uninitialized -Wno-sign-compare -W
 extract_data_for_mio_SOURCES := extract_data_for_mio.c
 
 skyconv_SOURCES := skyconv.c sm64tools/n64graphics.c sm64tools/utils.c
+skyconv_CFLAGS  := -I sm64tools
 
 armips: CC := $(CXX)
 armips_SOURCES := armips.cpp
@@ -47,13 +51,14 @@ ifeq ($(HOST_ENV),MinGW)
   armips_LDFLAGS += -municode
 endif
 
-all-except-recomp: $(LIBAUDIOFILE) $(BUILD_PROGRAMS)
+all-except-recomp: $(LIBAUDIOFILE) $(SM64TOOLSFILES) $(BUILD_PROGRAMS)
 
 all: all-except-recomp
 
 clean:
 	$(RM) $(ALL_PROGRAMS)
 	$(MAKE) -C audiofile clean
+	$(MAKE) -C sm64tools clean
 
 define COMPILE
 $(1): $($1_SOURCES)
@@ -64,5 +69,8 @@ $(foreach p,$(BUILD_PROGRAMS),$(eval $(call COMPILE,$(p))))
 
 $(LIBAUDIOFILE):
 	@CC=$(CC) CXX=$(CXX) $(MAKE) -C audiofile
+
+$(SM64TOOLSFILES):
+	CC=$(CC) CXX=$(CXX) $(MAKE) -C sm64tools
 
 .PHONY: all all-except-recomp clean default
