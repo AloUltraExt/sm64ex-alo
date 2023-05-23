@@ -433,15 +433,6 @@ endif
     ifeq ($(DUMMY),FAIL)
       $(error Failed to build tools)
     endif
-  $(info Building sm64tools...)
-ifeq ($(TARGET_PORT_CONSOLE),0)
-  DUMMY != CC=$(CC) CXX=$(CXX) $(MAKE) -s -C $(TOOLS_DIR)/sm64tools >&2 || echo FAIL
-else
-  DUMMY != $(MAKE) -s -C $(TOOLS_DIR)/sm64tools >&2 || echo FAIL
-endif
-    ifeq ($(DUMMY),FAIL)
-      $(error Failed to build tools)
-    endif
   $(info Building game...)
 
 endif
