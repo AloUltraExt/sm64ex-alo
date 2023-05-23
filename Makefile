@@ -193,7 +193,7 @@ ifeq ($(HOST_OS),Darwin)
     OSX_GCC_VER = $(shell find `brew --prefix`/bin/gcc* | grep -oE '[[:digit:]]+' | sort -n | uniq | tail -1)
     CC := gcc-$(OSX_GCC_VER)
     CXX := g++-$(OSX_GCC_VER)
-    CPP := cpp-$(OSX_GCC_VER) -P
+    CPP := cpp-$(OSX_GCC_VER)
     PLATFORM_CFLAGS := -I $(shell brew --prefix)/include
     PLATFORM_LDFLAGS := -L $(shell brew --prefix)/lib
   else
@@ -202,7 +202,7 @@ ifeq ($(HOST_OS),Darwin)
       OSX_GCC_VER = $(shell find /opt/local/bin/gcc* | grep -oE '[[:digit:]]+' | sort -n | uniq | tail -1)
       CC := gcc-mp-$(OSX_GCC_VER)
       CXX := g++-mp-$(OSX_GCC_VER)
-      CPP := cpp-mp-$(OSX_GCC_VER) -P
+      CPP := cpp-mp-$(OSX_GCC_VER)
       PLATFORM_CFLAGS := -I /opt/local/include
       PLATFORM_LDFLAGS := -L /opt/local/lib
     else
@@ -870,11 +870,7 @@ SDLCROSS ?= $(CROSS)
 AS := $(CROSS)as
 
 ifeq ($(OSX_BUILD),1)
-# cross assembler required for '00_sound_player.s'
-AS := i686-w64-mingw32-as
-# native assembler required for 'sound_data.s'
-# (GNU as is not available in any OSX port of binutils, use LLVM as instead)
-AS_NATIVE := as
+  AS := i686-w64-mingw32-as
 endif
 
 ifneq ($(TARGET_WEB),1) # As in, not-web PC port
