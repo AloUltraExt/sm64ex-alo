@@ -1245,7 +1245,6 @@ clean:
 distclean: clean
 	$(PYTHON) ./extract_assets.py --clean
 	$(MAKE) -C $(TOOLS_DIR) clean
-	$(MAKE) -C $(TOOLS_DIR)/sm64tools clean
 
 test: $(ROM)
 	$(EMULATOR) $(EMU_FLAGS) $<

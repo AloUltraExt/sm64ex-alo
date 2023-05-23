@@ -54,6 +54,7 @@ all: all-except-recomp
 clean:
 	$(RM) $(ALL_PROGRAMS)
 	$(MAKE) -C audiofile clean
+	$(MAKE) -C sm64tools clean
 
 define COMPILE
 $(1): $($1_SOURCES)
