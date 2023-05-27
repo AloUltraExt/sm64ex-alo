@@ -92,6 +92,9 @@
 /// Fixes unreachable stars if they close to a ceiling
 #define FIX_STARS_ON_CEILINGS (0 || QOL_FIXES)
 
+/// Fixes NPC interaction button so it's like the japanese version
+#define FIX_INTERACT_READING_BUTTON (0 || QOL_FIXES)
+
 /// Fixes hardcoded snow tree leaf particles
 #define FIX_HARDCODED_TREE_PARTICLES (0 || QOL_FIXES || !VANILLA_CHECKS)
 

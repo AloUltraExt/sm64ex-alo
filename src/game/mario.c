@@ -538,9 +538,7 @@ struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 ra
     struct WallCollisionData collisionData;
     struct Surface *wall = NULL;
 #if BETTER_RESOLVE_WALL_COLLISION
-    u8 i = 0;
-    s16 angleDiffStore = 0xFFFF;
-    s16 angleDiff = 0;
+    int i = 0;
 #endif
 
     collisionData.x = pos[0];
@@ -552,12 +550,7 @@ struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 ra
     if (find_wall_collisions(&collisionData)) {
 #if BETTER_RESOLVE_WALL_COLLISION
         for (i = 0; i < collisionData.numWalls; i++) {
-            angleDiff = abs_angle_diff(gCurrentObject->oMoveAngleYaw - 0x8000,
-                    atan2s(collisionData.walls[i]->normal.z, collisionData.walls[i]->normal.x));
-            if (angleDiff < angleDiffStore) {
-                wall = collisionData.walls[i];
-                angleDiffStore = angleDiff;
-            }
+            wall = collisionData.walls[i];
         }
 #else
         wall = collisionData.walls[collisionData.numWalls - 1];
@@ -771,10 +764,10 @@ s16 find_floor_slope(struct MarioState *m, s16 yawOffset) {
     } else
 #endif
     {
-    forwardFloorY = find_floor(m->pos[0] + x, m->pos[1] + 100.0f, m->pos[2] + z, &floor);
-    CHECK(if (floor == NULL) forwardFloorY = m->floorHeight); // handle OOB slopes
-    backwardFloorY = find_floor(m->pos[0] - x, m->pos[1] + 100.0f, m->pos[2] - z, &floor);
-    CHECK(if (floor == NULL) backwardFloorY = m->floorHeight); // handle OOB slopes
+        forwardFloorY = find_floor(m->pos[0] + x, m->pos[1] + 100.0f, m->pos[2] + z, &floor);
+        CHECK(if (floor == NULL) forwardFloorY = m->floorHeight); // handle OOB slopes
+        backwardFloorY = find_floor(m->pos[0] - x, m->pos[1] + 100.0f, m->pos[2] - z, &floor);
+        CHECK(if (floor == NULL) backwardFloorY = m->floorHeight); // handle OOB slopes
     }
 
     //! If Mario is near OOB, these floorY's can sometimes be -11000.
@@ -1739,6 +1732,12 @@ u32 update_and_return_cap_flags(struct MarioState *m) {
     return flags;
 }
 
+#if FIX_SHORT_HITBOX_SLIDE_ACTS
+#define ACT_FLAG_HEIGHT_MASK (ACT_FLAG_SHORT_HITBOX | ACT_FLAG_BUTT_OR_STOMACH_SLIDE)
+#else
+#define ACT_FLAG_HEIGHT_MASK ACT_FLAG_SHORT_HITBOX
+#endif
+
 /**
  * Updates the Mario's cap, rendering, and hitbox.
  */
@@ -1782,11 +1781,7 @@ void mario_update_hitbox_and_cap_model(struct MarioState *m) {
     }
 
     // Short hitbox for crouching/crawling/etc.
-    if (m->action & (ACT_FLAG_SHORT_HITBOX
-#if FIX_SHORT_HITBOX_SLIDE_ACTS
-        | ACT_FLAG_BUTT_OR_STOMACH_SLIDE
-#endif
-    )) {
+    if (m->action & ACT_FLAG_HEIGHT_MASK) {
         m->marioObj->hitboxHeight = 100.0f;
     } else {
         m->marioObj->hitboxHeight = 160.0f;
@@ -1874,9 +1869,6 @@ s32 execute_mario_action(UNUSED struct Object *o) {
         gMarioState->marioObj->header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
         mario_reset_bodystate(gMarioState);
         update_mario_inputs(gMarioState);
-#ifdef BETTERCAMERA
-        if (!(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE))
-#endif
         mario_handle_special_floors(gMarioState);
         mario_process_interactions(gMarioState);
 

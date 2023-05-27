@@ -79,7 +79,7 @@ void patch_interpolated_snow_particles(void) {
 }
 #endif
 
-#if QOL_FEATURE_NO_SNOW_CEILING
+#if NO_ENV_SNOW_CEILING
 // Stores snow particles count so it spawns quicky after exiting a ceiling
 s16 gSavedSnowParticleCount;
 #endif
@@ -89,7 +89,7 @@ s16 gSavedSnowParticleCount;
  * and setting a start amount.
  */
 s32 envfx_init_snow(s32 mode) {
-#if QOL_FEATURE_NO_SNOW_CEILING
+#if NO_ENV_SNOW_CEILING
     gSavedSnowParticleCount = 0;
 #endif
 
@@ -439,7 +439,7 @@ void append_snowflake_vertex_buffer(Gfx *gfx, s32 index, Vec3s vertex1, Vec3s ve
 
 }
 
-#if QOL_FEATURE_NO_SNOW_CEILING
+#if NO_ENV_SNOW_CEILING
 /**
  * Makes snow particles disappear if there's a ceiling 
  * on top of Mario and the camera
@@ -494,7 +494,7 @@ Gfx *envfx_update_snow(s32 snowMode, Vec3s marioPos, Vec3s camFrom, Vec3s camTo)
         return NULL;
     }
 
-#if QOL_FEATURE_NO_SNOW_CEILING
+#if NO_ENV_SNOW_CEILING
     envfx_update_ceiling_count();
 #endif
 

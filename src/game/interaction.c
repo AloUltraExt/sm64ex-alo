@@ -24,6 +24,10 @@
 #include "sound_init.h"
 #include "rumble_init.h"
 
+#ifdef BETTERCAMERA
+#include "extras/bettercamera.h"
+#endif
+
 #ifdef CHEATS_ACTIONS
 #include "extras/cheats.h"
 #endif
@@ -1331,9 +1335,18 @@ u32 interact_mr_blizzard(struct MarioState *m, UNUSED u32 interactType, struct O
     return FALSE;
 }
 
-u32 interact_hit_from_below(struct MarioState *m, UNUSED u32 interactType, struct Object *o) {
-    UNUSED u8 filler[4];
+#if TWIRL_WITH_OBJECT
+#define SET_MARIO_ACT(m, a, v) set_mario_action(m, a, v)
+#else
+#define SET_MARIO_ACT(m, a, v) drop_and_set_mario_action(m, a, v)
+#endif
 
+#if JUMP_ENEMY_BOUNCE_BOOST
+#define BOOST(c, t, f) ((c) ? t : f)
+#else
+#define BOOST(c, t, f) f
+#endif
+u32 interact_hit_from_below(struct MarioState *m, UNUSED u32 interactType, struct Object *o) {
     u32 interaction;
     if (m->flags & MARIO_METAL_CAP) {
         interaction = INT_FAST_ATTACK_OR_SHELL;
@@ -1359,13 +1372,9 @@ u32 interact_hit_from_below(struct MarioState *m, UNUSED u32 interactType, struc
 #ifndef VERSION_JP
                 play_sound(SOUND_MARIO_TWIRL_BOUNCE, m->marioObj->header.gfx.cameraToObject);
 #endif
-                return drop_and_set_mario_action(m, ACT_TWIRLING, 0);
+                return SET_MARIO_ACT(m, ACT_TWIRLING, 0);
             } else {
-                #if JUMP_ENEMY_BOUNCE_BOOST
-                bounce_off_object(m, o, (m->input & INPUT_A_DOWN) ? 50.0f : 30.0f);
-                #else
-                bounce_off_object(m, o, 30.0f);
-                #endif
+                bounce_off_object(m, o, BOOST(m->input & INPUT_A_DOWN, 50.0f, 30.0f));
             }
         }
     } else if (take_damage_and_knock_back(m, o)) {
@@ -1401,13 +1410,9 @@ u32 interact_bounce_top(struct MarioState *m, UNUSED u32 interactType, struct Ob
 #ifndef VERSION_JP
                 play_sound(SOUND_MARIO_TWIRL_BOUNCE, m->marioObj->header.gfx.cameraToObject);
 #endif
-                return drop_and_set_mario_action(m, ACT_TWIRLING, 0);
+                return SET_MARIO_ACT(m, ACT_TWIRLING, 0);
             } else {
-                #if JUMP_ENEMY_BOUNCE_BOOST
-                bounce_off_object(m, o, (m->input & INPUT_A_DOWN) ? 50.0f : 30.0f);
-                #else
-                bounce_off_object(m, o, 30.0f);
-                #endif
+                bounce_off_object(m, o, BOOST(m->input & INPUT_A_DOWN, 50.0f, 30.0f));
             }
         }
     } else if (take_damage_and_knock_back(m, o)) {
@@ -1420,6 +1425,8 @@ u32 interact_bounce_top(struct MarioState *m, UNUSED u32 interactType, struct Ob
 
     return FALSE;
 }
+#undef SET_MARIO_ACT
+#undef BOOST
 
 u32 interact_unknown_08(struct MarioState *m, UNUSED u32 interactType, struct Object *o) {
     u32 interaction = determine_interaction(m, o);
@@ -1714,7 +1721,7 @@ u32 mario_can_talk(struct MarioState *m, u32 arg) {
     return FALSE;
 }
 
-#ifdef VERSION_JP
+#if FIX_INTERACT_READING_BUTTON
 #define READ_MASK (INPUT_B_PRESSED)
 #else
 #define READ_MASK (INPUT_B_PRESSED | INPUT_A_PRESSED)
@@ -1906,6 +1913,12 @@ void mario_handle_special_floors(struct MarioState *m) {
     if ((m->action & ACT_GROUP_MASK) == ACT_GROUP_CUTSCENE) {
         return;
     }
+
+#ifdef BETTERCAMERA
+    if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE) {
+        return;
+    }
+#endif
 
     if (m->floor != NULL) {
         s32 floorType = m->floor->type;

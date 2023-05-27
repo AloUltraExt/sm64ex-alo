@@ -35,9 +35,9 @@ void bhv_collect_star_loop(void) {
 }
 
 #if ROOM_OBJECT_CAMERA_FOCUS
-#define CHECK(cond, set)
+#define COND(a, b) a
 #else
-#define CHECK(cond, set)    if (cond) { set; }
+#define COND(a, b) (a || b)
 #endif
 
 void bhv_star_spawn_init(void) {
@@ -47,20 +47,15 @@ void bhv_star_spawn_init(void) {
     o->oForwardVel = o->oStarSpawnDisFromHome / 30.0f;
     o->oStarSpawnUnkFC = o->oPosY;
 
-    CHECK(gCurrCourseNum == COURSE_BBH, cutscene_object(CUTSCENE_STAR_SPAWN, o));
-
-    if (o->oBhvParams2ndByte == 0) {
-        cutscene_object(CUTSCENE_STAR_SPAWN, o);
-    } else {
-        cutscene_object(CUTSCENE_RED_COIN_STAR_SPAWN, o);
-    }
+    cutscene_object(COND(o->oBhvParams2ndByte == 0, gCurrCourseNum == COURSE_BBH)
+            ? CUTSCENE_STAR_SPAWN : CUTSCENE_RED_COIN_STAR_SPAWN, o);
 
     set_time_stop_flags(TIME_STOP_ENABLED | TIME_STOP_MARIO_AND_DOORS);
     o->activeFlags |= ACTIVE_FLAG_INITIATED_TIME_STOP;
     cur_obj_become_intangible();
 }
 
-#undef CHECK
+#undef COND
 
 void bhv_star_spawn_loop(void) {
     switch (o->oAction) {

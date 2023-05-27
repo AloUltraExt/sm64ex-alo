@@ -106,8 +106,8 @@ enum RenderLayers {
 #define AIR_STEP_HIT_WALL        2
 #define AIR_STEP_GRABBED_LEDGE   3
 #define AIR_STEP_GRABBED_CEILING 4
+#define AIR_STEP_HIT_CEILING     5 // used when BETTER_RESOLVE_WALL_COLLISION is set
 #define AIR_STEP_HIT_LAVA_WALL   6
-#define AIR_STEP_HIT_CEILING     7 // used when BETTER_RESOLVE_WALL_COLLISION is set
 
 #define WATER_STEP_NONE        0
 #define WATER_STEP_HIT_FLOOR   1
@@ -157,7 +157,7 @@ enum RenderLayers {
 #define MARIO_KICKING                   0x00200000
 #define MARIO_TRIPPING                  0x00400000
 #define MARIO_UNKNOWN_25                0x02000000
-#define MARIO_UNKNOWN_30                0x40000000
+#define MARIO_AIR_HIT_WALL              0x40000000
 #define MARIO_UNKNOWN_31                0x80000000
 
 #define MARIO_SPECIAL_CAPS (MARIO_VANISH_CAP | MARIO_METAL_CAP | MARIO_WING_CAP)
