@@ -8245,7 +8245,7 @@ File *File::open(const char *path, File::AccessMode mode)
 		flags = O_CREAT | O_WRONLY | O_TRUNC;
 // ex-alo note: Added defines for mingw to fix crashes on some custom aiff files
 // if audiofile was build using MSYS Mingw.
-#if defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__MINGW64__)
+#if defined(WIN32) || defined(__CYGWIN__) || defined(_WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
 	flags |= O_BINARY;
 #endif
 	int fd = ::open(path, flags, 0666);

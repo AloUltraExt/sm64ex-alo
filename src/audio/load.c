@@ -982,8 +982,8 @@ void audio_init() {
 
     // Load bank sets for each sequence
     data = LOAD_DATA(gBankSetsData);
-    gAlBankSets = soundAlloc(&gAudioInitPool, BANK_SETS_ALLOC);
-    audio_dma_copy_immediate((uintptr_t) data, gAlBankSets, BANK_SETS_ALLOC);
+    gAlBankSets = soundAlloc(&gAudioInitPool, MAX_NUM_SOUNDBANKS * sizeof(s32));
+    audio_dma_copy_immediate((uintptr_t) data, gAlBankSets, MAX_NUM_SOUNDBANKS * sizeof(s32));
 #else
     // Load headers for sounds and sequences
     data = LOAD_DATA(gMusicData);

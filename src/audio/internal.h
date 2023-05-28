@@ -7,10 +7,21 @@
 
 #if defined(VERSION_EU) || defined(VERSION_SH)
 #define SEQUENCE_PLAYERS 4
+#else
+#define SEQUENCE_PLAYERS 3
+#endif
+
+#define LAYERS_MAX       4
+#define CHANNELS_MAX     16
+
+#ifdef EXPAND_AUDIO_HEAP // Not technically on the heap but it's memory nonetheless...
+#define SEQUENCE_CHANNELS (SEQUENCE_PLAYERS * CHANNELS_MAX)
+#define SEQUENCE_LAYERS ((SEQUENCE_CHANNELS * LAYERS_MAX) / 2) // This should be more than plenty in nearly all circumstances.
+#else // EXPAND_AUDIO_HEAP
+#if defined(VERSION_EU) || defined(VERSION_SH)
 #define SEQUENCE_CHANNELS 48
 #define SEQUENCE_LAYERS 64
 #else
-#define SEQUENCE_PLAYERS 3
 #define SEQUENCE_CHANNELS 32
 #ifdef VERSION_JP
 #define SEQUENCE_LAYERS 48
@@ -18,9 +29,7 @@
 #define SEQUENCE_LAYERS 52
 #endif
 #endif
-
-#define LAYERS_MAX       4
-#define CHANNELS_MAX     16
+#endif // EXPAND_AUDIO_HEAP
 
 #define NO_LAYER ((struct SequenceChannelLayer *)(-1))
 

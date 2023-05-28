@@ -1124,11 +1124,12 @@ else
 endif
 
 # Python tools
-ZEROTERM         := $(PYTHON) $(TOOLS_DIR)/zeroterm.py
-GET_GODDARD_SIZE := $(PYTHON) $(TOOLS_DIR)/getGoddardSize.py
-BINPNG           := $(TOOLS_DIR)/BinPNG.py
+ZEROTERM          := $(PYTHON) $(TOOLS_DIR)/zeroterm.py
+GET_GODDARD_SIZE  := $(PYTHON) $(TOOLS_DIR)/getGoddardSize.py
+BINPNG            := $(TOOLS_DIR)/BinPNG.py
+CODEBOOK_FAILSAFE := $(TOOLS_DIR)/aiff_extract_codebook_failsafe.py
 
-ENDIAN_BITWIDTH  := $(BUILD_DIR)/endian-and-bitwidth
+ENDIAN_BITWIDTH   := $(BUILD_DIR)/endian-and-bitwidth
 
 EMULATOR = mupen64plus
 EMU_FLAGS =
@@ -1458,7 +1459,7 @@ endif
 
 $(BUILD_DIR)/%.table: %.aiff
 	$(call print,Extracting codebook:,$<,$@)
-	$(V)$(AIFF_EXTRACT_CODEBOOK) $< >$@
+	$(V)$(PYTHON) $(CODEBOOK_FAILSAFE) $(AIFF_EXTRACT_CODEBOOK) $< $@
 
 $(BUILD_DIR)/%.aifc: $(BUILD_DIR)/%.table %.aiff
 	$(call print,Encoding ADPCM:,$(word 2,$^),$@)

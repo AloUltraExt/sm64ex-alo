@@ -522,8 +522,6 @@ void *func_sh_802f3564(s32 seqId) {
     return func_sh_802f3764(0, seqId2, &temp);
 }
 
-extern u8 gUnkLoadStatus[0x40];
-
 void *func_sh_802f3598(s32 idx, s32 *medium) {
     void *ret;
     ALSeqFile *f;
