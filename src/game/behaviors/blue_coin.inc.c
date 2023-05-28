@@ -71,7 +71,7 @@ void bhv_hidden_blue_coin_loop(void) {
 #define VEL_Y_MOVE 16.0f
 #define TIMER_INIT 3
 #else
-#define VEL_Y_DOWN 20.0f
+#define VEL_Y_MOVE 20.0f
 #define TIMER_INIT 5
 #endif
 

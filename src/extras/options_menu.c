@@ -176,7 +176,9 @@ static struct Option optsVanillaCamera[] = {
 #endif
 
 #ifdef BETTERCAMERA
+#if MORE_VANILLA_CAM_STUFF
 struct SubMenu menuVanillaCamera = DEF_SUBMENU( optsCameraStr[0], optsVanillaCamera );
+#endif
 
 static struct Option optsCamera[] = {
     DEF_OPT_TOGGLE( optsPuppyCamStr[1], &configPuppyCam.enable ),

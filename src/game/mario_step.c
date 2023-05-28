@@ -604,7 +604,7 @@ u32 check_ledge_grab(struct MarioState *m, struct Surface *wall, Vec3f intendedP
     m->floorHeight = ledgePos[1];
 
 #if FIX_LEDGE_GRAB_STEEP_SLOPES
-    if (floor->normal.y < 0.90630779f) {
+    if (m->floor->normal.y < 0.90630779f) {
         return FALSE;
     }
 #endif
@@ -705,7 +705,7 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
         }
         if ((m->vel[1] >= 0.0f) && (ceil->type == SURFACE_HANGABLE) &&
 #if HANGABLE_SURFACE_AIR_FREELY
-        !(m->prevAction & ACT_FLAG_HANGING) && (m->action & ACT_FLAG_AIR)
+        (!(m->prevAction & ACT_FLAG_HANGING)) && (m->action & ACT_FLAG_AIR)
 #else
         (stepArg & AIR_STEP_CHECK_HANG)
 #endif
@@ -745,9 +745,9 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
             m->vel[1] = 0.0f;
 
             //! Uses referenced ceiling instead of ceil (ceiling hang upwarp)
-            if (m->ceil != NULL && m->ceil->type == SURFACE_HANGABLE
+            if (m->ceil != NULL && m->ceil->type == SURFACE_HANGABLE &&
 #if HANGABLE_SURFACE_AIR_FREELY
-            !(m->prevAction & ACT_FLAG_HANGING) && (m->action & ACT_FLAG_AIR)
+            (!(m->prevAction & ACT_FLAG_HANGING)) && (m->action & ACT_FLAG_AIR)
 #else
             (stepArg & AIR_STEP_CHECK_HANG)
 #endif

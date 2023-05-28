@@ -186,6 +186,7 @@ const Gfx tree_seg3_sub_dl_snowy_pine[] = {
     gsSPEndDisplayList(),
 };
 
+#if OBJ_OPACITY_BY_CAM_DIST
 const Gfx tree_seg3_dl_snowy_pine[] = {
     gsDPPipeSync(),
     gsDPSetCombineMode(G_CC_DECALRGBA, G_CC_DECALRGBA),
@@ -197,6 +198,7 @@ const Gfx tree_seg3_dl_snowy_pine_transparent[] = {
     gsDPSetCombineMode(G_CC_DECALFADEA, G_CC_DECALFADEA),
     gsSPBranchList(tree_seg3_sub_dl_snowy_pine),
 };
+#endif
 
 // 0x03032218
 ALIGNED8 static const Texture tree_seg3_texture_palm[] = {
