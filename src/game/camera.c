@@ -11370,7 +11370,7 @@ void approach_fov(f32 fov, f32 inc) {
 }
 
 void zoom_fov(f32 fov, f32 div) {
-    if (FLT_IS_NONZERO(div)) {
+    if (F32_IS_NONZERO(div)) {
         approach_f32_asymptotic_bool(&sFOVState.fov, fov, (1.0f / div));
     } else {
         set_fov(fov);

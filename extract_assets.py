@@ -166,12 +166,14 @@ def main():
     if platform.system() == "Windows":
         winext = ".exe"
 
+    # Extract textures from the compressed MIO0 block
     subprocess.check_call(
-        ["make", "-s", "-C", "tools/sm64tools/", "n64graphics" + winext, "mio0" + winext]
+        ["make", "-s", "-C", "tools/sm64tools/", "n64graphics", "mio0"]
     )
 
+    # Extract sky textures unified along with extracting aiff audio
     subprocess.check_call(
-        ["make", "-s", "-C", "tools/", "skyconv" + winext, "aifc_decode" + winext]
+        ["make", "-s", "-C", "tools/", "skyconv", "aifc_decode"]
     )
 
     # Go through the assets in roughly alphabetical order (but assets in the same

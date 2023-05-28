@@ -74,7 +74,7 @@ s32 check_wall_triangle_vw(f32 d00, f32 d01, f32 d11, f32 d20, f32 d21, f32 invD
 s32 check_wall_triangle_edge(Vec3f vert, Vec3f v2, f32 *d00, f32 *d01, f32 *invDenom, f32 *offset, f32 margin_radius) {
     f32 y = vert[1];
 
-    if (FLT_IS_NONZERO(y)) {
+    if (F32_IS_NONZERO(y)) {
         f32 v = (v2[1] / y);
         if (v < 0.0f || v > 1.0f) {
             return TRUE;
@@ -223,9 +223,7 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
 
         // Inverse denom.
         invDenom = (d00 * d11) - (d01 * d01);
-        if (FLT_IS_NONZERO(invDenom)) {
-            invDenom = 1.0f / invDenom;
-        }
+        invDenom = F32_IS_NONZERO(invDenom) ? (1.0f / invDenom) : 1.0f;
 
         if (check_wall_triangle_vw(d00, d01, d11, d20, d21, invDenom)) {
             // Skip if behind surface.
@@ -249,9 +247,7 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
             }
 
             // Check collision
-            if (FLT_IS_NONZERO(invDenom)) {
-                invDenom = (offset / invDenom);
-            }
+            invDenom = F32_IS_NONZERO(invDenom) ? (offset / invDenom) : offset;
 
             // Update pos
             pos[0] += (d00 *= invDenom);
@@ -397,7 +393,7 @@ void add_ceil_margin(f32 *x, f32 *z, Vec3s target1, Vec3s target2, f32 margin) {
     f32 dz = ((target1[2] - *z) + (target2[2] - *z));
     f32 invDenom = (sqr(dx) + sqr(dz));
 
-    if (FLT_IS_NONZERO(invDenom)) {
+    if (F32_IS_NONZERO(invDenom)) {
         invDenom = (margin / sqrtf(invDenom));
 
         *x += (dx * invDenom);
@@ -414,7 +410,7 @@ void add_ceil_margin(f32 *x, f32 *z, Vec3s target1, Vec3s target2, f32 margin) {
 #endif
 static s32 check_within_ceil_triangle_bounds(s32 x, s32 z, struct Surface *surf, const f32 margin) {
 #if CEILING_MARGINS
-    s32 addMargin = (FLT_IS_NONZERO(margin) && (surf->type != SURFACE_HANGABLE));
+    s32 addMargin = (F32_IS_NONZERO(margin) && (surf->type != SURFACE_HANGABLE));
 #endif
 
     f32 x1 = surf->vertex1[0];

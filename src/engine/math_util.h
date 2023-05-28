@@ -543,7 +543,11 @@ ALWAYS_INLINE s16 abss(s16 in) {
 // On console, (x != 0) still returns true for denormalized floats,
 // which will count as a division by zero when divided and crash.
 // For console compatibility, use this check instead when avoiding a division by zero.
-#define FLT_IS_NONZERO(x) (absf(x) > NEAR_ZERO)
+#define F32_IS_NONZERO(x) ((*(int*)(&(x))) & ((((1 << (8))) - 1) << 23))
+#define F64_IS_NONZERO(x) ((*(int*)(&(x))) & ((((1 << (11))) - 1) << 52))
+// HackerSM64: Backwards compatibility
+#define FLT_IS_NONZERO(x) F32_IS_NONZERO(x)
+#define DBL_IS_NONZERO(x) F64_IS_NONZERO(x)
 
 // RNG
 u16 random_u16(void);
