@@ -1101,10 +1101,9 @@ endif
 # Miscellaneous Tools                                                          #
 #==============================================================================#
 
+WINEXT :=
 ifeq ($(HOST_OS),Windows)
 WINEXT := .exe
-else
-WINEXT :=
 endif
 
 # Executable tools
@@ -1113,7 +1112,7 @@ N64CKSUM              := $(TOOLS_DIR)/sm64tools/n64cksum$(WINEXT)
 N64GRAPHICS           := $(TOOLS_DIR)/sm64tools/n64graphics$(WINEXT)
 N64GRAPHICS_CI        := $(TOOLS_DIR)/sm64tools/n64graphics_ci$(WINEXT)
 TEXTCONV              := $(TOOLS_DIR)/textconv$(WINEXT)
-AIFF_EXTRACT_CODEBOOK := $(TOOLS_DIR)/aiff_extract_codebook$(WINEXT)
+TABLEDESIGN           := $(TOOLS_DIR)/tabledesign$(WINEXT)
 VADPCM_ENC            := $(TOOLS_DIR)/vadpcm_enc$(WINEXT)
 EXTRACT_DATA_FOR_MIO  := $(TOOLS_DIR)/extract_data_for_mio$(WINEXT)
 SKYCONV               := $(TOOLS_DIR)/skyconv$(WINEXT)
@@ -1127,7 +1126,6 @@ endif
 ZEROTERM          := $(PYTHON) $(TOOLS_DIR)/zeroterm.py
 GET_GODDARD_SIZE  := $(PYTHON) $(TOOLS_DIR)/getGoddardSize.py
 BINPNG            := $(TOOLS_DIR)/BinPNG.py
-CODEBOOK_FAILSAFE := $(TOOLS_DIR)/aiff_extract_codebook_failsafe.py
 
 ENDIAN_BITWIDTH   := $(BUILD_DIR)/endian-and-bitwidth
 
@@ -1458,15 +1456,15 @@ endif
 #==============================================================================#
 
 $(BUILD_DIR)/%.table: %.aiff
-	$(call print,Extracting codebook:,$<,$@)
-	$(V)$(PYTHON) $(CODEBOOK_FAILSAFE) $(AIFF_EXTRACT_CODEBOOK) $< $@
+	$(call print,Generating ADPCM table:,$<,$@)
+	$(V)$(TABLEDESIGN) -s 1 $< >$@
 
 $(BUILD_DIR)/%.aifc: $(BUILD_DIR)/%.table %.aiff
 	$(call print,Encoding ADPCM:,$(word 2,$^),$@)
 	$(V)$(VADPCM_ENC) -c $^ $@
 
 # Endianness and bit width
-$(ENDIAN_BITWIDTH): tools/determine-endian-bitwidth.c
+$(ENDIAN_BITWIDTH): $(TOOLS_DIR)/determine-endian-bitwidth.c
 	@$(PRINT) "$(GREEN)Generating endian-bitwidth $(NO_COL)\n"
 	$(V)$(CC) -c $(CFLAGS) -o $@.dummy2 $< 2>$@.dummy1; true
 	$(V)grep -o 'msgbegin --endian .* --bitwidth .* msgend' $@.dummy1 > $@.dummy2
@@ -1475,7 +1473,7 @@ $(ENDIAN_BITWIDTH): tools/determine-endian-bitwidth.c
 	$(V)$(RM) $@.dummy2
 
 $(SOUND_BIN_DIR)/sound_data.ctl: sound/sound_banks/ $(SOUND_BANK_FILES) $(SOUND_SAMPLE_AIFCS) $(ENDIAN_BITWIDTH)
-	@$(PRINT) "$(GREEN)Generating:  $(BLUE)$@ $(NO_COL)\n"
+	@$(PRINT) "$(GREEN)Generating: $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(PYTHON) $(TOOLS_DIR)/assemble_sound.py $(BUILD_DIR)/sound/samples/ sound/sound_banks/ $(SOUND_BIN_DIR)/sound_data.ctl $(SOUND_BIN_DIR)/ctl_header $(SOUND_BIN_DIR)/sound_data.tbl $(SOUND_BIN_DIR)/tbl_header $(C_DEFINES) $$(cat $(ENDIAN_BITWIDTH))
 
 $(SOUND_BIN_DIR)/sound_data.tbl: $(SOUND_BIN_DIR)/sound_data.ctl

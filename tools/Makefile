@@ -7,7 +7,7 @@ CC           ?= gcc
 CXX          ?= g++
 CFLAGS       := -I. -O2 -s
 LDFLAGS      := -lm
-ALL_PROGRAMS := armips textconv patch_elf_32bit aifc_decode aiff_extract_codebook vadpcm_enc tabledesign extract_data_for_mio skyconv
+ALL_PROGRAMS := armips textconv patch_elf_32bit aifc_decode vadpcm_enc tabledesign extract_data_for_mio skyconv
 # From audiofile make
 LIBAUDIOFILE := audiofile/libaudiofile.a
 # From sm64tools make
@@ -27,8 +27,6 @@ textconv_SOURCES := textconv.c utf8.c hashtable.c
 patch_elf_32bit_SOURCES := patch_elf_32bit.c
 
 aifc_decode_SOURCES := aifc_decode.c
-
-aiff_extract_codebook_SOURCES := aiff_extract_codebook.c
 
 tabledesign: $(LIBAUDIOFILE)
 tabledesign_SOURCES := sdk-tools/tabledesign/codebook.c sdk-tools/tabledesign/estimate.c sdk-tools/tabledesign/print.c sdk-tools/tabledesign/tabledesign.c
