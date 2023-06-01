@@ -129,7 +129,7 @@ struct {
     Gfx *pos;
     void *mtx;
     void *displayList;
-} gMtxTbl[GFX_POOL_SIZE_STATIC];
+} gMtxTbl[GFX_POOL_SIZE_FIXED];
 s32 gMtxTblSize;
 
 static Gfx *sViewportPos;

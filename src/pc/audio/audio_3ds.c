@@ -120,17 +120,25 @@ static bool audio_3ds_init()
     LightEvent_Init(&s_event_main, RESET_ONESHOT);
 
     s32 prio = 0;
-    svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
 
     int cpu;
     if (is_new_n3ds())
+    {
         cpu = 2; // n3ds 3rd core
-    else if (R_SUCCEEDED(APT_SetAppCpuTimeLimit(80)))
+        prio = 0x18;
+    }
+    else if (R_SUCCEEDED(APT_SetAppCpuTimeLimit(70)))
+    {
         cpu = 1; // o3ds 2nd core (system)
+        prio = 0x18;
+    }
     else
+    {
         cpu = 0; // better to have choppy sound than no sound?
+        prio = 0x19;
+    }
 
-    threadId = threadCreate(audio_3ds_loop, 0, 128 * 1024, prio - 1, cpu, true);
+    threadId = threadCreate(audio_3ds_loop, 0, 64 * 1024, prio, cpu, true);
 
     if (threadId)
         printf("Created audio thread on core %i\n", cpu);
