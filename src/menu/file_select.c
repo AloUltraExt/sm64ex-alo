@@ -3025,8 +3025,8 @@ static void print_file_select_strings(void) {
     file_select_fit_screen();
 #endif
 
-#ifdef SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
-    // Adds key combo to skip peach intro cutscene, useful on Non-PC targets
+#ifdef KEY_COMBO_SKIP_INTRO_CUTSCENE
+    // Adds key combo to skip intro cutscene, useful on Non-PC targets
     if ((gPlayer1Controller->buttonDown == (L_TRIG | R_TRIG)) && sCurrentMenuLevel == MENU_LAYER_MAIN) {
         if (!(gGlobalGameSkips & GAME_SKIP_INTRO_SCENE)) {
             play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);

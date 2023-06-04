@@ -3011,7 +3011,7 @@ void set_camera_mode(struct Camera *c, s16 mode, s16 frames) {
 #if MORE_VANILLA_CAM_STUFF
     if (mode == CAMERA_MODE_8_DIRECTIONS) {
         // Helps transition from any camera mode to 8dir
-        s8DirModeYawOffset = 0;
+        s8DirModeYawOffset = snap_to_45_degrees(c->yaw);
     }
 #endif
 
@@ -3849,7 +3849,7 @@ s32 move_point_along_spline(Vec3f pos, struct CutsceneSplinePoint spline[], s16 
         return TRUE;
     }
 
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < ARRAY_COUNT(controlPoints); i++) {
         controlPoints[i][0] = spline[segment + i].point[0];
         controlPoints[i][1] = spline[segment + i].point[1];
         controlPoints[i][2] = spline[segment + i].point[2];
@@ -5002,8 +5002,6 @@ s32 trigger_cutscene_dialog(s32 trigger) {
  * Updates the camera based on which C buttons are pressed this frame
  */
 void handle_c_button_movement(struct Camera *c) {
-    s16 cSideYaw;
-
     // Zoom in
     if (gPlayer1Controller->buttonPressed & U_CBUTTONS) {
         if (c->mode != CAMERA_MODE_FIXED && (gCameraMovementFlags & CAM_MOVE_ZOOMED_OUT)) {
@@ -5036,38 +5034,32 @@ void handle_c_button_movement(struct Camera *c) {
 
         // Rotate left or right
 #if MORE_VANILLA_CAM_STUFF
-        u16 camSrCheck = (configVanillaCam.srMario && set_cam_angle(0) == CAM_ANGLE_MARIO);
-        u16 tempButtonState = camSrCheck ? gPlayer1Controller->buttonDown : gPlayer1Controller->buttonPressed;
-        cSideYaw = camSrCheck ? 1 : 0x1000;
+        u16 cSrCheck = (configVanillaCam.srMario && set_cam_angle(0) == CAM_ANGLE_MARIO);
+        u16 cBtnState = cSrCheck ? gPlayer1Controller->buttonDown : gPlayer1Controller->buttonPressed;
+        u16 cSideYaw = cSrCheck ? 1 : 0x1000;
+        u16 cBtnSoundCheck = sCSideButtonYaw == 0 && !cSrCheck;
 #else
-        u16 tempButtonState = gPlayer1Controller->buttonPressed;
-        cSideYaw = 0x1000;
+        u16 cBtnState = gPlayer1Controller->buttonPressed;
+        u16 cSideYaw = 0x1000;
+        u16 cBtnSoundCheck = sCSideButtonYaw == 0;
 #endif
-        if (tempButtonState & R_CBUTTONS) {
+        if (cBtnState & R_CBUTTONS) {
             if (gCameraMovementFlags & CAM_MOVE_ROTATE_LEFT) {
                 gCameraMovementFlags &= ~CAM_MOVE_ROTATE_LEFT;
             } else {
                 gCameraMovementFlags |= CAM_MOVE_ROTATE_RIGHT;
-                if (sCSideButtonYaw == 0
-#if MORE_VANILLA_CAM_STUFF
-                    && !camSrCheck
-#endif
-                ) {
+                if (cBtnSoundCheck) {
                     play_sound_cbutton_side();
                 }
                 sCSideButtonYaw = -cSideYaw;
             }
         }
-        if (tempButtonState & L_CBUTTONS) {
+        if (cBtnState & L_CBUTTONS) {
             if (gCameraMovementFlags & CAM_MOVE_ROTATE_RIGHT) {
                 gCameraMovementFlags &= ~CAM_MOVE_ROTATE_RIGHT;
             } else {
                 gCameraMovementFlags |= CAM_MOVE_ROTATE_LEFT;
-                if (sCSideButtonYaw == 0
-#if MORE_VANILLA_CAM_STUFF
-                    && !camSrCheck
-#endif
-                ) {
+                if (cBtnSoundCheck) {
                     play_sound_cbutton_side();
                 }
                 sCSideButtonYaw = cSideYaw;
@@ -5559,7 +5551,7 @@ void set_camera_mode_8_directions(struct Camera *c) {
         c->mode = CAMERA_MODE_8_DIRECTIONS;
         sStatusFlags &= ~CAM_FLAG_SMOOTH_MOVEMENT;
 #if MORE_VANILLA_CAM_STUFF
-        s8DirModeBaseYaw = configVanillaCam.parallel ? snap_to_45_degrees(s8DirModeBaseYaw) : 0;
+        s8DirModeBaseYaw = snap_to_45_degrees(s8DirModeBaseYaw);
 #else
         s8DirModeBaseYaw = 0;
 #endif
@@ -6983,33 +6975,47 @@ void cap_switch_save(s16 dummy) {
     save_file_do_save(gCurrSaveFileNum - 1);
 }
 
-void init_spline_point(struct CutsceneSplinePoint *splinePoint, s8 index, u8 speed, Vec3s point) {
+void copy_spline_point(struct CutsceneSplinePoint *splinePoint, s8 index, u8 speed, Vec3s point) {
     splinePoint->index = index;
     splinePoint->speed = speed;
     vec3s_copy(splinePoint->point, point);
 }
 
-// TODO: (Scrub C)
-void copy_spline_segment(struct CutsceneSplinePoint dst[], struct CutsceneSplinePoint src[]) {
-    s32 j = 0;
-    s32 i = 0;
-    UNUSED u8 filler[8];
+/**
+ * Copy up to 16 entries of a spline segment but extend the beginning and end.
+ * This is only used for the credits.
+ */
+void copy_spline_segment(struct CutsceneSplinePoint *dst, struct CutsceneSplinePoint *src, s32 size, s32 startExtend, s32 endExtend) {
+    s32 i;
 
-    init_spline_point(&dst[i], src[j].index, src[j].speed, src[j].point);
-    i++;
-    do {
-        do {
-            init_spline_point(&dst[i], src[j].index, src[j].speed, src[j].point);
-            i++;
-            j++;
-        } while ((src[j].index != -1) && (src[j].index != -1)); //! same comparison performed twice
-    } while (j > 16);
+    // Extend the first point by duplicating the first point.
+    for (i = 0; i < startExtend; i++) {
+        copy_spline_point(dst, src->index, src->speed, src->point);
+        dst++;
+    }
 
-    // Create the end of the spline by duplicating the last point
-    do { init_spline_point(&dst[i], 0, src[j].speed, src[j].point); } while (0);
-    do { init_spline_point(&dst[i + 1], 0, 0, src[j].point); } while (0);
-    do { init_spline_point(&dst[i + 2], 0, 0, src[j].point); } while (0);
-    do { init_spline_point(&dst[i + 3], -1, 0, src[j].point); } while (0);
+    // Copy the actual spline segment.
+    for (i = 0; i < size; i++) {
+        copy_spline_point(dst, src->index, src->speed, src->point);
+
+        if (src->index == -1) {
+            // Exit this loop, but don't end the segment yet.
+            dst->index = 0;
+            dst++;
+            break;
+        }
+        dst++;
+        src++;
+    }
+
+    // Extend the end of the spline by duplicating the last point with 0 speed.
+    for (i = 0; i < endExtend; i++) {
+        copy_spline_point(dst, 0, 0, src->point);
+        dst++;
+    }
+
+    // Set the terminator at the extended endpoint.
+    dst->index = -1;
 }
 
 /**
@@ -9910,8 +9916,8 @@ BAD_RETURN(s32) cutscene_credits(struct Camera *c) {
             focus = sCCMOutsideCreditsSplineFocus;
     }
 
-    copy_spline_segment(sCurCreditsSplinePos, pos);
-    copy_spline_segment(sCurCreditsSplineFocus, focus);
+    copy_spline_segment(sCurCreditsSplinePos,   pos,   16, 1, 3);
+    copy_spline_segment(sCurCreditsSplineFocus, focus, 16, 1, 3);
     move_point_along_spline(c->pos, sCurCreditsSplinePos, &sCutsceneSplineSegment, &sCutsceneSplineSegmentProgress);
     move_point_along_spline(c->focus, sCurCreditsSplineFocus, &sCutsceneSplineSegment, &sCutsceneSplineSegmentProgress);
     player2_rotate_cam(c, -0x2000, 0x2000, -0x4000, 0x4000);

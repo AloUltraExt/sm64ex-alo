@@ -890,6 +890,12 @@ void initiate_delayed_warp(void) {
 
                     gCurrCreditsEntry++;
                     gCurrActNum = gCurrCreditsEntry->actNum;
+#ifdef KEY_COMBO_END_SCENE_CREDITS
+                    // Go straight to the end of the credits entry to trigger the end scene
+                    if (gPlayer1Controller->buttonDown == (L_TRIG | R_TRIG)) {
+                        gCurrCreditsEntry = &sCreditsSequence[ARRAY_COUNT(sCreditsSequence) - 2];
+                    }
+#endif
                     if ((gCurrCreditsEntry + 1)->levelNum == LEVEL_NONE) {
                         destWarpNode = WARP_NODE_CREDITS_END;
                     } else {

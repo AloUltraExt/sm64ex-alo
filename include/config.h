@@ -46,18 +46,12 @@
 /// Fixes bug where the angle speed isn't preserved while in a pole
 #define BUGFIX_PRESERVE_VEL_POLE (0 || VERSION_SH || QOL_FIXES)
 
-
-// Misc Settings
-/// Sets a key combo to skip Peach cutscene during file select
-#define SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
-/// Sets a key combo to get to the debug level select on Mario Head
-#define SET_KEY_COMBO_LEVEL_SELECT
-
 // Other Settings
 #include "config/config_audio.h"
 #include "config/config_camera.h"
 #include "config/config_collision.h"
 #include "config/config_graphics.h"
+#include "config/config_keycombo.h"
 #include "config/config_movement.h"
 #include "config/config_n64.h"
 #include "config/config_objects.h"
