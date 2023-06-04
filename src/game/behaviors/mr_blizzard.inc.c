@@ -239,7 +239,7 @@ static void mr_blizzard_act_death(void) {
         if (o->oMrBlizzardScale != 0.0f) {
             if ((o->oMrBlizzardScale -= 0.03f) <= 0.0f) {
                 o->oMrBlizzardScale = 0.0f;
-                if (!(o->oBhvParams & 0x0000FF00)) {
+                if (!(o->respawnInfo & 1)) {
                     obj_spawn_loot_yellow_coins(o, o->oNumLootCoins, 20.0f);
                     set_object_respawn_info_bits(o, 1);
                 }

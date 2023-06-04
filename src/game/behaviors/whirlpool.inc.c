@@ -19,10 +19,6 @@ void bhv_whirlpool_init(void) {
     o->oFaceAngleRoll = 0;
 }
 
-void whirlpool_set_hitbox(void) {
-    obj_set_hitbox(o, &sWhirlpoolHitbox);
-}
-
 void whirpool_orient_graph(void) {
     f32 cosPitch = coss(o->oFaceAnglePitch);
     f32 sinPitch = sins(o->oFaceAnglePitch);
@@ -63,7 +59,7 @@ void bhv_whirlpool_loop(void) {
 
     cur_obj_play_sound_1(SOUND_ENV_WATER);
 
-    whirlpool_set_hitbox();
+    obj_set_hitbox(o, &sWhirlpoolHitbox);
 }
 
 void bhv_jet_stream_loop(void) {

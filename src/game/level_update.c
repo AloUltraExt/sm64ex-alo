@@ -31,7 +31,6 @@
 #include "level_table.h"
 #include "course_table.h"
 #include "rumble_init.h"
-#include "../../include/libc/stdlib.h"
 
 #ifndef TARGET_N64
 #include "pc/pc_main.h"
@@ -509,7 +508,7 @@ void warp_level(void) {
 }
 
 void warp_credits(void) {
-    s32 marioAction;
+    s32 marioAction = ACT_UNINITIALIZED;
 
     switch (sWarpDest.nodeId) {
         case WARP_NODE_CREDITS_START:
@@ -890,6 +889,12 @@ void initiate_delayed_warp(void) {
 
                     gCurrCreditsEntry++;
                     gCurrActNum = gCurrCreditsEntry->actNum;
+#ifdef KEY_COMBO_END_SCENE_CREDITS
+                    // Go straight to the end of the credits entry to trigger the end scene
+                    if (gPlayer1Controller->buttonDown == (L_TRIG | R_TRIG)) {
+                        gCurrCreditsEntry = &sCreditsSequence[ARRAY_COUNT(sCreditsSequence) - 2];
+                    }
+#endif
                     if ((gCurrCreditsEntry + 1)->levelNum == LEVEL_NONE) {
                         destWarpNode = WARP_NODE_CREDITS_END;
                     } else {
@@ -1431,10 +1436,11 @@ s32 lvl_play_the_end_screen_sound(UNUSED s16 arg0, UNUSED s32 arg1) {
     return 1;
 }
 
-// Added so the player can reset the game at the end screen
+#if QOL_FEATURE_ENDING_SCREEN_START
 s32 lvl_end_screen_start_button_reset(UNUSED s16 arg0, UNUSED s32 arg1) {
     if (gPlayer1Controller->buttonPressed & START_BUTTON) {
         return 1;
     }
     return 0;
 }
+#endif

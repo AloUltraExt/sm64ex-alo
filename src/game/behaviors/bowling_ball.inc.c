@@ -78,17 +78,10 @@ void bowling_ball_set_waypoints(void) {
 }
 
 void bhv_bowling_ball_roll_loop(void) {
-    s16 collisionFlags;
-    s32 followStatus;
-#ifdef AVOID_UB
-    followStatus = 0;
-#endif
-
     bowling_ball_set_waypoints();
-    collisionFlags = object_step();
+    s16 collisionFlags = object_step();
 
-    //! Uninitialized parameter, but the parameter is unused in the called function
-    followStatus = cur_obj_follow_path(followStatus);
+    s32 followStatus = cur_obj_follow_path();
 
     o->oBowlingBallTargetYaw = o->oPathedTargetYaw;
     o->oMoveAngleYaw = approach_s16_symmetric(o->oMoveAngleYaw, o->oBowlingBallTargetYaw, 0x400);
@@ -113,15 +106,9 @@ void bhv_bowling_ball_roll_loop(void) {
 }
 
 void bhv_bowling_ball_initialize_loop(void) {
-    s32 followStatus;
-#ifdef AVOID_UB
-    followStatus = 0;
-#endif
-
     bowling_ball_set_waypoints();
 
-    //! Uninitialized parameter, but the parameter is unused in the called function
-    followStatus = cur_obj_follow_path(followStatus);
+    cur_obj_follow_path();
 
     o->oMoveAngleYaw = o->oPathedTargetYaw;
 
@@ -243,7 +230,7 @@ void bhv_bob_pit_bowling_ball_loop(void) {
 
     bowling_ball_set_hitbox();
     set_camera_shake_from_point(SHAKE_POS_BOWLING_BALL, o->oPosX, o->oPosY, o->oPosZ);
-    cur_obj_play_sound_1(SOUND_ENV_UNKNOWN2);
+    cur_obj_play_sound_1(SOUND_ENV_BOWLING_BALL_ROLL);
     set_object_visibility(o, 3000);
 }
 
@@ -265,7 +252,7 @@ void bhv_free_bowling_ball_roll_loop(void) {
 
     if (o->oForwardVel > 10.0f) {
         set_camera_shake_from_point(SHAKE_POS_BOWLING_BALL, o->oPosX, o->oPosY, o->oPosZ);
-        cur_obj_play_sound_1(SOUND_ENV_UNKNOWN2);
+        cur_obj_play_sound_1(SOUND_ENV_BOWLING_BALL_ROLL);
     }
 
     if ((collisionFlags & OBJ_COL_FLAG_GROUNDED) && !(collisionFlags & OBJ_COL_FLAG_NO_Y_VEL)) {

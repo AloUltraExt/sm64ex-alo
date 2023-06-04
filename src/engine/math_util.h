@@ -543,7 +543,11 @@ ALWAYS_INLINE s16 abss(s16 in) {
 // On console, (x != 0) still returns true for denormalized floats,
 // which will count as a division by zero when divided and crash.
 // For console compatibility, use this check instead when avoiding a division by zero.
-#define FLT_IS_NONZERO(x) (absf(x) > NEAR_ZERO)
+#define F32_IS_NONZERO(x) ((*(int*)(&(x))) & ((((1 << (8))) - 1) << 23))
+#define F64_IS_NONZERO(x) ((*(int*)(&(x))) & ((((1 << (11))) - 1) << 52))
+// HackerSM64: Backwards compatibility
+#define FLT_IS_NONZERO(x) F32_IS_NONZERO(x)
+#define DBL_IS_NONZERO(x) F64_IS_NONZERO(x)
 
 // RNG
 u16 random_u16(void);
@@ -607,8 +611,9 @@ void vec3s_quot(Vec3s dest, const Vec3s a, const Vec3s b);
 // Vector operations
 f32  vec3f_dot(              const Vec3f a, const Vec3f b);
 void vec3f_cross(Vec3f dest, const Vec3f a, const Vec3f b);
+Bool32 vec3f_normalize_check(Vec3f dest);
 void vec3f_normalize(Vec3f dest);
-Bool32 vec3f_normalize_bool(Vec3f dest);
+Bool32 vec3f_normalize_max(Vec3f dest, f32 max);
 // Mtxf operations
 void mtxf_copy(Mat4 dest, Mat4 src);
 // Create specific matrices
@@ -699,5 +704,10 @@ void evaluate_cubic_spline(f32 progress, Vec3f pos, Vec3f spline1, Vec3f spline2
 void spline_get_weights(Vec4f result, f32 t, UNUSED s32 c);
 void anim_spline_init(Vec4s *keyFrames);
 s32  anim_spline_poll(Vec3f result);
+// Misc
+s16 lenght_sins(s16 length, s16 direction);
+s16 lenght_coss(s16 length, s16 direction);
+float smooth_step(float edge0, float edge1, float x);
+float soft_clamp(float x, float a, float b);
 
 #endif // MATH_UTIL_H

@@ -3,11 +3,11 @@
 .section .data
 
 #ifdef EXTERNAL_DATA
-#define SOUND_FILE(file) .ascii file 
+#define SOUND_FILE(file) .ascii file
 #define SKIP(num)   .skip num
 #else
 #define SOUND_FILE(file) .incbin file
-#define SKIP(num) 
+#define SKIP(num)
 #endif
 
 glabel gSoundDataADSR
@@ -28,9 +28,9 @@ SKIP(4)
 #ifndef VERSION_SH
 glabel gBankSetsData
 SOUND_FILE("sound/bank_sets")
-SKIP(4) 
+SKIP(4)
 .balign 16
-#endif 
+#endif
 
 #if defined(EXTERNAL_DATA) && defined(VERSION_SH)
 glabel gBankSetsData
@@ -50,8 +50,7 @@ SKIP(4)
 
 glabel gShindouSampleBanksHeader
 SOUND_FILE("sound/tbl_header")
-SKIP(4) 
+SKIP(4)
 .balign 16
 
 #endif
-

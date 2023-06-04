@@ -17,7 +17,7 @@ void bhv_spawned_star_init(void) {
         o->oBhvParams = o->parentObj->oBhvParams;
     }
 
-    s32 starIndex = (o->oBhvParams >> 24) & 0xFF;
+    u8 starIndex = (o->oBhvParams >> 24) & 0xFF;
 
     if (save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum)) & (1 << starIndex)) {
         cur_obj_set_model(MODEL_TRANSPARENT_STAR);
@@ -34,25 +34,29 @@ void set_sparkle_spawn_star_hitbox(void) {
     }
 }
 
-void set_home_to_mario(void) {
-    f32 sp1C;
-    f32 sp18;
+void set_y_home_to_pos(void) {
+    o->oForwardVel = 0.0f;
+    o->oHomeY = o->oPosY;
+}
 
+void set_home_to_mario(void) {
+#if FIX_STARS_ON_CEILINGS
+    // Force y home to pos to prevent star clipping inside the ceiling
+    if (mario_is_close_to_a_ceiling()) {
+        set_y_home_to_pos();
+        return;
+    }
+#endif
     o->oHomeX = gMarioObject->oPosX;
     o->oHomeZ = gMarioObject->oPosZ;
     o->oHomeY = gMarioObject->oPosY;
     o->oHomeY += 250.0f;
     o->oPosY = o->oHomeY;
 
-    sp1C = o->oHomeX - o->oPosX;
-    sp18 = o->oHomeZ - o->oPosZ;
+    f32 sp1C = o->oHomeX - o->oPosX;
+    f32 sp18 = o->oHomeZ - o->oPosZ;
 
     o->oForwardVel = sqrtf(sp1C * sp1C + sp18 * sp18) / 23.0f;
-}
-
-void set_y_home_to_pos(void) {
-    o->oForwardVel = 0.0f;
-    o->oHomeY = o->oPosY;
 }
 
 void slow_star_rotation(void) {
@@ -61,7 +65,7 @@ void slow_star_rotation(void) {
     }
 }
 
-#if QOL_FIX_SPAWNED_STAR_SOFTLOCK
+#if FIX_SPAWNED_STAR_SOFTLOCK
 #define CHECK(cond, set)    { set }
 #else
 #define CHECK(cond, set)    if (cond) { set }

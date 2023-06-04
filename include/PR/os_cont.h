@@ -53,16 +53,16 @@ extern "C" {
 typedef struct {
 	u16     type;                   /* Controller Type */
 	u8      status;                 /* Controller status */
-	u8	    errnum;
+	u8      errnum;
 }OSContStatus;
 
 typedef struct {
 	u16     button;
 	s8      stick_x;		/* -80 <= stick_x <= 80 */
 	s8      stick_y;		/* -80 <= stick_y <= 80 */
-	s8      ext_stick_x;
-	s8      ext_stick_y;
-	u8	    errnum;
+	s8      ext_stick_x;	/* Only used on non-n64 */
+	s8      ext_stick_y;	/* Only used on non-n64 */
+	u8      errnum;
 } OSContPad;
 
 typedef struct {
@@ -70,7 +70,7 @@ typedef struct {
 	u8      databuffer[32];         /* address of the data buffer */
     u8      addressCrc;             /* CRC code for address */
 	u8      dataCrc;                /* CRC code for data */
-	u8	    errnum;
+	u8      errnum;
 } OSContRamIo;
 
 
@@ -95,6 +95,7 @@ typedef struct {
 /* controller errors */
 #define CONT_NO_RESPONSE_ERROR          0x8
 #define CONT_OVERRUN_ERROR              0x4
+#define CONT_RANGE_ERROR               -1
 #ifdef _HW_VERSION_1
 #define CONT_FRAME_ERROR                0x2
 #define CONT_COLLISION_ERROR            0x1

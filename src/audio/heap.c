@@ -7,7 +7,7 @@
 #include "seqplayer.h"
 #include "effects.h"
 #ifdef TARGET_N64
-#include "extras/n64/system_checks.h"
+#include "boot/system_checks.h"
 #endif
 
 struct PoolSplit {
@@ -51,9 +51,9 @@ struct PoolSplit sPersistentCommonPoolSplit;
 struct PoolSplit sTemporaryCommonPoolSplit;
 
 #ifdef VERSION_SH
-u8 gUnkLoadStatus[0x40];
+u8 gUnkLoadStatus[MAX_NUM_SOUNDBANKS];
 #endif
-u8 gBankLoadStatus[0x40];
+u8 gBankLoadStatus[MAX_NUM_SOUNDBANKS];
 u8 gSeqLoadStatus[0x100];
 
 #if defined(VERSION_EU) || defined(VERSION_SH)

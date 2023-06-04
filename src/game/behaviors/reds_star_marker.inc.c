@@ -5,7 +5,7 @@ void bhv_red_coin_star_marker_init(void) {
     o->header.gfx.scale[2] = 0.75f;
 }
 
-#if QOL_FEATURE_BETTER_REDS_STAR_MARKER
+#if BETTER_REDS_STAR_MARKER
 void bhv_red_coin_star_marker_loop(void) {
     struct Surface *floor;
     f32 curHeight;

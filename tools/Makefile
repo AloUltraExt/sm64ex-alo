@@ -7,8 +7,11 @@ CC           ?= gcc
 CXX          ?= g++
 CFLAGS       := -I. -O2 -s
 LDFLAGS      := -lm
-ALL_PROGRAMS := armips n64graphics n64graphics_ci mio0 n64cksum patch_elf_32bit aifc_decode aiff_extract_codebook vadpcm_enc tabledesign extract_data_for_mio skyconv
+ALL_PROGRAMS := armips patch_elf_32bit aifc_decode vadpcm_enc tabledesign extract_data_for_mio skyconv
+# From audiofile make
 LIBAUDIOFILE := audiofile/libaudiofile.a
+# From sm64tools make
+SM64TOOLSFILES := sm64tools/%.o
 
 # Only build armips from tools if it is not found on the system
 ifeq ($(call find-command,armips),)
@@ -19,22 +22,9 @@ endif
 
 default: all
 
-n64graphics_SOURCES := n64graphics.c utils.c
-n64graphics_CFLAGS  := -DN64GRAPHICS_STANDALONE
-
-n64graphics_ci_SOURCES := n64graphics_ci_dir/n64graphics_ci.c n64graphics_ci_dir/exoquant/exoquant.c n64graphics_ci_dir/utils.c
-
-mio0_SOURCES := libmio0.c
-mio0_CFLAGS  := -DMIO0_STANDALONE
-
-n64cksum_SOURCES := n64cksum.c utils.c
-n64cksum_CFLAGS  := -DN64CKSUM_STANDALONE
-
 patch_elf_32bit_SOURCES := patch_elf_32bit.c
 
 aifc_decode_SOURCES := aifc_decode.c
-
-aiff_extract_codebook_SOURCES := aiff_extract_codebook.c
 
 tabledesign: $(LIBAUDIOFILE)
 tabledesign_SOURCES := sdk-tools/tabledesign/codebook.c sdk-tools/tabledesign/estimate.c sdk-tools/tabledesign/print.c sdk-tools/tabledesign/tabledesign.c
@@ -46,7 +36,8 @@ vadpcm_enc_CFLAGS  := -Wno-unused-result -Wno-uninitialized -Wno-sign-compare -W
 
 extract_data_for_mio_SOURCES := extract_data_for_mio.c
 
-skyconv_SOURCES := skyconv.c n64graphics.c utils.c
+skyconv_SOURCES := skyconv.c sm64tools/n64graphics.c sm64tools/utils.c
+skyconv_CFLAGS  := -I sm64tools
 
 armips: CC := $(CXX)
 armips_SOURCES := armips.cpp
@@ -56,13 +47,14 @@ ifeq ($(HOST_ENV),MinGW)
   armips_LDFLAGS += -municode
 endif
 
-all-except-recomp: $(LIBAUDIOFILE) $(BUILD_PROGRAMS)
+all-except-recomp: $(LIBAUDIOFILE) $(SM64TOOLSFILES) $(BUILD_PROGRAMS)
 
 all: all-except-recomp
 
 clean:
 	$(RM) $(ALL_PROGRAMS)
 	$(MAKE) -C audiofile clean
+	$(MAKE) -C sm64tools clean
 
 define COMPILE
 $(1): $($1_SOURCES)
@@ -73,5 +65,8 @@ $(foreach p,$(BUILD_PROGRAMS),$(eval $(call COMPILE,$(p))))
 
 $(LIBAUDIOFILE):
 	@CC=$(CC) CXX=$(CXX) $(MAKE) -C audiofile
+
+$(SM64TOOLSFILES):
+	CC=$(CC) CXX=$(CXX) $(MAKE) -C sm64tools
 
 .PHONY: all all-except-recomp clean default

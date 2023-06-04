@@ -13,7 +13,7 @@ static struct ObjectHitbox sCollectStarHitbox = {
 };
 
 void bhv_collect_star_init(void) {
-    s8 starIndex = (o->oBhvParams >> 24) & 0xFF;
+    u8 starIndex = (o->oBhvParams >> 24) & 0xFF;
     u8 currentLevelStarFlags = save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum));
 
     if (currentLevelStarFlags & (1 << starIndex)) {
@@ -34,10 +34,10 @@ void bhv_collect_star_loop(void) {
     }
 }
 
-#if QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS
-#define CHECK(cond, set)
+#if ROOM_OBJECT_CAMERA_FOCUS
+#define COND(a, b) a
 #else
-#define CHECK(cond, set)    if (cond) { set; }
+#define COND(a, b) (a || b)
 #endif
 
 void bhv_star_spawn_init(void) {
@@ -47,20 +47,15 @@ void bhv_star_spawn_init(void) {
     o->oForwardVel = o->oStarSpawnDisFromHome / 30.0f;
     o->oStarSpawnUnkFC = o->oPosY;
 
-    CHECK(gCurrCourseNum == COURSE_BBH, cutscene_object(CUTSCENE_STAR_SPAWN, o));
-
-    if (o->oBhvParams2ndByte == 0) {
-        cutscene_object(CUTSCENE_STAR_SPAWN, o);
-    } else {
-        cutscene_object(CUTSCENE_RED_COIN_STAR_SPAWN, o);
-    }
+    cutscene_object(COND(o->oBhvParams2ndByte == 0, gCurrCourseNum == COURSE_BBH)
+            ? CUTSCENE_STAR_SPAWN : CUTSCENE_RED_COIN_STAR_SPAWN, o);
 
     set_time_stop_flags(TIME_STOP_ENABLED | TIME_STOP_MARIO_AND_DOORS);
     o->activeFlags |= ACTIVE_FLAG_INITIATED_TIME_STOP;
     cur_obj_become_intangible();
 }
 
-#undef CHECK
+#undef COND
 
 void bhv_star_spawn_loop(void) {
     switch (o->oAction) {
@@ -152,7 +147,7 @@ void spawn_no_exit_star(f32 homeX, f32 homeY, f32 homeZ) {
     star->oInteractionSubtype |= INT_SUBTYPE_NO_EXIT;
 }
 
-#if QOL_FEATURE_BETTER_REDS_STAR_MARKER
+#if BETTER_REDS_STAR_MARKER
 #define CHECK(cond, set)    set
 #else
 #define CHECK(cond, set)    if (cond) { set; }

@@ -1,6 +1,10 @@
 #ifdef USE_SYSTEM_MALLOC
 #include <stdlib.h>
+#ifdef __APPLE__
+// No malloc on mac
+#else
 #include <malloc.h>
+#endif
 #endif
 #include <PR/ultratypes.h>
 
@@ -311,8 +315,8 @@ struct Object *allocate_object(struct ObjectNode *objList) {
 
     mtxf_identity(obj->transform);
 
-    obj->respawnInfoType = RESPAWN_INFO_TYPE_NULL;
-    obj->respawnInfo = NULL;
+    obj->respawnInfo = 0;
+    obj->respawnInfoPointer = NULL;
 
     obj->oDistanceToMario = F32_MAX;
     obj->oRoom = -1;

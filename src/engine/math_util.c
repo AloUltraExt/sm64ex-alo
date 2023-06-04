@@ -317,12 +317,20 @@ void vec3f_cross(Vec3f dest, const Vec3f a, const Vec3f b) {
 }
 
 /// Scale vector 'dest' so it has length 1.
-void vec3f_normalize(Vec3f dest) {
+Bool32 vec3f_normalize_check(Vec3f dest) {
     f32 mag = vec3_sumsq(dest);
-    if (mag > (NEAR_ZERO)) {
-        f32 invsqrt = ((1.0f) / sqrtf(mag));
+    if (mag > NEAR_ZERO) {
+        f32 invsqrt = (1.0f / sqrtf(mag));
         vec3_mul_val(dest, invsqrt);
-    } else {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/// Scale vector 'dest' so it has length 1. Set to vertical vector if magnitude is zero.
+void vec3f_normalize(Vec3f dest) {
+    s32 ret = vec3f_normalize_check(dest);
+    if (!ret) {
         // Default to up vector.
         dest[0] = 0;
         ((u32 *) dest)[1] = FLOAT_ONE;
@@ -330,12 +338,14 @@ void vec3f_normalize(Vec3f dest) {
     }
 }
 
-/// Scale vector 'dest' and returns TRUE if is a valid value.
-Bool32 vec3f_normalize_bool(Vec3f dest) {
+/// Scale vector 'dest' so it has length at most 'max'.
+Bool32 vec3f_normalize_max(Vec3f dest, f32 max) {
     f32 mag = vec3_sumsq(dest);
-    if (mag > (NEAR_ZERO)) {
-        f32 invsqrt = ((1.0f) / sqrtf(mag));
-        vec3_mul_val(dest, invsqrt);
+    if (mag > NEAR_ZERO) {
+        if (mag > sqr(max)) {
+            f32 invsqrt = max / sqrtf(mag);
+            vec3_mul_val(dest, invsqrt);
+        }
         return TRUE;
     }
     return FALSE;
@@ -1587,7 +1597,7 @@ s32 anim_spline_poll(Vec3f result) {
     spline_get_weights(weights, gSplineKeyframeFraction, gSplineState);
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 3; j++) {
-            result[j] += weights[i] * gSplineKeyframe[i][j];
+            result[j] += weights[i] * gSplineKeyframe[i][j + 1];
         }
     }
 
@@ -1611,4 +1621,25 @@ s32 anim_spline_poll(Vec3f result) {
     }
 
     return hasEnded;
+}
+
+s16 lenght_sins(s16 length, s16 direction) {
+    return (length * sins(direction));
+}
+s16 lenght_coss(s16 length, s16 direction) {
+    return (length * coss(direction));
+}
+
+static inline float smooth(float x) {
+    x = CLAMP(x, 0, 1);
+    return x * x * (3.f - 2.f * x);
+}
+
+float soft_clamp(float x, float a, float b) {
+    return smooth((2.f / 3.f) * (x - a) / (b - a) + (1.f / 6.f)) * (b - a) + a;
+}
+
+float smooth_step(float edge0, float edge1, float x) {
+    float t = MIN(MAX((x - edge0) / (edge1 - edge0), 0.0f), 1.0f);
+    return t * t * (3.0f - 2.0f * t);
 }

@@ -1595,21 +1595,17 @@ void change_dialog_camera_angle(void) {
     }
 }
 
+// ex-alo change
+// properly shades the screen using a rectangle instead of a triangle
 void shade_screen(void) {
-    create_dl_translation_matrix(MENU_MTX_PUSH, GFX_DIMENSIONS_FROM_LEFT_EDGE(0), SCREEN_HEIGHT, 0);
+    Gfx* dlHead = gDisplayListHead;
 
-    // This is a bit weird. It reuses the dialog text box (width 130, height -80),
-    // so scale to at least fit the screen.
-#ifdef WIDESCREEN
-    create_dl_scale_matrix(MENU_MTX_NOPUSH,
-                           GFX_DIMENSIONS_ASPECT_RATIO * SCREEN_HEIGHT / 130.0f, 3.0f, 1.0f);
-#else
-    create_dl_scale_matrix(MENU_MTX_NOPUSH, 2.6f, 3.4f, 1.0f);
-#endif
+    gSPDisplayList(dlHead++, dl_shade_screen_begin);
+    gDPFillRectangle(dlHead++, GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(0), BORDER_HEIGHT,
+        (GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(0)), ((SCREEN_HEIGHT - BORDER_HEIGHT)));
+    gSPDisplayList(dlHead++, dl_shade_screen_end);
 
-    gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 110);
-    gSPDisplayList(gDisplayListHead++, dl_draw_text_bg_box);
-    gSPPopMatrix(gDisplayListHead++, G_MTX_MODELVIEW);
+    gDisplayListHead = dlHead;
 }
 
 void print_animated_red_coin(s16 x, s16 y) {
@@ -1990,7 +1986,7 @@ s32 render_pause_courses_and_castle(void) {
             gDialogLineNum = MENU_OPT_DEFAULT;
             gDialogTextAlpha = 0;
             level_set_transition(-1, NULL);
-            play_sound(SOUND_MENU_PAUSE, gGlobalSoundSource);
+            play_sound(SOUND_MENU_PAUSE_OPEN, gGlobalSoundSource);
 
             if (gCurrCourseNum >= COURSE_MIN
              && gCurrCourseNum <= COURSE_MAX) {
@@ -2019,7 +2015,7 @@ s32 render_pause_courses_and_castle(void) {
 
             if (gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON)) {
                 level_set_transition(0, NULL);
-                play_sound(SOUND_MENU_PAUSE_2, gGlobalSoundSource);
+                play_sound(SOUND_MENU_PAUSE_CLOSE, gGlobalSoundSource);
                 gDialogBoxState = DIALOG_STATE_OPENING;
                 gMenuMode = MENU_MODE_NONE;
 
@@ -2041,7 +2037,7 @@ s32 render_pause_courses_and_castle(void) {
 
             if (gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | Z_TRIG)) {
                 level_set_transition(0, NULL);
-                play_sound(SOUND_MENU_PAUSE_2, gGlobalSoundSource);
+                play_sound(SOUND_MENU_PAUSE_CLOSE, gGlobalSoundSource);
                 gMenuMode = MENU_MODE_NONE;
                 gDialogBoxState = DIALOG_STATE_OPENING;
 
@@ -2128,8 +2124,8 @@ void print_hud_course_complete_coins(s16 x, s16 y) {
 #endif
         }
 
-        if ((gHudDisplay.coins == gCourseCompleteCoins) && gGotFileCoinHiScore) {
-            play_sound(SOUND_MENU_MARIO_CASTLE_WARP2, gGlobalSoundSource);
+        if (gHudDisplay.coins == gCourseCompleteCoins && gGotFileCoinHiScore) {
+            play_sound(SOUND_MENU_HIGH_SCORE, gGlobalSoundSource);
         }
     }
 }

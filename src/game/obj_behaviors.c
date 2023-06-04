@@ -110,8 +110,7 @@ Gfx UNUSED *geo_obj_transparency_something(s32 callContext, struct GraphNode *no
 
         gfxHead = alloc_display_list(3 * sizeof(Gfx));
         gfx = gfxHead;
-        obj->header.gfx.node.flags =
-            (obj->header.gfx.node.flags & 0xFF) | (GRAPH_NODE_TYPE_FUNCTIONAL | GRAPH_NODE_TYPE_400);
+        obj->header.gfx.node.flags = (obj->header.gfx.node.flags & 0xFF) | (LAYER_TRANSPARENT << 8);
 
         gDPSetEnvColor(gfx++, 255, 255, 255, heldObject->oOpacity);
 
@@ -175,12 +174,9 @@ s8 turn_obj_away_from_steep_floor(struct Surface *objFloor, f32 floorY, f32 objV
     f32 floor_nX, floor_nY, floor_nZ, objVelXCopy, objVelZCopy, objYawX, objYawZ;
 
     if (objFloor == NULL) {
-#if QOL_FIX_OOB_OBJ_CRASH_OVERFLOW
+        // ex-alo change
+        // replaces weird trunc value to an actual degree value (originally 32767.999200000002)
         o->oMoveAngleYaw += 0x8000;
-#else
-        //! (OOB Object Crash) TRUNC overflow exception after 36 minutes
-        o->oMoveAngleYaw += 32767.999200000002; /* ¯\_(ツ)_/¯ */
-#endif
         return FALSE;
     }
 
@@ -719,7 +715,7 @@ void obj_check_floor_death(s16 collisionFlags, struct Surface *floor) {
                 break;
             //! @BUG Doesn't check for the vertical wind death floor.
             case SURFACE_DEATH_PLANE:
-            #if QOL_FIX_OBJ_FLOOR_WIND_DEATH
+            #if FIX_OBJ_FLOOR_WIND_DEATH
             case SURFACE_VERTICAL_WIND:
             #endif
                 o->oAction = OBJ_ACT_DEATH_PLANE_DEATH;
@@ -746,7 +742,7 @@ s8 obj_lava_death(void) {
     }
 
     if ((o->oTimer % 8) == 0) {
-        cur_obj_play_sound_2(SOUND_OBJ_BULLY_EXPLODE_2);
+        cur_obj_play_sound_2(SOUND_OBJ_BULLY_EXPLODE_LAVA);
         deathSmoke = spawn_object(o, MODEL_SMOKE, bhvBobombBullyDeathSmoke);
         deathSmoke->oPosX += random_float() * 20.0f;
         deathSmoke->oPosY += random_float() * 20.0f;
@@ -815,6 +811,7 @@ UNUSED s8 debug_sequence_tracker(s16 debugInputSequence[]) {
 #include "behaviors/water_wave.inc.c"
 #include "behaviors/explosion.inc.c"
 #include "behaviors/corkbox.inc.c"
+#include "behaviors/respawner.inc.c"
 #include "behaviors/bully.inc.c"
 #include "behaviors/water_ring.inc.c"
 #include "behaviors/bowser_bomb.inc.c"

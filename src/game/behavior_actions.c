@@ -50,6 +50,12 @@
 
 #define o gCurrentObject
 
+#if FIX_PARTICLES_CALL_DELETED
+#define SWAP_PARTICLE_CALL(a,b) b; a;
+#else
+#define SWAP_PARTICLE_CALL(a,b) a; b;
+#endif
+
 static s32 sCapSaveFlags[] = {
     SAVE_FLAG_HAVE_WING_CAP,
     SAVE_FLAG_HAVE_METAL_CAP,

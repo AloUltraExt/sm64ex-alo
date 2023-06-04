@@ -1628,9 +1628,9 @@ void bowser_held_update(void) {
     // Reset fire sky status and make him intangible
     o->oBowserStatus &= ~BOWSER_STATUS_FIRE_SKY;
     cur_obj_become_intangible();
-#if QOL_FIX_BOWSER_TRANSPARENT_HELD
+#if FIX_BOWSER_TRANSPARENT_HELD
     // Reset Opacity
-    o->oBowserTargetOpacity = 0xFF;
+    o->oBowserTargetOpacity = 255;
 #endif
 
     switch (o->oBowserGrabbedStatus) {

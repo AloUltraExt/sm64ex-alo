@@ -67,22 +67,6 @@ ConfigPuppyCam configPuppyCam = {
 };
 #endif
 
-s16 LENSIN(s16 length, s16 direction) {
-    return (length * sins(direction));
-}
-s16 LENCOS(s16 length, s16 direction) {
-    return (length * coss(direction));
-}
-
-static inline float smooth(float x) {
-    x = CLAMP(x, 0, 1);
-    return x * x * (3.f - 2.f * x);
-}
-
-static inline float softClamp(float x, float a, float b) {
-    return smooth((2.f / 3.f) * (x - a) / (b - a) + (1.f / 6.f)) * (b - a) + a;
-}
-
 /// CONFIG
 
 char optsPuppyCamStr[][32] = {
@@ -752,8 +736,8 @@ static void puppycam_view_panning(void) {
             slideSpeed = 10;
         }
 
-        expectedPanX = LENSIN(panEx + (200 * (gMarioState->forwardVel / 320.f)), gMarioState->faceAngle[1]) * panMulti;
-        expectedPanZ = LENCOS(panEx + (200 * (gMarioState->forwardVel / 320.f)), gMarioState->faceAngle[1]) * panMulti;
+        expectedPanX = lenght_sins(panEx + (200 * (gMarioState->forwardVel / 320.f)), gMarioState->faceAngle[1]) * panMulti;
+        expectedPanZ = lenght_coss(panEx + (200 * (gMarioState->forwardVel / 320.f)), gMarioState->faceAngle[1]) * panMulti;
 
         slideSpeed *= 0.02f;
         gPuppyCam.pan[0] = approach_f32_asymptotic(gPuppyCam.pan[0], expectedPanX, slideSpeed);
@@ -968,8 +952,8 @@ void puppycam_projection_behaviours(void) {
         }
 
         if (!(gMarioState->action & ACT_FLAG_SWIMMING_OR_FLYING)) {
-            gPuppyCam.floorY[0] = softClamp(gPuppyCam.targetObj->oPosY - gPuppyCam.lastTargetFloorHeight, -180, PUPPYCAM_FLOOR_DIST_UP);
-            gPuppyCam.floorY[1] = softClamp(gPuppyCam.targetObj->oPosY - gPuppyCam.lastTargetFloorHeight, -180, PUPPYCAM_FLOOR_DIST_DOWN);
+            gPuppyCam.floorY[0] = soft_clamp(gPuppyCam.targetObj->oPosY - gPuppyCam.lastTargetFloorHeight, -180, PUPPYCAM_FLOOR_DIST_UP);
+            gPuppyCam.floorY[1] = soft_clamp(gPuppyCam.targetObj->oPosY - gPuppyCam.lastTargetFloorHeight, -180, PUPPYCAM_FLOOR_DIST_DOWN);
             gPuppyCam.swimPitch = approach_f32_asymptotic(gPuppyCam.swimPitch, 0, 0.2f);
         } else {
             gPuppyCam.floorY[0] = 0;
@@ -1115,7 +1099,7 @@ static void puppycam_projection(void) {
             targetPos3[2] = (s16)approach_f32_asymptotic(targetPos[2], targetPos2[2], 0.5f);
             Vec3s d;
             vec3_diff(d, targetPos, targetPos2);
-            gPuppyCam.targetDist[0] = approach_f32_asymptotic(gPuppyCam.targetDist[0], (absi(LENCOS(sqrtf(sqr(d[0]) + sqr(d[2])),
+            gPuppyCam.targetDist[0] = approach_f32_asymptotic(gPuppyCam.targetDist[0], (absi(lenght_coss(sqrtf(sqr(d[0]) + sqr(d[2])),
                             (s16)absi((((gPuppyCam.yaw + 0x8000) % 0xFFFF) - 0x8000) - ((atan2s(d[2], d[0])) % 0xFFFF) - 0x8000) + 0x4000))), 0.2f);
         } else {
             gPuppyCam.targetDist[0] = approach_f32_asymptotic(gPuppyCam.targetDist[0], 0, 0.2f);
@@ -1127,9 +1111,9 @@ static void puppycam_projection(void) {
         if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_Y_MOVEMENT) gPuppyCam.focus[1] = targetPos3[1] + gPuppyCam.shake[1] + (gPuppyCam.pan[1] * gPuppyCam.targetDist[1] / gPuppyCam.zoomPoints[2]) + gPuppyCam.povHeight - gPuppyCam.floorY[0] + (gPuppyCam.swimPitch / 10);
         if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_Z_MOVEMENT) gPuppyCam.focus[2] = targetPos3[2] + gPuppyCam.shake[2] + (gPuppyCam.pan[2] * gPuppyCam.targetDist[1] / gPuppyCam.zoomPoints[2]) * panD;
 
-        if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_X_MOVEMENT) gPuppyCam.pos[0] = gPuppyCam.targetObj->oPosX + LENSIN(LENSIN(gPuppyCam.targetDist[1], pitchTotal), gPuppyCam.yaw) + gPuppyCam.shake[0];
-        if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_Y_MOVEMENT) gPuppyCam.pos[1] = gPuppyCam.targetObj->oPosY + gPuppyCam.povHeight + LENCOS(gPuppyCam.targetDist[1], pitchTotal) + gPuppyCam.shake[1] - gPuppyCam.floorY[1];
-        if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_Z_MOVEMENT) gPuppyCam.pos[2] = gPuppyCam.targetObj->oPosZ + LENCOS(LENSIN(gPuppyCam.targetDist[1], pitchTotal), gPuppyCam.yaw) + gPuppyCam.shake[2];
+        if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_X_MOVEMENT) gPuppyCam.pos[0] = gPuppyCam.targetObj->oPosX + lenght_sins(lenght_sins(gPuppyCam.targetDist[1], pitchTotal), gPuppyCam.yaw) + gPuppyCam.shake[0];
+        if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_Y_MOVEMENT) gPuppyCam.pos[1] = gPuppyCam.targetObj->oPosY + gPuppyCam.povHeight + lenght_coss(gPuppyCam.targetDist[1], pitchTotal) + gPuppyCam.shake[1] - gPuppyCam.floorY[1];
+        if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_Z_MOVEMENT) gPuppyCam.pos[2] = gPuppyCam.targetObj->oPosZ + lenght_coss(lenght_sins(gPuppyCam.targetDist[1], pitchTotal), gPuppyCam.yaw) + gPuppyCam.shake[2];
     }
 
     puppycam_vanilla_actions();
@@ -1249,9 +1233,9 @@ static void puppycam_collision(void) {
     // The ray, starting from the bottom
     vec3f_copy_y_off(target[1], &gPuppyCam.targetObj->oPosX, (gPuppyCam.povHeight * 0.4f));
 
-    camdir[0][0] = LENSIN(LENSIN(gPuppyCam.zoomTarget, pitchTotal), gPuppyCam.yaw) + gPuppyCam.shake[0];
-    camdir[0][1] = LENCOS(gPuppyCam.zoomTarget, pitchTotal) + gPuppyCam.shake[1];
-    camdir[0][2] = LENCOS(LENSIN(gPuppyCam.zoomTarget, pitchTotal), gPuppyCam.yaw) + gPuppyCam.shake[2];
+    camdir[0][0] = lenght_sins(lenght_sins(gPuppyCam.zoomTarget, pitchTotal), gPuppyCam.yaw) + gPuppyCam.shake[0];
+    camdir[0][1] = lenght_coss(gPuppyCam.zoomTarget, pitchTotal) + gPuppyCam.shake[1];
+    camdir[0][2] = lenght_coss(lenght_sins(gPuppyCam.zoomTarget, pitchTotal), gPuppyCam.yaw) + gPuppyCam.shake[2];
 
     vec3f_copy(camdir[1], camdir[0]);
 

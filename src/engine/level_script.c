@@ -330,7 +330,7 @@ static void level_cmd_load_mario_head(void) {
 }
 
 static void level_cmd_load_mio0_texture(void) {
-    load_segment_decompress_heap(CMD_GET(s16, 2), CMD_GET(void *, 4), CMD_GET(void *, 8));
+    load_segment_decompress(CMD_GET(s16, 2), CMD_GET(void *, 4), CMD_GET(void *, 8));
     sCurrentCmd = CMD_NEXT;
 }
 
@@ -461,6 +461,7 @@ static void level_cmd_init_mario(void) {
 
     gMarioSpawnInfo->activeAreaIndex = -1;
     gMarioSpawnInfo->areaIndex = 0;
+    gMarioSpawnInfo->respawnInfo = 0;
     gMarioSpawnInfo->behaviorArg = CMD_GET(u32, 4);
     gMarioSpawnInfo->behaviorScript = CMD_GET(void *, 8);
     gMarioSpawnInfo->model = gLoadedGraphNodes[CMD_GET(ModelID16, 0x2)];
@@ -478,12 +479,13 @@ static void level_cmd_place_object(void) {
         spawnInfo->startPos[1] = CMD_GET(s16, 6);
         spawnInfo->startPos[2] = CMD_GET(s16, 8);
 
-        spawnInfo->startAngle[0] = CMD_GET(s16, 10) * 0x8000 / 180;
-        spawnInfo->startAngle[1] = CMD_GET(s16, 12) * 0x8000 / 180;
-        spawnInfo->startAngle[2] = CMD_GET(s16, 14) * 0x8000 / 180;
+        spawnInfo->startAngle[0] = degrees_to_angle(CMD_GET(s16, 10));
+        spawnInfo->startAngle[1] = degrees_to_angle(CMD_GET(s16, 12));
+        spawnInfo->startAngle[2] = degrees_to_angle(CMD_GET(s16, 14));
 
         spawnInfo->areaIndex = sCurrAreaIndex;
         spawnInfo->activeAreaIndex = sCurrAreaIndex;
+        spawnInfo->respawnInfo = 0;
 
         spawnInfo->behaviorArg = CMD_GET(u32, 16);
         spawnInfo->behaviorScript = CMD_GET(void *, 20);
@@ -597,20 +599,17 @@ static void level_cmd_3A(void) {
 static void level_cmd_create_whirlpool(void) {
     struct Whirlpool *whirlpool;
     s32 index = CMD_GET(u8, 2);
-    s32 beatBowser2 =
-        (save_file_get_flags() & (SAVE_FLAG_HAVE_KEY_2 | SAVE_FLAG_UNLOCKED_UPSTAIRS_DOOR)) != 0;
-
-    if (CMD_GET(u8, 3) == 0 || (CMD_GET(u8, 3) == 1 && !beatBowser2)
-        || (CMD_GET(u8, 3) == 2 && beatBowser2) || (CMD_GET(u8, 3) == 3 && gCurrActNum >= 2)) {
-        if (sCurrAreaIndex != -1 && index < 2) {
-            if ((whirlpool = gAreas[sCurrAreaIndex].whirlpools[index]) == NULL) {
-                whirlpool = alloc_only_pool_alloc(sLevelPool, sizeof(struct Whirlpool));
-                gAreas[sCurrAreaIndex].whirlpools[index] = whirlpool;
-            }
-
-            vec3s_set(whirlpool->pos, CMD_GET(s16, 4), CMD_GET(s16, 6), CMD_GET(s16, 8));
-            whirlpool->strength = CMD_GET(s16, 10);
+    // ex-alo change
+    // Make whirlpool spawn using acts instead of weird bowser 2 checks
+    if (sCurrAreaIndex != -1 && index < ARRAY_COUNT(gAreas[sCurrAreaIndex].whirlpools) 
+    && ((CMD_GET(u8, 3) & (1 << (gCurrActNum - 1))) || CMD_GET(u8, 3) == 0x1F)) {
+        if ((whirlpool = gAreas[sCurrAreaIndex].whirlpools[index]) == NULL) {
+            whirlpool = alloc_only_pool_alloc(sLevelPool, sizeof(struct Whirlpool));
+            gAreas[sCurrAreaIndex].whirlpools[index] = whirlpool;
         }
+
+        vec3s_set(whirlpool->pos, CMD_GET(s16, 4), CMD_GET(s16, 6), CMD_GET(s16, 8));
+        whirlpool->strength = CMD_GET(s16, 10);
     }
 
     sCurrentCmd = CMD_NEXT;

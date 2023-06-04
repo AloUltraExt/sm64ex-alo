@@ -58,7 +58,7 @@ void bully_check_mario_collision(void) {
 #endif
     o->oInteractStatus & INT_STATUS_INTERACTED) {
         if (o->oBhvParams2ndByte == BULLY_BP_SIZE_SMALL) {
-            cur_obj_play_sound_2(SOUND_OBJ2_BULLY_ATTACKED);
+            cur_obj_play_sound_2(SOUND_OBJ2_SMALL_BULLY_ATTACKED);
         } else {
             cur_obj_play_sound_2(SOUND_OBJ2_LARGE_BULLY_ATTACKED);
         }
@@ -130,7 +130,7 @@ void bully_act_back_up(void) {
     //  conditions are activated. However because its angle is set to its facing angle,
     //  it will walk forward instead of backing up.
 
-#if QOL_FIX_BULLY_BACK_UP_TIMER
+#if FIX_BULLY_BACK_UP_TIMER
     if (o->oTimer >= 15)
 #else
     if (o->oTimer == 15)
@@ -157,9 +157,9 @@ void bully_play_stomping_sound(void) {
         case BULLY_ACT_PATROL:
             if (animFrame == 0 || animFrame == 12) {
                 if (o->oBhvParams2ndByte == BULLY_BP_SIZE_SMALL) {
-                    cur_obj_play_sound_2(SOUND_OBJ_BULLY_WALK);
+                    cur_obj_play_sound_2(SOUND_OBJ_BULLY_WALK_SMALL);
                 } else {
-                    cur_obj_play_sound_2(SOUND_OBJ_BULLY_WALKING);
+                    cur_obj_play_sound_2(SOUND_OBJ_BULLY_WALK_LARGE);
                 }
             }
             break;
@@ -168,9 +168,9 @@ void bully_play_stomping_sound(void) {
         case BULLY_ACT_BACK_UP:
             if (animFrame == 0 || animFrame == 5) {
                 if (o->oBhvParams2ndByte == BULLY_BP_SIZE_SMALL) {
-                    cur_obj_play_sound_2(SOUND_OBJ_BULLY_WALK);
+                    cur_obj_play_sound_2(SOUND_OBJ_BULLY_WALK_SMALL);
                 } else {
-                    cur_obj_play_sound_2(SOUND_OBJ_BULLY_WALKING);
+                    cur_obj_play_sound_2(SOUND_OBJ_BULLY_WALK_LARGE);
                 }
             }
             break;
@@ -354,7 +354,7 @@ void bhv_big_bully_with_minions_loop(void) {
 
                 if (o->oTimer > 90) {
                     o->oAction = BULLY_ACT_ACTIVATE_AND_FALL;
-#if QOL_FIX_BULLY_KNOCKBACK_TIMER
+#if FIX_BULLY_KNOCKBACK_TIMER
                     o->oBullyKBTimerAndMinionKOCounter = 0;
 #endif
                 }

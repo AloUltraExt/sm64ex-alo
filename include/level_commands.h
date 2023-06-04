@@ -29,10 +29,6 @@ enum LevelCmdGetOrSetValIds {
 #define WARP_CHECKPOINT 0x80
 #define WARP_NO_CHECKPOINT 0x00
 
-#define WHIRLPOOL_COND_ALWAYS 0
-#define WHIRLPOOL_COND_BOWSER2_BEATEN 2
-#define WHIRLPOOL_COND_AT_LEAST_SECOND_STAR 3
-
 // Head defines
 #define REGULAR_FACE 0x0002
 #define DIZZY_FACE 0x0003
@@ -386,8 +382,8 @@ enum LevelCommandsIDList {
     CMD_HH(unk6, unk8), \
     CMD_HH(unk10, 0x0000)
 
-#define WHIRLPOOL(index, condition, posX, posY, posZ, strength) \
-    CMD_BBBB(LVL_SCRIPT_CMD_3B, 0x0C, index, condition), \
+#define WHIRLPOOL(index, acts, posX, posY, posZ, strength) \
+    CMD_BBBB(LVL_SCRIPT_CMD_3B, 0x0C, index, acts), \
     CMD_HH(posX, posY), \
     CMD_HH(posZ, strength)
 

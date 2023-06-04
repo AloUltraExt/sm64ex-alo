@@ -45,12 +45,14 @@ static struct AllocOnlyPool *sDynamicSurfacePool;
 #else
 void *gCurrStaticSurfacePool;
 void *gDynamicSurfacePool;
+void *gDynamicSurfaceNodePool;
 
 /**
  * The end of the data currently allocated to the surface pools.
  */
 void *gCurrStaticSurfacePoolEnd;
 void *gDynamicSurfacePoolEnd;
+void *gDynamicSurfaceNodePoolEnd;
 
 /**
  * The amount of data currently allocated to static surfaces.
@@ -66,7 +68,7 @@ static struct SurfaceNode *alloc_surface_node(u32 dynamic) {
     struct AllocOnlyPool *pool = dynamic ? sDynamicSurfaceNodePool : sStaticSurfaceNodePool;
     struct SurfaceNode *node = alloc_only_pool_alloc(pool, sizeof(struct SurfaceNode));
 #else
-    struct SurfaceNode **poolEnd = (struct SurfaceNode **)(dynamic ? &gDynamicSurfacePoolEnd : &gCurrStaticSurfacePoolEnd);
+    struct SurfaceNode **poolEnd = (struct SurfaceNode **)(dynamic ? &gDynamicSurfaceNodePoolEnd : &gCurrStaticSurfacePoolEnd);
     struct SurfaceNode *node = (*poolEnd)++;
 #endif
     gSurfaceNodesAllocated++;
@@ -137,8 +139,6 @@ static void clear_static_surfaces(void) {
 static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surface *surface) {
     struct SurfaceNode *newNode = alloc_surface_node(dynamic);
     struct SurfaceNode *list;
-    s32 surfacePriority;
-    s32 priority;
     s32 sortDir = 1; // highest to lowest, then insertion order (water and floors)
     s32 listIndex;
 
@@ -162,18 +162,6 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
 #endif
     }
 
-#if COLLISION_IMPROVEMENTS
-    surfacePriority = surface->upperY * sortDir;
-#else
-    //! (Surface Cucking) Surfaces are sorted by the height of their first
-    //  vertex. Since vertices aren't ordered by height, this causes many
-    //  lower triangles to be sorted higher. This worsens surface cucking since
-    //  many functions only use the first triangle in surface order that fits,
-    //  missing higher surfaces.
-    //  upperY would be a better sort method.
-    surfacePriority = surface->vertex1[1] * sortDir;
-#endif
-
     newNode->surface = surface;
 
     if (dynamic) {
@@ -194,20 +182,39 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
         list = &gStaticSurfacePartition[cellZ][cellX][listIndex];
     }
 
-    // Loop until we find the appropriate place for the surface in the list.
-    while (list->next != NULL) {
-#if COLLISION_IMPROVEMENTS
-        priority = list->next->surface->upperY * sortDir;
-#else
-        priority = list->next->surface->vertex1[1] * sortDir;
+#if !NO_SURFACE_PRIORITY_REORDER || WATER_SURFACES
+#if WATER_SURFACES
+    if (listIndex == SPATIAL_PARTITION_WATER)
 #endif
+    {
+    #if COLLISION_IMPROVEMENTS
+        s32 surfacePriority = surface->upperY * sortDir;
+    #else
+        //! (Surface Cucking) Surfaces are sorted by the height of their first
+        //  vertex. Since vertices aren't ordered by height, this causes many
+        //  lower triangles to be sorted higher. This worsens surface cucking since
+        //  many functions only use the first triangle in surface order that fits,
+        //  missing higher surfaces.
+        //  upperY would be a better sort method.
+        s32 surfacePriority = surface->vertex1[1] * sortDir;
+    #endif
+        s32 priority;
+        // Loop until we find the appropriate place for the surface in the list.
+        while (list->next != NULL) {
+        #if COLLISION_IMPROVEMENTS
+            priority = list->next->surface->upperY * sortDir;
+        #else
+            priority = list->next->surface->vertex1[1] * sortDir;
+        #endif
 
-        if (surfacePriority > priority) {
-            break;
+            if (surfacePriority > priority) {
+                break;
+            }
+
+            list = list->next;
         }
-
-        list = list->next;
     }
+#endif
 
     newNode->next = list->next;
     list->next = newNode;
@@ -327,7 +334,7 @@ static struct Surface *read_surface_data(TerrainData *vertexData, TerrainData **
 
     find_vector_perpendicular_to_plane(n, v[0], v[1], v[2]);
 
-    if (!vec3f_normalize_bool(n)) return NULL;
+    if (!vec3f_normalize_check(n)) return NULL;
 
     struct Surface *surface = alloc_surface(dynamic);
 
@@ -494,7 +501,10 @@ void alloc_surface_pools(void) {
     sDynamicSurfaceNodePool = alloc_only_pool_init();
     sDynamicSurfacePool = alloc_only_pool_init();
 #else
-    gDynamicSurfacePool = main_pool_alloc(DYNAMIC_SURFACE_POOL_SIZE, MEMORY_POOL_LEFT);
+    // Single define for memory, and split it into thirds, giving 1 to the poolsize and 2 to the nodesize.
+    gDynamicSurfacePool = main_pool_alloc(DYNAMIC_SURFACE_POOL_SIZE * 0.33f, MEMORY_POOL_LEFT);
+    gDynamicSurfaceNodePool = main_pool_alloc(DYNAMIC_SURFACE_POOL_SIZE * 0.66f, MEMORY_POOL_LEFT);
+    gDynamicSurfaceNodePoolEnd = gDynamicSurfaceNodePool;
     gDynamicSurfacePoolEnd = gDynamicSurfacePool;
 #endif
 }
@@ -646,12 +656,15 @@ void clear_dynamic_surfaces(void) {
         if (gSurfaceNodesAllocated > gNumStaticSurfaceNodes) {
             alloc_only_pool_clear(sDynamicSurfaceNodePool);
         }
+#else
+        clear_dynamic_surface_references();
 #endif
 
         gSurfacesAllocated = gNumStaticSurfaces;
         gSurfaceNodesAllocated = gNumStaticSurfaceNodes;
 #ifndef USE_SYSTEM_MALLOC
         gDynamicSurfacePoolEnd = gDynamicSurfacePool;
+        gDynamicSurfaceNodePoolEnd = gDynamicSurfaceNodePool;
 #endif
 #if BETTER_DYNAMIC_CELLS
         if (sClearAllCells) {
@@ -803,15 +816,14 @@ static f32 get_optimal_collision_distance(struct Object *obj) {
 }
 #endif
 
+TerrainData sDynamicVertices[900];
+
 /**
  * Transform an object's vertices, reload them, and render the object.
  */
 void load_object_collision_model(void) {
-    TerrainData vertexData[600];
-
     TerrainData *collisionData = gCurrentObject->collisionData;
     f32 marioDist = gCurrentObject->oDistanceToMario;
-
 
     // On an object's first frame, the distance is set to F32_MAX.
     // If the distance hasn't been updated, update it now.
@@ -862,11 +874,11 @@ void load_object_collision_model(void) {
     if (!(gTimeStopState & TIME_STOP_ACTIVE) && marioDist < colDist
         && !(gCurrentObject->activeFlags & ACTIVE_FLAG_IN_DIFFERENT_ROOM)) {
         collisionData++;
-        transform_object_vertices(&collisionData, vertexData);
+        transform_object_vertices(&collisionData, sDynamicVertices);
 
         // TERRAIN_LOAD_CONTINUE acts as an "end" to the terrain data.
         while (*collisionData != TERRAIN_LOAD_CONTINUE) {
-            load_object_surfaces(&collisionData, vertexData, TRUE);
+            load_object_surfaces(&collisionData, sDynamicVertices, TRUE);
         }
     }
 
@@ -888,7 +900,6 @@ void load_object_collision_model(void) {
  * Transform an object's vertices and add them to the static surface pool.
  */
 void load_object_static_model(void) {
-    TerrainData vertexData[600];
     TerrainData *collisionData = gCurrentObject->collisionData;
 #ifndef USE_SYSTEM_MALLOC
     u32 surfacePoolData;
@@ -901,11 +912,11 @@ void load_object_static_model(void) {
     gSurfacesAllocated = gNumStaticSurfaces;
 
     collisionData++;
-    transform_object_vertices(&collisionData, vertexData);
+    transform_object_vertices(&collisionData, sDynamicVertices);
 
     // TERRAIN_LOAD_CONTINUE acts as an "end" to the terrain data.
     while (*collisionData != TERRAIN_LOAD_CONTINUE) {
-        load_object_surfaces(&collisionData, vertexData, FALSE);
+        load_object_surfaces(&collisionData, sDynamicVertices, FALSE);
     }
 #ifndef USE_SYSTEM_MALLOC
     surfacePoolData = (uintptr_t)gCurrStaticSurfacePoolEnd - (uintptr_t)gCurrStaticSurfacePool;

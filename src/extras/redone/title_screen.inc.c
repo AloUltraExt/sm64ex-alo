@@ -11,6 +11,11 @@
 #include "extras/draw_util.h"
 #include <stdio.h>
 
+#ifdef VERSION_EU
+#include "eu_translation.h"
+extern s32 gInGameLanguage;
+#endif
+
 #define MAX_PAGE_STRINGS 12
 #define PAGE_DOWN_STOPS_MAX (LEVEL_MAX / MAX_PAGE_STRINGS)
 

@@ -4,7 +4,7 @@
 #include "types.h"
 
 #ifdef TARGET_N64
-#include "extras/n64/ext_mem_screen.h"
+#include "boot/ext_mem_screen.h"
 #endif
 
 // geo

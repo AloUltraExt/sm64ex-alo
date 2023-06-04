@@ -10,8 +10,8 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include "n64graphics.h"
-#include "utils.h"
+#include "sm64tools/n64graphics.h"
+#include "sm64tools/utils.h"
 
 #define SKYCONV_ENCODING ENCODING_U8
 

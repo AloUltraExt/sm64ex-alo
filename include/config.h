@@ -46,30 +46,25 @@
 /// Fixes bug where the angle speed isn't preserved while in a pole
 #define BUGFIX_PRESERVE_VEL_POLE (0 || VERSION_SH || QOL_FIXES)
 
-// N64 Only Settings
-/// Enables extended ram on N64
-#define N64_USE_EXTENDED_RAM
-/// Enables crash screen on N64
-#define N64_CRASH_SCREEN
-
-// Misc Settings
-/// Sets a key combo to skip Peach cutscene during file select
-#define SET_KEY_COMBO_SKIP_PEACH_CUTSCENE
-/// Sets a key combo to get to the debug level select on Mario Head
-#define SET_KEY_COMBO_LEVEL_SELECT
-
 // Other Settings
 #include "config/config_audio.h"
 #include "config/config_camera.h"
 #include "config/config_collision.h"
 #include "config/config_graphics.h"
+#include "config/config_keycombo.h"
 #include "config/config_language.h"
 #include "config/config_movement.h"
+#include "config/config_n64.h"
+#include "config/config_objects.h"
 
 // Screen Size Defines
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
 #define BORDER_HEIGHT 0
+
+// Stack Size Defines
+#define IDLE_STACKSIZE 0x800
+#define STACKSIZE 0x2000
 
 #endif // CONFIG_H

@@ -45,6 +45,8 @@ extern u8 *gGfxPoolEnd;
 extern struct GfxPool *gGfxPool;
 extern u8 gControllerBits;
 extern s8 gEepromProbe;
+extern struct DmaHandlerList gMarioAnimsBuf;
+extern struct DmaHandlerList gDemoInputsBuf;
 
 #ifdef GODDARD_MFACE
 extern void (*gGoddardVblankCallback)(void);

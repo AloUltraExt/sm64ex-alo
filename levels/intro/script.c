@@ -57,6 +57,7 @@ const LevelScript level_intro_splash_screen[] = {
     GET_OR_SET(/*op*/ OP_GET, /*var*/ VAR_CURR_GAME_SKIPS),
     JUMP_IF(/*op*/ OP_AND, /*arg*/ GAME_SKIP_TITLE_SCREEN, level_intro_mario_head_regular),
 
+    SET_MENU_MUSIC(/*seq*/ SEQ_SOUND_PLAYER),
     CALL(/*arg*/ LVL_INTRO_PLAY_ITS_A_ME_MARIO, /*func*/ lvl_intro_update),
     SLEEP(/*frames*/ 75),
     TRANSITION(/*transType*/ WARP_TRANSITION_FADE_INTO_COLOR, /*time*/ 16, /*color*/ 0x00, 0x00, 0x00),

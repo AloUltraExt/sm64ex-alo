@@ -882,7 +882,6 @@ u16 unk_sh_data_4[] = {
 
 #ifndef VERSION_SH
 s16 gTatumsPerBeat = TATUMS_PER_BEAT;
-s8 gUnusedCount80333EE8 = UNUSED_COUNT_80333EE8;
 s32 gAudioHeapSize = DOUBLE_SIZE_ON_64_BIT(AUDIO_HEAP_SIZE);
 s32 gAudioInitPoolSize = DOUBLE_SIZE_ON_64_BIT(AUDIO_INIT_POOL_SIZE);
 volatile s32 gAudioLoadLock = AUDIO_LOCK_UNINITIALIZED;
@@ -925,11 +924,6 @@ s32 gRefreshRate;
 s16 *gAiBuffers[NUMAIBUFFERS];
 s16 gAiBufferLengths[NUMAIBUFFERS];
 
-#if defined(VERSION_JP) || defined(VERSION_US)
-u32 gUnused80226E58[0x10];
-u16 gUnused80226E98[0x10];
-#endif
-
 u32 gAudioRandom;
 
 #if defined(VERSION_EU) || defined(VERSION_SH)
@@ -958,5 +952,3 @@ OSMesg D_SH_80350F8C[1];
 OSMesgQueue D_SH_80350F90; // address written to D_SH_80350F90
 OSMesgQueue *D_SH_80350FA8;
 #endif
-
-u64 gAudioGlobalsEndMarker;

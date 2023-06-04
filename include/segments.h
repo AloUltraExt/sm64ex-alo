@@ -16,10 +16,14 @@
  * linker script syntax.
 */
 #ifdef N64_USE_EXTENDED_RAM
-#define RAM_END          0x80800000
-#define RAM_END_4MB      0x80400000
+#ifdef BBPLAYER
+#define SEG_RAM_END      0x807C0000 // iQue has stuff like EEPROM mapped at 807C0000 onwards. TODO: Code this using osMemSize
 #else
-#define RAM_END          0x80400000
+#define SEG_RAM_END      0x80800000
+#endif
+#define SEG_RAM_END_4MB  0x80400000
+#else
+#define SEG_RAM_END      0x80400000
 #endif
 
 /*
@@ -27,12 +31,12 @@
  * importing large custom content.
  */
 
-#define SEG_POOL_START   _framebuffersSegmentNoloadEnd // 0x0165000 in size
+#define SEG_POOL_START   _framebuffersSegmentBssEnd
 
 #ifdef N64_USE_EXTENDED_RAM
-#define POOL_SIZE_4MB    RAM_END_4MB - SEG_POOL_START
+#define POOL_SIZE_4MB    SEG_RAM_END_4MB - SEG_POOL_START
 #endif
 
-#define POOL_SIZE        RAM_END - SEG_POOL_START
+#define POOL_SIZE        SEG_RAM_END - SEG_POOL_START
 
 #endif // SEGMENTS_H

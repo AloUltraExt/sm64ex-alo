@@ -8243,7 +8243,9 @@ File *File::open(const char *path, File::AccessMode mode)
 		flags = O_RDONLY;
 	else if (mode == WriteAccess)
 		flags = O_CREAT | O_WRONLY | O_TRUNC;
-#if defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__MINGW64__)
+// ex-alo note: Added defines for mingw to fix crashes on some custom aiff files
+// if audiofile was build using MSYS Mingw.
+#if defined(WIN32) || defined(__CYGWIN__) || defined(_WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
 	flags |= O_BINARY;
 #endif
 	int fd = ::open(path, flags, 0666);
@@ -10184,7 +10186,9 @@ static const TrackSetup _af_default_tracksetup =
 {
 	0,
 	{
-		44100.0,
+        // ex-alo note: Originally 44100.0 (44.1 kHz), since we are using audiofile
+        // on an old game (Super Mario 64), 32 kHz should be enough by default.
+		32728.5,
 		AF_SAMPFMT_TWOSCOMP,
 		16,
 		_AF_BYTEORDER_NATIVE,

@@ -180,7 +180,7 @@ void play_anim_sound(struct MarioState *m, u32 actionState, s32 animFrame, u32 s
 
 s32 act_start_sleeping(struct MarioState *m) {
 #ifndef VERSION_JP
-    s32 animFrame;
+    s32 animFrame = 0;
 #endif
 
     if (check_common_idle_cancels(m)) {
@@ -911,9 +911,11 @@ s32 act_triple_jump_land_stop(struct MarioState *m) {
 }
 
 s32 act_backflip_land_stop(struct MarioState *m) {
+#if !FIX_ACTION_LAND_EAT_INPUT
     if (!(m->input & INPUT_Z_DOWN) || m->marioObj->header.gfx.animInfo.animFrame >= 6) {
         m->input &= ~INPUT_A_PRESSED;
     }
+#endif
 
     if (check_common_landing_cancels(m, ACT_BACKFLIP)) {
         return TRUE;
@@ -935,7 +937,9 @@ s32 act_lava_boost_land(struct MarioState *m) {
 }
 
 s32 act_long_jump_land_stop(struct MarioState *m) {
+#if !FIX_ACTION_LAND_EAT_INPUT
     m->input &= ~INPUT_B_PRESSED;
+#endif
     if (check_common_landing_cancels(m, ACT_JUMP)) {
         return TRUE;
     }
@@ -1004,6 +1008,14 @@ s32 act_air_throw_land(struct MarioState *m) {
     return FALSE;
 }
 
+#if TWIRL_WITH_OBJECT
+#define ACT_IDLE_DEF(a, b, c) (a ? b : c)
+#define CHECK(a, b) if (!a) { b; }
+#else
+#define ACT_IDLE_DEF(a, b, c) c
+#define CHECK(a, b) b;
+#endif
+
 s32 act_twirl_land(struct MarioState *m) {
     m->actionState = 1;
     if (m->input & INPUT_STOMPED) {
@@ -1015,7 +1027,7 @@ s32 act_twirl_land(struct MarioState *m) {
     }
 
     stationary_ground_step(m);
-    set_mario_animation(m, MARIO_ANIM_TWIRL_LAND);
+    CHECK(m->heldObj, set_mario_animation(m, MARIO_ANIM_TWIRL_LAND));
     if (m->angleVel[1] > 0) {
         m->angleVel[1] -= 0x400;
         if (m->angleVel[1] < 0) {
@@ -1028,11 +1040,13 @@ s32 act_twirl_land(struct MarioState *m) {
     m->marioObj->header.gfx.angle[1] += m->twirlYaw;
     if (is_anim_at_end(m) && m->angleVel[1] == 0) {
         m->faceAngle[1] += m->twirlYaw;
-        set_mario_action(m, ACT_IDLE, 0);
+        set_mario_action(m, ACT_IDLE_DEF(m->heldObj, ACT_HOLD_IDLE, ACT_IDLE), 0);
     }
 
     return FALSE;
 }
+#undef ACT_IDLE_DEF
+#undef CHECK
 
 s32 act_ground_pound_land(struct MarioState *m) {
     m->actionState = 1;

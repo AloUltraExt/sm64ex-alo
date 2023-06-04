@@ -70,12 +70,12 @@ void hoot_free_step(s16 fastOscY, s32 speed) {
     }
 
     if (animFrame == 0) {
-        cur_obj_play_sound_2(SOUND_GENERAL_SWISH_WATER);
+        cur_obj_play_sound_2(SOUND_GENERAL_WING_FLAP);
     }
 }
 
 void hoot_player_set_yaw(void) {
-#if QOL_FEATURE_BETTER_HOOT_YAW_CONTROL
+#if BETTER_HOOT_YAW_CONTROL
     s16 turnSpeed  = (gMarioState->intendedMag * 0x20);
     o->oMoveAngleYaw = approach_s16_symmetric(o->oMoveAngleYaw, gMarioState->intendedYaw, turnSpeed);
 #else
@@ -111,7 +111,7 @@ void hoot_carry_step(s32 speed, UNUSED f32 xPrev, UNUSED f32 zPrev) {
     o->oPosZ += o->oVelZ;
 
     if (animFrame == 0) {
-        cur_obj_play_sound_2(SOUND_GENERAL_SWISH_WATER);
+        cur_obj_play_sound_2(SOUND_GENERAL_WING_FLAP);
     }
 }
 
@@ -246,20 +246,16 @@ void hoot_awake_loop(void) {
 }
 
 void bhv_hoot_loop(void) {
-#if QOL_FEATURE_HOOT_TREE_PARTICLES
-    struct Object *obj;
-    f32 scale;
-#endif
     switch (o->oHootAvailability) {
         case HOOT_AVAIL_ASLEEP_IN_TREE:
             if (is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, 50)) {
                 o->header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
                 o->oHootAvailability = HOOT_AVAIL_WANTS_TO_TALK;
             }
-#if QOL_FEATURE_HOOT_TREE_PARTICLES
+#if HOOT_TREE_PARTICLES
             if (random_float() < 0.05f) {
-                obj                  = spawn_object(o, MODEL_LEAVES, bhvTreeLeaf);
-                scale                = (random_float() * 3.0f);
+                struct Object *obj   = spawn_object(o, MODEL_LEAVES, bhvTreeLeaf);
+                f32 scale            = (random_float() * 3.0f);
                 obj_scale(obj, scale);
                 obj->oMoveAngleYaw   = random_u16();
                 obj->oForwardVel     = ((random_float() *  5.0f) + 5.0f);

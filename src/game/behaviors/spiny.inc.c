@@ -39,7 +39,7 @@ static u8 sSpinyWalkAttackHandlers[] = {
 static s32 spiny_check_active(void) {
     if (o->parentObj != o) {
         if (o->oDistanceToMario > 2500.0f) {
-#if QOL_FIX_SPINY_CHECK_ACTIVE_PARENT
+#if FIX_SPINY_CHECK_ACTIVE_PARENT
             if (obj_has_behavior(o->parentObj, bhvEnemyLakitu)) {
                 o->parentObj->oEnemyLakituNumSpinies--;
             }
@@ -162,7 +162,7 @@ static void spiny_act_thrown_by_lakitu(void) {
         cur_obj_init_animation_with_sound(0);
 
         if (o->oMoveFlags & OBJ_MOVE_LANDED) {
-            cur_obj_play_sound_2(SOUND_OBJ_SPINY_UNK59);
+            cur_obj_play_sound_2(SOUND_OBJ_SPINY_LAND);
             cur_obj_set_model(MODEL_SPINY);
             obj_init_animation_with_sound(o, spiny_seg5_anims_05016EAC, 0);
             o->oGraphYOffset = -17.0f;

@@ -101,7 +101,7 @@ void king_bobomb_act_3(void) {
         o->oKingBobombUnkFC = 0;
 
         if (o->oTimer == 0) {
-            cur_obj_play_sound_2(SOUND_OBJ_UNKNOWN3);
+            cur_obj_play_sound_2(SOUND_OBJ_GRAB_MARIO);
         }
 
         if (cur_obj_init_animation_and_check_if_near_end(0)) {
@@ -134,7 +134,7 @@ void king_bobomb_act_3(void) {
 
         if (cur_obj_check_anim_frame(31)) {
             o->oKingBobombUnk88 = 2;
-            cur_obj_play_sound_2(SOUND_OBJ_UNKNOWN4);
+            cur_obj_play_sound_2(SOUND_OBJ_RELEASE_MARIO);
         } else if (cur_obj_check_if_near_animation_end()) {
             o->oAction = 1;
             o->oInteractStatus &= ~INT_STATUS_GRABBED_MARIO;
@@ -198,7 +198,7 @@ void king_bobomb_act_6(void) {
     }
 }
 
-#if QOL_FIX_MARIO_LOOK_HEAD_BOSSES
+#if FIX_MARIO_LOOK_HEAD_BOSSES
 #define MARIO_DIALOG_LOOK_BOSS MARIO_DIALOG_LOOK_FRONT
 #else
 #define MARIO_DIALOG_LOOK_BOSS MARIO_DIALOG_LOOK_UP
@@ -266,7 +266,7 @@ void king_bobomb_act_4(void) { // bobomb been thrown
 
         o->oSubAction++;
 
-#if QOL_FIX_KING_BOBOMB_MUSIC_THROWN_OFF
+#if FIX_KING_BOBOMB_MUSIC_THROWN_OFF
         if (o->oDistanceToMario > 2000.0f) {
             stop_background_music(SEQUENCE_ARGS(4, SEQ_EVENT_BOSS));
         }
@@ -320,7 +320,7 @@ void king_bobomb_act_5(void) { // bobomb returns home
             break;
 
         case 3:
-#if QOL_FIX_KING_BOBOMB_MUSIC_THROWN_OFF
+#if FIX_KING_BOBOMB_MUSIC_THROWN_OFF
             if (o->oDistanceToMario > 2000.0f)
 #else
             if (mario_is_far_below_object(1200.0f))
@@ -356,17 +356,17 @@ void (*sKingBobombActions[])(void) = {
 };
 struct SoundState sKingBobombSoundStates[] = {
     { 0, 0, 0, NO_SOUND },
-    { 1, 1, 20, SOUND_OBJ_POUNDING1_HIGHPRIO },
+    { 1, 1, 20, SOUND_OBJ_KING_BOBOMB_POUNDING1_HIGHPRIO },
     { 0, 0, 0, NO_SOUND },
     { 0, 0, 0, NO_SOUND },
-    { 1, 15, -1, SOUND_OBJ_POUNDING1_HIGHPRIO },
+    { 1, 15, -1, SOUND_OBJ_KING_BOBOMB_POUNDING1_HIGHPRIO },
     { 0, 0, 0, NO_SOUND },
     { 0, 0, 0, NO_SOUND },
     { 0, 0, 0, NO_SOUND },
     { 0, 0, 0, NO_SOUND },
-    { 1, 33, -1, SOUND_OBJ_POUNDING1_HIGHPRIO },
+    { 1, 33, -1, SOUND_OBJ_KING_BOBOMB_POUNDING1_HIGHPRIO },
     { 0, 0, 0, NO_SOUND },
-    { 1, 1, 15, SOUND_OBJ_POUNDING1_HIGHPRIO },
+    { 1, 1, 15, SOUND_OBJ_KING_BOBOMB_POUNDING1_HIGHPRIO },
 };
 
 void king_bobomb_move(void) {

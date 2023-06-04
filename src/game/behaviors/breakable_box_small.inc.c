@@ -38,7 +38,7 @@ void small_breakable_box_act_move(void) {
     obj_attack_collided_from_other_object(o);
 
     if (collisionFlags == OBJ_COL_FLAG_GROUNDED) {
-        cur_obj_play_sound_2(SOUND_GENERAL_BOX_LANDING_2);
+        cur_obj_play_sound_2(SOUND_GENERAL_SMALL_BOX_LANDING);
     }
 
     if (collisionFlags & OBJ_COL_FLAG_GROUNDED) {

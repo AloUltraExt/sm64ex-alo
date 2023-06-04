@@ -98,6 +98,12 @@ typedef u8  ModelID8;
 typedef u16 ModelID16;
 typedef u32 ModelID32;
 
+#define M_GFXTASK 1
+#define M_AUDTASK 2
+#define M_VIDTASK 3
+#define M_HVQTASK 6
+#define M_HVQMTASK 7
+
 enum SpTaskState {
     SPTASK_STATE_NOT_STARTED,
     SPTASK_STATE_RUNNING,
@@ -119,7 +125,7 @@ struct VblankHandler {
 };
 
 #define ANIM_FLAG_NOLOOP     (1 << 0) // 0x01
-#define ANIM_FLAG_FORWARD    (1 << 1) // 0x02
+#define ANIM_FLAG_BACKWARD   (1 << 1) // 0x02
 #define ANIM_FLAG_2          (1 << 2) // 0x04
 #define ANIM_FLAG_HOR_TRANS  (1 << 3) // 0x08
 #define ANIM_FLAG_VERT_TRANS (1 << 4) // 0x10
@@ -251,7 +257,7 @@ struct Object {
     /*0x1D0*/ u32 bhvStackIndex;
     /*0x1D4*/ uintptr_t bhvStack[8];
     /*0x1F4*/ s16 bhvDelayTimer;
-    /*0x1F6*/ s16 respawnInfoType;
+    /*0x1F6*/ u8 respawnInfo;
     /*0x1F8*/ f32 hitboxRadius;
     /*0x1FC*/ f32 hitboxHeight;
     /*0x200*/ f32 hurtboxRadius;
@@ -262,7 +268,7 @@ struct Object {
     /*0x214*/ struct Object *platform;
     /*0x218*/ void *collisionData;
     /*0x21C*/ Mat4 transform;
-    /*0x25C*/ void *respawnInfo;
+    /*0x25C*/ u8 *respawnInfoPointer;
 };
 
 struct ObjectHitbox {
@@ -376,7 +382,7 @@ struct MarioState {
     /*0xB8*/ s16 prevNumStarsForDialog;
     /*0xBC*/ f32 peakHeight;
     /*0xC0*/ f32 quicksandDepth;
-    /*0xC4*/ f32 unkC4;
+    /*0xC4*/ f32 gettingBlownGravity;
 };
 
 #endif // _SM64_TYPES_H_

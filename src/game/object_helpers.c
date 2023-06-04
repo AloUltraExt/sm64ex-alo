@@ -167,7 +167,7 @@ Gfx *geo_switch_area(s32 callContext, struct GraphNode *node, UNUSED void *conte
             switchCase->selectedCase = 0;
         } else {
             Vec3f focusPos = { gMarioObject->oPosX, gMarioObject->oPosY, gMarioObject->oPosZ };
-#if QOL_FEATURE_ROOM_OBJECT_CAMERA_FOCUS
+#if ROOM_OBJECT_CAMERA_FOCUS
             if (gCutsceneFocus != NULL) {
                 vec3f_copy(focusPos, gLakituState.pos);
             }
@@ -373,15 +373,13 @@ struct Object *spawn_object_abs_with_rot(struct Object *parent, s16 uselessArg, 
  * a copy-paste typo by one of the programmers.
  */
 struct Object *spawn_object_rel_with_rot(struct Object *parent, ModelID32 model, const BehaviorScript *behavior,
-                                         s16 xOff, s16 yOff, s16 zOff, s16 pitch, s16 yaw, UNUSED s16 roll) {
+                                         s16 xOff, s16 yOff, s16 zOff, s16 pitch, s16 yaw, s16 roll) {
     struct Object *newObj = spawn_object_at_origin(parent, 0, model, behavior);
     newObj->oFlags |= OBJ_FLAG_TRANSFORM_RELATIVE_TO_PARENT;
     obj_set_parent_relative_pos(newObj, xOff, yOff, zOff);
-#if QOL_FIX_SPAWN_OBJECT_ANGLE_ROLL
+    // ex-alo change
+    // last arg originally had a typo (zOff instead of roll)
     obj_set_angle(newObj, pitch, yaw, roll);
-#else
-    obj_set_angle(newObj, pitch, yaw, zOff); // Nice typo you got there Nintendo.
-#endif
 
     return newObj;
 }
@@ -1619,7 +1617,7 @@ static void cur_obj_update_floor(void) {
 #ifndef VERSION_JP
             case SURFACE_DEATH_PLANE:
             //! This misses SURFACE_VERTICAL_WIND (and maybe SURFACE_WARP)
-            #if QOL_FIX_OBJ_FLOOR_WIND_DEATH
+            #if FIX_OBJ_FLOOR_WIND_DEATH
             case SURFACE_VERTICAL_WIND:
             #endif
                 o->oMoveFlags |= OBJ_MOVE_ABOVE_DEATH_BARRIER;
@@ -1861,22 +1859,15 @@ void cur_obj_set_face_angle_to_move_angle(void) {
     o->oFaceAngleRoll = o->oMoveAngleRoll;
 }
 
-s32 cur_obj_follow_path(UNUSED s32 unusedArg) {
-    struct Waypoint *startWaypoint;
-    struct Waypoint *lastWaypoint;
-    struct Waypoint *targetWaypoint;
-    f32 prevToNextX, prevToNextY, prevToNextZ;
-    UNUSED u8 filler[4];
-    f32 objToNextXZ;
-    f32 objToNextX, objToNextY, objToNextZ;
-
+s32 cur_obj_follow_path(void) {
     if (o->oPathedPrevWaypointFlags == 0) {
         o->oPathedPrevWaypoint = o->oPathedStartWaypoint;
         o->oPathedPrevWaypointFlags = WAYPOINT_FLAGS_INITIALIZED;
     }
 
-    startWaypoint = o->oPathedStartWaypoint;
-    lastWaypoint = o->oPathedPrevWaypoint;
+    struct Waypoint *startWaypoint = o->oPathedStartWaypoint;
+    struct Waypoint *lastWaypoint  = o->oPathedPrevWaypoint;
+    struct Waypoint *targetWaypoint;
 
     if ((lastWaypoint + 1)->flags != WAYPOINT_FLAGS_END) {
         targetWaypoint = lastWaypoint + 1;
@@ -1886,14 +1877,14 @@ s32 cur_obj_follow_path(UNUSED s32 unusedArg) {
 
     o->oPathedPrevWaypointFlags = lastWaypoint->flags | WAYPOINT_FLAGS_INITIALIZED;
 
-    prevToNextX = targetWaypoint->pos[0] - lastWaypoint->pos[0];
-    prevToNextY = targetWaypoint->pos[1] - lastWaypoint->pos[1];
-    prevToNextZ = targetWaypoint->pos[2] - lastWaypoint->pos[2];
+    f32 prevToNextX = targetWaypoint->pos[0] - lastWaypoint->pos[0];
+    f32 prevToNextY = targetWaypoint->pos[1] - lastWaypoint->pos[1];
+    f32 prevToNextZ = targetWaypoint->pos[2] - lastWaypoint->pos[2];
 
-    objToNextX = targetWaypoint->pos[0] - o->oPosX;
-    objToNextY = targetWaypoint->pos[1] - o->oPosY;
-    objToNextZ = targetWaypoint->pos[2] - o->oPosZ;
-    objToNextXZ = sqrtf(sqr(objToNextX) + sqr(objToNextZ));
+    f32 objToNextX = targetWaypoint->pos[0] - o->oPosX;
+    f32 objToNextY = targetWaypoint->pos[1] - o->oPosY;
+    f32 objToNextZ = targetWaypoint->pos[2] - o->oPosZ;
+    f32 objToNextXZ = sqrtf(sqr(objToNextX) + sqr(objToNextZ));
 
     o->oPathedTargetYaw = atan2s(objToNextZ, objToNextX);
     o->oPathedTargetPitch = atan2s(objToNextXZ, -objToNextY);
@@ -2240,7 +2231,7 @@ s32 is_item_in_array(s8 item, s8 *array) {
 UNUSED static void stub_obj_helpers_5(void) {
 }
 
-#if QOL_FEATURE_BETTER_ROOM_CHECKS
+#if BETTER_ROOM_CHECKS
 void bhv_init_room(void) {
     struct Surface *floor = NULL;
     if (gCurrentArea->surfaceRooms != NULL) {
@@ -2290,7 +2281,7 @@ void cur_obj_enable_rendering_if_mario_in_room(void) {
             marioInRoom = TRUE;
         } else if (gDoorAdjacentRooms[gMarioCurrentRoom][1] == o->oRoom) {
             marioInRoom = TRUE;
-#if QOL_FEATURE_BETTER_ROOM_CHECKS
+#if BETTER_ROOM_CHECKS
         } else if (gDoorAdjacentRooms[o->oRoom][0] == gMarioCurrentRoom) {
             marioInRoom = TRUE;
         } else if (gDoorAdjacentRooms[o->oRoom][1] == gMarioCurrentRoom) {
@@ -2805,4 +2796,12 @@ ModelID32 obj_get_model(struct Object *obj) {
     }
 
     return MODEL_NONE;
+}
+
+s32 mario_is_close_to_a_ceiling(void) {   
+    if (gMarioStates[0].pos[1] + 160.0f + FIND_SURFACE_BUFFER >= gMarioStates[0].ceilHeight) {
+        return TRUE;
+    }
+
+    return FALSE;
 }

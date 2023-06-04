@@ -22,7 +22,7 @@
 #include "rumble_init.h"
 
 #ifdef TARGET_N64
-#include "extras/n64/system_checks.h"
+#include "boot/system_checks.h"
 #endif
 
 #ifdef BETTERCAMERA
@@ -76,10 +76,6 @@ void *gMarioAnimsMemAlloc;
 void *gDemoInputsMemAlloc;
 struct DmaHandlerList gMarioAnimsBuf;
 struct DmaHandlerList gDemoInputsBuf;
-
-// fillers
-UNUSED static u8 sfillerGameInit[0x90];
-UNUSED static s32 sUnusedGameInitValue = 0;
 
 // General timer that runs as the game starts
 u32 gGlobalTimer = 0;
@@ -378,7 +374,7 @@ void render_init(void) {
 
 #ifdef USE_SYSTEM_MALLOC
 Gfx **alloc_next_dl(void) {
-    u32 size = 10000;
+    u32 size = GFX_POOL_SIZE_FIXED;
     Gfx *new_chunk = alloc_only_pool_alloc(gGfxAllocOnlyPool, size * sizeof(Gfx));
     gSPBranchList(gDisplayListHeadInChunk++, new_chunk);
     gDisplayListHeadInChunk = new_chunk;

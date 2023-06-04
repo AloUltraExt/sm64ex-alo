@@ -30,8 +30,7 @@ void jumping_box_act_0(void) {
 
 void jumping_box_act_1(void) {
     if (o->oMoveFlags & (OBJ_MOVE_HIT_WALL | OBJ_MOVE_MASK_IN_WATER | OBJ_MOVE_LANDED)) {
-        obj_mark_for_deletion(o);
-        spawn_mist_particles();
+        SWAP_PARTICLE_CALL(obj_mark_for_deletion(o), spawn_mist_particles());
     }
 }
 

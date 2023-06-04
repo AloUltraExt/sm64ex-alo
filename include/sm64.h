@@ -57,15 +57,23 @@ int strcmp(char *s, char *t);
 #define SET_HIGH_S16_OF_32(var, x) ((((s16 *)&(var))[0]) = (x))
 #endif
 
-// Layers
-#define LAYER_FORCE             0
-#define LAYER_OPAQUE            1
-#define LAYER_OPAQUE_DECAL      2
-#define LAYER_OPAQUE_INTER      3
-#define LAYER_ALPHA             4
-#define LAYER_TRANSPARENT       5
-#define LAYER_TRANSPARENT_DECAL 6
-#define LAYER_TRANSPARENT_INTER 7
+// Render layer defines (see graph_node and rendering_graph_node).
+enum RenderLayers {
+    LAYER_FORCE,
+    LAYER_OPAQUE,
+    LAYER_OPAQUE_DECAL,
+    LAYER_OPAQUE_INTER,
+    LAYER_ALPHA,
+    LAYER_TRANSPARENT,
+    LAYER_TRANSPARENT_DECAL,
+    LAYER_TRANSPARENT_INTER,
+    LAYER_COUNT
+};
+
+#define LAYER_FIRST                         LAYER_FORCE
+#define LAYER_LAST                          (LAYER_COUNT - 1)
+
+#define LAYER_ZB_FIRST                      LAYER_OPAQUE
 
 #define INPUT_NONZERO_ANALOG         0x0001
 #define INPUT_A_PRESSED              0x0002
@@ -98,8 +106,8 @@ int strcmp(char *s, char *t);
 #define AIR_STEP_HIT_WALL        2
 #define AIR_STEP_GRABBED_LEDGE   3
 #define AIR_STEP_GRABBED_CEILING 4
+#define AIR_STEP_HIT_CEILING     5 // used when BETTER_RESOLVE_WALL_COLLISION is set
 #define AIR_STEP_HIT_LAVA_WALL   6
-#define AIR_STEP_HIT_CEILING     7 // used when BETTER_RESOLVE_WALL_COLLISION is set
 
 #define WATER_STEP_NONE        0
 #define WATER_STEP_HIT_FLOOR   1
@@ -149,7 +157,7 @@ int strcmp(char *s, char *t);
 #define MARIO_KICKING                   0x00200000
 #define MARIO_TRIPPING                  0x00400000
 #define MARIO_UNKNOWN_25                0x02000000
-#define MARIO_UNKNOWN_30                0x40000000
+#define MARIO_AIR_HIT_WALL              0x40000000
 #define MARIO_UNKNOWN_31                0x80000000
 
 #define MARIO_SPECIAL_CAPS (MARIO_VANISH_CAP | MARIO_METAL_CAP | MARIO_WING_CAP)

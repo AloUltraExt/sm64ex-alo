@@ -182,7 +182,7 @@ static void boo_move_during_hit(s32 roll, f32 fVel) {
     s32 oscillationVel = o->oTimer * 0x800 + 0x800;
 
     o->oForwardVel = fVel;
-#if QOL_FIX_BOO_MOVE_HIT_VELOCITY
+#if FIX_BOO_MOVE_HIT_VELOCITY
     o->oVelY = coss(oscillationVel) * 5;
 #else
     o->oVelY = coss(oscillationVel);
@@ -907,7 +907,7 @@ void bhv_boo_staircase(void) {
 
         case 2:
             if (o->oTimer == 0) {
-                cur_obj_play_sound_2(SOUND_GENERAL_UNKNOWN4_LOWPRIO);
+                cur_obj_play_sound_2(SOUND_GENERAL_ELEVATOR_WOBBLE_LOWPRIO);
             }
 
             if (jiggle_bbh_stair(o->oTimer)) {

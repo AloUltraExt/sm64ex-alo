@@ -84,7 +84,6 @@ extern s16 gDebugInfoOverwrite[][8];
 
 extern u32 gTimeStopState;
 extern struct Object gObjectPool[];
-extern struct Object gMacroObjectDefaultParent;
 extern struct ObjectNode *gObjectLists;
 extern struct ObjectNode gFreeObjectList;
 
@@ -133,6 +132,7 @@ void set_object_respawn_info_bits(struct Object *obj, u8 bits);
 void unload_objects_from_area(UNUSED s32 unused, s32 areaIndex);
 void spawn_objects_from_info(UNUSED s32 unused, struct SpawnInfo *spawnInfo);
 void clear_objects(void);
+void clear_dynamic_surface_references(void);
 void update_objects(UNUSED s32 unused);
 
 

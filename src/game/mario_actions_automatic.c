@@ -37,8 +37,8 @@ void add_tree_leaf_particles(struct MarioState *m) {
 
     if (m->usedObj->behavior == segmented_to_virtual(bhvTree)) {
         // make leaf effect spawn higher on the Shifting Sand Land palm tree
-#if QOL_FIX_PALM_TREE_LEAF_HEIGHT
-        if (m->usedObj->header.gfx.sharedChild == gLoadedGraphNodes[MODEL_SSL_PALM_TREE])
+#if FIX_PALM_TREE_LEAF_HEIGHT
+        if (obj_has_model(m->usedObj, MODEL_SSL_PALM_TREE))
 #else
         if (gCurrLevelNum == LEVEL_SSL)
 #endif
@@ -80,7 +80,7 @@ s32 set_pole_position(struct MarioState *m, f32 offsetY) {
 
     // Get the relative top and bottom of the pole.
     f32 poleTop = poleObj->hitboxHeight - 100.0f;
-#if QOL_FIX_POLE_BOTTOM_GRAB
+#if FIX_POLE_BOTTOM_GRAB
     f32 poleBottom = -poleObj->hitboxDownOffset - 100.0f;
 #else
     f32 poleBottom = -poleObj->hitboxDownOffset;
@@ -194,7 +194,7 @@ s32 act_holding_pole(struct MarioState *m) {
 
         m->faceAngle[1] += marioObj->oMarioPoleYawVel;
         marioObj->oMarioPolePos -= marioObj->oMarioPoleYawVel / 0x100;
-#if QOL_FIX_PALM_TREE_LEAF_HEIGHT
+#if FIX_PALM_TREE_LEAF_HEIGHT
         add_tree_leaf_particles(m);
 #else
         if (m->usedObj->behavior == segmented_to_virtual(bhvTree)) {
@@ -474,14 +474,7 @@ s32 act_start_hanging(struct MarioState *m) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
-    //! Crash if Mario's referenced ceiling is NULL (same for other hanging actions)
-    //  Fixed with qol fixes
-    if (
-#if FIX_CEILING_NULL_CRASH
-        (m->ceil == NULL) ||
-#endif
-        (m->ceil->type != SURFACE_HANGABLE)
-    ) {
+    if ((m->ceil == NULL) || (m->ceil->type != SURFACE_HANGABLE)) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
 
@@ -496,11 +489,12 @@ s32 act_start_hanging(struct MarioState *m) {
     return FALSE;
 }
 
+// ex-alo change
+// added ceil null check on all hanging actions to avoid crashes
 s32 act_hanging(struct MarioState *m) {
     if (m->input & INPUT_NONZERO_ANALOG) {
         return set_mario_action(m, ACT_HANG_MOVING, m->actionArg);
     }
-
 
     if (
 #if BETTER_HANGING
@@ -516,12 +510,7 @@ s32 act_hanging(struct MarioState *m) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
-    if (
-#if FIX_CEILING_NULL_CRASH
-        (m->ceil == NULL) ||
-#endif
-        (m->ceil->type != SURFACE_HANGABLE)
-    ) {
+    if ((m->ceil == NULL) || (m->ceil->type != SURFACE_HANGABLE)) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
 
@@ -551,12 +540,7 @@ s32 act_hang_moving(struct MarioState *m) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
-    if (
-#if FIX_CEILING_NULL_CRASH
-        (m->ceil == NULL) ||
-#endif
-        (m->ceil->type != SURFACE_HANGABLE)
-    ) {
+    if ((m->ceil == NULL) || (m->ceil->type != SURFACE_HANGABLE)) {
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
 
@@ -670,7 +654,9 @@ s32 act_ledge_grab(struct MarioState *m) {
         m->actionTimer++;
     }
 
-    if (m->floor->normal.y < 0.9063078f) {
+    // ex-alo change
+    // added floor null check to avoid crashes
+    if ((m->floor == NULL) || (m->floor->normal.y < 0.9063078f)) {
         return let_go_of_ledge(m);
     }
 
@@ -762,7 +748,7 @@ s32 act_ledge_climb_fast(struct MarioState *m) {
         return let_go_of_ledge(m);
     }
 
-    play_sound_if_no_flag(m, SOUND_MARIO_UH2, MARIO_MARIO_SOUND_PLAYED);
+    play_sound_if_no_flag(m, SOUND_MARIO_UH_LEDGE_CLIMB_FAST, MARIO_MARIO_SOUND_PLAYED);
 
     update_ledge_climb(m, MARIO_ANIM_FAST_LEDGE_GRAB, ACT_IDLE);
 

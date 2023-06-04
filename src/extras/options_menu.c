@@ -25,7 +25,6 @@
 #include "pc/controller/controller_api.h"
 
 #include <stdbool.h>
-#include "../../include/libc/stdlib.h"
 #endif
 
 #ifdef BETTERCAMERA
@@ -177,7 +176,9 @@ static struct Option optsVanillaCamera[] = {
 #endif
 
 #ifdef BETTERCAMERA
+#if MORE_VANILLA_CAM_STUFF
 struct SubMenu menuVanillaCamera = DEF_SUBMENU( optsCameraStr[0], optsVanillaCamera );
+#endif
 
 static struct Option optsCamera[] = {
     DEF_OPT_TOGGLE( optsPuppyCamStr[1], &configPuppyCam.enable ),
@@ -511,7 +512,7 @@ void optmenu_toggle(void) {
         l_counter = 0;
     } else {
         #ifndef nosound
-        play_sound(SOUND_MENU_MARIO_CASTLE_WARP2, gGlobalSoundSource);
+        play_sound(SOUND_MENU_HIGH_SCORE, gGlobalSoundSource);
         #endif
         optmenu_open = 0;
 #ifndef TARGET_N64

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
-#include "lib/src/libultra_internal.h"
+//#include "PR/os_internal.h"
 #include "macros.h"
 #include "platform.h"
 #include "fs/fs.h"
@@ -12,7 +12,6 @@
 #include <emscripten.h>
 #endif
 
-extern OSMgrArgs piMgrArgs;
 s32 gNumVblanks;
 u64 osClockRate = 62500000;
 

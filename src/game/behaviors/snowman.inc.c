@@ -52,16 +52,9 @@ void adjust_rolling_face_pitch(f32 f12) {
 }
 
 void snowmans_bottom_act_1(void) {
-    UNUSED s16 collisionFlags;
-    s32 followStatus;
-#ifdef AVOID_UB
-    followStatus = 0;
-#endif
-
     o->oPathedStartWaypoint = segmented_to_virtual(&ccm_seg7_trajectory_snowman);
-    collisionFlags = object_step_without_floor_orient();
-    //! Uninitialized parameter, but the parameter is unused in the called function
-    followStatus = cur_obj_follow_path(followStatus);
+    object_step_without_floor_orient();
+    s32 followStatus = cur_obj_follow_path();
     o->oSnowmansBottomUnkF8 = o->oPathedTargetYaw;
     o->oMoveAngleYaw = approach_s16_symmetric(o->oMoveAngleYaw, o->oSnowmansBottomUnkF8, 0x400);
 
@@ -140,13 +133,13 @@ void bhv_snowmans_bottom_loop(void) {
         case 1:
             snowmans_bottom_act_1();
             adjust_rolling_face_pitch(o->oSnowmansBottomScale);
-            cur_obj_play_sound_1(SOUND_ENV_UNKNOWN2);
+            cur_obj_play_sound_1(SOUND_ENV_BOWLING_BALL_ROLL);
             break;
 
         case 2:
             snowmans_bottom_act_2();
             adjust_rolling_face_pitch(o->oSnowmansBottomScale);
-            cur_obj_play_sound_1(SOUND_ENV_UNKNOWN2);
+            cur_obj_play_sound_1(SOUND_ENV_BOWLING_BALL_ROLL);
             break;
 
         case 3:
@@ -166,7 +159,7 @@ void bhv_snowmans_bottom_loop(void) {
 
 void bhv_snowmans_head_init(void) {
     u8 starFlags = save_file_get_star_flags(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum));
-    s8 sp36 = (o->oBhvParams >> 24) & 0xFF;
+    u8 bhvParams = (o->oBhvParams >> 24) & 0xFF;
 
     cur_obj_scale(0.7f);
 
@@ -174,7 +167,7 @@ void bhv_snowmans_head_init(void) {
     o->oFriction = 0.999f;
     o->oBuoyancy = 2.0f;
 
-    if ((starFlags & (1 << sp36)) && gCurrActNum != sp36 + 1) {
+    if ((starFlags & (1 << bhvParams)) && gCurrActNum != bhvParams + 1) {
         spawn_object_abs_with_rot(o, 0, MODEL_CCM_SNOWMAN_BASE, bhvBigSnowmanWhole, -4230, -1344, 1813,
                                   0, 0, 0);
         o->oPosX = -4230.0f;

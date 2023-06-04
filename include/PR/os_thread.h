@@ -16,6 +16,8 @@
 #define OS_STATE_RUNNING    4
 #define OS_STATE_WAITING    8
 
+#if defined(_LANGUAGE_C) || defined(_LANGUAGE_C_PLUS_PLUS)
+
 /* Types */
 
 typedef s32 OSPri;
@@ -64,12 +66,14 @@ typedef struct OSThread_s
 
 /* Functions */
 
-void osCreateThread(OSThread *thread, OSId id, void (*entry)(void *),
-    void *arg, void *sp, OSPri pri);
-OSId osGetThreadId(OSThread *thread);
-OSPri osGetThreadPri(OSThread *thread);
-void osSetThreadPri(OSThread *thread, OSPri pri);
-void osStartThread(OSThread *thread);
-void osStopThread(OSThread *thread);
+void osCreateThread(OSThread *, OSId, void (*)(void *), void *, void *, OSPri);
+void osYieldThread(void);
+OSId osGetThreadId(OSThread *);
+OSPri osGetThreadPri(OSThread *);
+void osSetThreadPri(OSThread *, OSPri);
+void osStartThread(OSThread *);
+void osStopThread(OSThread *);
+
+#endif
 
 #endif

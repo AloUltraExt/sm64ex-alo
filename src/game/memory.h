@@ -3,6 +3,7 @@
 
 #include <PR/ultratypes.h>
 
+#include "platform_info.h"
 #include "types.h"
 
 #define MEMORY_POOL_LEFT  0
@@ -12,13 +13,13 @@
 #ifdef TARGET_N64
 #define GFX_POOL_SIZE 0x2000 // originally 0x1900
 #else
-    
-#define GFX_POOL_SIZE_STATIC (0x2000 * 0x400)
+
+#define GFX_POOL_SIZE_FIXED DOUBLE_SIZE_ON_64_BIT(0x4000)
 
 #ifdef USE_SYSTEM_MALLOC
 #define GFX_POOL_SIZE 1
 #else
-#define GFX_POOL_SIZE GFX_POOL_SIZE_STATIC
+#define GFX_POOL_SIZE GFX_POOL_SIZE_FIXED
 #endif
 
 #endif
@@ -97,7 +98,11 @@ void load_engine_code_segment(void);
 
 #ifdef USE_SYSTEM_MALLOC
 #include <stdlib.h>
+#ifdef __APPLE__
+// No malloc on mac
+#else
 #include <malloc.h>
+#endif
 
 struct AllocOnlyPool *alloc_only_pool_init(void);
 void alloc_only_pool_clear(struct AllocOnlyPool *pool);

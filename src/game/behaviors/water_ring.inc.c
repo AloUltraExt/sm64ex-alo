@@ -16,7 +16,7 @@ void water_ring_init(void) {
     o->oWaterRingScalePhaseY = (s32)(random_float() * 4096.0f) + 0x1000;
     o->oWaterRingScalePhaseZ = (s32)(random_float() * 4096.0f) + 0x1000;
 
-#if QOL_FIX_WATER_RING
+#if FIX_WATER_RING_POSITION
     o->oWaterRingNormalX = sins(o->oFaceAngleYaw)   * sins(o->oFaceAngleRoll);
     o->oWaterRingNormalY = coss(o->oFaceAnglePitch) * coss(o->oFaceAngleRoll);
     o->oWaterRingNormalZ = coss(o->oFaceAngleYaw)   * sins(o->oFaceAnglePitch);
