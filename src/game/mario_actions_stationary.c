@@ -1067,13 +1067,13 @@ s32 act_ground_pound_land(struct MarioState *m) {
 }
 
 s32 act_first_person(struct MarioState *m) {
-    s32 sp1C = (m->input & (INPUT_OFF_FLOOR | INPUT_ABOVE_SLIDE | INPUT_STOMPED)) != 0;
+    s32 exitInput = (m->input & (INPUT_OFF_FLOOR | INPUT_ABOVE_SLIDE | INPUT_STOMPED)) != 0;
 
     if (m->actionState == 0) {
         lower_background_noise(2);
         set_camera_mode(m->area->camera, CAMERA_MODE_C_UP, 0x10);
         m->actionState = 1;
-    } else if (!(m->input & INPUT_FIRST_PERSON) || sp1C) {
+    } else if (!(m->input & INPUT_FIRST_PERSON) || exitInput) {
         raise_background_noise(2);
         // Go back to the last camera mode
         set_camera_mode(m->area->camera, -1, 1);
@@ -1082,10 +1082,10 @@ s32 act_first_person(struct MarioState *m) {
 
     if (m->floor->type == SURFACE_LOOK_UP_WARP
         && save_file_get_total_star_count(gCurrSaveFileNum - 1, COURSE_MIN - 1, COURSE_MAX - 1) >= WING_CAP_WARP_STAR_REQ) {
-        s16 sp1A = m->statusForCamera->headRotation[0];
-        s16 sp18 = ((m->statusForCamera->headRotation[1] * 4) / 3) + m->faceAngle[1];
-        if (sp1A == -0x1800 && (sp18 < -0x6FFF || sp18 >= 0x7000)) {
-            level_trigger_warp(m, WARP_OP_UNKNOWN_01);
+        s16 rotX = m->statusForCamera->headRotation[0];
+        s16 rotY = ((m->statusForCamera->headRotation[1] * 4) / 3) + m->faceAngle[1];
+        if (rotX == -0x1800 && (rotY <= -0x7000 || rotY >= 0x7000)) {
+            level_trigger_warp(m, WARP_OP_LOOK_UP);
         }
     }
 

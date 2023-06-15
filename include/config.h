@@ -17,8 +17,8 @@
 #define BUGFIX_MAX_LIVES (0 || VERSION_US || VERSION_EU || VERSION_SH || QOL_FIXES)
 /// Fixes bug where the Boss music won't fade out after defeating King Bob-omb
 #define BUGFIX_KING_BOB_OMB_FADE_MUSIC (0 || VERSION_US || VERSION_EU || VERSION_SH || QOL_FIXES)
-/// Fixes bug in Bob-omb Battlefield where entering a warp stops the Koopa race music
-#define BUGFIX_KOOPA_RACE_MUSIC ((0 || VERSION_US || VERSION_EU || VERSION_SH || QOL_FIXES) && VANILLA_CHECKS)
+/// Fixes bug where entering a warp on the same area overrides any non background music on a course
+#define BUGFIX_SAME_AREA_WARP_MUSIC ((0 || VERSION_US || VERSION_EU || VERSION_SH || QOL_FIXES) && VANILLA_CHECKS)
 /// Fixes bug where Piranha Plants do not reset their action state when the
 /// player exits their activation radius.
 #define BUGFIX_PIRANHA_PLANT_STATE_RESET (0 || VERSION_US || VERSION_EU || VERSION_SH || QOL_FIXES)
