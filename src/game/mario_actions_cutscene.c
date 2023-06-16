@@ -864,7 +864,7 @@ s32 act_unlocking_key_door(struct MarioState *m) {
     m->pos[2] = m->usedObj->oPosZ + sins(m->faceAngle[1]) * 75.0f;
 #endif
 
-    if (m->actionArg & 2) {
+    if (m->actionArg & WARP_FLAG_DOOR_FLIP_MARIO) {
         m->faceAngle[1] += 0x8000;
     }
 
@@ -904,7 +904,7 @@ s32 act_unlocking_star_door(struct MarioState *m) {
     switch (m->actionState) {
         case 0:
             m->faceAngle[1] = m->usedObj->oMoveAngleYaw;
-            if (m->actionArg & 2) {
+            if (m->actionArg & WARP_FLAG_DOOR_FLIP_MARIO) {
                 m->faceAngle[1] += 0x8000;
             }
             m->marioObj->oMarioReadingSignDPosX = m->pos[0];
@@ -951,7 +951,7 @@ s32 act_entering_star_door(struct MarioState *m) {
 
         // ~30 degrees / 1/12 rot
         targetAngle = m->usedObj->oMoveAngleYaw + 0x1555;
-        if (m->actionArg & 2) {
+        if (m->actionArg & WARP_FLAG_DOOR_FLIP_MARIO) {
             targetAngle += 0x5556; // ~120 degrees / 1/3 rot (total 150d / 5/12)
         }
 
@@ -983,7 +983,7 @@ s32 act_entering_star_door(struct MarioState *m) {
     else {
         m->faceAngle[1] = m->usedObj->oMoveAngleYaw;
 
-        if (m->actionArg & 2) {
+        if (m->actionArg & WARP_FLAG_DOOR_FLIP_MARIO) {
             m->faceAngle[1] += 0x8000;
         }
 
@@ -1004,7 +1004,7 @@ s32 act_entering_star_door(struct MarioState *m) {
 
 s32 act_going_through_door(struct MarioState *m) {
     if (m->actionTimer == 0) {
-        if (m->actionArg & 1) {
+        if (m->actionArg & WARP_FLAG_DOOR_PULLED) {
             m->interactObj->oInteractStatus = INT_STATUS_UNK16;
             set_mario_animation(m, MARIO_ANIM_PULL_DOOR_WALK_IN);
         } else {
@@ -1019,12 +1019,12 @@ s32 act_going_through_door(struct MarioState *m) {
     update_mario_pos_for_anim(m);
     stop_and_set_height_to_floor(m);
 
-    if (m->actionArg & 4) {
+    if (m->actionArg & WARP_FLAG_DOOR_IS_WARP) {
         if (m->actionTimer == 16) {
             level_trigger_warp(m, WARP_OP_WARP_DOOR);
         }
     } else if (is_anim_at_end(m)) {
-        if (m->actionArg & 2) {
+        if (m->actionArg & WARP_FLAG_DOOR_FLIP_MARIO) {
             m->faceAngle[1] += 0x8000;
         }
         set_mario_action(m, ACT_IDLE, 0);
@@ -1037,7 +1037,7 @@ s32 act_going_through_door(struct MarioState *m) {
 s32 act_warp_door_spawn(struct MarioState *m) {
     if (m->actionState == 0) {
         m->actionState = 1;
-        if (m->actionArg & 1) {
+        if (m->actionArg & WARP_FLAG_DOOR_PULLED) {
             m->usedObj->oInteractStatus = INT_STATUS_UNK18;
         } else {
             m->usedObj->oInteractStatus = INT_STATUS_UNK19;
@@ -1055,21 +1055,28 @@ s32 act_warp_door_spawn(struct MarioState *m) {
 }
 
 s32 act_emerge_from_pipe(struct MarioState *m) {
-    struct Object *marioObj = m->marioObj;
-
     if (m->actionTimer++ < 11) {
-        marioObj->header.gfx.node.flags &= ~GRAPH_RENDER_ACTIVE;
+        m->marioObj->header.gfx.node.flags &= ~GRAPH_RENDER_ACTIVE;
         return FALSE;
     }
 
-    marioObj->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
+    m->marioObj->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
 
     play_sound_if_no_flag(m, SOUND_MARIO_YAHOO, MARIO_MARIO_SOUND_PLAYED);
 
+#if VANILLA_CHECKS
     if (gCurrLevelNum == LEVEL_THI) {
         if (gCurrAreaIndex == 2) {
             play_sound_if_no_flag(m, SOUND_MENU_EXIT_PIPE, MARIO_ACTION_SOUND_PLAYED);
         } else {
+            play_sound_if_no_flag(m, SOUND_MENU_ENTER_PIPE, MARIO_ACTION_SOUND_PLAYED);
+        }
+    } else
+#endif
+    // ex-alo change
+    // makes pipe sound play if we actually used a warp pipe
+    {
+        if (obj_has_behavior(m->interactObj, bhvWarpPipe)) {
             play_sound_if_no_flag(m, SOUND_MENU_ENTER_PIPE, MARIO_ACTION_SOUND_PLAYED);
         }
     }
@@ -1465,7 +1472,7 @@ s32 act_bbh_enter_spin(struct MarioState *m) {
             mario_set_forward_vel(m, forwardVel);
             m->flags &= ~MARIO_UNKNOWN_08;
             if (perform_air_step(m, 0) == AIR_STEP_LANDED) {
-                level_trigger_warp(m, WARP_OP_UNKNOWN_02);
+                level_trigger_warp(m, WARP_OP_SPIN_SHRINK);
 #ifdef RUMBLE_FEEDBACK
                 queue_rumble_data(15, 80);
 #endif
