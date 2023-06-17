@@ -84,7 +84,7 @@ static void opt_debug_warp_0(UNUSED struct Option *self, s32 arg) {
 static void opt_debug_warp_1(UNUSED struct Option *self, s32 arg) {
     if (!arg) {
         force_quit_pause_debug();
-        // ensure medium water level in WDW credits cutscene
+        // Ensure medium water level in WDW credits cutscene
         gPaintingMarioYEntry = 1500.0f;
         // Define credits sequence (if not then crashes)
         if (gCurrCreditsEntry == NULL) {
@@ -149,12 +149,12 @@ void activate_complex_debug_display(void) {
     }
 }
 
-void set_debug_free_move_action(struct MarioState *m) {    
+void set_debug_free_move_action(struct MarioState *m) {
     if (m->action == ACT_DEBUG_FREE_MOVE) {
         if (m->controller->buttonPressed & L_TRIG) {
             DebugOpt.FreeMoveActFlags ^= ACT_DEBUG_STATE_CHECK_FLOOR;
         }
-    
+
         if (m->controller->buttonPressed & R_TRIG) {
             DebugOpt.FreeMoveActFlags ^= ACT_DEBUG_STATE_CHECK_CEIL;
         }
@@ -227,9 +227,11 @@ void set_debug_main_action(void) {
     if (DebugOpt.ShowFps) {
         debug_calculate_and_print_fps();
     }
-    
-    if (DebugOpt.CompleteSave) {
+
+    // Ensure we aren't on pause menu and update star hud
+    if (DebugOpt.CompleteSave && gMenuMode == -1) {
         get_complete_save_file(gCurrSaveFileNum);
+        gMarioState->numStars = save_file_get_total_star_count(gCurrSaveFileNum - 1, COURSE_MIN - 1, COURSE_MAX - 1);
     }
 }
 
