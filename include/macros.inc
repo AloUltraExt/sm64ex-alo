@@ -4,11 +4,19 @@
 #undef _LANGUAGE_C
 #endif
 
+// macOS seems to use a different macro scheme, thanks Apple
 #if defined(__APPLE__)
 .macro .section label
     \label
 .endm
+
+.macro .global label
+    .globl \label
+.endm
+
 #endif
+
+// Underscore needed for these targets
 #if defined(__APPLE__) || (defined(__MINGW32__) && !defined(__MINGW64__))
 #    define cdecl(s) _##s
 #else
