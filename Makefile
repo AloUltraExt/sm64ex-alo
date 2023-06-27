@@ -104,10 +104,6 @@ ifneq ($(shell which termux-setup-storage 2>/dev/null),)
   endif
 endif
 
-ifeq ($(COMPILER_TYPE),clang)
-  CPP_ASSEMBLY := 1
-endif
-
 ifeq ($(TARGET_N64),0)
   GRUCODE := f3dex2e
   PC_PORT_DEFINES := 1
@@ -152,6 +148,15 @@ ifeq ($(TARGET_ANDROID),1)
   CONTROLLER_API := SDL2
 
   TOUCH_CONTROLS := 1
+endif
+
+# Enforce C preprocessor on these targets
+ifeq ($(COMPILER_TYPE),clang)
+  CPP_ASSEMBLY := 1
+endif
+
+ifeq ($(TARGET_PORT_CONSOLE),1)
+  CPP_ASSEMBLY := 1
 endif
 
 # Custom Defines
@@ -493,7 +498,10 @@ RPI_MODEL_NAME ?= Raspberry Pi
 # Raspberry Pi 2 and 3 in ARM 32bit mode
   ifneq (,$(findstring armv7l,$(machine)))
     model = $(shell sh -c 'cat /sys/firmware/devicetree/base/model 2>/dev/null || echo unknown')
-    ifneq (,$(findstring 3,$(model)))
+    ifneq (,$(findstring 4,$(model)))
+      OPT_FLAGS := -march=armv8-a+crc+simd -mtune=cortex-a53 -mfpu=neon-fp-armv8 -O3
+      RPI_MODEL_NAME := Raspberry Pi 4
+    else ifneq (,$(findstring 3,$(model)))
       OPT_FLAGS := -march=armv8-a+crc -mtune=cortex-a53 -mfpu=neon-fp-armv8 -O3
       RPI_MODEL_NAME := Raspberry Pi 3
     else
@@ -502,7 +510,7 @@ RPI_MODEL_NAME ?= Raspberry Pi
     endif
   endif
 
-# RPi3 or RPi4, in ARM64 (aarch64) mode. NEEDS TESTING 32BIT.
+# RPi3 or RPi4, in ARM64 (aarch64) mode.
 # DO NOT pass -mfpu stuff here, thats for 32bit ARM only and will fail for 64bit ARM.
   ifneq (,$(findstring aarch64,$(machine)))
     model = $(shell sh -c 'cat /sys/firmware/devicetree/base/model 2>/dev/null || echo unknown')
@@ -512,6 +520,9 @@ RPI_MODEL_NAME ?= Raspberry Pi
     else ifneq (,$(findstring 4,$(model)))
       OPT_FLAGS := -march=armv8-a+crc+simd -mtune=cortex-a72 -O3
       RPI_MODEL_NAME := Raspberry Pi 4
+    else
+      OPT_FLAGS := -march=armv8-a+crc -mtune=cortex-a53 -O3
+      RPI_MODEL_NAME := Raspberry Pi ARMv8
     endif
   endif
 endif
@@ -894,11 +905,10 @@ else
 # for some reason sdl-config in dka64 is not prefixed, while pkg-config is
 SDLCROSS ?= $(CROSS)
 
-AS := $(CROSS)as
+AS ?= $(CROSS)as
 
-ifeq ($(OSX_BUILD),1)
-  # cross assembler required for '00_sound_player.s'
-  AS := i686-w64-mingw32-as
+ifeq ($(OSX_BUILD),1) # As in, not using macOS
+  AS := /usr/bin/as
 endif
 
 ifneq ($(TARGET_WEB),1) # As in, not-web PC port
@@ -909,6 +919,7 @@ else
   CXX := emcc
 endif
 
+AS_MINGW := i686-w64-mingw32-as
 LD := $(CXX)
 
 ifeq ($(DISCORDRPC),1)
@@ -1071,7 +1082,11 @@ ifeq ($(TARGET_SWITCH),1)
 endif
 
 ifeq ($(CPP_ASSEMBLY),1)
-  ASFLAGS := $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(ASMDEFINES),--defsym $(d))
+  ASFLAGS := $(foreach i,$(INCLUDE_DIRS),-I$(i))
+  ASFLAGS_DEFSYM := $(foreach d,$(ASMDEFINES),--defsym $(d))
+  ifeq ($(OSX_BUILD),0)
+    ASFLAGS += $(ASFLAGS_DEFSYM)
+  endif
 else
   ASMFLAGS := $(DEF_INC_CFLAGS) -D_LANGUAGE_ASSEMBLY
 endif
@@ -1543,6 +1558,19 @@ $(SOUND_BIN_DIR)/%.m64: $(SOUND_BIN_DIR)/%.o
 	$(call print,Converting to M64:,$<,$@)
 	$(V)$(OBJCOPY) -j .rodata $< -O binary $@
 
+# Assemble 00_sound_player.s using mingw64 on macOS
+ifeq ($(OSX_BUILD),1)
+  ifeq ($(TARGET_PORT_CONSOLE),0)
+   ifneq ($(call find-command,i686-w64-mingw32-as),)
+$(SOUND_BIN_DIR)/sequences/%.o: sound/sequences/%.s
+	$(call print,Assembling:,$<,$@)
+	$(V)$(CPP) $(CPPFLAGS) -D_LANGUAGE_ASSEMBLY $< | $(AS_MINGW) $(ASFLAGS) $(ASFLAGS_DEFSYM) -MD $(BUILD_DIR)/$*.d -o $@
+    else
+      $(warning Compiling sequence file without mingw32 assembly)
+    endif
+  endif
+endif
+
 #==============================================================================#
 # Generated Source Code Files                                                  #
 #==============================================================================#
@@ -1626,7 +1654,7 @@ $(BUILD_DIR)/%.o: %.cpp
 $(BUILD_DIR)/%.o: %.s
 	$(call print,Assembling:,$<,$@)
 ifeq ($(CPP_ASSEMBLY),1)
-	$(V)$(CPP) $(CPPFLAGS) -D$(ULTRA_VER_STR) -D_LANGUAGE_ASSEMBLY $< | $(AS) $(ASFLAGS) -MD $(BUILD_DIR)/$*.d -o $@
+	$(V)$(CPP) $(CPPFLAGS) -D_LANGUAGE_ASSEMBLY $< | $(AS) $(ASFLAGS) -o $@
 else
 	$(V)$(CC) -c $(ASMFLAGS) -x assembler-with-cpp -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
 endif
@@ -1650,7 +1678,6 @@ endif
 #==============================================================================#
 
 ifeq ($(TARGET_N64),1)
-
 # Link libgcc
 $(BUILD_DIR)/libgcc.a: $(LIBGCC_O_FILES)
 	@$(PRINT) "$(GREEN)Linking libgcc:  $(BLUE)$@ $(NO_COL)\n"
