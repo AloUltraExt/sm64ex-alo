@@ -47,7 +47,6 @@
 #define BUGFIX_PRESERVE_VEL_POLE (0 || VERSION_SH || QOL_FIXES)
 
 // Other Settings
-#include "config/config_audio.h"
 #include "config/config_camera.h"
 #include "config/config_collision.h"
 #include "config/config_graphics.h"
@@ -55,6 +54,7 @@
 #include "config/config_movement.h"
 #include "config/config_n64.h"
 #include "config/config_objects.h"
+#include "config/config_sounds.h"
 
 // Screen Size Defines
 #define SCREEN_WIDTH 320

@@ -6,7 +6,7 @@
 #include "internal.h"
 #include "types.h"
 #include "synthesis.h"
-#include "config.h"
+#include "config/config_audio.h"
 
 #define AUDIO_LOCK_UNINITIALIZED 0
 #define AUDIO_LOCK_NOT_LOADING 0x76557364

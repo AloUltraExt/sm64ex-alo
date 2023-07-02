@@ -4,6 +4,7 @@
 #include <ultra64.h>
 
 #include "types.h"
+#include "config/config_audio.h"
 
 #if defined(VERSION_EU) || defined(VERSION_SH)
 #define SEQUENCE_PLAYERS 4
@@ -14,7 +15,7 @@
 #define LAYERS_MAX       4
 #define CHANNELS_MAX     16
 
-#ifdef EXPAND_AUDIO_HEAP // Not technically on the heap but it's memory nonetheless...
+#if EXPAND_AUDIO_HEAP // Not technically on the heap but it's memory nonetheless...
 #define SEQUENCE_CHANNELS (SEQUENCE_PLAYERS * CHANNELS_MAX)
 #define SEQUENCE_LAYERS ((SEQUENCE_CHANNELS * LAYERS_MAX) / 2) // This should be more than plenty in nearly all circumstances.
 #else // EXPAND_AUDIO_HEAP
