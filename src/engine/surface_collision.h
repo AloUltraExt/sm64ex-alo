@@ -75,7 +75,7 @@ s32 find_water_level_and_floor(s32 x, s32 z, struct Surface **pfloor);
 f32 find_water_level(f32 x, f32 z);
 f32 find_poison_gas_level(f32 x, f32 z);
 void debug_surface_list_info(f32 xPos, f32 zPos);
-void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Vec3f hit_pos, s32 flags);
+f32 find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Vec3f hit_pos, s32 flags);
 void find_surface_on_ray_between_points(Vec3f pos1, Vec3f pos2, struct Surface **hit_surface, Vec3f hit_pos, s32 flags);
 void raycast_collision_walls(Vec3f pos, Vec3f intendedPos, f32 yOffset);
 

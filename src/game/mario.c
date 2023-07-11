@@ -1484,25 +1484,11 @@ void update_mario_inputs(struct MarioState *m) {
     update_mario_geometry_inputs(m);
 
     debug_print_speed_action_normal(m);
-
 #ifdef CHEATS_ACTIONS
     cheats_mario_inputs(m);
 #endif
-
 #ifdef BETTERCAMERA
-    if (gPuppyCam.enabled && (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE && gPuppyCam.debugFlags & PUPPYDEBUG_LOCK_CONTROLS)) {
-        m->input = INPUT_FIRST_PERSON;
-    }
-    
-    if (gPuppyCam.enabled && (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ENTER_FIRST_PERSON) 
-        && (gPuppyCam.options.inputType == PUPPYCAM_INPUT_TYPE_CLASSIC)) {
-        m->input |= INPUT_FIRST_PERSON;
-    } else if (!gPuppyCam.enabled || gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC) {
-        if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_IN) {
-            gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ZOOMED_MED;
-            gPuppyCam.mode3Flags &= ~(PUPPYCAM_MODE3_ZOOMED_IN | PUPPYCAM_MODE3_ENTER_FIRST_PERSON);
-        }
-    }
+    puppycam_mario_inputs(m);
 #endif
 
     if (gCameraMovementFlags & CAM_MOVE_C_UP_MODE) {

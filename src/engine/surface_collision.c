@@ -1142,7 +1142,6 @@ void debug_surface_list_info(f32 xPos, f32 zPos) {
  *                    RAYCASTING                  *
  **************************************************/
 
-#define RAY_OFFSET 30.0f /* How many units to extrapolate surfaces when testing for a raycast */
 #define RAY_STEPS      4 /* How many steps to do when casting rays, default to quartersteps.  */
 
 s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface *surface, Vec3f hit_pos, f32 *length)
@@ -1161,18 +1160,6 @@ s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface 
     vec3s_to_vec3f(v0, surface->vertex1);
     vec3s_to_vec3f(v1, surface->vertex2);
     vec3s_to_vec3f(v2, surface->vertex3);
-
-    // Get surface normal and extend it by RAY_OFFSET.
-    Vec3f norm;
-    norm[0] = surface->normal.x;
-    norm[1] = surface->normal.y;
-    norm[2] = surface->normal.z;
-    vec3_mul_val(norm, RAY_OFFSET);
-
-    // Move the face forward by RAY_OFFSET.
-    vec3f_add(v0, norm);
-    vec3f_add(v1, norm);
-    vec3f_add(v2, norm);
 
     // Make 'e1' (edge 1) the vector from vertex 0 to vertex 1.
     Vec3f e1;
@@ -1277,7 +1264,7 @@ void find_surface_on_ray_cell(s32 cellX, s32 cellZ, Vec3f orig, Vec3f normalized
     }
 }
 
-void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Vec3f hit_pos, s32 flags) {
+f32 find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Vec3f hit_pos, s32 flags) {
     Vec3f normalized_dir;
     f32 step;
     s32 i;
@@ -1304,7 +1291,7 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
     // Don't do DDA if straight down
     if ((normalized_dir[1] >= NEAR_ONE) || (normalized_dir[1] <= -NEAR_ONE)) {
         find_surface_on_ray_cell(cellX, cellZ, orig, normalized_dir, dir_length, hit_surface, hit_pos, &max_length, flags);
-        return;
+        return max_length;
     }
 
     // Get cells we cross using DDA
@@ -1335,6 +1322,7 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
             find_surface_on_ray_cell(cellPrevX, cellZ, orig, normalized_dir, dir_length, hit_surface, hit_pos, &max_length, flags);
         }
     }
+    return max_length;
 }
 
 void find_surface_on_ray_between_points(Vec3f pos1, Vec3f pos2, struct Surface **hit_surface, Vec3f hit_pos, s32 flags) {

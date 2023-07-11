@@ -78,11 +78,11 @@ typedef struct {
 #endif
     bool invertX;
     bool invertY;
+    bool helper;
+    bool opaque;
     unsigned int sensX;
     unsigned int sensY;
-    unsigned int aggression;
-    unsigned int scheme;
-    unsigned int opacity;
+    unsigned int input;
     bool debug;
 } ConfigPuppyCam;
 

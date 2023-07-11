@@ -705,9 +705,13 @@ void spline_get_weights(Vec4f result, f32 t, UNUSED s32 c);
 void anim_spline_init(Vec4s *keyFrames);
 s32  anim_spline_poll(Vec3f result);
 // Misc
-s16 lenght_sins(s16 length, s16 direction);
-s16 lenght_coss(s16 length, s16 direction);
+s16 length_sins(s16 length, s16 direction);
+s16 length_coss(s16 length, s16 direction);
 float smooth_step(float edge0, float edge1, float x);
 float soft_clamp(float x, float a, float b);
+
+ALWAYS_INLINE f32 remap(f32 x, f32 fromA, f32 toA, f32 fromB, f32 toB) {
+    return (x - fromA) / (toA - fromA) * (toB - fromB) + fromB;
+}
 
 #endif // MATH_UTIL_H

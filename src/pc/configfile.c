@@ -123,11 +123,11 @@ ConfigPuppyCam configPuppyCam = {
 #endif
     .invertX = true,
     .invertY = true,
-    .sensX = 100,
-    .sensY = 100,
-    .aggression = 50,
-    .scheme = 0, // PUPPYCAM_INPUT_TYPE_DOUBLE_TAB
-    .opacity = 1, // PUPPYCAM_OPACITY_TYPE_FADE
+    .sensX = 5,
+    .sensY = 5,
+    .helper = true,
+    .opaque = true,
+    .input = 0, // PUPPYCAM_INPUT_TYPE_DOUBLE_TAB
     .debug = false,
 };
 #endif
@@ -194,9 +194,9 @@ static const struct ConfigOption options[] = {
     {.name = "bettercam_inverty",    .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.invertY},
     {.name = "bettercam_xsens",      .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.sensX},
     {.name = "bettercam_ysens",      .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.sensY},
-    {.name = "bettercam_aggression", .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.aggression},
-    {.name = "bettercam_scheme",     .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.scheme},
-    {.name = "bettercam_opacity",    .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.opacity},
+    {.name = "bettercam_turnhelper", .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.helper},
+    {.name = "bettercam_opaque",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.opaque},
+    {.name = "bettercam_inputtype",  .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.input},
     {.name = "bettercam_debug",      .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.debug},
 #endif
 };

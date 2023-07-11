@@ -1623,10 +1623,10 @@ s32 anim_spline_poll(Vec3f result) {
     return hasEnded;
 }
 
-s16 lenght_sins(s16 length, s16 direction) {
+s16 length_sins(s16 length, s16 direction) {
     return (length * sins(direction));
 }
-s16 lenght_coss(s16 length, s16 direction) {
+s16 length_coss(s16 length, s16 direction) {
     return (length * coss(direction));
 }
 
