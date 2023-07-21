@@ -883,6 +883,16 @@ void cur_obj_update(void) {
     BhvCommandProc bhvCmdProc;
     s32 bhvProcResult;
 
+    s32 inRoom = cur_obj_is_mario_in_room();
+
+#if PROCESS_ONLY_ON_ROOM_PARENT
+    // Activates objects only if is inside a room associated with it.
+    if (inRoom == MARIO_OUTSIDE_ROOM && (objFlags & OBJ_FLAG_ONLY_PROCESS_INSIDE_ROOM)) {
+        cur_obj_disable_rendering_in_room();
+        return;
+    }
+#endif
+
     // Calculate the distance from the object to Mario.
     if (objFlags & OBJ_FLAG_COMPUTE_DIST_TO_MARIO) {
         gCurrentObject->oDistanceToMario = dist_between_objects(gCurrentObject, gMarioObject);
@@ -969,7 +979,23 @@ void cur_obj_update(void) {
     // Handle visibility of object
     if (gCurrentObject->oRoom != -1) {
         // If the object is in a room, only show it when Mario is in the room.
-        cur_obj_enable_rendering_if_mario_in_room();
+#ifndef NODRAWINGDISTANCE
+        if ((objFlags & OBJ_FLAG_ACTIVE_FROM_AFAR)|| distanceFromMario < gCurrentObject->oDrawingDistance)
+#endif
+        {
+            if (inRoom == MARIO_OUTSIDE_ROOM) {
+                cur_obj_disable_rendering_in_room();
+            } else if (inRoom == MARIO_INSIDE_ROOM) {
+                cur_obj_enable_rendering_in_room();
+            }
+            gCurrentObject->activeFlags &= ~ACTIVE_FLAG_FAR_AWAY;
+        }
+#ifndef NODRAWINGDISTANCE
+        else {
+            gCurrentObject->header.gfx.node.flags &= ~GRAPH_RENDER_ACTIVE;
+            gCurrentObject->activeFlags |= ACTIVE_FLAG_FAR_AWAY;
+        }
+#endif
     } else if ((objFlags & OBJ_FLAG_COMPUTE_DIST_TO_MARIO) && gCurrentObject->collisionData == NULL) {
         if (!(objFlags & OBJ_FLAG_ACTIVE_FROM_AFAR)) {
             // If the object has a render distance, check if it should be shown.

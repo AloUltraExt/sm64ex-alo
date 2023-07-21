@@ -8,8 +8,7 @@ void star_door_update_pos(void) {
 }
 
 void bhv_star_door_loop(void) {
-    UNUSED u8 filler[4];
-    struct Object *sp18 = cur_obj_nearest_object_with_behavior(bhvStarDoor);
+    struct Object *doorObj = cur_obj_nearest_object_with_behavior(bhvStarDoor);
 
     switch (o->oAction) {
         case 0:
@@ -17,7 +16,7 @@ void bhv_star_door_loop(void) {
             if (o->oInteractStatus & (INT_STATUS_UNK16 | INT_STATUS_UNK17)) {
                 o->oAction = 1;
             }
-            if (sp18 != NULL && sp18->oAction != 0) {
+            if (doorObj != NULL && doorObj->oAction != 0) {
                 o->oAction = 1;
             }
             break;
@@ -65,8 +64,8 @@ void bhv_star_door_loop(void) {
     if (o->oAction != 2) {
         load_object_collision_model();
     }
-    
-    bhv_star_door_loop_2();
+
+    bhv_door_rendering_loop();
 #endif
 
 }

@@ -69,6 +69,7 @@ f32 find_static_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
 f32 find_dynamic_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
 f32 find_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
 f32 find_room_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
+s32 get_room_at_pos(f32 x, f32 y, f32 z);
 #if WATER_SURFACES
 s32 find_water_level_and_floor(s32 x, s32 z, struct Surface **pfloor);
 #endif

@@ -48,11 +48,17 @@
 #define OBJ_FLAG_DONT_CALC_COLL_DIST              (0 << 0)
 #endif
 #if OBJ_OPACITY_BY_CAM_DIST
-#define OBJ_FLAG_OPACITY_FROM_CAMERA_DIST         (1 << 21) // 0x00010000
+#define OBJ_FLAG_OPACITY_FROM_CAMERA_DIST         (1 << 21) // 0x00200000
 #else
 #define OBJ_FLAG_OPACITY_FROM_CAMERA_DIST         (0 << 0)
 #endif
-#define OBJ_FLAG_30                               (1 << 30) // 0x40000000
+#if PROCESS_ONLY_ON_ROOM_PARENT
+#define OBJ_FLAG_ONLY_PROCESS_INSIDE_ROOM         (1 << 23) // 0x00800000
+#else
+#define OBJ_FLAG_ONLY_PROCESS_INSIDE_ROOM         (0 << 0)
+#endif
+
+#define OBJ_FLAG_HITBOX_WAS_SET                   (1 << 30) // 0x40000000
 
 /* oHeldState */
 #define HELD_FREE    0

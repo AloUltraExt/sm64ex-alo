@@ -428,10 +428,10 @@
 #define /*0x0F4*/ oDonutPlatformSpawnerSpawnedPlatforms OBJECT_FIELD_S32(0x1B)
 
 /* Door */
-#define /*0x088*/ oDoorUnk88  OBJECT_FIELD_S32(0x00)
-#define /*0x0F8*/ oDoorUnkF8  OBJECT_FIELD_S32(0x1C)
-#define /*0x0FC*/ oDoorUnkFC  OBJECT_FIELD_S32(0x1D)
-#define /*0x100*/ oDoorUnk100 OBJECT_FIELD_S32(0x1E)
+#define /*0x088*/ oDoorIsRendering  OBJECT_FIELD_S32(0x00)
+#define /*0x0F8*/ oDoorSelfRoom     OBJECT_FIELD_S32(0x1C)
+#define /*0x0FC*/ oDoorForwardRoom  OBJECT_FIELD_S32(0x1D)
+#define /*0x100*/ oDoorBackwardRoom OBJECT_FIELD_S32(0x1E)
 
 /* Dorrie */
 #define /*0x0F4*/ oDorrieDistToHome         OBJECT_FIELD_F32(0x1B)

@@ -872,6 +872,23 @@ f32 find_room_floor(f32 x, f32 y, f32 z, struct Surface **pfloor) {
     return find_static_floor(x, y, z, pfloor);
 }
 
+/**
+ * Get the room index at a given position.
+ */
+s32 get_room_at_pos(f32 x, f32 y, f32 z) {
+    if (gCurrentArea->surfaceRooms != NULL) {
+        struct Surface *floor;
+
+        find_room_floor(x, y, z, &floor);
+
+        if (floor != NULL) {
+            return floor->room;
+        }
+    }
+
+    return -1;
+}
+
 #if WATER_SURFACES
 /**
  * Find the highest water floor under a given position and return the height.

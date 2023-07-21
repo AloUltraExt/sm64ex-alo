@@ -67,9 +67,7 @@ void bhv_door_loop(void) {
     switch (o->oAction) {
         case 0:
             cur_obj_init_animation_with_sound(0);
-#if FIX_STAR_DOOR_ROOM_RENDER
             load_object_collision_model();
-#endif
             break;
         case 1:
             door_animation_and_reset(1);
@@ -89,85 +87,75 @@ void bhv_door_loop(void) {
             break;
     }
 
-#if !FIX_STAR_DOOR_ROOM_RENDER
-    if (o->oAction == 0) {
-        load_object_collision_model();
-    }
-#endif
-
-    bhv_star_door_loop_2();
+    bhv_door_rendering_loop();
 }
 
 #if BETTER_ROOM_CHECKS
-#define FIND_FLOOR_DOOR find_room_floor
+#define GET_ROOM_DOOR(x, y, z, r) r = get_room_at_pos(x, y, z);
 #else
-#define FIND_FLOOR_DOOR find_floor
+#define GET_ROOM_DOOR(x, y, z, r)      \
+    find_room_floor(x, y, z, &floor);  \
+    if (floor != NULL) r = floor->room;
 #endif
 
 void bhv_door_init(void) {
+    const f32 checkDist = 200.0f;
+
+#if !BETTER_ROOM_CHECKS
     struct Surface *floor;
+#endif
+
     f32 x = o->oPosX;
     f32 y = o->oPosY;
     f32 z = o->oPosZ;
 
-    FIND_FLOOR_DOOR(x, y, z, &floor);
-    if (floor != NULL) {
-        o->oDoorUnkF8 = floor->room;
-    }
+    GET_ROOM_DOOR(x, y, z, o->oDoorSelfRoom);
 
-    x = o->oPosX + sins(o->oMoveAngleYaw) * 200.0f;
-    z = o->oPosZ + coss(o->oMoveAngleYaw) * 200.0f;
-    FIND_FLOOR_DOOR(x, y, z, &floor);
-    if (floor != NULL) {
-        o->oDoorUnkFC = floor->room;
-    }
+    x = o->oPosX + sins(o->oMoveAngleYaw) * checkDist;
+    z = o->oPosZ + coss(o->oMoveAngleYaw) * checkDist;
 
-    x = o->oPosX + sins(o->oMoveAngleYaw) * -200.0f;
-    z = o->oPosZ + coss(o->oMoveAngleYaw) * -200.0f;
-    FIND_FLOOR_DOOR(x, y, z, &floor);
-    if (floor != NULL) {
-        o->oDoorUnk100 = floor->room;
-    }
+    GET_ROOM_DOOR(x, y, z, o->oDoorForwardRoom);
 
-    if (o->oDoorUnkF8 > 0 && o->oDoorUnkF8 < 60) {
-        gDoorAdjacentRooms[o->oDoorUnkF8][0] = o->oDoorUnkFC;
-        gDoorAdjacentRooms[o->oDoorUnkF8][1] = o->oDoorUnk100;
+    x = o->oPosX + sins(o->oMoveAngleYaw) * -checkDist;
+    z = o->oPosZ + coss(o->oMoveAngleYaw) * -checkDist;
+
+    GET_ROOM_DOOR(x, y, z, o->oDoorBackwardRoom);
+
+    if (
+        // Ensure the room number is in bounds.
+        o->oDoorSelfRoom > 0 && o->oDoorSelfRoom < ARRAY_COUNT(gDoorAdjacentRooms)
+#if !BETTER_ROOM_CHECKS
+        // Only set gDoorAdjacentRooms for transition rooms.
+        && o->oDoorSelfRoom    != o->oDoorForwardRoom
+        && o->oDoorSelfRoom    != o->oDoorBackwardRoom
+        && o->oDoorForwardRoom != o->oDoorBackwardRoom
+#endif
+    ) {
+        gDoorAdjacentRooms[o->oDoorSelfRoom].forwardRoom  = o->oDoorForwardRoom;
+        gDoorAdjacentRooms[o->oDoorSelfRoom].backwardRoom = o->oDoorBackwardRoom;
     }
 }
 
-#undef FIND_FLOOR_DOOR
+#undef GET_ROOM_DOOR
 
-void bhv_star_door_loop_2(void) {
-    s32 sp4 = FALSE;
+void bhv_door_rendering_loop(void) {
+    struct TransitionRoomData* transitionRoom = &gDoorAdjacentRooms[gMarioCurrentRoom];
 
-    if (gMarioCurrentRoom != 0) {
-        if (o->oDoorUnkF8 == gMarioCurrentRoom) {
-            sp4 = TRUE;
-        } else if (gMarioCurrentRoom == o->oDoorUnkFC) {
-            sp4 = TRUE;
-        } else if (gMarioCurrentRoom == o->oDoorUnk100) {
-            sp4 = TRUE;
-        } else if (gDoorAdjacentRooms[gMarioCurrentRoom][0] == o->oDoorUnkFC) {
-            sp4 = TRUE;
-        } else if (gDoorAdjacentRooms[gMarioCurrentRoom][0] == o->oDoorUnk100) {
-            sp4 = TRUE;
-        } else if (gDoorAdjacentRooms[gMarioCurrentRoom][1] == o->oDoorUnkFC) {
-            sp4 = TRUE;
-        } else if (gDoorAdjacentRooms[gMarioCurrentRoom][1] == o->oDoorUnk100) {
-            sp4 = TRUE;
-        }
-    } else {
-        sp4 = TRUE;
-    }
+    o->oDoorIsRendering = (
+        gMarioCurrentRoom            == 0                    || // Mario is in the "global" room.
+        gMarioCurrentRoom            == o->oDoorSelfRoom     || // Mario is in the same room as the door.
+        gMarioCurrentRoom            == o->oDoorForwardRoom  || // Mario is in the door's  forward room.
+        gMarioCurrentRoom            == o->oDoorBackwardRoom || // Mario is in the door's backward room.
+        transitionRoom->forwardRoom  == o->oDoorForwardRoom  || // The transition room's  forward room is in the same room as this door's  forward room.
+        transitionRoom->forwardRoom  == o->oDoorBackwardRoom || // The transition room's  forward room is in the same room as this door's backward room.
+        transitionRoom->backwardRoom == o->oDoorForwardRoom  || // The transition room's backward room is in the same room as this door's  forward room.
+        transitionRoom->backwardRoom == o->oDoorBackwardRoom    // The transition room's backward room is in the same room as this door's backward room.
+    );
 
-    if (sp4 == TRUE) {
+    if (o->oDoorIsRendering) {
         o->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
-        D_8035FEE4++;
-    }
-
-    if (!sp4) {
+        gNumDoorRenderCount++;
+    } else {
         o->header.gfx.node.flags &= ~GRAPH_RENDER_ACTIVE;
     }
-
-    o->oDoorUnk88 = sp4;
 }
