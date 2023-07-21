@@ -220,6 +220,12 @@ ALIGNED8 static const Texture texture_hud_char_beta_key[] = {
 ALIGNED8 const Texture texture_hud_char_puppycam[] = {
 #include "textures/segment2/custom/tex_puppycam_icon.rgba16.inc.c"
 };
+
+#ifdef MOUSE_ACTIONS
+ALIGNED8 const Texture texture_hud_char_mouse_small[] = {
+#include "textures/segment2/custom/tex_mouse_small.rgba16.inc.c"
+};
+#endif
 #endif
 
 #if !CREDITS_TEXT_STRING_FONT

@@ -120,11 +120,12 @@ ConfigPuppyCam configPuppyCam = {
     .analog = false,
 #ifdef MOUSE_ACTIONS
     .mouse = false,
+    .mouseSpeed = 15,
 #endif
     .invertX = true,
     .invertY = true,
-    .sensX = 5,
-    .sensY = 5,
+    .sensX = 50,
+    .sensY = 50,
     .helper = true,
     .opaque = true,
     .input = 0, // PUPPYCAM_INPUT_TYPE_DOUBLE_TAB
@@ -188,7 +189,8 @@ static const struct ConfigOption options[] = {
     {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.enable},  
     {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.analog},
     #ifdef MOUSE_ACTIONS
-    {.name = "bettercam_mouse_look", .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.mouse},
+    {.name = "bettercam_mouse_look",  .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.mouse},
+    {.name = "bettercam_mouse_speed", .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.mouseSpeed},
     #endif
     {.name = "bettercam_invertx",    .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.invertX},
     {.name = "bettercam_inverty",    .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.invertY},

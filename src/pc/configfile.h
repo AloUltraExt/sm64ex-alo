@@ -75,6 +75,7 @@ typedef struct {
     bool analog;
 #ifdef MOUSE_ACTIONS
     bool mouse;
+    unsigned int mouseSpeed;
 #endif
     bool invertX;
     bool invertY;

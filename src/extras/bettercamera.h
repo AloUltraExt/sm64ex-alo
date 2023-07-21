@@ -65,15 +65,24 @@ extern struct SubMenu menuPuppyCam;
 
 struct gPuppyOptions
 {
-    s16 analogue;
-    s16 sensitivityX;
-    s16 sensitivityY;
-    s16 invertX;
-    s16 invertY;
-    s16 turnHelper;
-    s16 opaque;
-    s16 inputType;
-    s16 debugCam;
+    // Schemes and Types
+    s16 inputType;              // Sets camera input control type (Single tap, Double Tap and Classic).
+    s16 analogue;               // Sets analogue camera (Uses right stick on PC but on N64 uses stick on a second controller).
+#ifdef MOUSE_ACTIONS
+    s16 mouse;                  // Sets camera mouse control if the target supports it.
+#endif
+#ifdef EXT_DEBUG_MENU
+    s16 debugCam;               // Sets debug free camera mode.
+#endif
+    s16 sensitivityX;           // Sets camera speed horizontally.
+    s16 sensitivityY;           // Sets camera speed vertically.
+#ifdef MOUSE_ACTIONS
+    s16 mouseSpeed;             // Sets mouse camera speed.
+#endif
+    s16 invertX;                // Sets camera inverted controls horizontally.
+    s16 invertY;                // Sets camera inverted controls vertically.
+    s16 turnHelper;             // Sets camera centering around Mario automatically.
+    s16 opaque;                 // Sets Mario opacity when the camera is closer.
 };
 
 struct gPuppyStruct
@@ -127,7 +136,7 @@ struct gPuppyStruct
     f32 splineProgress;         // Determines how far along the index the spline is.
 
 #ifdef MOUSE_ACTIONS
-    u8  mouse;                  // A boolean that decides whenever mouse should be used if the port target supports it.
+    s32 framesSinceMouse;       // Counts the number of frames since the camera mouse stops moving.
 #endif
     struct gPuppyOptions options;
 
