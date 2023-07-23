@@ -1,11 +1,9 @@
 #ifndef CONFIG_H
-
 #define CONFIG_H
 
 /**
  * @file config.h
- * A catch-all file for configuring various bugfixes and other settings
- * (maybe eventually) in SM64
+ * A catch-all file for configuring various bugfixes and other settings in SM64.
  */
 
 // QOL Defines
@@ -39,7 +37,7 @@
 /// Fixes bug that causes Wiggle to read a garbage health value when it gets loaded
 #define BUGFIX_WIGGLER_HEALTH (0 || VERSION_EU || AVOID_UB || QOL_FIXES)
 // --| Shindou Version Nintendo Bug Fixes
-/// Fixes bug where bully could still be interacted while he dies 
+/// Fixes bug where bully could still be interacted while he dies
 #define BUGFIX_BULLY_NO_INTERACT_DEATH (0 || VERSION_SH || QOL_FIXES)
 /// Fixes bug where standing a controllable platform in HMC be invisible while it blinks
 #define BUGFIX_HMC_VISIBLE_CONTROL_PLATFORM (0 || VERSION_SH || QOL_FIXES)

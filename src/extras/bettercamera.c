@@ -61,8 +61,8 @@ ConfigPuppyCam configPuppyCam = {
     .mouse = FALSE,
     .mouseSpeed = 15,
 #endif
-    .invertX = TRUE,
-    .invertY = TRUE,
+    .invertX = FALSE,
+    .invertY = FALSE,
     .sensX = 50,
     .sensY = 50,
     .helper = TRUE,
@@ -127,7 +127,6 @@ static struct Option optsPuppyCam[] = {
 };
 
 struct SubMenu menuPuppyCam = DEF_SUBMENU( optsPuppyCamStr[0], optsPuppyCam );
-
 
 void puppycam_default_config(void) {
     gPuppyCam.enabled = configPuppyCam.enable;
@@ -486,7 +485,6 @@ static void puppycam_input_hold_preset2(f32 ivX) {
 
 // Another alternative control scheme. This one aims to mimic the parallel camera scheme down to the last bit from the original game.
 static void puppycam_input_hold_preset3(f32 ivX) {
-    f32 stickMag[2] = { gPlayer1Controller->rawStickX * 0.65f, gPlayer1Controller->rawStickY * 0.2f };
     // Just in case it happens to be nonzero.
     gPuppyCam.yawAcceleration = 0;
 
@@ -578,6 +576,7 @@ static void puppycam_input_hold(void) {
     f32 ivY = ((gPuppyCam.options.invertY * 2) - 1);
     s8 stickMag[2] = { 100, 100 };
 
+#ifdef EXT_DEBUG_MENU
     if (gPuppyCam.options.debugCam) {
         gPuppyCam.flags = PUPPYCAM_BEHAVIOUR_FREE | PUPPYCAM_BEHAVIOUR_YAW_ROTATION | PUPPYCAM_BEHAVIOUR_PITCH_ROTATION;
 #ifdef MOUSE_ACTIONS
@@ -588,6 +587,7 @@ static void puppycam_input_hold(void) {
     } else {
         gPuppyCam.flags &= ~PUPPYCAM_BEHAVIOUR_FREE;
     }
+#endif
 
     // Analogue Camera stuff. If it fails to find an input, then it just sets stickmag to 100, which after calculations means the value goes unchanged.
     if (gPuppyCam.options.analogue && gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC) {
@@ -630,8 +630,7 @@ static void puppycam_input_hold(void) {
 }
 
 // Handles C Button inputs for modes that have pressed inputs, rather than held.
-static void puppycam_input_press(void)
-{
+static void puppycam_input_press(void) {
     s8 stickMag = 0;
 
     // Analogue Camera stuff. If it fails to find an input, then it just sets stickmag to 100, which after calculations means the value goes unchanged.
@@ -1122,8 +1121,7 @@ static void puppycam_vanilla_actions(void) {
 //void puppycam_shake(s16 x, s16 y, s16 z) {
 //}
 
-static void puppycam_analogue_stick(void)
-{
+static void puppycam_analogue_stick(void) {
     if (!gPuppyCam.options.analogue)
         return;
 
@@ -1397,7 +1395,6 @@ static void puppycam_collision(void) {
             }
         }
     }
-
 
     puppycam_opacity(dirToCam, target[0]);
 }
