@@ -804,7 +804,7 @@ static f32 get_optimal_collision_distance(struct Object *obj) {
 }
 #endif
 
-TerrainData sDynamicVertices[900];
+static TerrainData sDynamicVertices[600];
 
 /**
  * Transform an object's vertices, reload them, and render the object.
@@ -814,12 +814,12 @@ void load_object_collision_model(void) {
 
     TerrainData *collisionData = obj->collisionData;
 
+#if AUTO_COLLISION_DISTANCE
     f32 sqrLateralDist;
     vec3f_get_lateral_dist_squared(&obj->oPosX, &gMarioObject->oPosX, &sqrLateralDist);
 
     f32 verticalMarioDiff = (gMarioObject->oPosY - obj->oPosY);
 
-#if AUTO_COLLISION_DISTANCE
     f32 colDist;
     if (collisionData == NULL) {
         // No collision data, so no collision distance.
@@ -851,11 +851,20 @@ void load_object_collision_model(void) {
         drawDist = colDist;
     }
 
+    f32 marioDist = obj->oDistanceToMario;
+
+    int isInit = (marioDist == F32_MAX);
+
+#if AUTO_COLLISION_DISTANCE
+    // A value higher than 500.0f causes crashes with surfaces
     s32 inColRadius = (
            (sqrLateralDist < sqr(colDist))
         && (verticalMarioDiff > 0 || verticalMarioDiff > -colDist)
-        && (verticalMarioDiff < 0 || verticalMarioDiff < (colDist + 2000.0f))
+        && (verticalMarioDiff < 0 || verticalMarioDiff < (colDist + 500.0f))
     );
+#else
+    s32 inColRadius = (marioDist < colDist);
+#endif
 
     // Update if no Time Stop, in range, and in the current room.
     if (!(gTimeStopState & TIME_STOP_ACTIVE) && inColRadius
@@ -869,11 +878,9 @@ void load_object_collision_model(void) {
         }
     }
 
-    f32 marioDist = obj->oDistanceToMario;
-
     // On an object's first frame, the distance is set to F32_MAX.
     // If the distance hasn't been updated, update it now.
-    if (marioDist == F32_MAX) {
+    if (isInit) {
         marioDist = dist_between_objects(obj, gMarioObject);
     }
 
