@@ -524,11 +524,11 @@ u16 *intro_sample_framebuffer(s32 imageW, s32 imageH, s32 sampleW, s32 sampleH) 
     s32 xOffset = 120;
     s32 yOffset = 80;
 
-#ifdef TARGET_N64
+//#ifdef TARGET_N64
     fb = sFramebuffers[sRenderingFramebuffer];
-#else
-    fb = get_framebuffer();
-#endif
+//#else
+//    fb = get_framebuffer();
+//#endif
 
     image = alloc_display_list(imageW * imageH * sizeof(u16));
 

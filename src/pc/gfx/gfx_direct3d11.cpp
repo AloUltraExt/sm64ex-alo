@@ -1,4 +1,4 @@
-#ifdef RAPI_D3D11
+#if 0
 
 #include <cstdio>
 #include <vector>

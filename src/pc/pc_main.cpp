@@ -10,31 +10,41 @@
 #include <sys/stat.h>
 #endif
 
+extern "C" {
 #include "sm64.h"
 
 #include "game/memory.h"
 #include "game/sound_init.h"
 #include "audio/external.h"
+}
 
 #include "gfx/gfx_pc.h"
 
+#if 0
+extern "C" {
+#endif
 #include "gfx/gfx_opengl.h"
-#include "gfx/gfx_direct3d11.h"
-#include "gfx/gfx_direct3d12.h"
-#include "gfx/gfx_dxgi.h"
+//#include "gfx/gfx_direct3d11.h"
+//#include "gfx/gfx_direct3d12.h"
+//#include "gfx/gfx_dxgi.h"
 #include "gfx/gfx_sdl.h"
-#include "gfx/gfx_gx2.h"
-#include "gfx/gfx_3ds.h"
-#include "gfx/gfx_citro3d.h"
-#include "gfx/gfx_dummy.h"
+//#include "gfx/gfx_gx2.h"
+//#include "gfx/gfx_3ds.h"
+//#include "gfx/gfx_citro3d.h"
+//#include "gfx/gfx_dummy.h"
+#if 0
+}
+#endif
 
-#include "audio/audio_api.h"
+extern "C" {
+//#include "audio/audio_api.h"
 #include "audio/audio_sdl.h"
 #include "audio/audio_null.h"
-#include "audio/audio_3ds.h"
-#include "audio/audio_3ds_threading.h"
+//#include "audio/audio_3ds.h"
+//#include "audio/audio_3ds_threading.h"
 
 #include "pc_main.h"
+
 
 #ifdef COMMAND_LINE_OPTIONS
 #include "cliopts.h"
@@ -59,6 +69,7 @@
 #ifdef DISCORDRPC
 #include "pc/discord/discordrpc.h"
 #endif
+}
 
 OSMesg gMainReceivedMesg;
 OSMesgQueue gSIEventMesgQueue;
@@ -74,9 +85,12 @@ static struct GfxWindowManagerAPI *wm_api;
 static struct GfxRenderingAPI *rendering_api;
 
 extern void gfx_run(Gfx *commands);
+
+extern "C" {
 extern void thread5_game_loop(void *arg);
 extern void create_next_audio_buffer(s16 *samples, u32 num_samples);
 void game_loop_one_iteration(void);
+}
 
 void dispatch_audio_sptask(UNUSED struct SPTask *spTask) {
 }
@@ -171,7 +185,7 @@ void game_deinit(void) {
     discord_shutdown();
 #endif
     configfile_save(configfile_name());
-#if defined(TARGET_SWITCH) || !defined(TARGET_PORT_CONSOLE)
+#if 0
     controller_shutdown();
     audio_shutdown();
     gfx_shutdown();
@@ -180,12 +194,13 @@ void game_deinit(void) {
 }
 
 void game_exit(void) {
-#if defined(TARGET_SWITCH) || !defined(TARGET_PORT_CONSOLE)
-    game_deinit();
-#ifndef TARGET_WEB
+//#if defined(TARGET_SWITCH) || !defined(TARGET_PORT_CONSOLE)
+//    game_deinit();
+//#ifndef TARGET_WEB
+//    exit(0);
+//#endif
+//#endif
     exit(0);
-#endif
-#endif
 }
 
 #ifdef TARGET_WEB
@@ -360,10 +375,10 @@ void main_func(void) {
     #endif
 
     char window_title[96] =
-    "Super Mario 64 EX (" RAPI_NAME ")"
+    "Super Mario 64 EX"
     ;
 
-    gfx_init(wm_api, rendering_api, window_title);
+    gfx_init(wm_api, rendering_api, window_title, 0, configWindow.w, configWindow.h);
     #ifndef TARGET_PORT_CONSOLE
     wm_api->set_keyboard_callbacks(keyboard_on_key_down, keyboard_on_key_up, keyboard_on_all_keys_up);
     #endif
@@ -429,6 +444,7 @@ void main_func(void) {
 #endif
 }
 
+/**
 #ifdef TARGET_PORT_CONSOLE
 int main(UNUSED int argc, UNUSED char *argv[]) {
 #ifdef TARGET_SWITCH
@@ -451,3 +467,14 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 #endif
+ */
+
+extern "C"
+{
+	int main(int argc, char* argv[]);
+}
+
+int main(int argc, char *argv[]) {
+    main_func();
+    return 0;
+}

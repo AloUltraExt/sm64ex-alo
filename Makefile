@@ -1648,7 +1648,7 @@ $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
 # Compile C++ code
 $(BUILD_DIR)/%.o: %.cpp
 	$(call print,Compiling:,$<,$@)
-	$(V)$(CXX) -c $(CFLAGS) -D_LANGUAGE_C_PLUS_PLUS=1 $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
+	$(V)$(CXX) -c $(CFLAGS) -std=c++20 -D_LANGUAGE_C_PLUS_PLUS=1 $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
 
 # Assemble assembly code
 $(BUILD_DIR)/%.o: %.s

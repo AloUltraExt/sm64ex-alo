@@ -101,7 +101,8 @@ ifeq ($(TARGET_PORT_CONSOLE),0)
 
   # Check for Mouse Option (no DirectX yet)
   ifneq ($(WINDOW_API),DXGI)
-    CUSTOM_C_DEFINES += -DMOUSE_ACTIONS
+    # Broken for now
+    # CUSTOM_C_DEFINES += -DMOUSE_ACTIONS
   endif
 
   # Check for Discord Rich Presence option

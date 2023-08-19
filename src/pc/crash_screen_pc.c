@@ -1,7 +1,7 @@
 // Adapted from PeachyPeach's sm64ex-omm
 // Note: Only works on Windows
 
-#if defined(_WIN32) && !defined(WAPI_DUMMY)
+#if 0
 #ifdef HAVE_SDL2
 #include <SDL2/SDL.h>
 #endif

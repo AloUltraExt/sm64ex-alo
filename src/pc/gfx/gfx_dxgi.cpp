@@ -1,4 +1,4 @@
-#ifdef WAPI_DXGI
+#if 0
 
 #include <stdint.h>
 #include <math.h>
