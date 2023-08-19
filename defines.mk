@@ -102,9 +102,9 @@ endif
 ifeq ($(TARGET_PORT_CONSOLE),0)
 
   # Check for Mouse Option
-  ifeq ($(MOUSE_ACTIONS),1)
-    CUSTOM_C_DEFINES += -DMOUSE_ACTIONS
-  endif
+  #ifeq ($(MOUSE_ACTIONS),1)
+  #  CUSTOM_C_DEFINES += -DMOUSE_ACTIONS
+  #endif
 
   # Check for Discord Rich Presence option
   ifeq ($(DISCORDRPC),1)

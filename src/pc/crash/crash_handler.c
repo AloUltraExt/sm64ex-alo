@@ -11,7 +11,7 @@
 #define ENABLE_CRASH_HANDLER
 #endif
 
-#if (defined(_WIN32) || defined(__linux__)) && !defined(WAPI_DUMMY) && defined(ENABLE_CRASH_HANDLER)
+#if 0
 #ifdef HAVE_SDL2
 #include <SDL2/SDL.h>
 #endif
