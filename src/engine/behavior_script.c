@@ -971,9 +971,15 @@ void cur_obj_update(void) {
 #endif
 
     // ex-alo change
-    // Ensure the object is allocated to set default drawing distance
-    if (gCurrentObject->activeFlags & ACTIVE_FLAG_ALLOCATED && gCurrentObject->collisionData == NULL) {
-        if (gCurrentObject->oDrawingDistance == 0.0f) gCurrentObject->oDrawingDistance = 4000.0f;
+    // Ensure the object is allocated to set default collision and drawing distance
+    // in case that they were still not set at this point.
+    if (gCurrentObject->activeFlags & ACTIVE_FLAG_ALLOCATED) {
+        // Works for static and dynamic collision.
+        if (gCurrentObject->collisionData != NULL) {
+            if (gCurrentObject->oCollisionDistance == 0.0f) { gCurrentObject->oCollisionDistance = 1000.0f; }
+        }
+        // Prevent an always invisible object.
+        if (gCurrentObject->oDrawingDistance == 0.0f) { gCurrentObject->oDrawingDistance = 4000.0f; }
     }
 
     // Handle visibility of object
