@@ -974,7 +974,7 @@ void cur_obj_update(void) {
     // Ensure the object is allocated to set default collision and drawing distance
     // in case that they were still not set at this point.
     if (gCurrentObject->activeFlags & ACTIVE_FLAG_ALLOCATED) {
-        // Works for static and dynamic collision.
+        // This is for static collision since dynamic collision has different checks.
         if (gCurrentObject->collisionData != NULL) {
             if (gCurrentObject->oCollisionDistance == 0.0f) { gCurrentObject->oCollisionDistance = 1000.0f; }
         }
