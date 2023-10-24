@@ -157,7 +157,7 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
 }
 
 s32 check_kick_or_dive_in_air(struct MarioState *m) {
-#ifdef EASIER_JUMP_KICKS 
+#if EASIER_JUMP_KICKS 
     float directionFactor = (MAX(-1.0f, MIN(1.0f, sqrtf(2) * coss(m->faceAngle[1] - m->intendedYaw))));
     float intendedMagFactor = MIN(32.f, m->intendedMag * sqrtf(2)) / (32.0f);
     float velocityThreshhold = 38.0f - directionFactor * intendedMagFactor * 10.0f;
@@ -483,15 +483,6 @@ u32 common_air_action_step(struct MarioState *m, u32 landAction, s32 animation, 
 }
 
 s32 act_jump(struct MarioState *m) {
-#if EASIER_LONG_JUMPS
-    if (m->actionTimer < 1) {
-        m->actionTimer++;
-        if (m->input & INPUT_Z_PRESSED && m->forwardVel > 10.0f) {
-            return set_jumping_action(m, ACT_LONG_JUMP, 0);
-        }
-    }
-#endif
-
     if (check_kick_or_dive_in_air(m)) {
         return TRUE;
     }
@@ -2178,7 +2169,7 @@ s32 check_common_airborne_cancels(struct MarioState *m) {
 }
 
 s32 mario_execute_airborne_action(struct MarioState *m) {
-    u32 cancel = FALSE;
+    s32 cancel = FALSE;
 
     if (check_common_airborne_cancels(m)) {
         return TRUE;
