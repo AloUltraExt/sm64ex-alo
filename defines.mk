@@ -2,11 +2,11 @@
 # General Defines
 # --------------------------------------
 
-# Build debug version
+# Build debug version (1 simple debug compile, 2 max debug compile)
 DEBUG ?= 0
 # Enable extended options menu by default
 EXT_OPTIONS_MENU ?= 1
-# Enable debug options menu (Enabled if DEBUG=1)
+# Enable debug options menu (Enabled if DEBUG is not 0)
 EXT_DEBUG_MENU ?= 0
 # Enable better camera (Puppycam 2)
 BETTERCAMERA ?= 1
@@ -119,9 +119,14 @@ endif # !TARGET_PORT_CONSOLE
 endif # !TARGET_N64
 
 # Check for Debug option
-ifeq ($(DEBUG),1)
+ifneq ($(DEBUG),0)
+  ifeq ($(DEBUG),1)
+    COMPILER_OPT := debug
+  endif
+  ifeq ($(DEBUG),2)
+    COMPILER_OPT := debugmax
+  endif
   CUSTOM_C_DEFINES += -DDEBUG
-  COMPILER_OPT := debug
   EXT_DEBUG_MENU := 1
 endif
 

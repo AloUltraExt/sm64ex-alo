@@ -41,7 +41,7 @@ COMPILER_TYPE ?= gcc
 $(eval $(call validate-option,COMPILER_TYPE,gcc clang))
 
 COMPILER_OPT ?= default
-$(eval $(call validate-option,COMPILER_OPT,debug default fast))
+$(eval $(call validate-option,COMPILER_OPT,debug debugmax default fast))
 
 # Automatic target defines
 
@@ -473,6 +473,8 @@ else
     OPT_FLAGS := -O2
   else ifeq ($(COMPILER_OPT),debug)
     OPT_FLAGS := -g
+  else ifeq ($(COMPILER_OPT),debugmax)
+    OPT_FLAGS := -O2 -g3
   else ifeq ($(COMPILER_OPT),fast)
     OPT_FLAGS := -Ofast
   endif
@@ -1119,7 +1121,7 @@ else ifeq ($(WINDOWS_BUILD),1)
   ifeq ($(CROSS),)
     LDFLAGS += $(NO_PIE_DEF)
   endif
-  ifeq ($(COMPILER_OPT),debug)
+  ifneq ($(DEBUG),0)
     LDFLAGS += -mconsole
   endif
 
