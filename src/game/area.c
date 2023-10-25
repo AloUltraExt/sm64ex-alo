@@ -245,6 +245,16 @@ void load_area(s32 index) {
         main_pool_pop_state();
         main_pool_push_state();
 
+#if BETTER_ROOM_CHECKS
+        gMarioCurrentRoom = 0;
+#endif
+
+#if FIX_DOOR_NO_ROOM_VISIBLE
+        if (gCurrentArea->surfaceRooms != NULL) {
+            bzero(gDoorAdjacentRooms, sizeof(gDoorAdjacentRooms));
+        }
+#endif
+
         if (gCurrentArea->terrainData != NULL) {
             load_area_terrain(index, gCurrentArea->terrainData, gCurrentArea->surfaceRooms,
                               gCurrentArea->macroObjects);

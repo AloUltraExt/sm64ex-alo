@@ -124,7 +124,7 @@ void bhv_door_init(void) {
     if (
         // Ensure the room number is in bounds.
         o->oDoorSelfRoom > 0 && o->oDoorSelfRoom < ARRAY_COUNT(gDoorAdjacentRooms)
-#if !BETTER_ROOM_CHECKS
+#if !FIX_DOOR_NO_ROOM_VISIBLE
         // Only set gDoorAdjacentRooms for transition rooms.
         && o->oDoorSelfRoom    != o->oDoorForwardRoom
         && o->oDoorSelfRoom    != o->oDoorBackwardRoom
