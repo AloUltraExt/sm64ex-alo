@@ -684,7 +684,7 @@ void mtxf_billboard(Mat4 dest, Mat4 src, Vec3f position, Vec3f scale, s32 roll) 
 }
 
 /**
- * Same as mtxf_billboard, but minus the dest[1][n] lines. 
+ * Same as mtxf_billboard, but minus the dest[1][n] lines.
  * Transform for cylindrical billboards using src matrix.
  */
 void mtxf_cylboard(Mat4 dest, Mat4 src, Vec3f position, Vec3f scale, s32 roll) {
@@ -898,10 +898,10 @@ void mtx_set_float(Mtx *mtx, u32 index, f32 val) {
 }
 #endif
 
-#ifdef TARGET_N64 // Optimized function using MIPS optimized calls
+#ifdef TARGET_N64 // Optimized N64 function using MIPS optimized calls
 // Converts a floating point matrix to a fixed point matrix
 // Makes some assumptions about certain fields in the matrix, which will always be true for valid matrices.
-OPTIMIZE_OS ALIGNED32 void mtxf_to_mtx_fast_n64(s16* dst, float* src) {
+OPTIMIZE_OS ALIGNED32 void mtxf_to_mtx_n64(s16* dst, float* src) {
     int i;
 #if WORLD_SCALE > 1
     float scale = ((float)0x00010000 / WORLD_SCALE);
@@ -948,25 +948,24 @@ OPTIMIZE_OS ALIGNED32 void mtxf_to_mtx_fast_n64(s16* dst, float* src) {
     //  to set the top half.
     dst[15] = 1;
 }
-#else // Portable, any endianness
+#else // Portable, any target, any endianness
 #if WORLD_SCALE > 1
 /**
  * Modified into a hybrid of the original function and the worldscale altered function.
  * Will check if the worldscale is below what's considered safe in vanilla bounds and
  * just run the faster vanilla function, otherwise it'll run the slower, but safer scale
  * function, for extended boundaries.
- */                                                                           
+ */
 void mtxf_to_mtx_scale(Mtx *dest, Mat4 src) {
     Mat4 temp;
     register s32 i, j;
     for(i = 0; i < 4; i++) {
-          
         for(j = 0; j < 3; j++) {
             temp[i][j] = (src[i][j] / WORLD_SCALE);
         }
         temp[i][3] = src[i][3];
     }
-    guMtxF2L(temp, dest);          
+    guMtxF2L(temp, dest);
 }
 #endif
 
@@ -982,8 +981,8 @@ void mtxf_to_mtx_scale(Mtx *dest, Mat4 src) {
  */
 void mtxf_to_mtx(Mtx *dest, Mat4 src) {
 #ifdef TARGET_N64 // Optimized N64 function
-    mtxf_to_mtx_fast_n64((s16*)dest, (float*)src);
-#else // Portable
+    mtxf_to_mtx_n64((s16*)dest, (float*)src);
+#else // Portable, any target
 #if WORLD_SCALE > 1
     mtxf_to_mtx_scale(dest, src);
 #else
@@ -1040,8 +1039,8 @@ void create_transformation_from_matrices(Mat4 dst, Mat4 a1, Mat4 a2) {
     }
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 3; j++) {
-            dst[i][j] = (a1[i][0] * a2[j][0]) 
-                      + (a1[i][1] * a2[j][1]) 
+            dst[i][j] = (a1[i][0] * a2[j][0])
+                      + (a1[i][1] * a2[j][1])
                       + (a1[i][2] * a2[j][2]);
         }
     }
