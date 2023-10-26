@@ -606,7 +606,7 @@ else
 # Specify target folders
   PLATFORM_DIR := platform
 
-  SRC_DIRS += src/pc src/pc/gfx src/pc/audio src/pc/controller src/pc/fs src/pc/fs/packtypes
+  SRC_DIRS += src/pc src/pc/audio src/pc/controller src/pc/crash src/pc/fs src/pc/fs/packtypes src/pc/gfx
   ifeq ($(WINDOWS_BUILD),1)
     PLATFORM_DIR := $(PLATFORM_DIR)/win
   else ifeq ($(TARGET_N3DS),1)
@@ -1059,6 +1059,9 @@ else ifeq ($(TARGET_WEB),1)
 # Linux / Other builds below
 else
   CFLAGS := $(PLATFORM_CFLAGS) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -fwrapv
+  ifeq ($(TARGET_PORT_CONSOLE),0)
+    BACKEND_LDFLAGS += -rdynamic
+  endif
 endif
 
 ifeq ($(TARGET_WII_U),1)
@@ -1315,7 +1318,7 @@ ifeq ($(TARGET_N64),1)
   RSP_DIR := $(BUILD_DIR)/rsp
   $(BUILD_DIR)/lib/rsp.o: $(RSP_DIR)/rspboot.bin $(RSP_DIR)/fast3d.bin $(RSP_DIR)/audio.bin
 else
-  $(BUILD_DIR)/src/pc/crash_screen_pc.o: $(CRASH_TEXTURE_PC_C_FILES)
+  $(BUILD_DIR)/src/pc/crash/crash_handler.o: $(CRASH_TEXTURE_PC_C_FILES)
 endif
 
 SOUND_FILES := $(SOUND_BIN_DIR)/sound_data.ctl $(SOUND_BIN_DIR)/sound_data.tbl $(SOUND_BIN_DIR)/sequences.bin $(SOUND_BIN_DIR)/bank_sets
@@ -1840,8 +1843,8 @@ $(APK_SIGNED): $(APK)
 endif
 endif
 
-# For the crash handler on Windows
-ifeq ($(WINDOWS_BUILD),1)
+# For the crash handler on Windows and Linux
+ifeq ($(TARGET_PORT_CONSOLE),0)
 all: PC_EXE_MAP
 PC_EXE_MAP: $(EXE)
 	$(V)objdump -t $(EXE) > $(BUILD_DIR)/sm64pc.map
