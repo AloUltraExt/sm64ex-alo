@@ -3,7 +3,15 @@
 // Linux port by Isaac0-dev
 // Simplified dependencies by AloXado320
 
-#if (defined(_WIN32) || defined(__linux__)) && !defined(WAPI_DUMMY)
+#if defined(__x86_64__) || defined(_M_X64) // 64 bit
+#define ENABLE_CRASH_HANDLER
+#endif
+
+#if defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86) // 32 bit
+#define ENABLE_CRASH_HANDLER
+#endif
+
+#if (defined(_WIN32) || defined(__linux__)) && !defined(WAPI_DUMMY) && defined(ENABLE_CRASH_HANDLER)
 #ifdef HAVE_SDL2
 #include <SDL2/SDL.h>
 #endif
