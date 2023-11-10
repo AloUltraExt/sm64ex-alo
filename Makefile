@@ -345,6 +345,11 @@ else ifeq ($(TARGET_SWITCH),1)
   DEFINES += TARGET_SWITCH=1 USE_GLES=1
 endif
 
+# OpenGL defines
+ifeq ($(USE_GLES),1) # GLES can be used outside Raspberry Pi, Android or Switch
+  DEFINES += USE_GLES=1
+endif
+
 # Libultra defines
 LIBULTRA ?= L
 
@@ -956,8 +961,12 @@ else ifeq ($(findstring SDL,$(WINDOW_API)),SDL)
     BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(TARGET_SWITCH),1)
     BACKEND_LDFLAGS += -lGLESv2
+  else ifeq ($(USE_GLES),1)
+    BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(OSX_BUILD),1)
     BACKEND_LDFLAGS += -framework OpenGL $(shell pkg-config --libs glew)
+  else ifeq ($(USE_GLVND),1) # Link against modern OpenGL via GLVND instead of legacy GLX.
+    BACKEND_LDFLAGS += -lOpenGL
   else
     BACKEND_LDFLAGS += -lGL
   endif
