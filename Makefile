@@ -66,6 +66,9 @@ NO_BZERO_BCOPY ?= 0
 NO_LDIV ?= 0
 NO_PIE ?= 1
 
+# Use vendor-gnostic GLVND implementation, instead of the old/legacy GLX X11-only implementation.
+USE_GLVND ?= 0
+
 # Backend selection
 
 # Renders: GL, GL_LEGACY, D3D11, D3D12, GX2 (forced if the target is Wii U), C3D (forced if the target is 3DS)
@@ -345,6 +348,11 @@ else ifeq ($(TARGET_SWITCH),1)
   DEFINES += TARGET_SWITCH=1 USE_GLES=1
 endif
 
+# OpenGL defines
+ifeq ($(USE_GLES),1) # GLES can be used outside Raspberry Pi, Android or Switch
+  DEFINES += USE_GLES=1
+endif
+
 # Libultra defines
 LIBULTRA ?= L
 
@@ -488,45 +496,7 @@ ifeq ($(TARGET_WEB),1)
 endif
 
 ifeq ($(TARGET_RPI),1)
-RPI_MODEL_NAME ?= Raspberry Pi
-
-  machine = $(shell sh -c 'uname -m 2>/dev/null || echo unknown')
-# Raspberry Pi B+, Zero, etc
-  ifneq (,$(findstring armv6l,$(machine)))
-   OPT_FLAGS := -march=armv6zk+fp -mfpu=vfp -Ofast
-   RPI_MODEL_NAME := Raspberry Pi ARMv6
-  endif
-
-# Raspberry Pi 2 and 3 in ARM 32bit mode
-  ifneq (,$(findstring armv7l,$(machine)))
-    model = $(shell sh -c 'cat /sys/firmware/devicetree/base/model 2>/dev/null || echo unknown')
-    ifneq (,$(findstring 4,$(model)))
-      OPT_FLAGS := -march=armv8-a+crc+simd -mtune=cortex-a53 -mfpu=neon-fp-armv8 -O3
-      RPI_MODEL_NAME := Raspberry Pi 4
-    else ifneq (,$(findstring 3,$(model)))
-      OPT_FLAGS := -march=armv8-a+crc -mtune=cortex-a53 -mfpu=neon-fp-armv8 -O3
-      RPI_MODEL_NAME := Raspberry Pi 3
-    else
-      OPT_FLAGS := -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -O3
-      RPI_MODEL_NAME := Raspberry Pi 2
-    endif
-  endif
-
-# RPi3 or RPi4, in ARM64 (aarch64) mode.
-# DO NOT pass -mfpu stuff here, thats for 32bit ARM only and will fail for 64bit ARM.
-  ifneq (,$(findstring aarch64,$(machine)))
-    model = $(shell sh -c 'cat /sys/firmware/devicetree/base/model 2>/dev/null || echo unknown')
-    ifneq (,$(findstring 3,$(model)))
-      OPT_FLAGS := -march=armv8-a+crc -mtune=cortex-a53 -O3
-      RPI_MODEL_NAME := Raspberry Pi 3
-    else ifneq (,$(findstring 4,$(model)))
-      OPT_FLAGS := -march=armv8-a+crc+simd -mtune=cortex-a72 -O3
-      RPI_MODEL_NAME := Raspberry Pi 4
-    else
-      OPT_FLAGS := -march=armv8-a+crc -mtune=cortex-a53 -O3
-      RPI_MODEL_NAME := Raspberry Pi ARMv8
-    endif
-  endif
+  OPT_FLAGS := -O3 -march=native -mtune=native
 endif
 
 #==============================================================================#
@@ -582,7 +552,7 @@ else # Linux/Unix builds/binary namer
   else ifeq ($(HOST_OS),Haiku)
     TARGET_NAME := Haiku OS
   else ifeq ($(TARGET_RPI),1)
-    TARGET_NAME := $(RPI_MODEL_NAME)
+    TARGET_NAME := Raspberry Pi
   else
     TARGET_NAME := Linux-Unix system
   endif
@@ -994,8 +964,12 @@ else ifeq ($(findstring SDL,$(WINDOW_API)),SDL)
     BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(TARGET_SWITCH),1)
     BACKEND_LDFLAGS += -lGLESv2
+  else ifeq ($(USE_GLES),1)
+    BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(OSX_BUILD),1)
     BACKEND_LDFLAGS += -framework OpenGL $(shell pkg-config --libs glew)
+  else ifeq ($(USE_GLVND),1)
+    BACKEND_LDFLAGS += -lOpenGL
   else
     BACKEND_LDFLAGS += -lGL
   endif
