@@ -66,6 +66,9 @@ NO_BZERO_BCOPY ?= 0
 NO_LDIV ?= 0
 NO_PIE ?= 1
 
+# Use vendor-gnostic GLVND implementation, instead of the old/legacy GLX X11-only implementation.
+USE_GLVND ?= 0
+
 # Backend selection
 
 # Renders: GL, GL_LEGACY, D3D11, D3D12, GX2 (forced if the target is Wii U), C3D (forced if the target is 3DS)
@@ -965,7 +968,7 @@ else ifeq ($(findstring SDL,$(WINDOW_API)),SDL)
     BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(OSX_BUILD),1)
     BACKEND_LDFLAGS += -framework OpenGL $(shell pkg-config --libs glew)
-  else ifeq ($(USE_GLVND),1) # Link against modern OpenGL via GLVND instead of legacy GLX.
+  else ifeq ($(USE_GLVND),1)
     BACKEND_LDFLAGS += -lOpenGL
   else
     BACKEND_LDFLAGS += -lGL
