@@ -30,7 +30,11 @@
  * Workaround for running out of pool space due to
  * importing large custom content.
  */
-
+// Make Fast64 Shut Up About There Being No Extended Ram.
+/*
+#define USE_EXT_RAM
+#ifndef USE_EXT_RAM
+ */
 #define SEG_POOL_START   _framebuffersSegmentBssEnd
 
 #ifdef N64_USE_EXTENDED_RAM
