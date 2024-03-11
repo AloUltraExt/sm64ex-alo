@@ -7,6 +7,11 @@
 #endif
 
 #if FOR_WINDOWS
+unsigned int timeBeginPeriod(unsigned int uPeriod);
+unsigned int timeEndPeriod(unsigned int uPeriod);
+unsigned long GetPriorityClass(void* hProcess);
+unsigned long SetPriorityClass(void* hProcess, unsigned long dwPriorityClass);
+void Sleep(unsigned long ms);
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
@@ -171,6 +176,10 @@ static void gfx_sdl_reset_dimension_and_pos(void) {
 }
 
 static void gfx_sdl_init(const char *window_title) {
+#if FOR_WINDOWS
+    if (GetPriorityClass((void*)-1) == 0x20) SetPriorityClass((void*)-1, 0x8000);
+    timeBeginPeriod(1);
+#endif
     SDL_Init(SDL_INIT_VIDEO);
 
     #ifdef __ANDROID__
@@ -328,13 +337,13 @@ static void gfx_sdl_handle_events(void) {
                 break;
 #endif
 #ifdef TOUCH_CONTROLS
-	    case SDL_FINGERDOWN:
+        case SDL_FINGERDOWN:
                 gfx_sdl_fingerdown(event.tfinger);
                 break;
-	    case SDL_FINGERMOTION:
+        case SDL_FINGERMOTION:
                 gfx_sdl_fingermotion(event.tfinger);
                 break;
-	    case SDL_FINGERUP:
+        case SDL_FINGERUP:
                 gfx_sdl_fingerup(event.tfinger);
                 break;
 #endif
@@ -387,6 +396,26 @@ static bool gfx_sdl_start_frame(void) {
     return true;
 }
 
+#if FOR_WINDOWS
+static inline void sync_framerate_with_timer(void) {
+    // calculate how long it took for the frame to render
+    double now = SDL_GetPerformanceCounter();
+    double frame_length = now - frame_time;
+
+    // Only sleep if we have time to spare
+    while (frame_length < frame_rate) {
+        double remain = (frame_rate - frame_length) / perf_freq * 1000.0;
+        if (remain > 2.0) // > 2ms
+            Sleep(1); // sleep for ~1ms
+        else
+            Sleep(0); // yield thread's time-slice (does not actually sleep)
+
+        now = SDL_GetPerformanceCounter();
+        frame_length = now - frame_time;
+    }
+    frame_time = now;
+}
+#else
 static inline void sync_framerate_with_timer(void) {
     // calculate how long it took for the frame to render
     const double now = SDL_GetPerformanceCounter();
@@ -403,6 +432,7 @@ static inline void sync_framerate_with_timer(void) {
         frame_time = now;
     }
 }
+#endif
 
 static void gfx_sdl_swap_buffers_begin(void) {
     // Swap after we finished rendering, only if this frame wasn't dropped.
@@ -428,6 +458,9 @@ static void gfx_sdl_shutdown(void) {
         if (wnd) { SDL_DestroyWindow(wnd); wnd = NULL; }
         SDL_Quit();
     }
+#if FOR_WINDOWS
+    timeEndPeriod(1);
+#endif
 }
 
 struct GfxWindowManagerAPI gfx_sdl = {
