@@ -60,8 +60,8 @@
 
 #define TEXT_OPT_TEXFILTER _("TEXTURE FILTERING")
 #define TEXT_OPT_FSCREEN   _("FULLSCREEN")
-#define TEXT_OPT_NEAREST   _("NEAREST")
-#define TEXT_OPT_LINEAR    _("LINEAR")
+#define TEXT_OPT_DS        _("DS FILTERING")
+#define TEXT_OPT_N64       _("N64 FILTERING")
 #define TEXT_OPT_MVOLUME   _("MASTER VOLUME")
 #define TEXT_OPT_MUSVOLUME _("MUSIC VOLUME")
 #define TEXT_OPT_SFXVOLUME _("SFX VOLUME")
@@ -132,8 +132,8 @@
 
 #define TEXT_OPT_TEXFILTER _("Texture Filtering")
 #define TEXT_OPT_FSCREEN   _("Fullscreen")
-#define TEXT_OPT_NEAREST   _("Nearest")
-#define TEXT_OPT_LINEAR    _("Linear")
+#define TEXT_OPT_DS        _("DS FILTERING")
+#define TEXT_OPT_N64       _("N64 FILTERING")
 #define TEXT_OPT_MVOLUME   _("Master Volume")
 #define TEXT_OPT_MUSVOLUME _("Music Volume")
 #define TEXT_OPT_SFXVOLUME _("Sfx Volume")

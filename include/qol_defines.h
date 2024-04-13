@@ -21,7 +21,7 @@
 /// Adds improved platform displacement with intertia
 #define PLATFORM_DISPLACEMENT_2 (0 || QOL_REDONE)
 /// Uses optimized shadows which are faster than vanilla
-#define OPTIMIZED_SHADOWS (0 || QOL_REDONE)
+#define OPTIMIZED_SHADOWS (1 || QOL_REDONE)
 
 // --| Quality of life features
 /// Adds an extra Z button trig for some menu files (Originally defined in EU)
@@ -39,9 +39,9 @@
 /// Fixes complete coins not giving lives every 50 coins after 150 coins
 #define QOL_FIX_COMPLETE_COURSE_50_COINS (0 || QOL_FIXES)
 /// Fixes instant warp offset not working when warping across different areas
-#define QOL_FIX_INSTANT_WARP_OFFSET (0 || QOL_FIXES)
+#define QOL_FIX_INSTANT_WARP_OFFSET (1 || QOL_FIXES)
 /// Fixes pss slide value not being reset on exit
-#define QOL_FIX_RESET_PSS_SLIDE_STARTED (0 || QOL_FIXES)
+#define QOL_FIX_RESET_PSS_SLIDE_STARTED (1 || QOL_FIXES)
 
 // --| Unused Code Fixes (for convenience)
 /// Fixes (or rather removes) 0 yaw code in Beta Chest object
