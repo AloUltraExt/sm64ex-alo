@@ -85,8 +85,8 @@ const u8 optsCameraStr[][32] = {
 static const u8 optsVideoStr[][32] = {
     { TEXT_OPT_FSCREEN },
     { TEXT_OPT_TEXFILTER },
-    { TEXT_OPT_NEAREST },
-    { TEXT_OPT_LINEAR },
+    {  TEXT_OPT_DS },
+    {  TEXT_OPT_N64 },
     { TEXT_OPT_RESETWND },
     { TEXT_OPT_VSYNC },
     { TEXT_OPT_APPLY },
