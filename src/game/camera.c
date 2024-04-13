@@ -29,10 +29,6 @@
 #include "level_table.h"
 #include "pc/configfile.h"
 
-#ifdef BETTERCAMERA
-#include "extras/bettercamera.h"
-#endif
-
 #define CBUTTON_MASK (U_CBUTTONS | D_CBUTTONS | L_CBUTTONS | R_CBUTTONS)
 
 /**
@@ -3170,9 +3166,6 @@ void update_camera(struct Camera *c) {
     gCamera = c;
     update_camera_hud_status(c);
     if (c->cutscene == 0
-#ifdef BETTERCAMERA
-    && !gPuppyCam.enabled && !gCurrDemoInput && !(c->mode == CAMERA_MODE_INSIDE_CANNON) && !(c->mode == CAMERA_MODE_2_DIRECTIONS)
-#endif
     ) {
         // Only process R_TRIG if 'fixed' is not selected in the menu
         if (cam_select_alt_mode(0) == CAM_SELECTION_MARIO) {
@@ -3195,10 +3188,6 @@ void update_camera(struct Camera *c) {
         sStatusFlags |= CAM_FLAG_FRAME_AFTER_CAM_INIT;
     }
 
-#ifdef BETTERCAMERA
-    if (!gPuppyCam.enabled || gCurrDemoInput || c->cutscene != 0 
-        || c->mode == CAMERA_MODE_INSIDE_CANNON || c->mode == CAMERA_MODE_2_DIRECTIONS) {
-#endif
     update_mario_geometry_info(&sMarioGeometry);
     gCollisionFlags |= COLLISION_FLAG_CAMERA;
     vec3f_copy(c->pos, gLakituState.goalPos);
@@ -3370,19 +3359,12 @@ void update_camera(struct Camera *c) {
 #endif
         }
     }
-#ifdef BETTERCAMERA
-    }
-#endif
 
     // Start any Mario-related cutscenes
     start_cutscene(c, get_cutscene_from_mario_status(c));
     stub_camera_2(c);
     gCollisionFlags &= ~COLLISION_FLAG_CAMERA;
-    
-#ifdef BETTERCAMERA
-    if (!gPuppyCam.enabled || gCurrDemoInput || c->cutscene != 0 
-        || c->mode == CAMERA_MODE_INSIDE_CANNON || c->mode == CAMERA_MODE_2_DIRECTIONS) {
-#endif
+
     if (gCurrLevelNum != LEVEL_CASTLE) {
         // If fixed camera is selected as the alternate mode, then fix the camera as long as the right
         // trigger is held
@@ -3421,53 +3403,6 @@ void update_camera(struct Camera *c) {
 
     update_lakitu(c);
 
-#ifdef BETTERCAMERA
-    }
-    puppycam_default_config(); // load bettercam settings from config vars
-
-    // Just a cute little bit that syncs puppycamera up to vanilla when playing a vanilla cutscene :3
-    if (c->cutscene != 0) {
-        gPuppyCam.yawTarget = gCamera->yaw;
-        gPuppyCam.yaw = gCamera->yaw;
-        // god this is stupid and the fact I have to continue doing this is testament to the idiocy of the star door cutscene >:(
-        if (gMarioState->action == ACT_ENTERING_STAR_DOOR) {
-            gPuppyCam.yawTarget = gMarioState->faceAngle[1] + 0x8000;
-            gPuppyCam.yaw       = gMarioState->faceAngle[1] + 0x8000;
-        }
-    }
-
-    if (c->cutscene == 0 && gPuppyCam.enabled && !gCurrDemoInput 
-        && !(c->mode == CAMERA_MODE_INSIDE_CANNON)) {
-        // Clear the recent cutscene after 8 frames
-        if (gRecentCutscene != 0 && sFramesSinceCutsceneEnded < 8) {
-            sFramesSinceCutsceneEnded++;
-            if (sFramesSinceCutsceneEnded >= 8) {
-                gRecentCutscene = 0;
-                sFramesSinceCutsceneEnded = 0;
-            }
-        }
-        
-        // Deactivate vanilla C-Up mode if puppycamera is enabled
-        if (gCameraMovementFlags & CAM_MOVE_C_UP_MODE) {
-            gCameraMovementFlags |= CAM_MOVE_STARTED_EXITING_C_UP;
-            gCameraMovementFlags &= ~CAM_MOVE_C_UP_MODE;
-        }
-
-        puppycam_loop();
-        // Apply camera shakes
-        shake_camera_pitch(gLakituState.pos, gLakituState.focus);
-        shake_camera_yaw(gLakituState.pos, gLakituState.focus);
-        shake_camera_roll(&gLakituState.roll);
-        shake_camera_handheld(gLakituState.pos, gLakituState.focus);
-
-        if (sMarioCamState->action == ACT_DIVE && gLakituState.lastFrameAction != ACT_DIVE) {
-            set_camera_shake_from_hit(SHAKE_HIT_FROM_BELOW);
-        }
-
-        gLakituState.roll += sHandheldShakeRoll;
-        gLakituState.roll += gLakituState.keyDanceRoll;
-    }
-#endif
     gLakituState.lastFrameAction = sMarioCamState->action;
 }
 
@@ -3679,10 +3614,6 @@ void init_camera(struct Camera *c) {
     gLakituState.nextYaw = gLakituState.yaw;
     c->yaw = gLakituState.yaw;
     c->nextYaw = gLakituState.yaw;
-    
-#ifdef BETTERCAMERA
-    puppycam_init();
-#endif
 }
 
 /**
@@ -4102,9 +4033,6 @@ s32 update_camera_hud_status(struct Camera *c) {
 
     if (c->cutscene != 0
         || ((gPlayer1Controller->buttonDown & R_TRIG) && cam_select_alt_mode(0) == CAM_SELECTION_FIXED
-#ifdef BETTERCAMERA
-    && !gPuppyCam.enabled
-#endif
     )) {
         status |= CAM_STATUS_FIXED;
     } else if (set_cam_angle(0) == CAM_ANGLE_MARIO) {
@@ -5304,10 +5232,6 @@ void warp_camera(f32 displacementX, f32 displacementY, f32 displacementZ) {
     vec3f_add(start->pos, displacement);
     vec3f_add(end->focus, displacement);
     vec3f_add(end->pos, displacement);
-    
-#ifdef BETTERCAMERA
-    puppycam_warp(displacementX, displacementY, displacementZ);
-#endif
 }
 
 /**

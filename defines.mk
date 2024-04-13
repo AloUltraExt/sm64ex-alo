@@ -8,8 +8,6 @@ DEBUG ?= 0
 EXT_OPTIONS_MENU ?= 1
 # Enable debug options menu (Enabled if DEBUG is not 0)
 EXT_DEBUG_MENU ?= 0
-# Enable better camera (Puppycam 2)
-BETTERCAMERA ?= 1
 # Enable cheats
 CHEATS_ACTIONS ?= 1
 # Enable rumble functions (Originally in Shindou)
@@ -133,12 +131,6 @@ endif
 # Check for Debug Menu option
 ifeq ($(EXT_DEBUG_MENU),1)
   CUSTOM_C_DEFINES += -DEXT_DEBUG_MENU
-  EXT_OPTIONS_MENU := 1
-endif
-
-# Check for Puppycam option
-ifeq ($(BETTERCAMERA),1)
-  CUSTOM_C_DEFINES += -DBETTERCAMERA
   EXT_OPTIONS_MENU := 1
 endif
 

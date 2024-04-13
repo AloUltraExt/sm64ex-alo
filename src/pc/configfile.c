@@ -113,26 +113,6 @@ ConfigVanillaCam configVanillaCam = {
 };
 #endif
 
-#ifdef BETTERCAMERA
-// PuppyCam 2 settings
-ConfigPuppyCam configPuppyCam = {
-    .enable = true,
-    .analog = false,
-#ifdef MOUSE_ACTIONS
-    .mouse = false,
-    .mouseSpeed = 15,
-#endif
-    .invertX = true,
-    .invertY = true,
-    .sensX = 50,
-    .sensY = 50,
-    .helper = true,
-    .opaque = true,
-    .input = 0, // PUPPYCAM_INPUT_TYPE_DOUBLE_TAB
-    .debug = false,
-};
-#endif
-
 static const struct ConfigOption options[] = {
 #ifndef TARGET_PORT_CONSOLE
     {.name = "fullscreen",           .type = CONFIG_TYPE_BOOL, .boolValue = &configWindow.fullscreen},
@@ -184,22 +164,6 @@ static const struct ConfigOption options[] = {
     {.name = "vanillacam_srmario",      .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.srMario},
     {.name = "vanillacam_c_up_sounds",  .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.cUpSounds},
     {.name = "vanillacam_parallel_col", .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.parallelCol},
-#endif
-#ifdef BETTERCAMERA
-    {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.enable},  
-    {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.analog},
-    #ifdef MOUSE_ACTIONS
-    {.name = "bettercam_mouse_look",  .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.mouse},
-    {.name = "bettercam_mouse_speed", .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.mouseSpeed},
-    #endif
-    {.name = "bettercam_invertx",    .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.invertX},
-    {.name = "bettercam_inverty",    .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.invertY},
-    {.name = "bettercam_xsens",      .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.sensX},
-    {.name = "bettercam_ysens",      .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.sensY},
-    {.name = "bettercam_turnhelper", .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.helper},
-    {.name = "bettercam_opaque",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.opaque},
-    {.name = "bettercam_inputtype",  .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.input},
-    {.name = "bettercam_debug",      .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.debug},
 #endif
 };
 

@@ -26,10 +26,6 @@
 #include <stdbool.h>
 #endif
 
-#ifdef BETTERCAMERA
-#include "bettercamera.h"
-#endif
-
 #ifdef CHEATS_ACTIONS
 #include "cheats.h"
 #endif
@@ -175,20 +171,6 @@ static struct Option optsVanillaCamera[] = {
 };
 #endif
 
-#ifdef BETTERCAMERA
-#if MORE_VANILLA_CAM_STUFF
-struct SubMenu menuVanillaCamera = DEF_SUBMENU( optsCameraStr[0], optsVanillaCamera );
-#endif
-
-static struct Option optsCamera[] = {
-    DEF_OPT_TOGGLE( optsPuppyCamStr[1], &configPuppyCam.enable ),
-    DEF_OPT_SUBMENU(optsPuppyCamStr[0], &menuPuppyCam ),
-#if MORE_VANILLA_CAM_STUFF
-    DEF_OPT_SUBMENU(  optsCameraStr[0], &menuVanillaCamera ),
-#endif
-};
-#endif
-
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct Option optsControls[] = {
     DEF_OPT_BIND( optBindStr[ 2], configKeyA ),
@@ -248,12 +230,8 @@ static struct Option optsSettings[] = {
 
 /* submenu definitions */
 
-#ifdef BETTERCAMERA
-struct SubMenu menuCamera = DEF_SUBMENU( optMainStr[1], optsCamera );
-#else
 #if MORE_VANILLA_CAM_STUFF
 struct SubMenu menuCamera = DEF_SUBMENU( optMainStr[1], optsVanillaCamera );
-#endif
 #endif
 
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
@@ -270,7 +248,7 @@ static struct SubMenu menuSettings = DEF_SUBMENU( optMainStr[5], optsSettings );
 /* main options menu definition */
 
 static struct Option optsMain[] = {
-#if defined(BETTERCAMERA) || MORE_VANILLA_CAM_STUFF
+#if defined(MORE_VANILLA_CAM_STUFF)
     DEF_OPT_SUBMENU( optMainStr[1], &menuCamera ),
 #endif
 

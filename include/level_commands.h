@@ -97,9 +97,6 @@ enum LevelCommandsIDList {
     LVL_SCRIPT_CMD_3A,
     LVL_SCRIPT_CMD_3B,
     LVL_SCRIPT_CMD_3C,
-#ifdef BETTERCAMERA
-    LVL_SCRIPT_CMD_PUPPYVOLUME,
-#endif
 };
 
 #ifdef NO_SEGMENTED_MEMORY

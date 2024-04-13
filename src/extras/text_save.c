@@ -14,7 +14,7 @@
 
 #include "course_table.h"
 
-#define FILENAME_FORMAT "%s/sm64_save_file_%d.sav"
+#define FILENAME_FORMAT "%s/sm64dsr_save_file_%d.sav"
 #define NUM_COURSES 15
 #define NUM_BONUS_COURSES 10
 #define NUM_FLAGS 21
@@ -101,15 +101,8 @@ s32 write_text_save(s32 fileIndex) {
     } else
         printf("Saving updated progress to '%s'\n", filename);
 
-    fprintf(file, "# Super Mario 64 save file\n");
-    fprintf(file, "# Comment starts with #\n");
-    fprintf(file, "# True = 1, False = 0\n");
-
-    get_timestamp(value);
-    fprintf(file, "# %s\n", value);
-
     menudata = &gSaveBuffer.menuData[0];
-    fprintf(file, "\n[menu]\n");
+    fprintf(file, "[menu]\n");
     fprintf(file, "coin_score_age = %d\n", menudata->coinScoreAges[fileIndex]);
     
     if (menudata->soundMode == 0) {

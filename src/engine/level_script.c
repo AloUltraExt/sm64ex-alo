@@ -29,10 +29,6 @@
 #include "goddard/renderer.h"
 #endif
 
-#ifdef BETTERCAMERA
-#include "extras/bettercamera.h"
-#endif
-
 #define NUM_PAINTINGS 45
 
 #define CMD_GET(type, offset) (*(type *) (CMD_PROCESS_OFFSET(offset) + (u8 *) sCurrentCmd))
@@ -793,44 +789,6 @@ static void level_cmd_get_or_set_var(void) {
     sCurrentCmd = CMD_NEXT;
 }
 
-#ifdef BETTERCAMERA
-static void level_cmd_puppyvolume(void) {
-    sPuppyVolumeStack[gPuppyVolumeCount] = mem_pool_alloc(gPuppyMemoryPool, sizeof(struct sPuppyVolume));
-
-    if (sPuppyVolumeStack[gPuppyVolumeCount] == NULL) {
-        sCurrentCmd = CMD_NEXT;
-        gPuppyError |= PUPPY_ERROR_POOL_FULL;
-        return;
-    }
-
-    vec3s_set(sPuppyVolumeStack[gPuppyVolumeCount]->pos, CMD_GET(s16, 2),
-                                                         CMD_GET(s16, 4),
-                                                         CMD_GET(s16, 6));
-
-    vec3s_set(sPuppyVolumeStack[gPuppyVolumeCount]->radius, CMD_GET(s16,  8),
-                                                            CMD_GET(s16, 10),
-                                                            CMD_GET(s16, 12));
-
-    sPuppyVolumeStack[gPuppyVolumeCount]->rot = CMD_GET(s16, 14);
-
-    sPuppyVolumeStack[gPuppyVolumeCount]->func   = CMD_GET(void *, 16);
-    sPuppyVolumeStack[gPuppyVolumeCount]->angles = segmented_to_virtual(CMD_GET(void *, 20));
-
-    sPuppyVolumeStack[gPuppyVolumeCount]->flagsAdd    = CMD_GET(s32, 24);
-    sPuppyVolumeStack[gPuppyVolumeCount]->flagsRemove = CMD_GET(s32, 28);
-
-    sPuppyVolumeStack[gPuppyVolumeCount]->flagPersistance = CMD_GET(u8, 32);
-
-    sPuppyVolumeStack[gPuppyVolumeCount]->shape = CMD_GET(u8,  33);
-    sPuppyVolumeStack[gPuppyVolumeCount]->room  = CMD_GET(s16, 34);
-    sPuppyVolumeStack[gPuppyVolumeCount]->fov  = CMD_GET(u8, 36);
-    sPuppyVolumeStack[gPuppyVolumeCount]->area  = sCurrAreaIndex;
-
-    gPuppyVolumeCount++;
-    sCurrentCmd = CMD_NEXT;
-}
-#endif
-
 static void (*LevelScriptJumpTable[])(void) = {
     /*00*/ level_cmd_load_and_execute,
     /*01*/ level_cmd_exit_and_execute,
@@ -893,9 +851,6 @@ static void (*LevelScriptJumpTable[])(void) = {
     /*3A*/ level_cmd_3A,
     /*3B*/ level_cmd_create_whirlpool,
     /*3C*/ level_cmd_get_or_set_var,
-#ifdef BETTERCAMERA
-    /*3D*/ level_cmd_puppyvolume,
-#endif
 };
 
 #ifdef TOUCH_CONTROLS

@@ -20,7 +20,7 @@
 #define FS_TEXTUREDIR "gfx"
 #define FS_SOUNDDIR "sound"
 
-#define SAVE_FILENAME "sm64_save_file.bin"
+#define SAVE_FILENAME "sm64dsr_save_file.bin"
 
 extern char fs_gamedir[];
 extern char fs_writepath[];

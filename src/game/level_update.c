@@ -42,10 +42,6 @@
 #include "pc/cliopts.h"
 #endif
 
-#ifdef BETTERCAMERA
-#include "extras/bettercamera.h"
-#endif
-
 // TODO: Make these ifdefs better
 const char *credits01[] = { "1GAME DIRECTOR", "SHIGERU MIYAMOTO" };
 const char *credits02[] = { "2ASSISTANT DIRECTORS", "YOSHIAKI KOIZUMI", "TAKASHI TEZUKA" };
@@ -638,12 +634,6 @@ void initiate_warp(s16 destLevel, s16 destArea, s16 destWarpNode, s32 warpFlags)
     sWarpDest.areaIdx = destArea;
     sWarpDest.nodeId = destWarpNode;
     sWarpDest.arg = warpFlags;
-
-#ifdef BETTERCAMERA
-    if (sWarpDest.type == WARP_TYPE_CHANGE_LEVEL) {
-        puppycam_script_clear();
-    }
-#endif
 }
 
 // From Surface 0xD3 to 0xFC

@@ -69,27 +69,6 @@ typedef struct {
 extern ConfigVanillaCam configVanillaCam;
 #endif
 
-#ifdef BETTERCAMERA
-typedef struct {
-    bool enable;
-    bool analog;
-#ifdef MOUSE_ACTIONS
-    bool mouse;
-    unsigned int mouseSpeed;
-#endif
-    bool invertX;
-    bool invertY;
-    bool helper;
-    bool opaque;
-    unsigned int sensX;
-    unsigned int sensY;
-    unsigned int input;
-    bool debug;
-} ConfigPuppyCam;
-
-extern ConfigPuppyCam configPuppyCam;
-#endif
-
 extern bool         configHUD;
 #ifdef MOUSE_ACTIONS
 extern bool         configMouse;

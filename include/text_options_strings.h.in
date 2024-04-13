@@ -42,8 +42,6 @@
 #define TEXT_OPT_CAM_C_UP_SOUNDS  _("CAMERA SOUND EFFECTS")
 #define TEXT_OPT_CAM_PARALLEL_COL _("PARALLEL CAM COLLISION")
 
-#define TEXT_OPT_PUPPYCAM  _("PUPPY CAMERA")
-#define TEXT_OPT_PUPPYON   _("PUPPYCAM 2")
 #define TEXT_OPT_CAMSCHEME _("CONTROL SCHEME")
 #define TEXT_OPT_CAMANALOG _("ANALOGUE CAMERA")
 #define TEXT_OPT_CAMMOUSE  _("MOUSE CAMERA")
@@ -116,8 +114,6 @@
 #define TEXT_OPT_CAM_C_UP_SOUNDS  _("Camera Sound Effects")
 #define TEXT_OPT_CAM_PARALLEL_COL _("Parallel Cam Collision")
 
-#define TEXT_OPT_PUPPYCAM  _("PUPPY CAMERA")
-#define TEXT_OPT_PUPPYON   _("PuppyCam 2")
 #define TEXT_OPT_CAMSCHEME _("Control Scheme")
 #define TEXT_OPT_CAMANALOG _("Analogue Camera")
 #define TEXT_OPT_CAMMOUSE  _("Mouse Camera")

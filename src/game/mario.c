@@ -34,10 +34,6 @@
 #include "sound_init.h"
 #include "pc/configfile.h"
 
-#ifdef BETTERCAMERA
-#include "extras/bettercamera.h"
-#endif
-
 #ifdef CHEATS_ACTIONS
 #include "extras/cheats.h"
 #endif
@@ -1486,9 +1482,6 @@ void update_mario_inputs(struct MarioState *m) {
     debug_print_speed_action_normal(m);
 #ifdef CHEATS_ACTIONS
     cheats_mario_inputs(m);
-#endif
-#ifdef BETTERCAMERA
-    puppycam_mario_inputs(m);
 #endif
 
     if (gCameraMovementFlags & CAM_MOVE_C_UP_MODE) {

@@ -1,14 +1,5 @@
-# sm64ex_alo
-Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex) with additional features. 
-
-## Changes
- * N64 Building - Support for it was removed in sm64ex
- * Based of the latest refresh (since sm64ex is stuck on 12)
- * Puppycam 2 (sm64ex still has Puppycam 1)
- * Quality of life fixes and features (QOL_FIXES=1 and QOL_FEATURES=1 respectively)
- * Mouse support for desktop targets (MOUSE_ACTIONS=1) (SDL1/SDL2 only, DirectX Mouse not implemented yet)
- * Simple debug options menu (EXT_DEBUG_MENU=1)
- * Kaze's more objects patch (PORT_MOP_OBJS=1)
+# sm64ds-remastered
+Fork of [AloXado320/sm64ex-alo](https://github.com/AloUltraExt/sm64ex-alo)
  
 ## Backends included
  * Same ones as in [sm64ex](https://github.com/sm64pc/sm64ex/tree/nightly) (macOS - Raspberry Pi Series - Windows - Linux), etc.
@@ -18,15 +9,12 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex) with additional featur
  * [Nintendo Switch](https://github.com/fgsfdsfgs/sm64ex/tree/switch) (by Vatuu, fgsfdsfgs, KiritoDev)
  * [Android](https://github.com/VDavid003/sm64-port-android/tree/ex/nightly) (by VDavid003)
 
-## Patches
- * Some misc patches for this repo are available [here](https://github.com/AloXado320/sm64ex-alo-patches) (more incoming)
-
 ## Building
  ### Clone the repository:
 
  ```sh
  git clone https://github.com/AloXado320/sm64ex-alo
- cd sm64ex-alo
+ cd sm64ds-remastered
  ```
  
  **Note:** On Unix systems you may need to do this before doing any changes:
@@ -60,7 +48,7 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex) with additional featur
  
   #### ROM location:
   ```sh
-  build/us/sm64.us.f3dzex.z64
+  build/us/sm64dsr.us.(currentver).z64
   ```
 
 </details>
@@ -103,7 +91,7 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex) with additional featur
 
  #### Install apk:
   ```sh
-  xdg-open build/us_android/sm64.us.f3dex2e.apk
+  xdg-open build/us_android/sm64dsr.us.(currentver).apk
   ```
  
 </details>

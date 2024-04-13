@@ -57,8 +57,8 @@ build/*
 *.map
 *.sav
 .assets-local.txt
-sm64_save_file.bin
-sm64config.txt
+sm64dsr_save_file.bin
+sm64dsr_config.txt
 
 # Assets. Generally ignored, but ones with "custom" in the name are fine.
 /levels/**/*.png

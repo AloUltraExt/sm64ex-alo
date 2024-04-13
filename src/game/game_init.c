@@ -25,10 +25,6 @@
 #include "boot/system_checks.h"
 #endif
 
-#ifdef BETTERCAMERA
-#include "extras/bettercamera.h"
-#endif
-
 #if defined(TARGET_N3DS) && !defined(DISABLE_N3DS_AUDIO)
 #include "pc/audio/audio_3ds_threading.h"
 #endif
@@ -627,19 +623,6 @@ void read_controller_inputs(void) {
     gPlayer3Controller->stickMag = gPlayer1Controller->stickMag;
     gPlayer3Controller->buttonPressed = gPlayer1Controller->buttonPressed;
     gPlayer3Controller->buttonDown = gPlayer1Controller->buttonDown;
-    
-#ifdef BETTERCAMERA
-    //If a cutscene's active, just kill all controller input.
-    if (gPuppyCam.enabled && gPuppyCam.cutscene && gPuppyCam.sceneInput) {
-        gPlayer1Controller->rawStickX = 0;
-        gPlayer1Controller->rawStickY = 0;
-        gPlayer1Controller->buttonPressed = 0;
-        gPlayer1Controller->buttonDown = 0;
-        gPlayer1Controller->stickX = 0;
-        gPlayer1Controller->stickY = 0;
-        gPlayer1Controller->stickMag = 0;
-    }
-#endif
 }
 
 /**
@@ -733,9 +716,6 @@ void thread5_game_loop(UNUSED void *arg) {
     create_thread_6();
 #endif
     save_file_load_all();
-#ifdef BETTERCAMERA
-    puppycam_boot();
-#endif
 
     set_vblank_handler(2, &gGameVblankHandler, &gGameVblankQueue, (OSMesg) 1);
 

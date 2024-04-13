@@ -24,10 +24,6 @@
 #include "sound_init.h"
 #include "rumble_init.h"
 
-#ifdef BETTERCAMERA
-#include "extras/bettercamera.h"
-#endif
-
 #ifdef CHEATS_ACTIONS
 #include "extras/cheats.h"
 #endif
@@ -1913,12 +1909,6 @@ void mario_handle_special_floors(struct MarioState *m) {
     if ((m->action & ACT_GROUP_MASK) == ACT_GROUP_CUTSCENE) {
         return;
     }
-
-#ifdef BETTERCAMERA
-    if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE) {
-        return;
-    }
-#endif
 
     if (m->floor != NULL) {
         s32 floorType = m->floor->type;
