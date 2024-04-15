@@ -75,7 +75,6 @@
 
 #define TEXT_OPT_TEXMODE   _("TEXTURE MODE")
 #define TEXT_OPT_DS_SLIDE  _("DS WALLSLIDE")
-#define TEXT_OPT_DS_DASH   _("DS DASH")
 #define TEXT_OPT_DS_DIVE   _("DS DIVE")
 
 #define TEXT_BIND_A        _("A BUTTON")
@@ -151,7 +150,6 @@
 
 #define TEXT_OPT_TEXMODE   _("Texture Mode")
 #define TEXT_OPT_DS_SLIDE  _("DS Wallslide")
-#define TEXT_OPT_DS_DASH   _("DS Dash")
 #define TEXT_OPT_DS_DIVE   _("DS Dive")
 
 #define TEXT_BIND_A        _("A Button")

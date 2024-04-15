@@ -108,7 +108,6 @@ static const u8 optsSettingsStr[][32] = {
 
 static const u8 optsDsSettingsStr[][32] = {
     { TEXT_OPT_DS_SLIDE },
-    { TEXT_OPT_DS_DASH },
     { TEXT_OPT_DS_DIVE },
 };
 
@@ -228,7 +227,6 @@ static struct Option optsSettings[] = {
 
 static struct Option optsDsSettings[] = {
     DEF_OPT_TOGGLE( optsDsSettingsStr[0], &configWallslide ),
-    DEF_OPT_TOGGLE( optsDsSettingsStr[1], &configDash ),
     DEF_OPT_TOGGLE( optsDsSettingsStr[2], &configDive ),
 };
 

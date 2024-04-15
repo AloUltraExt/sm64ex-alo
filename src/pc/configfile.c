@@ -105,7 +105,6 @@ bool configDiscordRPC = true;
 bool configSkipIntro = false;
 bool configHUD = true;
 bool configWallslide = true;
-bool configDash = false;
 bool configDive = true;
 
 static const struct ConfigOption options[] = {
@@ -155,7 +154,6 @@ static const struct ConfigOption options[] = {
     #endif
     {.name = "skip_intro",           .type = CONFIG_TYPE_BOOL, .boolValue = &configSkipIntro},
     {.name = "wallslide",            .type = CONFIG_TYPE_BOOL, .boolValue = &configWallslide},
-    {.name = "dash",                 .type = CONFIG_TYPE_BOOL, .boolValue = &configDash},
     {.name = "dive",                 .type = CONFIG_TYPE_BOOL, .boolValue = &configDive},
 };
 
