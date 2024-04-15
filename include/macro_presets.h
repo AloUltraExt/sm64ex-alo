@@ -2,7 +2,7 @@
 #define MACRO_PRESETS_H
 
 enum MacroPresets {
-    macro_yellow_coin_1,
+    macro_yellow_coin,
     macro_yellow_coin_2,
     macro_moving_blue_coin,
     macro_sliding_blue_coin,
@@ -108,7 +108,7 @@ enum MacroPresets {
     macro_empty_103,
     macro_empty_104,
     macro_empty_105,
-    macro_wooden_post_1,
+    macro_wooden_post,
     macro_water_bomb_spawner,
     macro_enemy_lakitu,
     macro_bob_koopa_the_quick,

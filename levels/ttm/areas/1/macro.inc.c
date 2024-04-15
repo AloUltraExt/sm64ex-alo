@@ -1,9 +1,9 @@
 // 0x07016F18 - 0x070170A0
 const MacroObject ttm_seg7_area_1_macro_objs[] = {
     MACRO_OBJECT               (/*preset*/ macro_bobomb_buddy_opens_cannon_1, /*yaw*/   0, /*pos*/   799, -2668,  3320),
-    MACRO_OBJECT_WITH_BHV_PARAM(/*preset*/ macro_cannon_closed,               /*yaw*/  45, /*pos*/  5035, -3994, -3445, /*bhvParam*/ 0xC0),
-    MACRO_OBJECT_WITH_BHV_PARAM(/*preset*/ macro_wooden_signpost,             /*yaw*/  90, /*pos*/  3644, -1304,  1422, /*bhvParam*/ DIALOG_072),
-    MACRO_OBJECT_WITH_BHV_PARAM(/*preset*/ macro_wooden_signpost,             /*yaw*/   0, /*pos*/   622, -4331,  5466, /*bhvParam*/ DIALOG_094),
+    MACRO_OBJECT_WITH_BEH_PARAM(/*preset*/ macro_cannon_closed,               /*yaw*/  45, /*pos*/  5035, -3994, -3445, /*bhvParam*/ 0xC0),
+    MACRO_OBJECT_WITH_BEH_PARAM(/*preset*/ macro_wooden_signpost,             /*yaw*/  90, /*pos*/  3644, -1304,  1422, /*bhvParam*/ DIALOG_072),
+    MACRO_OBJECT_WITH_BEH_PARAM(/*preset*/ macro_wooden_signpost,             /*yaw*/   0, /*pos*/   622, -4331,  5466, /*bhvParam*/ DIALOG_094),
     MACRO_OBJECT               (/*preset*/ macro_red_coin,                    /*yaw*/   0, /*pos*/  1450, -2750, -4250),
     MACRO_OBJECT               (/*preset*/ macro_red_coin,                    /*yaw*/   0, /*pos*/  2550, -2750, -3400),
     MACRO_OBJECT               (/*preset*/ macro_red_coin,                    /*yaw*/   0, /*pos*/  4150, -2700, -2800),
@@ -11,7 +11,7 @@ const MacroObject ttm_seg7_area_1_macro_objs[] = {
     MACRO_OBJECT               (/*preset*/ macro_red_coin,                    /*yaw*/   0, /*pos*/ -1200, -1600, -3250),
     MACRO_OBJECT               (/*preset*/ macro_red_coin,                    /*yaw*/   0, /*pos*/ -1850,   100, -2850),
     MACRO_OBJECT               (/*preset*/ macro_red_coin,                    /*yaw*/   0, /*pos*/ -1500,  -800, -2750),
-    MACRO_OBJECT_WITH_BHV_PARAM(/*preset*/ macro_wooden_signpost,             /*yaw*/ 180, /*pos*/ -1126, -3448, -4400, /*bhvParam*/ DIALOG_091),
+    MACRO_OBJECT_WITH_BEH_PARAM(/*preset*/ macro_wooden_signpost,             /*yaw*/ 180, /*pos*/ -1126, -3448, -4400, /*bhvParam*/ DIALOG_091),
     MACRO_OBJECT               (/*preset*/ macro_goomba_triplet_spawner,      /*yaw*/   0, /*pos*/  1740, -4236,  5320),
     MACRO_OBJECT               (/*preset*/ macro_coin_ring_horizontal,        /*yaw*/   0, /*pos*/  4540, -4607,  1060),
     MACRO_OBJECT               (/*preset*/ macro_1up,                         /*yaw*/   0, /*pos*/ -3713, -4130,  3530),

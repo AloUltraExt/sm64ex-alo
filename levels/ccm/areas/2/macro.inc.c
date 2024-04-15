@@ -1,11 +1,11 @@
 // 0x07023468 - 0x07023604
 const MacroObject ccm_seg7_area_2_macro_objs[] = {
     MACRO_OBJECT               (/*preset*/ macro_yellow_coin_2,        /*yaw*/   0, /*pos*/  2255,  4091,  -536),
-    MACRO_OBJECT               (/*preset*/ macro_yellow_coin_1,        /*yaw*/   0, /*pos*/  2055,  4352,  -497),
-    MACRO_OBJECT               (/*preset*/ macro_yellow_coin_1,        /*yaw*/   0, /*pos*/  1843,  4486,  -433),
-    MACRO_OBJECT               (/*preset*/ macro_yellow_coin_1,        /*yaw*/   0, /*pos*/  1603,  4567,  -347),
-    MACRO_OBJECT               (/*preset*/ macro_yellow_coin_1,        /*yaw*/   0, /*pos*/  1397,  4530,  -287),
-    MACRO_OBJECT_WITH_BHV_PARAM(/*preset*/ macro_wooden_signpost,      /*yaw*/   0, /*pos*/ -5320,  6656, -6540, /*bhvParam*/ DIALOG_054),
+    MACRO_OBJECT               (/*preset*/ macro_yellow_coin,        /*yaw*/   0, /*pos*/  2055,  4352,  -497),
+    MACRO_OBJECT               (/*preset*/ macro_yellow_coin,        /*yaw*/   0, /*pos*/  1843,  4486,  -433),
+    MACRO_OBJECT               (/*preset*/ macro_yellow_coin,        /*yaw*/   0, /*pos*/  1603,  4567,  -347),
+    MACRO_OBJECT               (/*preset*/ macro_yellow_coin,        /*yaw*/   0, /*pos*/  1397,  4530,  -287),
+    MACRO_OBJECT_WITH_BEH_PARAM(/*preset*/ macro_wooden_signpost,      /*yaw*/   0, /*pos*/ -5320,  6656, -6540, /*bhvParam*/ DIALOG_054),
     MACRO_OBJECT               (/*preset*/ macro_coin_line_horizontal, /*yaw*/   0, /*pos*/ -4980,  2180, -1980),
     MACRO_OBJECT               (/*preset*/ macro_coin_line_horizontal, /*yaw*/   0, /*pos*/  6640,   -60,  -800),
     MACRO_OBJECT               (/*preset*/ macro_coin_line_horizontal, /*yaw*/   0, /*pos*/  6640, -1020,   440),

@@ -13,7 +13,7 @@ const MacroObject wdw_seg7_area_2_macro_objs[] = {
     MACRO_OBJECT               (/*preset*/ macro_hidden_1up_trigger,          /*yaw*/   0, /*pos*/ -1034, -2560,   524),
     MACRO_OBJECT               (/*preset*/ macro_hidden_1up_trigger,          /*yaw*/   0, /*pos*/ -1034, -2560,  1034),
     MACRO_OBJECT               (/*preset*/ macro_hidden_1up_trigger,          /*yaw*/   0, /*pos*/  -524, -2560,  1034),
-    MACRO_OBJECT_WITH_BHV_PARAM(/*preset*/ macro_hidden_1up,                  /*yaw*/   0, /*pos*/  -772, -2180,   772, /*bhvParam*/ 4),
+    MACRO_OBJECT_WITH_BEH_PARAM(/*preset*/ macro_hidden_1up,                  /*yaw*/   0, /*pos*/  -772, -2180,   772, /*bhvParam*/ 4),
     MACRO_OBJECT               (/*preset*/ macro_breakable_box_no_coins,      /*yaw*/   0, /*pos*/  -870,  -300,   870),
     MACRO_OBJECT               (/*preset*/ macro_breakable_box_no_coins,      /*yaw*/   0, /*pos*/  -670,  -300,   870),
     MACRO_OBJECT               (/*preset*/ macro_breakable_box_no_coins,      /*yaw*/   0, /*pos*/  -670,  -300,   670),

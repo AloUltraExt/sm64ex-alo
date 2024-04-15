@@ -1,11 +1,11 @@
 // 0x07014F90 - 0x07015122
 const MacroObject bitfs_seg7_macro_objs[] = {
-    MACRO_OBJECT               (/*preset*/ macro_yellow_coin_1,               /*yaw*/   0, /*pos*/ -1990, -2780,  -590),
-    MACRO_OBJECT               (/*preset*/ macro_yellow_coin_1,               /*yaw*/   0, /*pos*/ -2860, -2780,  -580),
+    MACRO_OBJECT               (/*preset*/ macro_yellow_coin,               /*yaw*/   0, /*pos*/ -1990, -2780,  -590),
+    MACRO_OBJECT               (/*preset*/ macro_yellow_coin,               /*yaw*/   0, /*pos*/ -2860, -2780,  -580),
     MACRO_OBJECT               (/*preset*/ macro_coin_line_horizontal_flying, /*yaw*/   0, /*pos*/  1130, -3000,   400),
     MACRO_OBJECT               (/*preset*/ macro_1up,                         /*yaw*/   0, /*pos*/ -4320, -2640,  -500),
     MACRO_OBJECT               (/*preset*/ macro_small_bully,                 /*yaw*/   0, /*pos*/  2340, -2764,   580),
-    MACRO_OBJECT_WITH_BHV_PARAM(/*preset*/ macro_circling_amp,                /*yaw*/   0, /*pos*/  6600, -2770,   280, /*bhvParam*/ AMP_BP_ROT_RADIUS_200),
+    MACRO_OBJECT_WITH_BEH_PARAM(/*preset*/ macro_circling_amp,                /*yaw*/   0, /*pos*/  6600, -2770,   280, /*bhvParam*/ AMP_BP_ROT_RADIUS_200),
     MACRO_OBJECT               (/*preset*/ macro_recovery_heart,              /*yaw*/   0, /*pos*/  3660, -2700,   280),
     MACRO_OBJECT               (/*preset*/ macro_hidden_1up_in_pole,          /*yaw*/   0, /*pos*/  3880, -1140,   260),
     MACRO_OBJECT               (/*preset*/ macro_coin_ring_horizontal_flying, /*yaw*/   0, /*pos*/ -1900,   652,   320),
@@ -17,7 +17,7 @@ const MacroObject bitfs_seg7_macro_objs[] = {
     MACRO_OBJECT               (/*preset*/ macro_hidden_1up_trigger,          /*yaw*/   0, /*pos*/ -6150,  1480,   500),
     MACRO_OBJECT               (/*preset*/ macro_hidden_1up_trigger,          /*yaw*/   0, /*pos*/ -6150,  2600,   500),
     MACRO_OBJECT               (/*preset*/ macro_hidden_1up_trigger,          /*yaw*/   0, /*pos*/ -6150,  3080,   500),
-    MACRO_OBJECT_WITH_BHV_PARAM(/*preset*/ macro_hidden_1up,                  /*yaw*/   0, /*pos*/ -6460,  2760,   320, /*bhvParam*/ 3),
+    MACRO_OBJECT_WITH_BEH_PARAM(/*preset*/ macro_hidden_1up,                  /*yaw*/   0, /*pos*/ -6460,  2760,   320, /*bhvParam*/ 3),
     MACRO_OBJECT               (/*preset*/ macro_coin_line_horizontal,        /*yaw*/  90, /*pos*/ -6360,  3760,  -840),
     MACRO_OBJECT               (/*preset*/ macro_recovery_heart,              /*yaw*/   0, /*pos*/   -20,  3850,   160),
     MACRO_OBJECT               (/*preset*/ macro_box_1up,                     /*yaw*/   0, /*pos*/  2440,  5520,   140),
@@ -38,7 +38,7 @@ const MacroObject bitfs_seg7_macro_objs[] = {
     MACRO_OBJECT               (/*preset*/ macro_red_coin,                    /*yaw*/   0, /*pos*/  4330,  -790,   -50),
     MACRO_OBJECT               (/*preset*/ macro_box_three_coins,             /*yaw*/   0, /*pos*/  7220, -1800,   260),
     MACRO_OBJECT               (/*preset*/ macro_fire_spitter,                /*yaw*/   0, /*pos*/ -7280,  3100,  -925),
-    MACRO_OBJECT_WITH_BHV_PARAM(/*preset*/ macro_circling_amp,                /*yaw*/   0, /*pos*/ -2325,  3625,     0, /*bhvParam*/ AMP_BP_ROT_RADIUS_400),
+    MACRO_OBJECT_WITH_BEH_PARAM(/*preset*/ macro_circling_amp,                /*yaw*/   0, /*pos*/ -2325,  3625,     0, /*bhvParam*/ AMP_BP_ROT_RADIUS_400),
     MACRO_OBJECT               (/*preset*/ macro_box_ten_coins,               /*yaw*/   0, /*pos*/ -5340,  4000,   100),
     MACRO_OBJECT_END(),
 };

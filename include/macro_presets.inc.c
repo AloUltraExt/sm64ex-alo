@@ -7,7 +7,7 @@ struct MacroPreset {
 };
 
 static struct MacroPreset sMacroObjectPresets[] = {
-    /* macro_yellow_coin_1               */ { bhvYellowCoin, MODEL_YELLOW_COIN, 0 },
+    /* macro_yellow_coin               */ { bhvYellowCoin, MODEL_YELLOW_COIN, 0 },
     /* macro_yellow_coin_2               */ { bhvOneCoin, MODEL_YELLOW_COIN, 0 },
     /* macro_moving_blue_coin            */ { bhvMovingBlueCoin, MODEL_BLUE_COIN, 0 },
     /* macro_sliding_blue_coin           */ { bhvBlueCoinSliding, MODEL_BLUE_COIN, 0 }, // unused
@@ -113,7 +113,7 @@ static struct MacroPreset sMacroObjectPresets[] = {
     /* macro_empty_103                   */ { bhvYellowCoin, MODEL_YELLOW_COIN, 0 },
     /* macro_empty_104                   */ { bhvYellowCoin, MODEL_YELLOW_COIN, 0 },
     /* macro_empty_105                   */ { bhvYellowCoin, MODEL_YELLOW_COIN, 0 },
-    /* macro_wooden_post_1               */ { bhvWoodenPost, MODEL_WOODEN_POST, 0 },
+    /* macro_wooden_post               */ { bhvWoodenPost, MODEL_WOODEN_POST, 0 },
     /* macro_water_bomb_spawner          */ { bhvWaterBombSpawner, MODEL_NONE, 0 },
     /* macro_enemy_lakitu                */ { bhvEnemyLakitu, MODEL_ENEMY_LAKITU, 0 },
     /* macro_bob_koopa_the_quick         */ { bhvKoopa, MODEL_KOOPA_WITH_SHELL, KOOPA_BP_KOOPA_THE_QUICK_BOB }, // unused

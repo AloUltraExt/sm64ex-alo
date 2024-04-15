@@ -72,7 +72,7 @@ const MacroObject thi_seg7_area_2_macro_objs[] = {
     MACRO_OBJECT(/*preset*/ macro_butterfly_triplet,           /*yaw*/   0, /*pos*/ -1693,  -890,  1746),
     MACRO_OBJECT(/*preset*/ macro_koopa_tiny,                  /*yaw*/   0, /*pos*/  -600,  -153,   800),
     MACRO_OBJECT(/*preset*/ macro_hidden_breakable_box,        /*yaw*/   0, /*pos*/   -40,  -970, -3920),
-    MACRO_OBJECT(/*preset*/ macro_yellow_coin_1,               /*yaw*/   0, /*pos*/   280,  -640, -4140),
+    MACRO_OBJECT(/*preset*/ macro_yellow_coin,               /*yaw*/   0, /*pos*/   280,  -640, -4140),
     MACRO_OBJECT(/*preset*/ macro_tiny_goomba,                 /*yaw*/   0, /*pos*/ -2020,  -890,  1720),
     MACRO_OBJECT_END(),
 };
