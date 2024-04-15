@@ -73,6 +73,9 @@ extern bool         configHUD;
 #ifdef MOUSE_ACTIONS
 extern bool         configMouse;
 #endif
+extern bool         configWallslide;
+extern bool         configDash;
+extern bool         configDive;
 extern bool         configSkipIntro;
 #ifdef DISCORDRPC
 extern bool         configDiscordRPC;

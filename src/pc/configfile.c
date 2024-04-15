@@ -18,6 +18,7 @@
 #include "gfx/gfx_screen_config.h"
 #include "gfx/gfx_window_manager_api.h"
 #include "controller/controller_api.h"
+#include "src/extras/options_menu.h"
 #include "fs/fs.h"
 
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof(arr[0]))
@@ -103,6 +104,9 @@ bool configDiscordRPC = true;
 
 bool configSkipIntro = false;
 bool configHUD = true;
+bool configWallslide = true;
+bool configDash = false;
+bool configDive = true;
 
 #if MORE_VANILLA_CAM_STUFF
 ConfigVanillaCam configVanillaCam = {
@@ -165,6 +169,9 @@ static const struct ConfigOption options[] = {
     {.name = "vanillacam_c_up_sounds",  .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.cUpSounds},
     {.name = "vanillacam_parallel_col", .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.parallelCol},
 #endif
+    {.name = "wallslide",            .type = CONFIG_TYPE_BOOL, .boolValue = &configWallslide},
+    {.name = "dash",                 .type = CONFIG_TYPE_BOOL, .boolValue = &configDash},
+    {.name = "dive",                 .type = CONFIG_TYPE_BOOL, .boolValue = &configDive},
 };
 
 // Reads an entire line from a file (excluding the newline character) and returns an allocated string

@@ -16,6 +16,14 @@
 #ifdef CHEATS_ACTIONS
 #include "extras/cheats.h"
 #endif
+#ifdef EXT_OPTIONS_MENU
+#ifndef TARGET_N64
+#include "pc/configfile.h"
+#else
+int configWallslide = TRUE;
+int configDive = TRUE;
+#endif
+#endif
 
 void play_flip_sounds(struct MarioState *m, s16 frame1, s16 frame2, s16 frame3) {
     s32 animFrame = m->marioObj->header.gfx.animInfo.animFrame;
@@ -157,15 +165,21 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
 }
 
 s32 check_kick_or_dive_in_air(struct MarioState *m) {
-#if EASIER_JUMP_KICKS 
-    float directionFactor = (MAX(-1.0f, MIN(1.0f, sqrtf(2) * coss(m->faceAngle[1] - m->intendedYaw))));
-    float intendedMagFactor = MIN(32.f, m->intendedMag * sqrtf(2)) / (32.0f);
-    float velocityThreshhold = 38.0f - directionFactor * intendedMagFactor * 10.0f;
-#else
     float velocityThreshhold = 28.0f;
-#endif
     if (m->input & INPUT_B_PRESSED) {
-        return set_mario_action(m, m->forwardVel > velocityThreshhold ? ACT_DIVE : ACT_JUMP_KICK, 0);
+        if (configDive) {
+            if (m->forwardVel >= 28.0f) {
+                m->vel[1] = 30.0f;
+                m->forwardVel += 2.0f;
+                return set_mario_action(m, ACT_DIVE, 0);
+            }
+            else if (m->forwardVel < 28.0f) {
+                return set_mario_action(m, ACT_JUMP_KICK, 0);
+            }
+        }
+        else if (!configDive) {
+            return set_mario_action(m, m->forwardVel > velocityThreshhold ? ACT_DIVE : ACT_JUMP_KICK, 0);
+        }
     }
     return FALSE;
 }
@@ -443,6 +457,82 @@ void update_flying(struct MarioState *m) {
     m->slideVelZ = m->vel[2];
 }
 
+// SM64DS Wallslide
+
+#define ACT_WALL_SLIDE          0x000008B9 // (0x0B9 | ACT_FLAG_AIR)
+#define MARIO_WALL_SLIDE_SPEED  -24.0f
+
+static s32 mario_check_wall_slide(struct MarioState *m) {
+
+    // There must be a wall
+    if (m->wall == NULL) {
+        return FALSE;
+    }
+
+    // Not a painting
+    s16 stype = m->wall->type;
+    if (stype >= SURFACE_PAINTING_WOBBLE_A6 && stype <= SURFACE_WOBBLING_WARP) {
+        return FALSE;
+    }
+
+    // Mario must not be holding something
+    if (m->heldObj != NULL) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static s32 act_wall_slide(struct MarioState *m) {
+    mario_set_forward_vel(m, 0);
+    set_mario_animation(m, MARIO_ANIM_START_WALLKICK);
+    play_sound(SOUND_MOVING_TERRAIN_SLIDE + m->terrainSoundAddend, m->marioObj->header.gfx.cameraToObject);
+    m->vel[1] = MAX(m->vel[1] - 4.f, MARIO_WALL_SLIDE_SPEED);
+    m->particleFlags |= PARTICLE_DUST;
+
+    // Wall jump
+    if (m->input & INPUT_A_PRESSED) {
+        m->vel[1] = 52.0f;
+        m->faceAngle[1] += 0x8000;
+        mario_set_forward_vel(m, 24.f);
+        return set_mario_action(m, ACT_WALL_KICK_AIR, 0);
+    }
+
+    // Stop wall sliding
+    if (m->input & INPUT_Z_PRESSED) {
+        play_sound(SOUND_MARIO_UH, m->marioObj->header.gfx.cameraToObject);
+        m->input &= (~(INPUT_Z_PRESSED | INPUT_Z_DOWN));
+        return set_mario_action(m, ACT_FREEFALL, 0);
+    }
+
+    // Cling Mario to the wall before performing the air step,
+    // to avoid missing slightly slanted walls (normal.y near 0, but not 0)
+    if (m->wall) {
+        m->pos[0] -= m->wall->normal.x * 4.f;
+        m->pos[2] -= m->wall->normal.z * 4.f;
+    }
+    switch (perform_air_step(m, 0)) {
+        case AIR_STEP_LANDED:
+            return set_mario_action(m, ACT_IDLE, 0);
+
+        case AIR_STEP_NONE:
+            return set_mario_action(m, ACT_FREEFALL, 0);
+
+        case AIR_STEP_HIT_LAVA_WALL:
+            return lava_boost_on_wall(m);
+
+        case AIR_STEP_HIT_WALL:
+            if (!mario_check_wall_slide(m)) {
+                return set_mario_action(m, ACT_FREEFALL, 0);
+            }
+            break;
+    }
+
+    // Turn Mario away from the wall
+    m->marioObj->header.gfx.angle[1] = m->faceAngle[1] + 0x8000;
+    return FALSE;
+}
+
 u32 common_air_action_step(struct MarioState *m, u32 landAction, s32 animation, u32 stepArg) {
     u32 stepResult;
 
@@ -462,8 +552,21 @@ u32 common_air_action_step(struct MarioState *m, u32 landAction, s32 animation, 
 
         case AIR_STEP_HIT_WALL:
             set_mario_animation(m, animation);
-            hit_or_wall_kick_on_wall(m, 16.0f);
-            break;
+
+        if (configWallslide) {
+            if (mario_check_wall_slide(m)) {
+
+                // Mario starts wall-sliding only if he's falling
+                // and moving towards the wall
+                if (m->forwardVel > 16.0f && m->vel[1] < 0.f) {
+                    set_mario_action(m, ACT_WALL_SLIDE, 0);
+                }
+                return AIR_STEP_NONE;
+            }
+        }
+
+        hit_or_wall_kick_on_wall(m, 16.0f);
+        break;
 
         case AIR_STEP_GRABBED_LEDGE:
             set_mario_animation(m, MARIO_ANIM_IDLE_ON_LEDGE);
@@ -2226,6 +2329,9 @@ s32 mario_execute_airborne_action(struct MarioState *m) {
         case ACT_RIDING_HOOT:          cancel = act_riding_hoot(m);          break;
         case ACT_TOP_OF_POLE_JUMP:     cancel = act_top_of_pole_jump(m);     break;
         case ACT_VERTICAL_WIND:        cancel = act_vertical_wind(m);        break;
+        if (configWallslide) {
+            case ACT_WALL_SLIDE:       cancel = act_wall_slide(m);           break;
+        }
     }
     /* clang-format on */
 

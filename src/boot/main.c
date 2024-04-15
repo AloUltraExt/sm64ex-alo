@@ -12,7 +12,7 @@
 #include "game/main.h"
 #include "game/rumble_init.h"
 #include "system_checks.h"
-#ifdef N64_USE_EXTENDED_RAM
+#ifdef USE_EXT_RAM
 #include "ext_mem_screen.h"
 #endif
 
@@ -138,7 +138,7 @@ void alloc_pool(void) {
     void *start = (void *) SEG_POOL_START;
     void *end = (void *) (SEG_POOL_START + POOL_SIZE);
 
-#ifdef N64_USE_EXTENDED_RAM
+#ifdef USE_EXT_RAM
     // Detect memory size
     if (does_pool_end_lie_out_of_bounds(end))
         end = (void *) (SEG_POOL_START + POOL_SIZE_4MB);
@@ -349,7 +349,7 @@ void thread3_main(UNUSED void *arg) {
     create_thread(&gSoundThread, 4, thread4_sound, NULL, &gThread4Stack[STACKSIZE], 20);
     osStartThread(&gSoundThread);
 
-#ifdef N64_USE_EXTENDED_RAM
+#ifdef USE_EXT_RAM
     create_thread(&gGameLoopThread, 5, 
         gNotEnoughMemory ? thread5_mem_error_message_loop : thread5_game_loop, NULL, &gThread5Stack[STACKSIZE], 10);
 #else

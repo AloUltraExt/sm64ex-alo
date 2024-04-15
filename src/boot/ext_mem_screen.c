@@ -17,7 +17,7 @@
 #include "game/segment2.h"
 #include "engine/level_script.h"
 
-#ifdef N64_USE_EXTENDED_RAM
+#ifdef USE_EXT_RAM
 /*
  * mem_error_screen.inc.c
  *

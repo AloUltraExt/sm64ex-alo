@@ -9,9 +9,17 @@
 #include "interaction.h"
 #include "mario_step.h"
 #include "object_helpers.h"
+#include "save_file.h"
 
 #ifdef CHEATS_ACTIONS
 #include "extras/cheats.h"
+#endif
+#ifdef EXT_OPTIONS_MENU
+#ifndef TARGET_N64
+#include "pc/configfile.h"
+#else
+int configWallslide = TRUE;
+#endif
 #endif
 
 static s16 sMovingSandSpeeds[] = { 12, 8, 4, 0 };
@@ -967,7 +975,12 @@ s32 perform_air_step(struct MarioState *m, u32 stepArg) {
     s32 quarterStepResult;
     s32 stepResult = AIR_STEP_NONE;
 
-    m->wall = NULL;
+    if (!configWallslide) {
+        m->wall = NULL;
+    }
+    
+    struct Surface *wall = NULL;
+
 
     for (i = 0; i < 4; i++) {
         intendedPos[0] = m->pos[0] + m->vel[0] / 4.0f;
@@ -982,6 +995,11 @@ s32 perform_air_step(struct MarioState *m, u32 stepArg) {
 
         if (quarterStepResult != AIR_STEP_NONE) {
             stepResult = quarterStepResult;
+        }
+        if (configWallslide) {
+            if (quarterStepResult == AIR_STEP_HIT_WALL && m->wall != NULL) {
+                wall = m->wall;
+            }
         }
 
         if (quarterStepResult == AIR_STEP_LANDED || quarterStepResult == AIR_STEP_GRABBED_LEDGE

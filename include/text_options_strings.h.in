@@ -11,6 +11,7 @@
 #define TEXT_OPT_VIDEO     _("DISPLAY")
 #define TEXT_OPT_AUDIO     _("SOUND")
 #define TEXT_OPT_SETTINGS  _("SETTINGS")
+#define TEXT_OPT_DS_SETTINGS _("DS SETTINGS")
 
 // Markers
 
@@ -58,7 +59,6 @@
 #define TEXT_OPT_CAM_SCH2  _("SINGLE PRESS")
 #define TEXT_OPT_CAM_SCH3  _("CLASSIC")
 
-#define TEXT_OPT_TEXFILTER _("TEXTURE FILTERING")
 #define TEXT_OPT_FSCREEN   _("FULLSCREEN")
 #define TEXT_OPT_DS        _("DS FILTERING")
 #define TEXT_OPT_N64       _("N64 FILTERING")
@@ -72,6 +72,10 @@
 
 #define TEXT_OPT_HUD       _("HUD")
 #define TEXT_OPT_MOUSE     _("MOUSE")
+
+#define TEXT_OPT_DS_MOVE   _("DS MOVEMENT SETTINGS")
+
+#define TEXT_OPT_DS_SLIDE  _("DS WALLSLIDE")
 
 #define TEXT_BIND_A        _("A BUTTON")
 #define TEXT_BIND_B        _("B BUTTON")
@@ -130,7 +134,6 @@
 #define TEXT_OPT_CAM_SCH2  _("Single Press")
 #define TEXT_OPT_CAM_SCH3  _("Classic")
 
-#define TEXT_OPT_TEXFILTER _("Texture Filtering")
 #define TEXT_OPT_FSCREEN   _("Fullscreen")
 #define TEXT_OPT_DS        _("DS FILTERING")
 #define TEXT_OPT_N64       _("N64 FILTERING")
@@ -144,6 +147,11 @@
 
 #define TEXT_OPT_HUD       _("HUD")
 #define TEXT_OPT_MOUSE     _("Mouse")
+
+#define TEXT_OPT_TEXMODE   _("Texture Mode")
+#define TEXT_OPT_DS_SLIDE  _("DS Wallslide")
+#define TEXT_OPT_DS_DASH   _("DS Dash")
+#define TEXT_OPT_DS_DIVE   _("DS Dive")
 
 #define TEXT_BIND_A        _("A Button")
 #define TEXT_BIND_B        _("B Button")

@@ -70,6 +70,7 @@ static const u8 optMainStr[][32] = {
     { TEXT_OPT_VIDEO },
     { TEXT_OPT_AUDIO },
     { TEXT_OPT_SETTINGS },
+    { TEXT_OPT_DS_SETTINGS },
     { TEXT_EXIT_GAME },
 };
 
@@ -84,9 +85,9 @@ const u8 optsCameraStr[][32] = {
 #ifndef TARGET_N64
 static const u8 optsVideoStr[][32] = {
     { TEXT_OPT_FSCREEN },
-    { TEXT_OPT_TEXFILTER },
-    {  TEXT_OPT_DS },
-    {  TEXT_OPT_N64 },
+    { TEXT_OPT_TEXMODE },
+    { TEXT_OPT_DS },
+    { TEXT_OPT_N64 },
     { TEXT_OPT_RESETWND },
     { TEXT_OPT_VSYNC },
     { TEXT_OPT_APPLY },
@@ -103,6 +104,12 @@ static const u8 optsAudioStr[][32] = {
 static const u8 optsSettingsStr[][32] = {
     { TEXT_OPT_HUD },
     { TEXT_OPT_MOUSE },
+};
+
+static const u8 optsDsSettingsStr[][32] = {
+    { TEXT_OPT_DS_SLIDE },
+    { TEXT_OPT_DS_DASH },
+    { TEXT_OPT_DS_DIVE },
 };
 
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
@@ -228,6 +235,12 @@ static struct Option optsSettings[] = {
 #endif
 };
 
+static struct Option optsDsSettings[] = {
+    DEF_OPT_TOGGLE( optsDsSettingsStr[0], &configWallslide ),
+    DEF_OPT_TOGGLE( optsDsSettingsStr[1], &configDash ),
+    DEF_OPT_TOGGLE( optsDsSettingsStr[2], &configDive ),
+};
+
 /* submenu definitions */
 
 #if MORE_VANILLA_CAM_STUFF
@@ -239,11 +252,12 @@ static struct SubMenu menuControls = DEF_SUBMENU( optMainStr[2], optsControls );
 #endif
 
 #ifndef TARGET_N64
-static struct SubMenu menuVideo    = DEF_SUBMENU( optMainStr[3], optsVideo );
+static struct SubMenu menuVideo      = DEF_SUBMENU( optMainStr[3], optsVideo );
 #endif
 
-static struct SubMenu menuAudio    = DEF_SUBMENU( optMainStr[4], optsAudio );
-static struct SubMenu menuSettings = DEF_SUBMENU( optMainStr[5], optsSettings );
+static struct SubMenu menuAudio      = DEF_SUBMENU( optMainStr[4], optsAudio );
+static struct SubMenu menuSettings   = DEF_SUBMENU( optMainStr[5], optsSettings );
+static struct SubMenu menuDsSettings = DEF_SUBMENU( optMainStr[6], optsDsSettings );
 
 /* main options menu definition */
 
@@ -262,6 +276,7 @@ static struct Option optsMain[] = {
 
     DEF_OPT_SUBMENU( optMainStr[4], &menuAudio ),
     DEF_OPT_SUBMENU( optMainStr[5], &menuSettings ),
+    DEF_OPT_SUBMENU( optMainStr[6], &menuDsSettings ),
 
 #ifdef EXT_DEBUG_MENU
     // NOTE: always keep cheats the last option here because of the half-assed way I toggle them
@@ -269,7 +284,7 @@ static struct Option optsMain[] = {
 #endif
 
 #if !defined(TARGET_N64) && (defined(TARGET_SWITCH) || !defined(TARGET_PORT_CONSOLE))
-    DEF_OPT_BUTTON ( optMainStr[6], optmenu_act_exit ),
+    DEF_OPT_BUTTON ( optMainStr[7], optmenu_act_exit ),
 #endif
 
 #ifdef CHEATS_ACTIONS

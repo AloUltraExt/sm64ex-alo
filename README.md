@@ -13,7 +13,7 @@ Fork of [AloXado320/sm64ex-alo](https://github.com/AloUltraExt/sm64ex-alo)
  ### Clone the repository:
 
  ```sh
- git clone https://github.com/AloXado320/sm64ex-alo
+ git clone https://github.com/ExcellentGamer/sm64ds-remastered
  cd sm64ds-remastered
  ```
  
