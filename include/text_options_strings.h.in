@@ -73,9 +73,10 @@
 #define TEXT_OPT_HUD       _("HUD")
 #define TEXT_OPT_MOUSE     _("MOUSE")
 
-#define TEXT_OPT_DS_MOVE   _("DS MOVEMENT SETTINGS")
-
+#define TEXT_OPT_TEXMODE   _("TEXTURE MODE")
 #define TEXT_OPT_DS_SLIDE  _("DS WALLSLIDE")
+#define TEXT_OPT_DS_DASH   _("DS DASH")
+#define TEXT_OPT_DS_DIVE   _("DS DIVE")
 
 #define TEXT_BIND_A        _("A BUTTON")
 #define TEXT_BIND_B        _("B BUTTON")

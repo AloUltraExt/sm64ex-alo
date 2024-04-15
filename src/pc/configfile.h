@@ -58,17 +58,6 @@ extern unsigned int configRumbleStrength;
 extern bool         configPrecacheRes;
 #endif
 
-#if MORE_VANILLA_CAM_STUFF
-typedef struct {
-    bool parallel;
-    bool srMario;
-    bool cUpSounds;
-    bool parallelCol;
-} ConfigVanillaCam;
-
-extern ConfigVanillaCam configVanillaCam;
-#endif
-
 extern bool         configHUD;
 #ifdef MOUSE_ACTIONS
 extern bool         configMouse;

@@ -18,7 +18,7 @@
 #include "make_const_nonconst.h"
 #include "levels/intro/header.h"
 
-#if defined(TARGET_N64) && defined(USE_EXT_RAM)
+#if defined(TARGET_N64) && defined(N64_USE_EXTENDED_RAM)
 const LevelScript level_intro_entry_error_screen[] = {
     INIT_LEVEL(),
 #ifdef GODDARD_MFACE

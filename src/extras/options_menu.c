@@ -169,15 +169,6 @@ static void optvideo_apply(UNUSED struct Option *self, s32 arg) {
 #endif
 
 /* submenu option lists */
-#if MORE_VANILLA_CAM_STUFF
-static struct Option optsVanillaCamera[] = {
-    DEF_OPT_TOGGLE( optsCameraStr[1], &configVanillaCam.parallel ),
-    DEF_OPT_TOGGLE( optsCameraStr[2], &configVanillaCam.srMario ),
-    DEF_OPT_TOGGLE( optsCameraStr[3], &configVanillaCam.cUpSounds ),
-    DEF_OPT_TOGGLE( optsCameraStr[4], &configVanillaCam.parallelCol ),
-};
-#endif
-
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct Option optsControls[] = {
     DEF_OPT_BIND( optBindStr[ 2], configKeyA ),
@@ -243,10 +234,6 @@ static struct Option optsDsSettings[] = {
 
 /* submenu definitions */
 
-#if MORE_VANILLA_CAM_STUFF
-struct SubMenu menuCamera = DEF_SUBMENU( optMainStr[1], optsVanillaCamera );
-#endif
-
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct SubMenu menuControls = DEF_SUBMENU( optMainStr[2], optsControls );
 #endif
@@ -262,10 +249,6 @@ static struct SubMenu menuDsSettings = DEF_SUBMENU( optMainStr[6], optsDsSetting
 /* main options menu definition */
 
 static struct Option optsMain[] = {
-#if defined(MORE_VANILLA_CAM_STUFF)
-    DEF_OPT_SUBMENU( optMainStr[1], &menuCamera ),
-#endif
-
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
     DEF_OPT_SUBMENU( optMainStr[2], &menuControls ),
 #endif

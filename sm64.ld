@@ -223,7 +223,7 @@ SECTIONS
     END_NOLOAD(framebuffers)
 
     __expansionRamStart = 0x80400000;
-    #ifndef USE_EXT_RAM
+    #ifndef N64_USE_EXTENDED_RAM
         #ifndef PRELIMINARY
             ASSERT((. <= __expansionRamStart), "Error: RDRAM expanded into Expansion RAM, despite Expansion RAM not being defined.")
         #endif

@@ -19,12 +19,6 @@
 /// Fixes camera boss fight y position to be more dynamic
 #define FIX_CAMERA_BOSS_FIGHT_POS (0 || QOL_FIXES || !VANILLA_CHECKS)
 
-/// Changes C-Up vanilla camera similar to the DS version
-#define DS_CAM_MOVEMENT_C_UP (0 || QOL_FEATURES)
-
-/// Adds parallel lakitu camera, star road mario camera and some reonucam stuff, all configurable
-#define MORE_VANILLA_CAM_STUFF (0 || (EXT_OPTIONS_MENU && QOL_FEATURES))
-
 /// The number of steps between Mario and the camera to check for walls obstructing Mario. Vanilla is 8.
 #define CAMERA_NUM_OBSTRUCTION_CHECKS   8
 

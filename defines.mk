@@ -30,11 +30,11 @@ RM2C ?= 0
 # --------------------------------------
 
 # Quality of life fixes
-QOL_FIXES ?= 1
+QOL_FIXES ?= 0
 # Quality of life features
-QOL_FEATURES ?= 1
+QOL_FEATURES ?= 0
 # Quality of life redone files
-QOL_REDONE ?= 1
+QOL_REDONE ?= 0
 
 # --------------------------------------
 # Port Only Defines

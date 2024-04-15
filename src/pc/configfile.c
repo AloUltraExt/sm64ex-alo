@@ -108,15 +108,6 @@ bool configWallslide = true;
 bool configDash = false;
 bool configDive = true;
 
-#if MORE_VANILLA_CAM_STUFF
-ConfigVanillaCam configVanillaCam = {
-    .parallel = false,
-    .srMario = false,
-    .parallelCol = false,
-    .cUpSounds = true,
-};
-#endif
-
 static const struct ConfigOption options[] = {
 #ifndef TARGET_PORT_CONSOLE
     {.name = "fullscreen",           .type = CONFIG_TYPE_BOOL, .boolValue = &configWindow.fullscreen},
@@ -163,12 +154,6 @@ static const struct ConfigOption options[] = {
     {.name = "discordrpc_enable",    .type = CONFIG_TYPE_BOOL, .boolValue = &configDiscordRPC},
     #endif
     {.name = "skip_intro",           .type = CONFIG_TYPE_BOOL, .boolValue = &configSkipIntro},
-#if MORE_VANILLA_CAM_STUFF
-    {.name = "vanillacam_parallel",     .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.parallel},  
-    {.name = "vanillacam_srmario",      .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.srMario},
-    {.name = "vanillacam_c_up_sounds",  .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.cUpSounds},
-    {.name = "vanillacam_parallel_col", .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.parallelCol},
-#endif
     {.name = "wallslide",            .type = CONFIG_TYPE_BOOL, .boolValue = &configWallslide},
     {.name = "dash",                 .type = CONFIG_TYPE_BOOL, .boolValue = &configDash},
     {.name = "dive",                 .type = CONFIG_TYPE_BOOL, .boolValue = &configDive},

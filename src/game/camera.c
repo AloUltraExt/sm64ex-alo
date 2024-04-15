@@ -75,19 +75,6 @@
  *
  */
 
-#if MORE_VANILLA_CAM_STUFF
-#ifdef TARGET_N64
-ConfigVanillaCam configVanillaCam = {
-    .parallel = FALSE,
-    .srMario = FALSE,
-    .cUpSounds = TRUE,
-    .parallelCol = FALSE,
-};
-#endif
-
-s16 sParallelCamLOverride = FALSE;
-#endif
-
 // BSS
 /**
  * Stores Lakitu's position from the last frame, used for transitioning in next_lakitu_state()
@@ -1167,63 +1154,6 @@ void mode_radial_camera(struct Camera *c) {
     pan_ahead_of_player(c);
 }
 
-#if MORE_VANILLA_CAM_STUFF
-#define CAMERA_COLLISION_MIN_DIST 300.0f
-
-/**
- * Reonucam collision handler, handles collision detection using ray casting.
- */
- 
-void update_camera_collision_handler(struct Camera *c) {
-    struct Surface *surf;
-    Vec3f camdir;
-    Vec3f origin;
-    Vec3f thick;
-    Vec3f hitpos;
-    vec3f_copy(origin, gMarioState->pos);
-    origin[1] += 50.0f;
-    camdir[0] = c->pos[0] - origin[0];
-    camdir[1] = c->pos[1] - origin[1];
-    camdir[2] = c->pos[2] - origin[2];
-    find_surface_on_ray(origin, camdir, &surf, hitpos, (RAYCAST_FIND_FLOOR | RAYCAST_FIND_WALL | RAYCAST_FIND_CEIL));
-    if (surf) {
-        f32 distFromSurf = 100.0f;
-        f32 dist;
-        f32 yDist = 0;
-        Vec3f camToMario;
-        vec3f_diff(camToMario, gMarioState->pos, hitpos);
-        s16 yaw = atan2s(camToMario[2], camToMario[0]);
-        vec3f_get_lateral_dist(hitpos, gMarioState->pos, &dist);
-        if (dist < CAMERA_COLLISION_MIN_DIST) {
-            distFromSurf += (dist - CAMERA_COLLISION_MIN_DIST);
-            yDist = CAMERA_COLLISION_MIN_DIST - CLAMP(dist, 0, CAMERA_COLLISION_MIN_DIST);
-        }
-        thick[0] = sins(yaw) * distFromSurf;
-        thick[1] = yDist;
-        thick[2] = coss(yaw) * distFromSurf;
-        vec3f_add(hitpos,thick);
-        vec3f_copy(c->pos,hitpos);
-
-    }
-    c->yaw = atan2s(c->pos[2] - gMarioState->pos[2], c->pos[0] - gMarioState->pos[0]);
-}
-
-s32 snap_to_45_degrees(s16 angle) {
-    if (angle % DEGREES(45)) {
-        s16 d1 = ABS(angle) % DEGREES(45);
-        s16 d2 = DEGREES(45) - d1;
-        if (angle > 0) {
-            if (d1 < d2) return angle - d1;
-            else return angle + d2;
-        } else {
-            if (d1 < d2) return angle + d1;
-            else return angle - d2;
-        }
-    }
-    return angle;
-}
-#endif
-
 /**
  * A mode that only has 8 camera angles, 45 degrees apart
  */
@@ -1242,40 +1172,12 @@ void mode_8_directions_camera(struct Camera *c) {
         play_sound_cbutton_side();
     }
 
-#if MORE_VANILLA_CAM_STUFF
-    // extra parallel cam functionality
-    if (configVanillaCam.parallel) {
-        if (gPlayer1Controller->buttonPressed & U_JPAD) {
-            s8DirModeYawOffset = gMarioState->faceAngle[1] - 0x8000;
-        }
-        if (gPlayer1Controller->buttonDown & L_JPAD) {
-            s8DirModeYawOffset -= DEGREES(2);
-        }
-        if (gPlayer1Controller->buttonDown & R_JPAD) {
-            s8DirModeYawOffset += DEGREES(2);
-        }
-        if (gPlayer1Controller->buttonPressed & D_JPAD) {
-            s8DirModeYawOffset = snap_to_45_degrees(s8DirModeYawOffset);
-        }
-    }
-#endif
-
     lakitu_zoom(400.f, 0x900);
     c->nextYaw = update_8_directions_camera(c, c->focus, pos);
-#if MORE_VANILLA_CAM_STUFF
-    set_camera_height(c, pos[1]);
-#endif
     c->pos[0] = pos[0];
-#if MORE_VANILLA_CAM_STUFF
-    if (configVanillaCam.parallelCol) { c->pos[1] = pos[1]; }
-#endif
     c->pos[2] = pos[2];
     sAreaYawChange = sAreaYaw - oldAreaYaw;
-#if MORE_VANILLA_CAM_STUFF
-    if (configVanillaCam.parallelCol) { update_camera_collision_handler(c); }
-#else
     set_camera_height(c, pos[1]);
-#endif
 }
 
 /**
@@ -2318,12 +2220,7 @@ s16 update_default_camera(struct Camera *c) {
             yawVel = 0;
         }
         if (yawVel != 0 && get_dialog_id() == DIALOG_NONE) {
-#if MORE_VANILLA_CAM_STUFF
-            s16 tempYawVel = (configVanillaCam.srMario && set_cam_angle(0) == CAM_ANGLE_MARIO) ? 0 : yawVel;
-            camera_approach_s16_symmetric_bool(&yaw, yawGoal, tempYawVel);
-#else
             camera_approach_s16_symmetric_bool(&yaw, yawGoal, yawVel);
-#endif
         }
     }
 
@@ -2764,7 +2661,6 @@ void move_mario_head_c_up(UNUSED struct Camera *c) {
         sCUpCameraPitch = -0x2000;
     }
 
-#if DS_CAM_MOVEMENT_C_UP
     s16 tempYaw;
     // Bound the camera yaw to...
     if (gCameraMovementFlags & CAM_MOVE_C_UP_MODE) {
@@ -2786,15 +2682,6 @@ void move_mario_head_c_up(UNUSED struct Camera *c) {
         }
         sModeOffsetYaw = -tempYaw;
     }
-#else
-    // Bound the camera yaw to +-120 degrees
-    if (sModeOffsetYaw > 0x5555) {
-        sModeOffsetYaw = 0x5555;
-    }
-    if (sModeOffsetYaw < -0x5555) {
-        sModeOffsetYaw = -0x5555;
-    }
-#endif
 
     // Give Mario's neck natural-looking constraints
     sMarioCamState->headRotation[0] = sCUpCameraPitch * 3 / 4;
@@ -3003,13 +2890,6 @@ void set_camera_mode(struct Camera *c, s16 mode, s16 frames) {
 
     vec3f_copy(end->pos, c->pos);
     vec3f_sub(end->pos, sMarioCamState->pos);
-
-#if MORE_VANILLA_CAM_STUFF
-    if (mode == CAMERA_MODE_8_DIRECTIONS) {
-        // Helps transition from any camera mode to 8dir
-        s8DirModeYawOffset = snap_to_45_degrees(c->yaw);
-    }
-#endif
 
     sAreaYaw = sModeTransitions[sModeInfo.newMode](c, end->focus, end->pos);
 
@@ -3252,47 +3132,6 @@ void update_camera(struct Camera *c) {
                     mode_mario_camera(c);
             }
         } else {
-#if MORE_VANILLA_CAM_STUFF
-        if (configVanillaCam.parallel) {
-            if (gPlayer1Controller->buttonPressed & L_TRIG) {
-                sParallelCamLOverride ^= 1;
-            }
-
-            switch (c->mode) {
-                case CAMERA_MODE_BEHIND_MARIO:
-                    if (!sParallelCamLOverride) {
-                        mode_behind_mario_camera(c);
-                    } else {
-                        mode_8_directions_camera(c);
-                    }
-                    break;
-
-                case CAMERA_MODE_C_UP:
-                    mode_c_up_camera(c);
-                    break;
-
-                case CAMERA_MODE_WATER_SURFACE:
-                    if (!sParallelCamLOverride) {
-                        mode_water_surface_camera(c);
-                    } else {
-                        mode_8_directions_camera(c);
-                    }
-                    break;
-
-                case CAMERA_MODE_INSIDE_CANNON:
-                    mode_cannon_camera(c);
-                    break;
-
-                case CAMERA_MODE_2_DIRECTIONS:
-                    mode_2_directions_camera(c);
-                    break;
-
-                default:
-                    mode_8_directions_camera(c);
-                    break;
-            }
-        } else {
-#endif
             switch (c->mode) {
                 case CAMERA_MODE_BEHIND_MARIO:
                     mode_behind_mario_camera(c);
@@ -3354,9 +3193,6 @@ void update_camera(struct Camera *c) {
                     break;
 
             }
-#if MORE_VANILLA_CAM_STUFF
-            }
-#endif
         }
     }
 
@@ -4772,23 +4608,14 @@ void play_camera_buzz_if_c_sideways(void) {
 }
 
 void play_sound_cbutton_up(void) {
-#if MORE_VANILLA_CAM_STUFF
-    if (!configVanillaCam.cUpSounds) return;
-#endif
     play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
 }
 
 void play_sound_cbutton_down(void) {
-#if MORE_VANILLA_CAM_STUFF
-    if (!configVanillaCam.cUpSounds) return;
-#endif
     play_sound(SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource);
 }
 
 void play_sound_cbutton_side(void) {
-#if MORE_VANILLA_CAM_STUFF
-    if (!configVanillaCam.cUpSounds) return;
-#endif
     play_sound(SOUND_MENU_CAMERA_TURN, gGlobalSoundSource);
 }
 
@@ -4961,16 +4788,9 @@ void handle_c_button_movement(struct Camera *c) {
         }
 
         // Rotate left or right
-#if MORE_VANILLA_CAM_STUFF
-        u16 cSrCheck = (configVanillaCam.srMario && set_cam_angle(0) == CAM_ANGLE_MARIO);
-        u16 cBtnState = cSrCheck ? gPlayer1Controller->buttonDown : gPlayer1Controller->buttonPressed;
-        u16 cSideYaw = cSrCheck ? 1 : 0x1000;
-        u16 cBtnSoundCheck = sCSideButtonYaw == 0 && !cSrCheck;
-#else
         u16 cBtnState = gPlayer1Controller->buttonPressed;
         u16 cSideYaw = 0x1000;
         u16 cBtnSoundCheck = sCSideButtonYaw == 0;
-#endif
         if (cBtnState & R_CBUTTONS) {
             if (gCameraMovementFlags & CAM_MOVE_ROTATE_LEFT) {
                 gCameraMovementFlags &= ~CAM_MOVE_ROTATE_LEFT;
@@ -5474,11 +5294,7 @@ void set_camera_mode_8_directions(struct Camera *c) {
     if (c->mode != CAMERA_MODE_8_DIRECTIONS) {
         c->mode = CAMERA_MODE_8_DIRECTIONS;
         sStatusFlags &= ~CAM_FLAG_SMOOTH_MOVEMENT;
-#if MORE_VANILLA_CAM_STUFF
-        s8DirModeBaseYaw = snap_to_45_degrees(s8DirModeBaseYaw);
-#else
         s8DirModeBaseYaw = 0;
-#endif
         s8DirModeYawOffset = 0;
     }
 }
