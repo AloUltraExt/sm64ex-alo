@@ -29,10 +29,10 @@ static const LevelScript script_func_local_1[] = {
 };
 
 static const LevelScript script_func_local_2[] = {
-    OBJECT_WITH_ACTS(/*model*/ MODEL_NONE,                  /*pos*/  1535, 3840, -5561, /*angle*/ 0, 0, 0,   /*bhvParam*/ BPARAM2(BBALL_BP_STYPE_BOB_UPPER), /*bhv*/ bhvBoBBowlingBallSpawner,  /*acts*/ ACT_1 | ACT_2),
-    OBJECT_WITH_ACTS(/*model*/ MODEL_NONE,                  /*pos*/  1535, 3840, -5561, /*angle*/ 0, 0, 0,   /*bhvParam*/ BPARAM2(BBALL_BP_STYPE_BOB_UPPER), /*bhv*/ bhvTTMBowlingBallSpawner,  /*acts*/ ACT_3 | ACT_4 | ACT_5 | ACT_6),
-    OBJECT_WITH_ACTS(/*model*/ MODEL_NONE,                  /*pos*/   524, 2825, -5400, /*angle*/ 0, 0, 0,   /*bhvParam*/ BPARAM2(BBALL_BP_STYPE_BOB_LOWER), /*bhv*/ bhvBoBBowlingBallSpawner,  /*acts*/ ACT_1 | ACT_2),
-    OBJECT_WITH_ACTS(/*model*/ MODEL_NONE,                  /*pos*/   524, 2825, -5400, /*angle*/ 0, 0, 0,   /*bhvParam*/ BPARAM2(BBALL_BP_STYPE_BOB_LOWER), /*bhv*/ bhvTTMBowlingBallSpawner,  /*acts*/ ACT_3 | ACT_4 | ACT_5 | ACT_6),
+    OBJECT_WITH_ACTS(/*model*/ MODEL_NONE,                  /*pos*/  1535, 3840, -5561, /*angle*/ 0, 0, 0,   /*bhvParam*/ BPARAM2(BBALL_BP_STYPE_BOB_UPPER), /*bhv*/ bhvBobBowlingBallSpawner,  /*acts*/ ACT_1 | ACT_2),
+    OBJECT_WITH_ACTS(/*model*/ MODEL_NONE,                  /*pos*/  1535, 3840, -5561, /*angle*/ 0, 0, 0,   /*bhvParam*/ BPARAM2(BBALL_BP_STYPE_BOB_UPPER), /*bhv*/ bhvTtmBowlingBallSpawner,  /*acts*/ ACT_3 | ACT_4 | ACT_5 | ACT_6),
+    OBJECT_WITH_ACTS(/*model*/ MODEL_NONE,                  /*pos*/   524, 2825, -5400, /*angle*/ 0, 0, 0,   /*bhvParam*/ BPARAM2(BBALL_BP_STYPE_BOB_LOWER), /*bhv*/ bhvBobBowlingBallSpawner,  /*acts*/ ACT_1 | ACT_2),
+    OBJECT_WITH_ACTS(/*model*/ MODEL_NONE,                  /*pos*/   524, 2825, -5400, /*angle*/ 0, 0, 0,   /*bhvParam*/ BPARAM2(BBALL_BP_STYPE_BOB_LOWER), /*bhv*/ bhvTtmBowlingBallSpawner,  /*acts*/ ACT_3 | ACT_4 | ACT_5 | ACT_6),
     OBJECT          (/*model*/ MODEL_BOWLING_BALL,          /*pos*/  -993,  886, -3565, /*angle*/ 0, 0, 0,   /*bhvParam*/ 0, /*bhv*/ bhvPitBowlingBall),
     OBJECT          (/*model*/ MODEL_BOWLING_BALL,          /*pos*/  -785,  886, -4301, /*angle*/ 0, 0, 0,   /*bhvParam*/ 0, /*bhv*/ bhvPitBowlingBall),
     OBJECT_WITH_ACTS(/*model*/ MODEL_BOWLING_BALL,          /*pos*/   -93,  886, -3414, /*angle*/ 0, 0, 0,   /*bhvParam*/ 0, /*bhv*/ bhvPitBowlingBall,         /*acts*/ ACT_2 | ACT_3 | ACT_4 | ACT_5 | ACT_6),

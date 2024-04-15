@@ -4353,7 +4353,7 @@ const BehaviorScript bhvBowlingBall[] = {
     END_LOOP(),
 };
 
-const BehaviorScript bhvTTMBowlingBallSpawner[] = {
+const BehaviorScript bhvTtmBowlingBallSpawner[] = {
     BEGIN(OBJ_LIST_GENACTOR),
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
     SET_INT(oBBallSpawnerPeriodMinus1, 63),
@@ -4363,7 +4363,7 @@ const BehaviorScript bhvTTMBowlingBallSpawner[] = {
     END_LOOP(),
 };
 
-const BehaviorScript bhvBoBBowlingBallSpawner[] = {
+const BehaviorScript bhvBobBowlingBallSpawner[] = {
     BEGIN(OBJ_LIST_GENACTOR),
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
     SET_INT(oBBallSpawnerPeriodMinus1, 127),
