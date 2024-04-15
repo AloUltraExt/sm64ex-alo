@@ -170,11 +170,6 @@ Gfx *geo_switch_area(s32 callContext, struct GraphNode *node, UNUSED void *conte
 
     if (callContext == GEO_CONTEXT_RENDER && gMarioObject != NULL) {
         Vec3f focusPos = { gMarioObject->oPosX, gMarioObject->oPosY, gMarioObject->oPosZ };
-#if ROOM_OBJECT_CAMERA_FOCUS
-        if (gCutsceneFocus != NULL) {
-            vec3f_copy(focusPos, gLakituState.pos);
-        }
-#endif
 
 #if BETTER_ROOM_CHECKS
         room = get_room_at_pos(focusPos[0], focusPos[1], focusPos[2]);

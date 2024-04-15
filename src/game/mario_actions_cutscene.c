@@ -511,11 +511,7 @@ s32 act_reading_automatic_dialog(struct MarioState *m) {
             disable_time_stop();
             if (gNeverEnteredCastle) {
                 gNeverEnteredCastle = FALSE;
-#if FIX_INTRO_CASTLE_DIALOG_MUSIC
-                play_cutscene_music(SEQUENCE_ARGS(gCurrentArea->musicParam, gCurrentArea->musicParam2));
-#else
                 play_cutscene_music(SEQUENCE_ARGS(0, SEQ_LEVEL_INSIDE_CASTLE));
-#endif
             }
             if (m->prevAction == ACT_STAR_DANCE_WATER) {
                 set_mario_action(m, ACT_WATER_IDLE, 0); // 100c star?
@@ -1226,11 +1222,7 @@ s32 act_falling_exit_airborne(struct MarioState *m) {
     return FALSE;
 }
 
-#if RESTORE_MISSING_SOUNDS_KEY_EXIT
-#define BREAK break
-#else
 #define BREAK //! fallthrough
-#endif
 
 s32 act_exit_land_save_dialog(struct MarioState *m) {
     s32 animFrame;

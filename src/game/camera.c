@@ -726,9 +726,6 @@ void set_camera_height(struct Camera *c, f32 goalHeight) {
     UNUSED s16 action = sMarioCamState->action;
     f32 baseOff = 125.f;
     f32 camCeilHeight = find_ceil(c->pos[0], gLakituState.goalPos[1] - 50.f, c->pos[2], &surface);
-#if FAST_VERTICAL_CAMERA_MOVEMENT
-    f32 approachRate = 20.0f;
-#endif
 
     if (sMarioCamState->action & ACT_FLAG_HANGING) {
         marioCeilHeight = sMarioGeometry.currCeilHeight;
@@ -765,12 +762,7 @@ void set_camera_height(struct Camera *c, f32 goalHeight) {
             }
         }
 
-#if FAST_VERTICAL_CAMERA_MOVEMENT
-        approachRate += absf(c->pos[1] - goalHeight) / 20;
-        approach_camera_height(c, goalHeight, approachRate);
-#else
         approach_camera_height(c, goalHeight, 20.0f);
-#endif
 
         if (camCeilHeight != CELL_HEIGHT_LIMIT) {
             camCeilHeight -= baseOff;
@@ -860,26 +852,6 @@ void pan_ahead_of_player(struct Camera *c) {
     vec3f_add(c->focus, pan);
 }
 
-#if CAMERA_VANILLA_DEFINES
-s16 find_in_bounds_yaw_wdw_bob_thi(Vec3f pos, Vec3f origin, s16 yaw) {
-    switch (gCurrLevelArea) {
-        case AREA_WDW_MAIN:
-            yaw = clamp_positions_and_find_yaw(pos, origin, 4508.f, -3739.f, 4508.f, -3739.f);
-            break;
-        case AREA_BOB:
-            yaw = clamp_positions_and_find_yaw(pos, origin, 8000.f, -8000.f, 7050.f, -8000.f);
-            break;
-        case AREA_THI_HUGE:
-            yaw = clamp_positions_and_find_yaw(pos, origin, 8192.f, -8192.f, 8192.f, -8192.f);
-            break;
-        case AREA_THI_TINY:
-            yaw = clamp_positions_and_find_yaw(pos, origin, 2458.f, -2458.f, 2458.f, -2458.f);
-            break;
-    }
-    return yaw;
-}
-#endif
-
 /**
  * Rotates the camera around the area's center point.
  */
@@ -898,9 +870,6 @@ s32 update_radial_camera(struct Camera *c, Vec3f focus, Vec3f pos) {
     sAreaYaw = camYaw - sModeOffsetYaw;
     calc_y_to_curr_floor(&posY, 1.f, 200.f, &focusY, 0.9f, 200.f);
     focus_on_mario(focus, pos, posY + yOff, focusY + yOff, sLakituDist + baseDist, pitch, camYaw);
-#if CAMERA_VANILLA_DEFINES
-    camYaw = find_in_bounds_yaw_wdw_bob_thi(pos, focus, camYaw);
-#endif
 
     return camYaw;
 }
@@ -923,11 +892,6 @@ s32 update_8_directions_camera(struct Camera *c, Vec3f focus, Vec3f pos) {
     calc_y_to_curr_floor(&posY, 1.f, 200.f, &focusY, 0.9f, 200.f);
     focus_on_mario(focus, pos, posY + yOff, focusY + yOff, sLakituDist + baseDist, pitch, camYaw);
     pan_ahead_of_player(c);
-#if CAMERA_VANILLA_DEFINES
-    if (gCurrLevelArea == AREA_DDD_SUB) {
-        camYaw = clamp_positions_and_find_yaw(pos, focus, 6839.f, 995.f, 5994.f, -3945.f);
-    }
-#endif
 
     return camYaw;
 }
@@ -1589,28 +1553,11 @@ s32 update_boss_fight_camera(struct Camera *c, Vec3f focus, Vec3f pos) {
         // ex-alo change
         // Simplify this to a surface function
         pos[1] = 300.f + get_surface_height_at_pos(pos[0], pos[2], floor);
-#if FIX_CAMERA_BOSS_FIGHT_POS
         pos[1] += 125.f;
-#else
-        switch (gCurrLevelArea) {
-            case AREA_BOB:
-                pos[1] += 125.f;
-                break;
-
-            case AREA_WF:
-                pos[1] += 125.f;
-                break;
-        }
-#endif
     }
 
-#if FIX_CAMERA_BOSS_FIGHT_POS
     f32 lowHeight = gMarioState->floorHeight + 125.f;
     if (pos[1] < lowHeight) pos[1] = lowHeight;
-#else
-    // Prevent the camera from going to the ground in the outside boss fight
-    if (gCurrLevelNum == LEVEL_BBH) { pos[1] = 2047.f; }
-#endif
 
     // Rotate from C-Button input
     if (sCSideButtonYaw < 0) {
@@ -2859,12 +2806,6 @@ void set_camera_mode(struct Camera *c, s16 mode, s16 frames) {
     struct LinearTransitionPoint *start = &sModeInfo.transitionStart;
     struct LinearTransitionPoint *end = &sModeInfo.transitionEnd;
 
-#if CAMERA_VANILLA_DEFINES
-    if (mode == CAMERA_MODE_WATER_SURFACE || gCurrLevelArea == AREA_TTM_OUTSIDE) {
-        return;
-    }
-#endif
-
     // Clear movement flags that would affect the transition
     gCameraMovementFlags &= ~(CAM_MOVE_RESTRICT | CAM_MOVE_ROTATE);
     gCameraMovementFlags |= CAM_MOVING_INTO_MODE;
@@ -3078,13 +3019,10 @@ void update_camera(struct Camera *c) {
     c->mode = gLakituState.mode;
     c->defMode = gLakituState.defMode;
 
-#if CAMERA_VANILLA_DEFINES
-    camera_course_processing(c);
-#else
     if (gCurrDemoInput != NULL) {
         camera_course_processing(c);
     }
-#endif
+
     stub_camera_3(c);
     sCButtonsPressed = find_c_buttons_pressed(sCButtonsPressed, gPlayer1Controller->buttonPressed,gPlayer1Controller->buttonDown);
 
@@ -3488,11 +3426,6 @@ void zoom_out_if_paused_and_outside(struct GraphNodeCamera *camera) {
                 camera->focus[2] = gCamera->areaCenZ;
                 vec3f_get_dist_and_angle(camera->focus, sMarioCamState->pos, &dist, &pitch, &yaw);
                 vec3f_set_dist_and_angle(sMarioCamState->pos, camera->pos, 6000.f, 0x1000, yaw);
-#if CAMERA_VANILLA_DEFINES
-                if (gCurrLevelNum != LEVEL_THI) {
-                    find_in_bounds_yaw_wdw_bob_thi(camera->pos, camera->focus, 0);
-                }
-#endif
             }
         } else {
             sFramesPaused++;
@@ -3899,12 +3832,7 @@ s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius) {
     f32 normZ;
     f32 originOffset;
     f32 offset;
-#if CORRECT_COLLIDE_WITH_WALLS
     f32 displacement;
-#else
-    f32 offsetAbsolute;
-    Vec3f newPos[MAX_REFERENCED_WALLS];
-#endif
     s32 i;
     s32 numCollisions = 0;
 
@@ -3917,23 +3845,11 @@ s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius) {
     if (numCollisions != 0) {
         for (i = 0; i < collisionData.numWalls; i++) {
             wall = collisionData.walls[collisionData.numWalls - 1];
-#if !CORRECT_COLLIDE_WITH_WALLS
-            vec3f_copy(newPos[i], pos);
-#endif
             // Read surface data:
             normX = wall->normal.x;
             normY = wall->normal.y;
             normZ = wall->normal.z;
             originOffset = wall->originOffset;
-#if !CORRECT_COLLIDE_WITH_WALLS
-            offset = normX * newPos[i][0] + normY * newPos[i][1] + normZ * newPos[i][2] + originOffset;
-            offsetAbsolute = absf(offset);
-            if (offsetAbsolute < radius) {
-                newPos[i][0] += normX * (radius - offset);
-                newPos[i][2] += normZ * (radius - offset);
-                vec3f_copy(pos, newPos[i]);
-            }
-#else
             // offset = how much pos is moved by the surface (dot(normal, pos)).
             offset = (normX * pos[0]) + (normY * pos[1]) + (normZ * pos[2]) + originOffset;
             if (absf(offset) < radius) {
@@ -3943,7 +3859,6 @@ s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius) {
                 pos[1] += normY * displacement;
                 pos[2] += normZ * displacement;
             }
-#endif
         }
     }
     return numCollisions;
@@ -4904,33 +4819,7 @@ u8 get_cutscene_from_mario_status(struct Camera *c) {
         cutscene = sObjectCutscene;
         sObjectCutscene = 0;
         if (sMarioCamState->cameraEvent == CAM_EVENT_DOOR) {
-#if CAMERA_VANILLA_DEFINES
-            switch (gCurrLevelArea) {
-                case AREA_CASTLE_LOBBY:
-                    //! doorStatus is never DOOR_ENTER_LOBBY when cameraEvent == 6, because
-                    //! doorStatus is only used for the star door in the lobby, which uses
-                    //! ACT_ENTERING_STAR_DOOR
-                    if (c->mode == CAMERA_MODE_SPIRAL_STAIRS || c->mode == CAMERA_MODE_CLOSE || c->doorStatus == DOOR_ENTER_LOBBY) {
-                        cutscene = open_door_cutscene(CUTSCENE_DOOR_PULL_MODE, CUTSCENE_DOOR_PUSH_MODE);
-                    } else {
-                        cutscene = open_door_cutscene(CUTSCENE_DOOR_PULL, CUTSCENE_DOOR_PUSH);
-                    }
-                    break;
-                case AREA_BBH:
-                    //! Castle Lobby uses 0 to mean 'no special modes', but BBH uses 1...
-                    if (c->doorStatus == DOOR_LEAVING_SPECIAL) {
-                        cutscene = open_door_cutscene(CUTSCENE_DOOR_PULL, CUTSCENE_DOOR_PUSH);
-                    } else {
-                        cutscene = open_door_cutscene(CUTSCENE_DOOR_PULL_MODE, CUTSCENE_DOOR_PUSH_MODE);
-                    }
-                    break;
-                default:
-                    cutscene = open_door_cutscene(CUTSCENE_DOOR_PULL, CUTSCENE_DOOR_PUSH);
-                    break;
-            }
-#else
             cutscene = open_door_cutscene(CUTSCENE_DOOR_PULL, CUTSCENE_DOOR_PUSH);
-#endif
         }
         if (sMarioCamState->cameraEvent == CAM_EVENT_DOOR_WARP) {
             cutscene = CUTSCENE_DOOR_WARP;
@@ -6339,116 +6228,6 @@ s16 camera_course_processing(struct Camera *c) {
         }
     }
 
-#if CAMERA_VANILLA_DEFINES
-    // Area-specific camera processing
-    if (!(sStatusFlags & CAM_FLAG_BLOCK_AREA_PROCESSING)) {
-        switch (gCurrLevelArea) {
-            case AREA_WF:
-                if (sMarioCamState->action == ACT_RIDING_HOOT) {
-                    transition_to_camera_mode(c, CAMERA_MODE_SLIDE_HOOT, 60);
-                } else {
-                    switch (sMarioGeometry.currFloorType) {
-                        case SURFACE_CAMERA_8_DIR:
-                            transition_to_camera_mode(c, CAMERA_MODE_8_DIRECTIONS, 90);
-                            s8DirModeBaseYaw = DEGREES(90);
-                            break;
-
-                        case SURFACE_BOSS_FIGHT_CAMERA:
-                            if (gCurrActNum == 1) {
-                                set_camera_mode_boss_fight(c);
-                            } else {
-                                set_camera_mode_radial(c, 60);
-                            }
-                            break;
-                        default:
-                            set_camera_mode_radial(c, 60);
-                    }
-                }
-                break;
-
-            case AREA_BBH:
-                // if camera is fixed at bbh_room_13_balcony_camera (but as floats)
-                if (vec3f_compare_f32(sFixedModeBasePosition, 210.f, 420.f, 3109.f)) {
-                    if (sMarioCamState->pos[1] < 1800.f) {
-                        transition_to_camera_mode(c, CAMERA_MODE_CLOSE, 30);
-                    }
-                }
-                break;
-
-            case AREA_SSL_PYRAMID:
-                set_mode_if_not_set_by_surface(c, CAMERA_MODE_OUTWARD_RADIAL);
-                break;
-
-            case AREA_SSL_OUTSIDE:
-                set_mode_if_not_set_by_surface(c, CAMERA_MODE_RADIAL);
-                break;
-
-            case AREA_THI_HUGE:
-                break;
-
-            case AREA_THI_TINY:
-                surface_type_modes_thi(c);
-                break;
-
-            case AREA_TTC:
-                set_mode_if_not_set_by_surface(c, CAMERA_MODE_OUTWARD_RADIAL);
-                break;
-
-            case AREA_BOB:
-                if (set_mode_if_not_set_by_surface(c, CAMERA_MODE_NONE) == 0) {
-                    if (sMarioGeometry.currFloorType == SURFACE_BOSS_FIGHT_CAMERA) {
-                        set_camera_mode_boss_fight(c);
-                    } else {
-                        if (c->mode == CAMERA_MODE_CLOSE) {
-                            transition_to_camera_mode(c, CAMERA_MODE_RADIAL, 60);
-                        } else {
-                            set_camera_mode_radial(c, 60);
-                        }
-                    }
-                }
-                break;
-
-            case AREA_WDW_MAIN:
-                switch (sMarioGeometry.currFloorType) {
-                    case SURFACE_INSTANT_WARP_1B:
-                        c->defMode = CAMERA_MODE_RADIAL;
-                        break;
-                }
-                break;
-
-            case AREA_WDW_TOWN:
-                switch (sMarioGeometry.currFloorType) {
-                    case SURFACE_INSTANT_WARP_1C:
-                        c->defMode = CAMERA_MODE_CLOSE;
-                        break;
-                }
-                break;
-
-            case AREA_DDD_WHIRLPOOL:
-                //! @bug this does nothing
-                gLakituState.defMode = CAMERA_MODE_OUTWARD_RADIAL;
-                break;
-
-            case AREA_DDD_SUB:
-                if ((c->mode != CAMERA_MODE_BEHIND_MARIO)
-                    && (c->mode != CAMERA_MODE_WATER_SURFACE)) {
-                    if (((sMarioCamState->action & ACT_FLAG_ON_POLE) != 0)
-                        || (sMarioGeometry.currFloorHeight > 800.f)) {
-                        transition_to_camera_mode(c, CAMERA_MODE_8_DIRECTIONS, 60);
-
-                    } else {
-                        if (sMarioCamState->pos[1] < 800.f) {
-                            transition_to_camera_mode(c, CAMERA_MODE_FREE_ROAM, 60);
-                        }
-                    }
-                }
-                //! @bug this does nothing
-                gLakituState.defMode = CAMERA_MODE_FREE_ROAM;
-                break;
-        }
-    }
-#endif
-
     sStatusFlags &= ~CAM_FLAG_BLOCK_AREA_PROCESSING;
     if (oldMode == CAMERA_MODE_C_UP) {
         sModeInfo.lastMode = c->mode;
@@ -6516,7 +6295,6 @@ s32 rotate_camera_around_walls(struct Camera *c, Vec3f cPos, s16 *avoidYaw, s16 
     // The yaw of the vector from Mario to the camera.
     s16 yawFromMario;
     s32 status = 0;
-    /// The current iteration. The algorithm takes CAMERA_NUM_OBSTRUCTION_CHECKS equal steps from Mario back to the camera.
     s32 step = 0;
 
     sStatusFlags &= ~CAM_FLAG_CAM_NEAR_WALL;
@@ -6526,88 +6304,51 @@ s32 rotate_camera_around_walls(struct Camera *c, Vec3f cPos, s16 *avoidYaw, s16 
     
     Vec3f marioToCamera;
     vec3f_diff(marioToCamera, cPos, sMarioCamState->pos);
-#if !CORRECT_ROTATE_CAMERA_AROUND_WALLS
-    /// The radius used to find potential walls to avoid.
-    f32 radius = 150.0f;
-    /// This only increases when there is a wall collision found in the coarse pass
-    f32 fineRadius = 100.0f;
-    
-    vec3f_get_yaw(sMarioCamState->pos, cPos, &yawFromMario);
-#else
     f32 radius = 100.0f;
     // The yaw of the vector from Mario to the camera.
     yawFromMario = atan2s(marioToCamera[2], marioToCamera[0]);
-#endif
 
-    for (step = 0; step < CAMERA_NUM_OBSTRUCTION_CHECKS; step++) {
+    for (step = 0; step < 8; step++) {
         // Start at Mario, move backwards to Lakitu's position
         colData.x = sMarioCamState->pos[0] + (marioToCamera[0] * checkDist);
         colData.y = sMarioCamState->pos[1] + (marioToCamera[1] * checkDist);
         colData.z = sMarioCamState->pos[2] + (marioToCamera[2] * checkDist);
         colData.radius = radius;
-#if !CORRECT_ROTATE_CAMERA_AROUND_WALLS
-        //  Increase the coarse check radius
-        //! @bug Increases to 250.f, but the max collision radius is 200.f
-        camera_approach_f32_symmetric_bool(&radius, MAX_COLLISION_RADIUS + 50.0f, 30.0f);
-#else
         // Increase the check radius the closer we get to the camera.
-        radius += (100.0f / CAMERA_NUM_OBSTRUCTION_CHECKS);
+        radius += (100.0f / 8);
         if (radius > MAX_COLLISION_RADIUS) {
             radius = MAX_COLLISION_RADIUS;
         }
-#endif
         // Coarse check found a wall
         if (find_wall_collisions(&colData) != 0) {
             wall = colData.walls[colData.numWalls - 1];
-#if CORRECT_ROTATE_CAMERA_AROUND_WALLS
             wallYaw = atan2s(wall->normal.z, wall->normal.x);
-#endif
             // If we're over halfway from Mario to Lakitu, then there's a wall near the camera, but
             // not necessarily obstructing Mario.
-            if (step > (CAMERA_NUM_OBSTRUCTION_CHECKS / 2)) {
+            if (step > (8 / 2)) {
                 sStatusFlags |= CAM_FLAG_CAM_NEAR_WALL;
                 if (status <= 0) {
                     status = 1;
                     wall = colData.walls[colData.numWalls - 1];
-#if !CORRECT_ROTATE_CAMERA_AROUND_WALLS
-                    // wallYaw is parallel to the wall, not perpendicular
-                    wallYaw = atan2s(wall->normal.z, wall->normal.x);
-#endif
                     // Calculate the avoid direction. The function returns the opposite direction so add 180
                     // degrees.
                     *avoidYaw = calc_avoid_yaw(yawFromMario, wallYaw);
                 }
             }
-#if !CORRECT_ROTATE_CAMERA_AROUND_WALLS
-            colData.x = sMarioCamState->pos[0] + (marioToCamera[0] * checkDist);
-            colData.y = sMarioCamState->pos[1] + (marioToCamera[1] * checkDist);
-            colData.z = sMarioCamState->pos[2] + (marioToCamera[2] * checkDist);
-            colData.radius = fineRadius;
-            // Increase the fine check radius
-            camera_approach_f32_symmetric_bool(&fineRadius, MAX_COLLISION_RADIUS, 20.0f);
-#endif
-
-#if !CORRECT_ROTATE_CAMERA_AROUND_WALLS
-            if (find_wall_collisions(&colData) != 0) {  
-                wall = colData.walls[colData.numWalls - 1];
-                wallYaw = atan2s(wall->normal.z, wall->normal.x);
-#endif         
-                // If Mario would be blocked by the surface, then avoid it
-                if (!is_range_behind_surface(sMarioCamState->pos, cPos, wall, yawRange, SURFACE_WALL_MISC)
-                    && is_mario_behind_surface(c, wall)
-                    // Also check if the wall is tall enough to cover Mario
-                    && !is_surf_within_bounding_box(wall, -1.f, 150.f, -1.f)) {
-                    // Calculate the avoid direction. The function returns the opposite direction so add 180 degrees.
-                    *avoidYaw = calc_avoid_yaw(yawFromMario, wallYaw);
-                    camera_approach_s16_symmetric_bool(avoidYaw, wallYaw, yawRange);
-                    status = 3;
-                    step = CAMERA_NUM_OBSTRUCTION_CHECKS;
-                }
-#if !CORRECT_ROTATE_CAMERA_AROUND_WALLS 
+      
+            // If Mario would be blocked by the surface, then avoid it
+            if (!is_range_behind_surface(sMarioCamState->pos, cPos, wall, yawRange, SURFACE_WALL_MISC)
+                && is_mario_behind_surface(c, wall)
+                // Also check if the wall is tall enough to cover Mario
+                && !is_surf_within_bounding_box(wall, -1.f, 150.f, -1.f)) {
+                // Calculate the avoid direction. The function returns the opposite direction so add 180 degrees.
+                *avoidYaw = calc_avoid_yaw(yawFromMario, wallYaw);
+                camera_approach_s16_symmetric_bool(avoidYaw, wallYaw, yawRange);
+                status = 3;
+                step = 8;
             }
-#endif  
         }
-        checkDist += (1.0f / CAMERA_NUM_OBSTRUCTION_CHECKS);
+        checkDist += (1.0f / 8);
     }
 
     return status;
@@ -6783,11 +6524,6 @@ static UNUSED void unused_cutscene_mario_dialog_looking_down(UNUSED struct Camer
  * Cause Mario to enter the normal dialog state.
  */
 static BAD_RETURN(s32) cutscene_mario_dialog(UNUSED struct Camera *c) {
-#if SSL_PYRAMID_CUTSCENE
-    if (gMarioState->action & ACT_FLAG_RIDING_SHELL) {
-        gCutsceneTimer = CUTSCENE_LOOP;
-    }
-#endif
     gCutsceneTimer = cutscene_common_set_dialog_state(MARIO_DIALOG_LOOK_FRONT);
 }
 
@@ -10946,14 +10682,12 @@ void play_cutscene(struct Camera *c) {
     sStatusFlags &= ~CAM_FLAG_SMOOTH_MOVEMENT;
     gCameraMovementFlags &= ~CAM_MOVING_INTO_MODE;
 
-#if FIX_CUTSCENE_FOCUS_DEACTIVE
     if (gCutsceneFocus != NULL) {
         if (gCutsceneFocus->activeFlags == ACTIVE_FLAG_DEACTIVATED) {
             gObjCutsceneDone = TRUE;
             gTimeStopState = 0;
         }
     }
-#endif
 
 #define CUTSCENE(id, cutscene)                                                                            \
     case id:                                                                                              \

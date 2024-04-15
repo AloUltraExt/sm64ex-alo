@@ -34,11 +34,7 @@ void bhv_collect_star_loop(void) {
     }
 }
 
-#if ROOM_OBJECT_CAMERA_FOCUS
-#define COND(a, b) a
-#else
 #define COND(a, b) (a || b)
-#endif
 
 void bhv_star_spawn_init(void) {
     o->oMoveAngleYaw = atan2s(o->oHomeZ - o->oPosZ, o->oHomeX - o->oPosX);
