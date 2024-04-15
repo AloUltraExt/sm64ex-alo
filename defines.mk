@@ -41,7 +41,7 @@ QOL_REDONE ?= 1
 # --------------------------------------
 
 # Enable 60 fps interpolation
-HIGH_FPS_PC ?= 0
+HIGH_FPS_PC ?= 1
 # Disable text-based save-files by default
 TEXTSAVES ?= 0
 # Load resources from external files
