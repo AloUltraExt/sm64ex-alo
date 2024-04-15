@@ -64,6 +64,7 @@ extern bool         configMouse;
 #endif
 extern bool         configWallslide;
 extern bool         configDive;
+extern bool         configDash;
 extern bool         configSkipIntro;
 #ifdef DISCORDRPC
 extern bool         configDiscordRPC;

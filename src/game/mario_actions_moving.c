@@ -17,6 +17,13 @@
 #ifdef CHEATS_ACTIONS
 #include "extras/cheats.h"
 #endif
+#ifdef EXT_OPTIONS_MENU
+#ifndef TARGET_N64
+#include "pc/configfile.h"
+#else
+int configDash = FALSE;
+#endif
+#endif
 
 struct LandingAction {
     s16 numFrames;
@@ -471,9 +478,17 @@ void update_walking_speed(struct MarioState *m) {
     f32 targetSpeed;
 
     if (m->floor != NULL && m->floor->type == SURFACE_SLOW) {
-        maxTargetSpeed = 24.0f;
+        if ((gPlayer1Controller->buttonDown & L_TRIG && configDash)) {
+            maxTargetSpeed = 24.0f;
+        } else {
+            maxTargetSpeed = 10.0f;
+        }
     } else {
-        maxTargetSpeed = 32.0f;
+        if ((gPlayer1Controller->buttonDown & L_TRIG && configDash)) {
+            maxTargetSpeed = 32.0f;
+        } else {
+            maxTargetSpeed = 14.0f;
+        }
     }
 
     targetSpeed = m->intendedMag < maxTargetSpeed ? m->intendedMag : maxTargetSpeed;
@@ -635,7 +650,7 @@ void anim_and_audio_for_walk(struct MarioState *m) {
                 case 2:
                     if (val04 < 5.0f) {
                         m->actionTimer = 1;
-                    } else if (val04 > 22.0f) {
+                    } else if ((gPlayer1Controller->buttonDown & L_TRIG && configDash) || (val04 > 22.0f && !configDash)) {
                         m->actionTimer = 3;
                     } else {
                         //! (Speed Crash) If Mario's speed is more than 2^17.
@@ -648,7 +663,7 @@ void anim_and_audio_for_walk(struct MarioState *m) {
                     break;
 
                 case 3:
-                    if (val04 < 18.0f) {
+                    if ((!(gPlayer1Controller->buttonDown & L_TRIG) && configDash) || (val04 < 18.0f && !configDash)) {
                         m->actionTimer = 2;
                     } else {
                         //! (Speed Crash) If Mario's speed is more than 2^17.
