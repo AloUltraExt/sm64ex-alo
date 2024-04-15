@@ -18,7 +18,7 @@
 
 #include "levels/intro/header.h"
 
-#if defined(TARGET_N64) && defined(N64_USE_EXTENDED_RAM)
+#if defined(TARGET_N64) && defined(USE_EXT_RAM)
 const GeoLayout intro_geo_error_screen[] = {
     GEO_NODE_SCREEN_AREA(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2),
     GEO_OPEN_NODE(),
