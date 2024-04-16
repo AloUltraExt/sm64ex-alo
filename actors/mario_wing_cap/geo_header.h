@@ -1,0 +1,17 @@
+extern const GeoLayout marios_wing_cap_geo[];
+extern Lights1 mario_wing_cap_cap_lights;
+extern Lights1 mario_wing_cap_wing_lights;
+extern u8 mario_wing_cap_mario_cap_ci8[];
+extern u8 mario_wing_cap_mario_cap_pal_rgba16[];
+extern u8 mario_wing_cap_custom_mario_wing_ci8[];
+extern u8 mario_wing_cap_custom_mario_wing_pal_rgba16[];
+extern Vtx mario_wing_cap_Wing_Cap_mesh_layer_1_vtx_0[88];
+extern Gfx mario_wing_cap_Wing_Cap_mesh_layer_1_tri_0[];
+extern Vtx mario_wing_cap_Wing_Cap_mesh_layer_4_vtx_0[8];
+extern Gfx mario_wing_cap_Wing_Cap_mesh_layer_4_tri_0[];
+extern Gfx mat_mario_wing_cap_cap[];
+extern Gfx mat_revert_mario_wing_cap_cap[];
+extern Gfx mat_mario_wing_cap_wing[];
+extern Gfx mat_revert_mario_wing_cap_wing[];
+extern Gfx mario_wing_cap_Wing_Cap_mesh_layer_1[];
+extern Gfx mario_wing_cap_Wing_Cap_mesh_layer_4[];
