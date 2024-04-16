@@ -18,7 +18,7 @@
 #ifndef TARGET_N64
 #include "pc/configfile.h"
 #else
-int configWallslide = TRUE;
+extern int configWallslide;
 #endif
 #endif
 

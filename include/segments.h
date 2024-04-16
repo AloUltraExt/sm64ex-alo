@@ -15,6 +15,7 @@
  * to cast the addresses to pointers in this file, since that would be invalid
  * linker script syntax.
 */
+#define USE_EXT_RAM
 #ifndef USE_EXT_RAM
 #define SEG_RAM_END      0x80400000
 #else

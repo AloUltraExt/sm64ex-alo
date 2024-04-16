@@ -33,10 +33,13 @@ struct WiiUKeymap {
 #define SE(dir) VPAD_STICK_R_EMULATION_##dir, WPAD_CLASSIC_STICK_R_EMULATION_##dir, WPAD_PRO_STICK_R_EMULATION_##dir
 
 struct WiiUKeymap map[] = {
-    { B_BUTTON, VB(B) | VB(Y), CB(B) | CB(Y), PB(B) | PB(Y) },
-    { A_BUTTON, VB(A) | VB(X), CB(A) | CB(X), PB(A) | PB(X) },
+    { B_BUTTON, VB(B), CB(B), PB(B) },
+    { A_BUTTON, VB(A), CB(A), PB(A) },
+    { X_BUTTON, VB(X), CB(X), PB(X) },
+    { Y_BUTTON, VB(Y), CB(Y), PB(Y) },
     { START_BUTTON, VB(PLUS), CB(PLUS), PB(PLUS) },
-    { Z_TRIG, VB(ZL) | VB(ZR), CB(ZL) | CB(ZR), PT(ZL) | PT(ZR) },
+    { ZL_TRIG, VB(ZL), CB(ZL), PT(ZL) },
+    { ZR_TRIG, VB(ZR), CB(ZR), PT(ZR) },
     { L_TRIG, VB(L), CB(L), PT(L) },
     { R_TRIG, VB(R), CB(R), PT(R) },
     { U_CBUTTONS, SE(UP) },
@@ -141,6 +144,8 @@ static void read_wpad(OSContPad* pad) {
 
         if (wm & WPAD_BUTTON_A) pad->button |= A_BUTTON;
         if (wm & WPAD_BUTTON_B) pad->button |= B_BUTTON;
+        if (wm & WPAD_BUTTON_X) pad->button |= X_BUTTON;
+        if (wm & WPAD_BUTTON_Y) pad->button |= Y_BUTTON;
         if (wm & WPAD_BUTTON_PLUS) pad->button |= START_BUTTON;
         if (wm & WPAD_BUTTON_UP) { pad->button |= U_CBUTTONS; rStick.y += 1.0; }
         if (wm & WPAD_BUTTON_DOWN) { pad->button |= D_CBUTTONS; rStick.y -= 1.0; }
@@ -148,7 +153,7 @@ static void read_wpad(OSContPad* pad) {
         if (wm & WPAD_BUTTON_RIGHT) { pad->button |= R_CBUTTONS; rStick.x += 1.0; }
         if (wm & WPAD_BUTTON_MINUS) pad->button |= L_TRIG;
         if (ext & WPAD_NUNCHUK_BUTTON_C) pad->button |= R_TRIG;
-        if (ext & WPAD_NUNCHUK_BUTTON_Z) pad->button |= Z_TRIG;
+        if (ext & WPAD_NUNCHUK_BUTTON_Z) pad->button |= ZR_TRIG;
     } else if (status.extensionType == WPAD_EXT_CLASSIC || status.extensionType == WPAD_EXT_MPLUS_CLASSIC) {
         uint32_t ext = status.classic.hold;
         stick = status.classic.leftStick;

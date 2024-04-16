@@ -29,3 +29,7 @@
 #ifdef PORT_MOP_OBJS
 #include "src/extras/mop/geo.inc.c"
 #endif
+
+#include "mario_metal_cap/geo.inc.c"
+#include "mario_wing_cap/geo.inc.c"
+#include "mario_winged_metal_cap/geo.inc.c"

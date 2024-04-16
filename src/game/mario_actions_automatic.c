@@ -818,12 +818,10 @@ s32 act_in_cannon(struct MarioState *m) {
             m->faceAngle[0] -= (s16)(m->controller->stickY * 10.0f);
             marioObj->oMarioCannonInputYaw -= (s16)(m->controller->stickX * 10.0f);
 #ifdef MOUSE_ACTIONS
-            if (configMouse) {
-                gMouseHasCenterControl = TRUE;
+            gMouseHasCenterControl = TRUE;
 
-                m->faceAngle[0] -= (s16)(gMouseYPos * 10.0f);
-                marioObj->oMarioCannonInputYaw -= (s16)(gMouseXPos * 10.0f);
-            }
+            m->faceAngle[0] -= (s16)(gMouseYPos * 10.0f);
+            marioObj->oMarioCannonInputYaw -= (s16)(gMouseXPos * 10.0f);
 #endif
 
             if (m->faceAngle[0] > 0x38E3) {

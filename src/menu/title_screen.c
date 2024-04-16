@@ -98,6 +98,12 @@ s16 intro_level_select(void) {
     if (gPlayer1Controller->buttonPressed & B_BUTTON) {
         --gCurrLevelNum, stageChanged = TRUE;
     }
+    if (gPlayer1Controller->buttonPressed & X_BUTTON) {
+        ++gCurrLevelNum, stageChanged = TRUE;
+    }
+    if (gPlayer1Controller->buttonPressed & Y_BUTTON) {
+        --gCurrLevelNum, stageChanged = TRUE;
+    }
     if (gPlayer1Controller->buttonPressed & U_JPAD) {
         --gCurrLevelNum, stageChanged = TRUE;
     }

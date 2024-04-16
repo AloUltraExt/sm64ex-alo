@@ -136,7 +136,6 @@
 0xea6f033e, actors/ukiki/ukiki_fur.rgba16.png
 0xea566cb8, textures/skybox_tiles/bitfs.28.rgba16.png
 0xea11fb10, levels/lll/23.rgba16.png
-0xe9fcbf74, actors/mario/mario_mustache.rgba16.png
 0xe9e0c62a, textures/snow/ccm_textures.05800.rgba16.png
 0xe9cabb44, actors/warp_pipe/warp_pipe_side.rgba16.png
 0xe944a81b, levels/wf/3.rgba16.png
@@ -570,7 +569,6 @@
 0xa07bcde0, textures/skybox_tiles/clouds.20.rgba16.png
 0xa055e62e, levels/cotmc/1.rgba16.png
 0x9fcddce1, textures/inside/inside_castle_textures.09000.rgba16.png
-0x9fbecef9, actors/mario/mario_eyes_half_closed.rgba16.png
 0x9fb76a34, textures/skybox_tiles/cloud_floor.38.rgba16.png
 0x9fa96b1f, textures/mountain/ttm_textures.01800.rgba16.png
 0x9f82c465, textures/skybox_tiles/ccm.41.rgba16.png
@@ -666,8 +664,6 @@
 0x908bb0a5, textures/skybox_tiles/bidw.30.rgba16.png
 0x906ff62e, actors/sparkle/sparkle_1.rgba16.png
 0x9066e92b, levels/vcutm/0.rgba16.png
-0x905d3214, actors/mario_cap/mario_cap_logo.rgba16.png
-0x905d3214, actors/mario/mario_logo.rgba16.png
 0x90581231, actors/klepto/klepto_chest_tuft.rgba16.png
 0x9026cba3, textures/generic/bob_textures.08800.rgba16.png
 0x90027a49, actors/poundable_pole/poundable_pole_side.rgba16.png
@@ -916,7 +912,6 @@
 0x6bcc2e51, actors/snufit/snufit_mouth.rgba16.png
 0x6bc84af5, textures/skybox_tiles/cake.46.rgba16.png
 0x6bc75681, textures/segment2/segment2.02E00.rgba16.png
-0x6b8d43c4, actors/mario/mario_eyes_center.rgba16.png
 0x6b3a40a5, actors/bowser/bowser_eye_center_0.rgba16.png
 0x6b3a40a5, actors/bowser/bowser_eye_center_1.rgba16.png
 0x6b1fc91a, textures/segment2/segment2.00000.rgba16.png
@@ -1006,9 +1001,6 @@
 0x5e819c11, textures/skybox_tiles/bbh.5.rgba16.png
 0x5dfa73ac, actors/bubble/mr_i_bubble.rgba16.png
 0x5ddd4bf0, textures/skybox_tiles/bbh.8.rgba16.png
-0x5d6b0678, actors/mario/mario_eyes_closed_unused_0.rgba16.png
-0x5d6b0678, actors/mario/mario_eyes_closed.rgba16.png
-0x5d6b0678, actors/mario/mario_eyes_closed_unused_1.rgba16.png
 0x5d617ea0, actors/lakitu_enemy/lakitu_enemy_shell.rgba16.png
 0x5d617ea0, actors/lakitu_cameraman/lakitu_cameraman_shell.rgba16.png
 0x5d5bb4d6, textures/sky/rr_textures.00800.rgba16.png
@@ -1161,8 +1153,6 @@
 0x4446f65d, actors/stomp_smoke/stomp_smoke_3.ia16.png
 0x4443d529, actors/haunted_cage/bbh_cage_double_ornament.rgba16.png
 0x438cc5be, textures/segment2/segment2.07D50.rgba16.png
-0x432d56be, actors/mario_cap/mario_cap_metal.rgba16.png
-0x432d56be, actors/mario/mario_metal.rgba16.png
 0x431e1944, levels/menu/main_menu_seg7.03C68.rgba16.png
 0x42f2325a, textures/skybox_tiles/bits.13.rgba16.png
 0x42a20f7e, actors/explosion/explosion_5.rgba16.png
@@ -1229,8 +1219,6 @@
 0x38afcd8f, textures/segment2/segment2.06580.rgba16.png
 0x38afccee, levels/ssl/6.rgba16.png
 0x38894888, actors/bobomb/bob-omb_right_side.rgba16.png
-0x387d6d33, actors/mario_cap/mario_cap_wing_tip.rgba16.png
-0x387d6d33, actors/mario/mario_wing_tip.rgba16.png
 0x386a9785, actors/bowser/bowser_shell.rgba16.png
 0x3867cbee, actors/wiggler/wiggler_segment_left_side.rgba16.png
 0x385055f4, textures/skybox_tiles/wdw.37.rgba16.png
@@ -1298,7 +1286,6 @@
 0x2cdb87de, levels/wmotr/0.rgba16.png
 0x2c44217c, textures/skybox_tiles/bits.57.rgba16.png
 0x2c246943, textures/skybox_tiles/bits.59.rgba16.png
-0x2bea0a29, actors/mario/mario_sideburn.rgba16.png
 0x2bc420f5, textures/grass/wf_textures.06800.rgba16.png
 0x2b851f69, textures/segment2/segment2.02C00.rgba16.png
 0x2b846815, actors/power_meter/power_meter_six_segments.rgba16.png
@@ -1320,7 +1307,6 @@
 0x292c40a1, textures/skybox_tiles/cake.13.rgba16.png
 0x28df6c96, actors/flame/flame_1.ia16.png
 0x28a7f52b, textures/segment2/segment2.01200.rgba16.png
-0x28964b59, actors/mario/mario_eyes_dead.rgba16.png
 0x2811c57f, textures/segment2/segment2.06880.rgba16.png
 0x28061018, levels/ttm/5.rgba16.png
 0x27ece31d, textures/outside/castle_grounds_textures.04000.rgba16.png
@@ -1412,7 +1398,6 @@
 0x19d0a651, textures/skybox_tiles/wdw.36.rgba16.png
 0x19cf329b, textures/skybox_tiles/ssl.57.rgba16.png
 0x19bb64c1, textures/machine/ttc_textures.03000.rgba16.png
-0x19442fc9, actors/mario/mario_overalls_button.rgba16.png
 0x192fa726, actors/tree/tree_left_side.rgba16.png
 0x19132bcc, textures/skybox_tiles/water.6.rgba16.png
 0x18a7104c, textures/skybox_tiles/bits.19.rgba16.png
@@ -1426,8 +1411,6 @@
 0x17eb8cf3, textures/title_screen_bg/title_screen_bg.00E40.rgba16.png
 0x17ea3392, textures/snow/ccm_textures.09000.ia16.png
 0x17cde57d, actors/thwomp/thwomp_face.rgba16.png
-0x17c50cf2, actors/mario_cap/mario_cap_wing.rgba16.png
-0x17c50cf2, actors/mario/mario_wing.rgba16.png
 0x177d197c, levels/bitdw/3.rgba16.png
 0x176c2e93, actors/coin/coin_tilt_left.ia16.png
 0x17405808, levels/bbh/5.rgba16.png

@@ -591,7 +591,7 @@ Gfx *geo_intro_face_easter_egg(s32 state, struct GraphNode *node, UNUSED void *c
 
     } else if (state == 1) {
         if (sFaceCounter == 0) {
-            if (gPlayer1Controller->buttonPressed & Z_TRIG) {
+            if (gPlayer1Controller->buttonPressed & (ZL_TRIG | ZR_TRIG)) {
                 play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
                 sFaceVisible[0] ^= 1;
                 sFaceCounter++;

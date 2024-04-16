@@ -140,13 +140,13 @@ void cheats_blj_anywhere(struct MarioState *m) {
     if (m->forwardVel < -7.0f && (m->action == ACT_LONG_JUMP || m->action == ACT_LONG_JUMP_LAND)) {
         switch (Cheats.BljAny.Mode) {
             case 1: // Pressing
-                if (m->controller->buttonPressed & A_BUTTON && m->controller->buttonDown & Z_TRIG) {
+                if (m->controller->buttonPressed & A_BUTTON && m->controller->buttonDown & (ZL_TRIG | ZR_TRIG)) {
                     m->forwardVel -= (Cheats.BljAny.VelForce + 1) * 2.5f;
                     m->vel[1] -= 50.0f;
                 }
                 break;
             case 2: // Holding
-                if (m->controller->buttonDown & (A_BUTTON | Z_TRIG)) {
+                if (m->controller->buttonDown & (A_BUTTON | ZL_TRIG | ZR_TRIG)) {
                     m->forwardVel -= (Cheats.BljAny.VelForce + 1) * 2.5f;
                     m->vel[1] -= 50.0f;
 

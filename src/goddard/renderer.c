@@ -1331,7 +1331,7 @@ void gd_copy_p1_contpad(OSContPad *p1cont) {
         dest[i] = src[i];
     }
 
-    if (p1cont->button & Z_TRIG) {
+    if (p1cont->button & (ZL_TRIG | ZR_TRIG)) {
         print_all_timers();
     }
 }
@@ -2470,6 +2470,8 @@ void parse_p1_controller(void) {
     gdctrl->trgR   = (currInputs->button & R_TRIG) != 0;
     gdctrl->btnA   = (currInputs->button & A_BUTTON) != 0;
     gdctrl->btnB   = (currInputs->button & B_BUTTON) != 0;
+    gdctrl->btnX   = (currInputs->button & X_BUTTON) != 0;
+    gdctrl->btnY   = (currInputs->button & Y_BUTTON) != 0;
     gdctrl->cleft  = (currInputs->button & L_CBUTTONS) != 0;
     gdctrl->cright = (currInputs->button & R_CBUTTONS) != 0;
     gdctrl->cup    = (currInputs->button & U_CBUTTONS) != 0;
@@ -2508,7 +2510,7 @@ void parse_p1_controller(void) {
         gdctrl->newStartPress ^= 1;
     }
 
-    if (currInputs->button & Z_TRIG && !(prevInputs->button & Z_TRIG)) {
+    if (currInputs->button & (ZL_TRIG | ZR_TRIG) && !(prevInputs->button & (ZL_TRIG | ZR_TRIG))) {
         sCurrDebugViewIndex++;
     }
 
@@ -2556,7 +2558,7 @@ void parse_p1_controller(void) {
     }
 
     float screenScale = (float) gfx_current_dimensions.height / (float)SCREEN_HEIGHT;
-    if (configMouse && gMouseHasFreeControl) {
+    if (gMouseHasFreeControl) {
         gdctrl->csrX = (gMouseXPos - (gfx_current_dimensions.width - (screenScale * (float)SCREEN_WIDTH))/ 2)/ screenScale;
         gdctrl->csrY = gMouseYPos / screenScale;
     }

@@ -2751,7 +2751,7 @@ s16 render_pause_screen(void) {
 #endif
 
 #if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
-            if (gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | Z_TRIG))
+            if (gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | ZL_TRIG | ZR_TRIG))
 #else
             if (gPlayer3Controller->buttonPressed & A_BUTTON
                 || (gPlayer3Controller->buttonPressed & START_BUTTON))
@@ -2779,7 +2779,7 @@ s16 render_pause_screen(void) {
             render_pause_castle_main_strings(104, 60);
 
 #if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
-            if (gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | Z_TRIG))
+            if (gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | (ZL_TRIG | ZR_TRIG)))
 #else
             if ((gPlayer3Controller->buttonPressed & A_BUTTON)
              || (gPlayer3Controller->buttonPressed & START_BUTTON))
@@ -3191,7 +3191,7 @@ s16 render_course_complete_screen(void) {
                 && (gPlayer3Controller->buttonPressed & A_BUTTON
                  || gPlayer3Controller->buttonPressed & START_BUTTON
 #if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
-                 || gPlayer3Controller->buttonPressed & Z_TRIG
+                 || gPlayer3Controller->buttonPressed & (ZL_TRIG | ZR_TRIG)
 #endif
                 )) {
                 level_set_transition(0, NULL);

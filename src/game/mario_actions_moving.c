@@ -21,7 +21,7 @@
 #ifndef TARGET_N64
 #include "pc/configfile.h"
 #else
-int configDash = FALSE;
+unsigned int configDash = 0;
 #endif
 #endif
 
@@ -478,16 +478,28 @@ void update_walking_speed(struct MarioState *m) {
     f32 targetSpeed;
 
     if (m->floor != NULL && m->floor->type == SURFACE_SLOW) {
-        if ((gPlayer1Controller->buttonDown & L_TRIG && configDash)) {
+        if (!(gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 1)) {
             maxTargetSpeed = 24.0f;
-        } else {
+        } else if ((gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 1)) {
             maxTargetSpeed = 10.0f;
+        } else if ((gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 2)) {
+            maxTargetSpeed = 24.0f;
+        } else if (!(gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 2)) {
+            maxTargetSpeed = 10.0f;
+        } else {
+            maxTargetSpeed = 24.0f;
         }
     } else {
-        if ((gPlayer1Controller->buttonDown & L_TRIG && configDash)) {
+        if (!(gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 1)) {
             maxTargetSpeed = 32.0f;
-        } else {
+        } else if ((gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 1)) {
             maxTargetSpeed = 14.0f;
+        } else if ((gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 2)) {
+            maxTargetSpeed = 32.0f;
+        } else if (!(gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 2)) {
+            maxTargetSpeed = 14.0f;
+        } else {
+            maxTargetSpeed = 32.0f;
         }
     }
 
@@ -650,12 +662,19 @@ void anim_and_audio_for_walk(struct MarioState *m) {
                 case 2:
                     if (val04 < 5.0f) {
                         m->actionTimer = 1;
-                    } else if ((gPlayer1Controller->buttonDown & L_TRIG && configDash) || (val04 > 22.0f && !configDash)) {
+                    } else if ((gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 2) || (val04 > 22.0f && (configDash == 0))) {
+                        m->actionTimer = 3;
+                    } else if (!(gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 1) || (val04 > 22.0f && (configDash == 0))) {
                         m->actionTimer = 3;
                     } else {
                         //! (Speed Crash) If Mario's speed is more than 2^17.
                         val14 = (s32)(val04 / 4.0f * 0x10000);
+
+                    if (configDash == 1 || configDash == 2) {
+                        set_mario_anim_with_accel(m, MARIO_ANIM_WALKING, (val14 / 2.4));
+                    } else {
                         set_mario_anim_with_accel(m, MARIO_ANIM_WALKING, val14);
+                    }
                         play_step_sound(m, 10, 49);
 
                         val0C = FALSE;
@@ -663,7 +682,9 @@ void anim_and_audio_for_walk(struct MarioState *m) {
                     break;
 
                 case 3:
-                    if ((!(gPlayer1Controller->buttonDown & L_TRIG) && configDash) || (val04 < 18.0f && !configDash)) {
+                    if ((!(gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 2)) || (val04 < 18.0f && (configDash == 0))) {
+                        m->actionTimer = 2;
+                    } else if (((gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 1)) || (val04 < 18.0f && (configDash == 0))) {
                         m->actionTimer = 2;
                     } else {
                         //! (Speed Crash) If Mario's speed is more than 2^17.
@@ -793,11 +814,11 @@ void tilt_body_walking(struct MarioState *m, s16 startYaw) {
     UNUSED struct Object *marioObj = m->marioObj;
     s16 animID = m->marioObj->header.gfx.animInfo.animID;
 
-    if (animID == MARIO_ANIM_WALKING || animID == MARIO_ANIM_RUNNING) {
+    if (((animID == MARIO_ANIM_WALKING && !(gPlayer1Controller->buttonDown & Y_BUTTON) & (configDash == 0))) || animID == MARIO_ANIM_RUNNING) {
         s16 dYaw = m->faceAngle[1] - startYaw;
         //! (Speed Crash) These casts can cause a crash if (dYaw * forwardVel / 12) or
         //! (forwardVel * 170) exceed or equal 2^31.
-        s16 val02 = -(s16)(dYaw * m->forwardVel / 12.0f);
+        /*s16 val02 = -(s16)(dYaw * m->forwardVel / 12.0f);
         s16 val00 = (s16)(m->forwardVel * 170.0f);
 
         if (val02 > 0x1555) {
@@ -815,7 +836,7 @@ void tilt_body_walking(struct MarioState *m, s16 startYaw) {
         }
 
         val0C->torsoAngle[2] = approach_s32(val0C->torsoAngle[2], val02, 0x400, 0x400);
-        val0C->torsoAngle[0] = approach_s32(val0C->torsoAngle[0], val00, 0x400, 0x400);
+        val0C->torsoAngle[0] = approach_s32(val0C->torsoAngle[0], val00, 0x400, 0x400);*/
     } else {
         val0C->torsoAngle[2] = 0;
         val0C->torsoAngle[0] = 0;
@@ -906,8 +927,10 @@ s32 act_walking(struct MarioState *m) {
 
         case GROUND_STEP_NONE:
             anim_and_audio_for_walk(m);
-            if (m->intendedMag - m->forwardVel > 16.0f) {
-                m->particleFlags |= PARTICLE_DUST;
+            if (configDash == 0) {
+                if (m->intendedMag - m->forwardVel > 16.0f) {
+                    m->particleFlags |= PARTICLE_DUST;
+                }
             }
             break;
 

@@ -37,6 +37,8 @@ struct GdControl { // gGdCtrl
     /* 0x30 */ void * unk30;     // null-checked ptr? symbol not deref-ed in extant code?
     /* 0x34 */ s32 btnA; // bool A button
     /* 0x38 */ s32 btnB; // bool B button
+    /* idk  */ s32 btnX; // bool X button
+    /* idk  */ s32 btnY; // bool Y button
     /* 0x3C */ u8  filler2[8];
     /* 0x44 */ s32 trgL; // bool L trigger pressed
     /* 0x48 */ s32 trgR; // bool R trigger pressed

@@ -442,7 +442,7 @@ void display_and_vsync(void) {
 UNUSED static void record_demo(void) {
     // Record the player's button mask and current rawStickX and rawStickY.
     u8 buttonMask =
-        ((gPlayer1Controller->buttonDown & (A_BUTTON | B_BUTTON | Z_TRIG | START_BUTTON)) >> 8)
+        ((gPlayer1Controller->buttonDown & (A_BUTTON | B_BUTTON | X_BUTTON | Y_BUTTON | ZL_TRIG | ZR_TRIG | START_BUTTON)) >> 8)
         | (gPlayer1Controller->buttonDown & (U_CBUTTONS | D_CBUTTONS | L_CBUTTONS | R_CBUTTONS));
     s8 rawStickX = gPlayer1Controller->rawStickX;
     s8 rawStickY = gPlayer1Controller->rawStickY;

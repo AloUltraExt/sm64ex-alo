@@ -76,7 +76,7 @@ static inline void controller_add_binds(const u32 mask, const u32 *btns) {
             ++num_joy_binds;
         }
 #ifdef MOUSE_ACTIONS
-        if (btns[i] >= VK_BASE_SDL_MOUSE && num_joy_binds < MAX_JOYBINDS && configMouse) {
+        if (btns[i] >= VK_BASE_SDL_MOUSE && num_joy_binds < MAX_JOYBINDS) {
             mouse_binds[num_mouse_binds][0] = btns[i] - VK_BASE_SDL_MOUSE;
             mouse_binds[num_mouse_binds][1] = mask;
             ++num_mouse_binds;
@@ -95,7 +95,10 @@ static void controller_sdl_bind(void) {
 
     controller_add_binds(A_BUTTON,     configKeyA);
     controller_add_binds(B_BUTTON,     configKeyB);
-    controller_add_binds(Z_TRIG,       configKeyZ);
+    controller_add_binds(X_BUTTON,     configKeyX);
+    controller_add_binds(Y_BUTTON,     configKeyY);
+    controller_add_binds(ZL_TRIG,      configKeyZL);
+    controller_add_binds(ZR_TRIG,      configKeyZR);
     controller_add_binds(STICK_UP,     configKeyStickUp);
     controller_add_binds(STICK_LEFT,   configKeyStickLeft);
     controller_add_binds(STICK_DOWN,   configKeyStickDown);
@@ -157,18 +160,12 @@ void set_cursor_visibility(bool newVisibility) {
 static void mouse_control_handler(OSContPad *pad) {
     u32 mouse;
 
-    if (configMouse) {
         set_cursor_visibility(gMouseHasFreeControl || configWindow.fullscreen);
 
-        if (gMouseHasCenterControl && sCurrPlayMode != 2) {
-            SDL_WM_GrabInput(SDL_GRAB_ON);
-            mouse = SDL_GetRelativeMouseState(&gMouseXPos, &gMouseYPos);
-        } else {
-            SDL_WM_GrabInput(SDL_GRAB_OFF);
-            mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
-        }
+    if (gMouseHasCenterControl && sCurrPlayMode != 2) {
+        SDL_WM_GrabInput(SDL_GRAB_ON);
+        mouse = SDL_GetRelativeMouseState(&gMouseXPos, &gMouseYPos);
     } else {
-        set_cursor_visibility(false);
         SDL_WM_GrabInput(SDL_GRAB_OFF);
         mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
     }
@@ -284,13 +281,11 @@ static u32 controller_sdl_rawkey(void) {
     }
 
 #ifdef MOUSE_ACTIONS
-    if (configMouse) {
-        for (int i = 0; i < MAX_MOUSEBUTTONS; ++i) {
-            if (last_mouse & SDL_BUTTON(i)) {
-                const u32 ret = VK_OFS_SDL_MOUSE + i;
-                last_mouse = 0;
-                return ret;
-            }
+    for (int i = 0; i < MAX_MOUSEBUTTONS; ++i) {
+        if (last_mouse & SDL_BUTTON(i)) {
+            const u32 ret = VK_OFS_SDL_MOUSE + i;
+            last_mouse = 0;
+            return ret;
         }
     }
 #endif

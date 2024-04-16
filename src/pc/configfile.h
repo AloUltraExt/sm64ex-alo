@@ -36,10 +36,13 @@ extern unsigned int configSfxVolume;
 extern unsigned int configEnvVolume;
 extern unsigned int configKeyA[];
 extern unsigned int configKeyB[];
+extern unsigned int configKeyX[];
+extern unsigned int configKeyY[];
 extern unsigned int configKeyStart[];
 extern unsigned int configKeyL[];
 extern unsigned int configKeyR[];
-extern unsigned int configKeyZ[];
+extern unsigned int configKeyZL[];
+extern unsigned int configKeyZR[];
 extern unsigned int configKeyCUp[];
 extern unsigned int configKeyCDown[];
 extern unsigned int configKeyCLeft[];
@@ -59,12 +62,9 @@ extern bool         configPrecacheRes;
 #endif
 
 extern bool         configHUD;
-#ifdef MOUSE_ACTIONS
-extern bool         configMouse;
-#endif
 extern bool         configWallslide;
 extern bool         configDive;
-extern bool         configDash;
+extern unsigned int configDash;
 extern bool         configSkipIntro;
 #ifdef DISCORDRPC
 extern bool         configDiscordRPC;

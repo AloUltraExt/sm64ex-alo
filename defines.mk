@@ -45,7 +45,7 @@ HIGH_FPS_PC ?= 1
 # Disable text-based save-files by default
 TEXTSAVES ?= 0
 # Load resources from external files
-EXTERNAL_DATA ?= 0
+EXTERNAL_DATA ?= 1
 # Enable Discord Rich Presence
 DISCORDRPC ?= 0
 # Enable Command Line Options

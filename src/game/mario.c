@@ -1364,11 +1364,11 @@ void update_mario_button_inputs(struct MarioState *m) {
             m->input |= INPUT_B_PRESSED;
         }
 
-        if (m->controller->buttonDown & Z_TRIG) {
+        if (m->controller->buttonDown & (ZL_TRIG | ZR_TRIG)) {
             m->input |= INPUT_Z_DOWN;
         }
 
-        if (m->controller->buttonPressed & Z_TRIG) {
+        if (m->controller->buttonPressed & (ZL_TRIG | ZR_TRIG)) {
             m->input |= INPUT_Z_PRESSED;
         }
     }
@@ -1796,10 +1796,7 @@ void set_wind_floor_properties(struct MarioState *m) {
  * sets Mario with a different cap.
  */
 void debug_update_mario_cap(u16 button, s32 flags, u16 capTimer, u16 capMusic) {
-    // This checks for Z_TRIG instead of Z_DOWN flag
-    // (which is also what other debug functions do),
-    // so likely debug behavior rather than unused behavior.
-    if ((gPlayer1Controller->buttonDown & Z_TRIG) && (gPlayer1Controller->buttonPressed & button)
+    if ((gPlayer1Controller->buttonDown & (ZL_TRIG | ZR_TRIG)) && (gPlayer1Controller->buttonPressed & button)
         && !(gMarioState->flags & flags)) {
         gMarioState->flags |= (flags + MARIO_CAP_ON_HEAD);
 

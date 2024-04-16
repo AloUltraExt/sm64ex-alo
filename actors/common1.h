@@ -153,26 +153,6 @@ extern const Gfx flame_seg3_dl_0301B5A8[];
 extern const GeoLayout leaves_geo[];
 extern const Gfx leaves_seg3_dl_0301CDE0[];
 
-// mario_cap
-extern const GeoLayout marios_cap_geo[];
-extern const GeoLayout marios_metal_cap_geo[];
-extern const GeoLayout marios_wing_cap_geo[];
-extern const GeoLayout marios_winged_metal_cap_geo[];
-extern const Gfx mario_cap_seg3_dl_03022B30[];
-extern const Gfx mario_cap_seg3_dl_03022B68[];
-extern const Gfx mario_cap_seg3_dl_03022CC8[];
-extern const Gfx mario_cap_seg3_dl_03022D10[];
-extern const Gfx mario_cap_seg3_dl_03022E78[];
-extern const Gfx mario_cap_seg3_dl_03022EA8[];
-extern const Gfx mario_cap_seg3_dl_03022ED8[];
-extern const Gfx mario_cap_seg3_dl_03022F20[];
-extern const Gfx mario_cap_seg3_dl_03022F48[];
-extern const Gfx mario_cap_seg3_dl_03022FF8[];
-extern const Gfx mario_cap_seg3_dl_030230B0[];
-extern const Gfx mario_cap_seg3_dl_03023108[];
-extern const Gfx mario_cap_seg3_dl_03023160[];
-extern const Gfx mario_cap_seg3_dl_03023298[];
-
 // mist
 extern const GeoLayout mist_geo[];
 extern const GeoLayout white_puff_geo[];
@@ -256,5 +236,13 @@ extern const Collision wooden_signpost_seg3_collision_0302DD80[];
 #ifdef PORT_MOP_OBJS
 #include "src/extras/mop/include_models.h"
 #endif
+
+#include "mario_cap/geo_header.h"
+
+#include "mario_metal_cap/geo_header.h"
+
+#include "mario_wing_cap/geo_header.h"
+
+#include "mario_winged_metal_cap/geo_header.h"
 
 #endif

@@ -110,6 +110,8 @@ static const u8 optsDsSettingsStr[][32] = {
     { TEXT_OPT_DS_SLIDE },
     { TEXT_OPT_DS_DASH },
     { TEXT_OPT_DS_DIVE },
+    { TEXT_OPT_DS_SWALK },
+    { TEXT_OPT_DS_SRUN },
 };
 
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
@@ -118,10 +120,13 @@ static const u8 optBindStr[][32] = {
     { TEXT_OPT_PRESSKEY },
     { TEXT_BIND_A },
     { TEXT_BIND_B },
+    { TEXT_BIND_X },
+    { TEXT_BIND_Y },
     { TEXT_BIND_START },
     { TEXT_BIND_L },
     { TEXT_BIND_R },
-    { TEXT_BIND_Z },
+    { TEXT_BIND_ZL },
+    { TEXT_BIND_ZR },
     { TEXT_BIND_C_UP },
     { TEXT_BIND_C_DOWN },
     { TEXT_BIND_C_LEFT },
@@ -145,6 +150,12 @@ static const u8 *filterChoices[] = {
     optsVideoStr[3],
 };
 #endif
+
+static const u8 *movementChoices[] = {
+    toggleStr[0],
+    optsDsSettingsStr[3],
+    optsDsSettingsStr[4],
+};
 
 /* button action functions */
 
@@ -173,22 +184,25 @@ static void optvideo_apply(UNUSED struct Option *self, s32 arg) {
 static struct Option optsControls[] = {
     DEF_OPT_BIND( optBindStr[ 2], configKeyA ),
     DEF_OPT_BIND( optBindStr[ 3], configKeyB ),
-    DEF_OPT_BIND( optBindStr[ 4], configKeyStart ),
-    DEF_OPT_BIND( optBindStr[ 5], configKeyL ),
-    DEF_OPT_BIND( optBindStr[ 6], configKeyR ),
-    DEF_OPT_BIND( optBindStr[ 7], configKeyZ ),
-    DEF_OPT_BIND( optBindStr[ 8], configKeyCUp ),
-    DEF_OPT_BIND( optBindStr[ 9], configKeyCDown ),
-    DEF_OPT_BIND( optBindStr[10], configKeyCLeft ),
-    DEF_OPT_BIND( optBindStr[11], configKeyCRight ),
-    DEF_OPT_BIND( optBindStr[12], configKeyDUp ),
-    DEF_OPT_BIND( optBindStr[13], configKeyDDown ),
-    DEF_OPT_BIND( optBindStr[14], configKeyDLeft ),
-    DEF_OPT_BIND( optBindStr[15], configKeyDRight ),
-    DEF_OPT_BIND( optBindStr[16], configKeyStickUp ),
-    DEF_OPT_BIND( optBindStr[17], configKeyStickDown ),
-    DEF_OPT_BIND( optBindStr[18], configKeyStickLeft ),
-    DEF_OPT_BIND( optBindStr[19], configKeyStickRight ),
+    DEF_OPT_BIND( optBindStr[ 4], configKeyX ),
+    DEF_OPT_BIND( optBindStr[ 5], configKeyY ),
+    DEF_OPT_BIND( optBindStr[ 6], configKeyStart ),
+    DEF_OPT_BIND( optBindStr[ 7], configKeyL ),
+    DEF_OPT_BIND( optBindStr[ 8], configKeyR ),
+    DEF_OPT_BIND( optBindStr[ 9], configKeyZL ),
+    DEF_OPT_BIND( optBindStr[10], configKeyZR ),
+    DEF_OPT_BIND( optBindStr[11], configKeyCUp ),
+    DEF_OPT_BIND( optBindStr[12], configKeyCDown ),
+    DEF_OPT_BIND( optBindStr[13], configKeyCLeft ),
+    DEF_OPT_BIND( optBindStr[14], configKeyCRight ),
+    DEF_OPT_BIND( optBindStr[15], configKeyDUp ),
+    DEF_OPT_BIND( optBindStr[16], configKeyDDown ),
+    DEF_OPT_BIND( optBindStr[17], configKeyDLeft ),
+    DEF_OPT_BIND( optBindStr[18], configKeyDRight ),
+    DEF_OPT_BIND( optBindStr[19], configKeyStickUp ),
+    DEF_OPT_BIND( optBindStr[20], configKeyStickDown ),
+    DEF_OPT_BIND( optBindStr[21], configKeyStickLeft ),
+    DEF_OPT_BIND( optBindStr[22], configKeyStickRight ),
     // max deadzone is 31000; this is less than the max range of ~32768, but this
     // way, the player can't accidentally lock themselves out of using the stick
     DEF_OPT_SCROLL( optBindStr[20], &configStickDeadzone, 0, 100, 1 ),
@@ -204,7 +218,6 @@ static struct Option optsVideo[] = {
     DEF_OPT_TOGGLE( optsVideoStr[0], &configWindow.fullscreen ),
     DEF_OPT_TOGGLE( optsVideoStr[5], &configWindow.vsync ),
 #endif
-    DEF_OPT_CHOICE( optsVideoStr[1], &configFiltering, filterChoices ),
 #if !defined(TARGET_PORT_CONSOLE) && !defined(TARGET_ANDROID)
     DEF_OPT_BUTTON( optsVideoStr[4], optvideo_reset_window ),
 #endif
@@ -221,14 +234,14 @@ static struct Option optsAudio[] = {
 
 static struct Option optsSettings[] = {
     DEF_OPT_TOGGLE( optsSettingsStr[0], &configHUD ),
-#ifdef MOUSE_ACTIONS
-    DEF_OPT_TOGGLE( optsSettingsStr[1], &configMouse ),
-#endif
 };
 
 static struct Option optsDsSettings[] = {
+#ifndef TARGET_N64
+    DEF_OPT_CHOICE( optsVideoStr[1], &configFiltering, filterChoices ),
+#endif
+    DEF_OPT_CHOICE( optsDsSettingsStr[1], &configDash, movementChoices ),
     DEF_OPT_TOGGLE( optsDsSettingsStr[0], &configWallslide ),
-    DEF_OPT_TOGGLE( optsDsSettingsStr[1], &configDash ),
     DEF_OPT_TOGGLE( optsDsSettingsStr[2], &configDive ),
 };
 
@@ -620,7 +633,7 @@ void optmenu_check_buttons(void) {
             }
         }
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
-    } else if (gPlayer1Controller->buttonPressed & Z_TRIG) {
+    } else if (gPlayer1Controller->buttonPressed & (ZL_TRIG | ZR_TRIG)) {
         // HACK: clear binds with Z
         if (allowInput && currentMenu->opts[currentMenu->select].type == OPT_BIND)
             optmenu_opt_change(&currentMenu->opts[currentMenu->select], 0xFF);

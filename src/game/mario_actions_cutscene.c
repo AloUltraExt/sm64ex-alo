@@ -578,7 +578,7 @@ s32 act_debug_free_move(struct MarioState *m) {
 
     // integer immediates, generates convert instructions for some reason
     speed = gPlayer1Controller->buttonDown & B_BUTTON ? 4 : 1;
-    if (gPlayer1Controller->buttonDown & Z_TRIG) {
+    if (gPlayer1Controller->buttonDown & (ZL_TRIG | ZR_TRIG)) {
         speed = 0.01f;
     }
 

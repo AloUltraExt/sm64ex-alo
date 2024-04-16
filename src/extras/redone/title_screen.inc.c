@@ -228,7 +228,7 @@ void debug_level_select_update(struct ZDebugLevelSelect *this) {
             }
         }
 
-        if (gPlayer1Controller->buttonPressed & Z_TRIG) {
+        if (gPlayer1Controller->buttonPressed & (ZL_TRIG | ZR_TRIG)) {
             gCurrSaveFileNum++;
 
             if (gCurrSaveFileNum > 4) {

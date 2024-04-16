@@ -360,7 +360,7 @@ void try_change_debug_page(void) {
 void try_modify_debug_controls(void) {
     s32 sp4;
 
-    if (gPlayer1Controller->buttonPressed & Z_TRIG) {
+    if (gPlayer1Controller->buttonPressed & (ZL_TRIG | ZR_TRIG)) {
         sNoExtraDebug ^= 1;
     }
     if (!(gPlayer1Controller->buttonDown & (L_TRIG | R_TRIG)) && !sNoExtraDebug) {
