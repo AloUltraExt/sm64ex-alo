@@ -205,9 +205,9 @@ static struct Option optsControls[] = {
     DEF_OPT_BIND( optBindStr[22], configKeyStickRight ),
     // max deadzone is 31000; this is less than the max range of ~32768, but this
     // way, the player can't accidentally lock themselves out of using the stick
-    DEF_OPT_SCROLL( optBindStr[20], &configStickDeadzone, 0, 100, 1 ),
+    DEF_OPT_SCROLL( optBindStr[23], &configStickDeadzone, 0, 100, 1 ),
 #ifdef RUMBLE_FEEDBACK
-    DEF_OPT_SCROLL( optBindStr[21], &configRumbleStrength, 0, 100, 1),
+    DEF_OPT_SCROLL( optBindStr[24], &configRumbleStrength, 0, 100, 1),
 #endif
 };
 #endif
