@@ -869,16 +869,11 @@ s32 launch_mario_until_land(struct MarioState *m, s32 endAction, s32 animation, 
 s32 act_unlocking_key_door(struct MarioState *m) {
     m->faceAngle[1] = m->usedObj->oMoveAngleYaw;
 
-#if FIX_DOOR_KEY_CUTSCENE
     s16 dAngle = abs_angle_diff(m->usedObj->oFaceAngleYaw, m->faceAngle[1]);
     f32 offset = ((dAngle <= 0x4000) ? 75.0f : -75.0f);
 
     m->pos[0] = m->usedObj->oPosX + coss(m->faceAngle[1]) * offset;
     m->pos[2] = m->usedObj->oPosZ + sins(m->faceAngle[1]) * offset;
-#else
-    m->pos[0] = m->usedObj->oPosX + coss(m->faceAngle[1]) * 75.0f;
-    m->pos[2] = m->usedObj->oPosZ + sins(m->faceAngle[1]) * 75.0f;
-#endif
 
     if (m->actionArg & WARP_FLAG_DOOR_FLIP_MARIO) {
         m->faceAngle[1] += 0x8000;
@@ -1146,7 +1141,6 @@ s32 act_spawn_spin_landing(struct MarioState *m) {
     return FALSE;
 }
 
-#if BETTER_EXIT_AIRBORNE
 s32 act_exit_airborne(struct MarioState *m) {
     f32 scale;
     Vec3f nextScale;
@@ -1187,29 +1181,6 @@ s32 act_exit_airborne(struct MarioState *m) {
     m->particleFlags |= PARTICLE_SPARKLES;
     return FALSE;
 }
-#else
-/**
- * act_exit_airborne: Jump out of a level after collecting a Power Star (no
- ** sparkles)
- * Mario always faces a level entrance when he launches out of it, whether he
- * died or he collected a star/key. Because of that, we need him to move away
- * from the painting by setting his speed to -32.0f and have him face away from
- * the painting by adding 0x8000 (180 deg) to his graphics angle. We also set
- * his heal counter to 31 to restore 7.75 units of his health, and enable the
- * particle flag that generates sparkles.
- */
-s32 act_exit_airborne(struct MarioState *m) {
-    if (15 < m->actionTimer++
-        && launch_mario_until_land(m, ACT_EXIT_LAND_SAVE_DIALOG, MARIO_ANIM_GENERAL_FALL, -32.0f)) {
-        // heal Mario
-        m->healCounter = 31;
-    }
-    // rotate him to face away from the entrance
-    m->marioObj->header.gfx.angle[1] += 0x8000;
-    m->particleFlags |= PARTICLE_SPARKLES;
-    return FALSE;
-}
-#endif
 
 s32 act_falling_exit_airborne(struct MarioState *m) {
     if (launch_mario_until_land(m, ACT_EXIT_LAND_SAVE_DIALOG, MARIO_ANIM_GENERAL_FALL, 0.0f)) {
@@ -1627,9 +1598,7 @@ s32 act_squished(struct MarioState *m) {
     f32 spaceUnderCeil;
     s16 surfAngle;
     s32 underSteepSurf = FALSE; // seems to be responsible for setting velocity?
-#if SMOOTH_SQUISH
     Vec3f nextScale;
-#endif
 
     if ((spaceUnderCeil = m->ceilHeight - m->floorHeight) < 0) {
         spaceUnderCeil = 0;
@@ -1647,12 +1616,8 @@ s32 act_squished(struct MarioState *m) {
             if (spaceUnderCeil >= 10.1f) {
                 // Mario becomes a pancake
                 squishAmount = spaceUnderCeil / 160.0f;
-#if SMOOTH_SQUISH
                 vec3f_set(nextScale, (2.0f - squishAmount), squishAmount, (2.0f - squishAmount));
                 approach_vec3f_asymptotic(m->marioObj->header.gfx.scale, nextScale, 0.5f, 0.5f, 0.5f);
-#else
-                vec3f_set(m->marioObj->header.gfx.scale, 2.0f - squishAmount, squishAmount, 2.0f - squishAmount);
-#endif
             } else {
                 if (!(m->flags & MARIO_METAL_CAP) && m->invincTimer == 0) {
                     // cap on: 3 units; cap off: 4.5 units

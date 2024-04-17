@@ -111,9 +111,7 @@ static void clear_spatial_partition(SpatialPartitionCell *cells) {
         (*cells)[SPATIAL_PARTITION_FLOORS].next = NULL;
         (*cells)[SPATIAL_PARTITION_CEILS].next = NULL;
         (*cells)[SPATIAL_PARTITION_WALLS].next = NULL;
-#if WATER_SURFACES
         (*cells)[SPATIAL_PARTITION_WATER].next = NULL;
-#endif
 
         cells++;
     }
@@ -129,11 +127,8 @@ static void clear_static_surfaces(void) {
     clear_spatial_partition(&gStaticSurfacePartition[0][0]);
 }
 
-#if COLLISION_IMPROVEMENTS
 #define SURFACE_SORT(surf) surf->upperY
-#else
-#define SURFACE_SORT(surf) surf->vertex1[1]
-#endif
+
 /**
  * Add a surface to the correct cell list of surfaces.
  * @param dynamic Determines whether the surface is static or dynamic.
@@ -149,22 +144,14 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
 
     if (surface->normal.y > NORMAL_FLOOR_THRESHOLD) {
         listIndex = SPATIAL_PARTITION_FLOORS;
-#if WATER_SURFACES
     } else if (SURFACE_IS_NEW_WATER(surface->type)) {
         listIndex = SPATIAL_PARTITION_WATER;
-#endif
     } else if (surface->normal.y < NORMAL_CEIL_THRESHOLD) {
         listIndex = SPATIAL_PARTITION_CEILS;
         sortDir = -1; // lowest to highest, then insertion order
     } else {
         listIndex = SPATIAL_PARTITION_WALLS;
         sortDir = 0; // insertion order
-
-#if !BETTER_FIND_WALL_COLLISION
-        if (surface->normal.x < -0.707 || surface->normal.x > 0.707) {
-            surface->flags |= SURFACE_FLAG_X_PROJECTION;
-        }
-#endif
     }
 
     newNode->surface = surface;
@@ -187,11 +174,8 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
         list = &gStaticSurfacePartition[cellZ][cellX][listIndex];
     }
 
-#if !NO_SURFACE_PRIORITY_REORDER || WATER_SURFACES
-#if WATER_SURFACES
-    if (listIndex == SPATIAL_PARTITION_WATER)
-#endif
-    {
+#if !NO_SURFACE_PRIORITY_REORDER
+    if (listIndex == SPATIAL_PARTITION_WATER) {
         //! (Surface Cucking) Surfaces are sorted by the height of their first vertex.
         //  Since vertices aren't ordered by height, this causes many lower triangles
         //  to be sorted higher. This worsens surface cucking since many functions

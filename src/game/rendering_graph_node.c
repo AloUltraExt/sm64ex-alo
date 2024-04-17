@@ -976,10 +976,8 @@ void geo_process_shadow(struct GraphNodeShadow *node) {
                 GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_ALPHA);
             } else if (gMarioOnIceOrCarpet == TRUE) {
                 GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT);
-    #if WATER_SURFACES
             } else if (gShadowAboveCustomWater == TRUE) {
                 GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT);
-    #endif
             } else {
                 GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT_DECAL);
             }

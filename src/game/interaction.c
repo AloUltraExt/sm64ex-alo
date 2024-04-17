@@ -1320,11 +1320,7 @@ u32 interact_mr_blizzard(struct MarioState *m, UNUSED u32 interactType, struct O
     return FALSE;
 }
 
-#if TWIRL_WITH_OBJECT
-#define SET_MARIO_ACT(m, a, v) set_mario_action(m, a, v)
-#else
 #define SET_MARIO_ACT(m, a, v) drop_and_set_mario_action(m, a, v)
-#endif
 
 #if JUMP_ENEMY_BOUNCE_BOOST
 #define BOOST(c, t, f) ((c) ? t : f)
@@ -1838,11 +1834,7 @@ void check_death_barrier(struct MarioState *m) {
     }
 }
 
-#if FIX_LAVA_INTERACTION
 #define ACT_FLAG_GROUP_NO_LAVA_BOOST (ACT_FLAG_SWIMMING | ACT_FLAG_RIDING_SHELL)
-#else
-#define ACT_FLAG_GROUP_NO_LAVA_BOOST (ACT_FLAG_AIR | ACT_FLAG_SWIMMING | ACT_FLAG_RIDING_SHELL)
-#endif
 
 void check_lava_boost(struct MarioState *m) {
 #ifdef CHEATS_ACTIONS

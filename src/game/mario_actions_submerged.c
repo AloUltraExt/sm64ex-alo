@@ -449,11 +449,7 @@ static void common_swimming_step(struct MarioState *m, s16 swimStrength) {
         case WATER_STEP_HIT_FLOOR:
             floorPitch = -find_floor_slope(m, -0x8000);
             if (m->faceAngle[0] < floorPitch) {
-#if SMOOTH_PITCH_WHEN_HITTING_FLOOR_UNDERWATER
                 approach_angle_bool(&m->faceAngle[0], floorPitch, 0x800);
-#else
-                m->faceAngle[0] = floorPitch;
-#endif
             }
             break;
 
@@ -1504,16 +1500,11 @@ static s32 check_common_submerged_cancels(struct MarioState *m) {
     s16 waterHeight = m->waterLevel - 80;
     if (m->pos[1] > waterHeight) {
         if (waterHeight > m->floorHeight) {
-#if FIX_WATER_PLUNGE_UPWARP
             if (m->pos[1] - waterHeight < 50) {
                 m->pos[1] = waterHeight; // lock mario to top if the falloff isn't big enough
             } else {
                 return transition_submerged_to_airborne(m);
             }
-#else
-            // Vanilla bug: Downwarp swimming out of waterfalls
-            m->pos[1] = waterHeight;
-#endif
         } else {
             //! If you press B to throw the shell, there is a ~5 frame window
             // where your held object is the shell, but you are not in the

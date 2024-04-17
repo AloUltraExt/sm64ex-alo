@@ -270,12 +270,8 @@ Gfx *create_shadow_below_xyz(Vec3f pos, Vec3f floorNormal, Vec3f scaleVec, s16 s
     *isDecal = TRUE;
 
     // Check for water under the shadow.
-#if WATER_SURFACES
     struct Surface *waterFloor = NULL;
     f32 waterLevel = find_water_level_and_floor(x, z, &waterFloor);
-#else
-    f32 waterLevel = find_water_level(x, z);
-#endif
 
     // Whether the floor is an environment box rather than an actual surface.
     s8 isEnvBox = FALSE;
@@ -295,16 +291,12 @@ Gfx *create_shadow_below_xyz(Vec3f pos, Vec3f floorNormal, Vec3f scaleVec, s16 s
         // Don't use the decal layer, since water is transparent.
         *isDecal = FALSE;
 
-#if WATER_SURFACES
         // Check whether the water is an environment box or a water surface.
         if (waterFloor != NULL) { // Water surfaces:
             floor = waterFloor;
         } else { // Environment boxes:
             isEnvBox = TRUE;
         }
-#else
-        isEnvBox = TRUE;
-#endif
     } else { // Normal surfaces:
         TerrainData type = floor->type;
         if (type == SURFACE_ICE) {

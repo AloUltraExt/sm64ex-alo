@@ -882,11 +882,9 @@ s32 act_triple_jump_land_stop(struct MarioState *m) {
 }
 
 s32 act_backflip_land_stop(struct MarioState *m) {
-#if !FIX_ACTION_LAND_EAT_INPUT
     if (!(m->input & INPUT_Z_DOWN) || m->marioObj->header.gfx.animInfo.animFrame >= 6) {
         m->input &= ~INPUT_A_PRESSED;
     }
-#endif
 
     if (check_common_landing_cancels(m, ACT_BACKFLIP)) {
         return TRUE;
@@ -908,9 +906,8 @@ s32 act_lava_boost_land(struct MarioState *m) {
 }
 
 s32 act_long_jump_land_stop(struct MarioState *m) {
-#if !FIX_ACTION_LAND_EAT_INPUT
     m->input &= ~INPUT_B_PRESSED;
-#endif
+
     if (check_common_landing_cancels(m, ACT_JUMP)) {
         return TRUE;
     }
@@ -979,13 +976,8 @@ s32 act_air_throw_land(struct MarioState *m) {
     return FALSE;
 }
 
-#if TWIRL_WITH_OBJECT
-#define ACT_IDLE_DEF(a, b, c) (a ? b : c)
-#define CHECK(a, b) if (!a) { b; }
-#else
 #define ACT_IDLE_DEF(a, b, c) c
 #define CHECK(a, b) b;
-#endif
 
 s32 act_twirl_land(struct MarioState *m) {
     m->actionState = 1;

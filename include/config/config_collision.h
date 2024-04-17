@@ -7,9 +7,6 @@
 // Sets custom and recommended values surfaces (higher than vanilla).
 #define CUSTOM_SURFACE_VALUES (0 || COLLISION_FIXES)
 
-// Fixes most collision bugs and adds extra checks for performance.
-#define COLLISION_IMPROVEMENTS (0 || COLLISION_FIXES)
-
 // Checks for ceilings from Mario's actual height instead of from the floor height.
 #define EXPOSED_CEILINGS_FIX (0 || COLLISION_FIXES)
 
@@ -24,15 +21,6 @@
 
 // Adds margins to celling surfaces (except hangable ones).
 #define CEILING_MARGINS (0 || COLLISION_FIXES)
-
-// Adds rounded corners on edge walls along with some extra checks.
-#define BETTER_FIND_WALL_COLLISION (0 || COLLISION_FIXES)
-
-// Improves resolve and return wall checks, along with some fixes.
-#define BETTER_RESOLVE_WALL_COLLISION (0 || COLLISION_FIXES)
-
-// Adds water collision surfaces.
-#define WATER_SURFACES (0 || COLLISION_FIXES)
 
 // Saves a lot of CPU over silliness, by cleaning only used dynamic cells.
 #define BETTER_DYNAMIC_CELLS (0 || COLLISION_FIXES)
