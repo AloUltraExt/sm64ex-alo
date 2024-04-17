@@ -144,8 +144,6 @@ static void read_wpad(OSContPad* pad) {
 
         if (wm & WPAD_BUTTON_A) pad->button |= A_BUTTON;
         if (wm & WPAD_BUTTON_B) pad->button |= B_BUTTON;
-        if (wm & WPAD_BUTTON_X) pad->button |= X_BUTTON;
-        if (wm & WPAD_BUTTON_Y) pad->button |= Y_BUTTON;
         if (wm & WPAD_BUTTON_PLUS) pad->button |= START_BUTTON;
         if (wm & WPAD_BUTTON_UP) { pad->button |= U_CBUTTONS; rStick.y += 1.0; }
         if (wm & WPAD_BUTTON_DOWN) { pad->button |= D_CBUTTONS; rStick.y -= 1.0; }
