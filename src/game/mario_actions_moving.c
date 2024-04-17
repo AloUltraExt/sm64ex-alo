@@ -21,7 +21,7 @@
 #ifndef TARGET_N64
 #include "pc/configfile.h"
 #else
-unsigned int configDash = 0;
+unsigned int configDash = 1;
 #endif
 #endif
 

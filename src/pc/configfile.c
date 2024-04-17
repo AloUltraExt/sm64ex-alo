@@ -62,7 +62,7 @@ ConfigWindow configWindow       = {
 #endif
 };
 
-unsigned int configFiltering    = 1;          // 0=force nearest, 1=linear
+unsigned int configFiltering    = 0;          // 0=force nearest, 1=linear
 unsigned int configMasterVolume = MAX_VOLUME; // 0 - MAX_VOLUME
 unsigned int configMusicVolume = MAX_VOLUME;
 unsigned int configSfxVolume = MAX_VOLUME;
@@ -104,7 +104,7 @@ bool configDiscordRPC = true;
 bool configSkipIntro = false;
 bool configHUD = true;
 bool configWallslide = true;
-unsigned int configDash = 0;
+unsigned int configDash = 1;
 bool configDive = true;
 
 static const struct ConfigOption options[] = {
