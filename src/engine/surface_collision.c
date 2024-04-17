@@ -56,6 +56,7 @@ f32 get_surface_height_at_pos(f32 xPos, f32 zPos, struct Surface *surf) {
  *                      WALLS                     *
  **************************************************/
 
+#if BETTER_FIND_WALL_COLLISION
 s32 check_wall_triangle_vw(f32 d00, f32 d01, f32 d11, f32 d20, f32 d21, f32 invDenom) {
     f32 v = ((d11 * d20) - (d01 * d21)) * invDenom;
     if (v < 0.0f || v > 1.0f) {
@@ -89,28 +90,71 @@ s32 check_wall_triangle_edge(Vec3f vert, Vec3f v2, f32 *d00, f32 *d01, f32 *invD
 
     return TRUE;
 }
+#else
+s32 check_wall_x_projection(struct Surface *surf, f32 y, f32 z) {
+    f32 w1, w2, w3, y1, y2, y3;
+
+    w1 = -surf->vertex1[2];     w2 = -surf->vertex2[2];     w3 = -surf->vertex3[2];
+    y1 =  surf->vertex1[1];     y2 =  surf->vertex2[1];     y3 =  surf->vertex3[1];
+
+    if (surf->normal.x > 0.0f) {
+        if ((y1 - y) * (w2 - w1) - (w1 - -z) * (y2 - y1) > 0.0f) return TRUE;
+        if ((y2 - y) * (w3 - w2) - (w2 - -z) * (y3 - y2) > 0.0f) return TRUE;
+        if ((y3 - y) * (w1 - w3) - (w3 - -z) * (y1 - y3) > 0.0f) return TRUE;
+    } else {
+        if ((y1 - y) * (w2 - w1) - (w1 - -z) * (y2 - y1) < 0.0f) return TRUE;
+        if ((y2 - y) * (w3 - w2) - (w2 - -z) * (y3 - y2) < 0.0f) return TRUE;
+        if ((y3 - y) * (w1 - w3) - (w3 - -z) * (y1 - y3) < 0.0f) return TRUE;
+    }
+    return FALSE;
+}
+
+s32 check_wall_z_projection(struct Surface *surf, f32 y, f32 x) {
+    f32 w1, w2, w3, y1, y2, y3;
+
+    w1 = surf->vertex1[0];      w2 = surf->vertex2[0];      w3 = surf->vertex3[0];
+    y1 = surf->vertex1[1];      y2 = surf->vertex2[1];      y3 = surf->vertex3[1];
+
+    if (surf->normal.z > 0.0f) {
+        if ((y1 - y) * (w2 - w1) - (w1 - x) * (y2 - y1) > 0.0f) return TRUE;
+        if ((y2 - y) * (w3 - w2) - (w2 - x) * (y3 - y2) > 0.0f) return TRUE;
+        if ((y3 - y) * (w1 - w3) - (w3 - x) * (y1 - y3) > 0.0f) return TRUE;
+    } else {
+        if ((y1 - y) * (w2 - w1) - (w1 - x) * (y2 - y1) < 0.0f) return TRUE;
+        if ((y2 - y) * (w3 - w2) - (w2 - x) * (y3 - y2) < 0.0f) return TRUE;
+        if ((y3 - y) * (w1 - w3) - (w3 - x) * (y1 - y3) < 0.0f) return TRUE;
+    }
+    return FALSE;
+}
+#endif
 
 /**
  * Iterate through the list of walls until all walls are checked and
  * have given their wall push.
  */
 static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struct WallCollisionData *data) {
+#if BETTER_FIND_WALL_COLLISION
     const f32 corner_threshold = -0.9f;
+#endif
     struct Surface *surf;
     f32 offset;
     f32 radius = data->radius;
     Vec3f pos = { data->x, (data->y + data->offsetY), data->z };
     f32 nx, ny, nz, oo;
+#if BETTER_FIND_WALL_COLLISION
     Vec3f v0, v1, v2;
     f32 d00, d01, d11, d20, d21;
     f32 invDenom;
+#endif
     s32 numCols = 0;
 
     if (radius > MAX_COLLISION_RADIUS) {
         radius = MAX_COLLISION_RADIUS;
     }
 
+#if BETTER_FIND_WALL_COLLISION
     f32 margin_radius = radius - 1.0f;
+#endif
 
     // Stay in this loop until out of walls.
     while (surfaceNode != NULL) {
@@ -162,6 +206,7 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
             continue;
         }
 
+#if BETTER_FIND_WALL_COLLISION
         // Edge 1 vector.
         vec3_diff(v0, surf->vertex2, surf->vertex1);
         // Edge 2 vector.
@@ -216,7 +261,29 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
             pos[0] += nx * (radius - offset);
             pos[2] += nz * (radius - offset);
         }
-
+#else
+        //! (Quantum Tunneling) Due to issues with the vertices walls choose and
+        //  the fact they are floating point, certain floating point positions
+        //  along the seam of two walls may collide with neither wall or both walls.
+        if (surf->flags & SURFACE_FLAG_X_PROJECTION) {
+            if (check_wall_x_projection(surf, pos[1], pos[2])) {
+                continue;
+            }
+        } else {
+            if (check_wall_z_projection(surf, pos[1], pos[0])) {
+                continue;
+            }
+        }
+    #if COLLISION_IMPROVEMENTS
+        data->x = pos[0] += (nx * (radius - offset));
+        data->z = pos[2] += (nz * (radius - offset));
+    #else
+        //! (Wall Overlaps) Because this doesn't update the x and z local variables,
+        //  multiple walls can push mario more than is required.
+        data->x += nx * (radius - offset);
+        data->z += nz * (radius - offset);
+    #endif
+#endif
         //! (Unreferenced Walls) Since this only returns the first four walls,
         //  this can lead to wall interaction being missed. Typically unreferenced walls
         //  come from only using one wall, however.
@@ -227,9 +294,10 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
 
         numCols++;
     }
-
+#if BETTER_FIND_WALL_COLLISION
     data->x = pos[0];
     data->z = pos[2];
+#endif
 
     return numCols;
 }
@@ -389,8 +457,10 @@ static struct Surface *find_ceil_from_list(struct SurfaceNode *surfaceNode, s32 
             continue;
         }
 
+#if COLLISION_IMPROVEMENTS
         // Exclude all ceilings below the point.
         if (y > surf->upperY) continue;
+#endif
 
         // Check that the point is within the triangle bounds.
         // Margin value (1.5f) gets ignored if CEILING_MARGINS is undefined
@@ -399,19 +469,31 @@ static struct Surface *find_ceil_from_list(struct SurfaceNode *surfaceNode, s32 
         // Find the ceil height at the specific point.
         height = get_surface_height_at_pos(x, z, surf);
 
+#if COLLISION_IMPROVEMENTS
         // Checks for ceiling interaction.
         if (height < y) continue;
         
         // Exclude ceilings above the previous lowest ceiling.
         if (height >= *pheight) continue;
+#else
+        // Checks for ceiling interaction with a 78 (FIND_CEIL_BUFFER) unit buffer.
+        //! (Exposed Ceilings) Because any point above a ceiling counts
+        //  as interacting with a ceiling, ceilings far below can cause
+        // "invisible walls" that are really just exposed ceilings.
+        if (y - (height + FIND_CEIL_BUFFER) > 0.0f) continue;
+#endif
 
         // Use the current ceiling
         *pheight = height;
         ceil = surf;
-
+#if COLLISION_IMPROVEMENTS
         // Exit the loop if it's not possible for another ceiling to be closer
         // to the original point.
         if (height == y) break;
+#else
+        //! Immediately exit the loop.
+        break;
+#endif
     }
 
     //! (Surface Cucking) Since only the first ceil is returned and not the lowest,
@@ -501,7 +583,9 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
     struct Surface *surf;
     f32 height;
     struct Surface *floor = NULL;
+#if COLLISION_IMPROVEMENTS
     s32 bufferY = y + FIND_FLOOR_BUFFER;
+#endif
 
     // Iterate through the list of floors until there are no more floors.
     while (surfaceNode != NULL) {
@@ -525,20 +609,26 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
             continue;
         }
 
+#if COLLISION_IMPROVEMENTS
         // Exclude all floors above the point.
         if (bufferY < surf->lowerY) continue;
-
+#endif
         // Check that the point is within the triangle bounds.
         if (!check_within_floor_triangle_bounds(x, z, surf)) continue;
 
         // Find the height of the floor at a given location.
         height = get_surface_height_at_pos(x, z, surf);
 
+#if COLLISION_IMPROVEMENTS
         // Checks for floor interaction with a FIND_FLOOR_BUFFER unit buffer.
         if (height > bufferY) continue;
         
         // Exclude floors lower than the previous highest floor.
         if (height <= *pheight) continue;
+#else
+        // Checks for floor interaction with a 78 (FIND_FLOOR_BUFFER) unit buffer.
+        if (y - (height - FIND_FLOOR_BUFFER) < 0.0f) continue;
+#endif
 
 #ifdef CHEATS_ACTIONS
         // Set floor height cheats for Mario.
@@ -548,10 +638,14 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
         // Use the current floor
         *pheight = height;
         floor = surf;
-
+#if COLLISION_IMPROVEMENTS
         // Exit the loop if it's not possible for another floor to be closer
         // to the original point.
         if (height == bufferY) break;
+#else
+        //! Immediately exit the loop.
+        break;
+#endif
     }
 
     //! (Surface Cucking) Since only the first floor is returned and not the highest,
@@ -560,6 +654,7 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
     return floor;
 }
 
+#if WATER_SURFACES
 /**
  * Generic triangle bounds function.
  */
@@ -651,6 +746,7 @@ struct Surface *find_water_top_from_list(struct SurfaceNode *surfaceNode, s32 x,
 
     return waterTop;
 }
+#endif
 
 /**
  * Find the height of the highest floor below a point.
@@ -793,6 +889,7 @@ s32 get_room_at_pos(f32 x, f32 y, f32 z) {
     return -1;
 }
 
+#if WATER_SURFACES
 /**
  * Find the highest water floor under a given position and return the height.
  */
@@ -860,11 +957,13 @@ f32 find_water_floor(s32 xPos, s32 yPos, s32 zPos, struct Surface **pfloor) {
 
     return height;
 }
+#endif
 
 /**************************************************
  *               ENVIRONMENTAL BOXES              *
  **************************************************/
 
+#if WATER_SURFACES
 s32 find_water_level_and_floor(s32 x, s32 z, struct Surface **pfloor) {
     s32 i;
     s32 val;
@@ -898,6 +997,7 @@ s32 find_water_level_and_floor(s32 x, s32 z, struct Surface **pfloor) {
 
     return waterLevel;
 }
+#endif
 
 /**
  * Finds the height of water at a given location.
@@ -909,9 +1009,14 @@ f32 find_water_level(f32 x, f32 z) {
     f32 loX, hiX, loZ, hiZ;
     TerrainData *p = gEnvironmentRegions;
 
+#if WATER_SURFACES
     struct Surface *floor;
     f32 waterLevel = find_water_floor(x, ((gCollisionFlags & COLLISION_FLAG_CAMERA) ? gLakituState.pos[1] : gMarioState->pos[1]), z, &floor);
     if (p != NULL && waterLevel == FLOOR_LOWER_LIMIT)
+#else
+    f32 waterLevel = FLOOR_LOWER_LIMIT;
+    if (p != NULL)
+#endif
     {
         numRegions = *p++;
 

@@ -529,7 +529,9 @@ u32 mario_get_terrain_sound_addend(struct MarioState *m) {
 struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 radius) {
     struct WallCollisionData collisionData;
     struct Surface *wall = NULL;
+#if BETTER_RESOLVE_WALL_COLLISION
     int i = 0;
+#endif
 
     collisionData.x = pos[0];
     collisionData.y = pos[1];
@@ -538,19 +540,29 @@ struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 ra
     collisionData.offsetY = offset;
 
     if (find_wall_collisions(&collisionData)) {
+#if BETTER_RESOLVE_WALL_COLLISION
         for (i = 0; i < collisionData.numWalls; i++) {
             wall = collisionData.walls[i];
         }
+#else
+        wall = collisionData.walls[collisionData.numWalls - 1];
+#endif
     }
 
     pos[0] = collisionData.x;
     pos[1] = collisionData.y;
     pos[2] = collisionData.z;
 
+#if BETTER_RESOLVE_WALL_COLLISION
     // Returns the wall the actor is closest to facing
+#else
+    // This only returns the most recent wall and can also return NULL
+    // there are no wall collisions.
+#endif
     return wall;
 }
 
+#if BETTER_RESOLVE_WALL_COLLISION
 void resolve_and_return_wall_collisions_data(Vec3f pos, f32 offset, f32 radius, struct WallCollisionData *collisionData) {
     collisionData->x = pos[0];
     collisionData->y = pos[1];
@@ -564,6 +576,7 @@ void resolve_and_return_wall_collisions_data(Vec3f pos, f32 offset, f32 radius, 
     pos[1] = collisionData->y;
     pos[2] = collisionData->z;
 }
+#endif
 
 /**
  * Finds the ceiling from a vec3f horizontally and a height 
@@ -668,9 +681,11 @@ s32 mario_floor_is_slope(struct MarioState *m) {
  */
 s32 mario_floor_is_steep(struct MarioState *m) {
     f32 normY;
+#if FIX_JUMP_KICK_NOT_SLIPPERY
     if (m->floor->type == SURFACE_NOT_SLIPPERY) {
         return FALSE;
     }
+#endif
     // Interestingly, this function does not check for the
     // slide terrain type. This means that steep behavior persists for
     // non-slippery and slippery surfaces.
@@ -688,6 +703,11 @@ s32 mario_floor_is_steep(struct MarioState *m) {
             default:
                 normY = 0.8660254f; // ~cos(30 deg)
                 break;
+#if !FIX_JUMP_KICK_NOT_SLIPPERY
+            case SURFACE_NOT_SLIPPERY:
+                normY = 0.8660254f; // ~cos(30 deg)
+                break;
+#endif
         }
 
         return (m->floor->normal.y <= normY);
@@ -711,7 +731,11 @@ f32 find_floor_height_relative_polar(struct MarioState *m, s16 angleFromMario, f
     return floorY;
 }
 
+#if FIX_FLOOR_SLOPE_OOB
 #define CHECK(set)    set
+#else
+#define CHECK(set)
+#endif
 
 /**
  * Returns the slope of the floor based off points around Mario.
@@ -738,6 +762,9 @@ s16 find_floor_slope(struct MarioState *m, s16 yawOffset) {
         CHECK(if (floor == NULL) backwardFloorY = m->floorHeight); // handle OOB slopes
     }
 
+    //! If Mario is near OOB, these floorY's can sometimes be -11000.
+    //  This will cause these to be off and give improper slopes.
+    //  FIX_FLOOR_SLOPE_OOB fixes it
     forwardYDelta = forwardFloorY - m->pos[1];
     backwardYDelta = m->pos[1] - backwardFloorY;
 
@@ -1207,6 +1234,7 @@ s32 transition_submerged_to_walking(struct MarioState *m) {
     }
 }
 
+#if FIX_WATER_PLUNGE_UPWARP
 /**
  * Transitions Mario from a submerged action to an airborne action.
  * You may want to change these actions to fit your hack
@@ -1224,6 +1252,7 @@ s32 transition_submerged_to_airborne(struct MarioState *m) {
         else return set_mario_action(m, ACT_HOLD_FREEFALL, 0);
     }
 }
+#endif
 
 /**
  * This is the transition function typically for entering a submerged action for a
@@ -1232,6 +1261,11 @@ s32 transition_submerged_to_airborne(struct MarioState *m) {
 s32 set_water_plunge_action(struct MarioState *m) {
     m->forwardVel = m->forwardVel / 4.0f;
     m->vel[1] = m->vel[1] / 2.0f;
+
+#if !FIX_WATER_PLUNGE_UPWARP
+    //! Causes waterbox upwarp
+    m->pos[1] = m->waterLevel - 100;
+#endif
 
     m->faceAngle[2] = 0;
 
@@ -1669,7 +1703,11 @@ u32 update_and_return_cap_flags(struct MarioState *m) {
     return flags;
 }
 
+#if FIX_SHORT_HITBOX_SLIDE_ACTS
 #define ACT_FLAG_HEIGHT_MASK (ACT_FLAG_SHORT_HITBOX | ACT_FLAG_BUTT_OR_STOMACH_SLIDE)
+#else
+#define ACT_FLAG_HEIGHT_MASK ACT_FLAG_SHORT_HITBOX
+#endif
 
 /**
  * Updates the Mario's cap, rendering, and hitbox.
@@ -1727,7 +1765,10 @@ void mario_update_hitbox_and_cap_model(struct MarioState *m) {
 }
 
 void set_wind_floor_properties(struct MarioState *m) {
-    if (!(m->action & ACT_FLAG_INTANGIBLE)) {
+#if FIX_SURFACE_WIND_DETECTION
+    if (!(m->action & ACT_FLAG_INTANGIBLE))
+#endif
+    {
         // Both of the wind handling portions play wind audio only in
         // non-Japanese releases.
         if (m->floor->type == SURFACE_HORIZONTAL_WIND) {

@@ -50,7 +50,10 @@ extern s8 gShadowAboveWaterOrLava;
  * Flag for if Mario is on ice or a flying carpet.
  */
 extern s8 gMarioOnIceOrCarpet;
+
+#if WATER_SURFACES
 extern s8 gShadowAboveCustomWater;
+#endif
 
 /**
  * Given the (x, y, z) location of an object, create a shadow below that object
