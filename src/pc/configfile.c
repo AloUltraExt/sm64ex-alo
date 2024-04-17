@@ -69,27 +69,27 @@ unsigned int configSfxVolume = MAX_VOLUME;
 unsigned int configEnvVolume = MAX_VOLUME;
 
 // Keyboard mappings (VK_ values, by default keyboard/gamepad/mouse)
-unsigned int configKeyA[MAX_BINDS]          = { 0x002D,     0x1000,     0x1101       };
-unsigned int configKeyB[MAX_BINDS]          = { 0x002E,     0x1002,     0x1103       };
-unsigned int configKeyX[MAX_BINDS]          = { VK_INVALID, VK_INVALID, VK_INVALID   };
-unsigned int configKeyY[MAX_BINDS]          = { VK_INVALID, VK_INVALID, VK_INVALID   };
-unsigned int configKeyStart[MAX_BINDS]      = { 0x001C,     0x1006,     0x1102       };
-unsigned int configKeyL[MAX_BINDS]          = { 0x0010,     0x1009,     VK_INVALID   };
-unsigned int configKeyR[MAX_BINDS]          = { 0x0012,     0x100A,     VK_INVALID   };
-unsigned int configKeyZL[MAX_BINDS]         = { 0x002C,     0x1007,     VK_INVALID   };
-unsigned int configKeyZR[MAX_BINDS]         = { 0x002C,     0x1007,     VK_INVALID   };
-unsigned int configKeyCUp[MAX_BINDS]        = { 0x0011,     VK_INVALID, VK_INVALID   };
-unsigned int configKeyCDown[MAX_BINDS]      = { 0x001F,     VK_INVALID, VK_INVALID   };
-unsigned int configKeyCLeft[MAX_BINDS]      = { 0x001E,     VK_INVALID, VK_INVALID   };
-unsigned int configKeyCRight[MAX_BINDS]     = { 0x0020,     VK_INVALID, VK_INVALID   };
-unsigned int configKeyDUp[MAX_BINDS]        = { 0x0014,     VK_INVALID, VK_INVALID   };
-unsigned int configKeyDDown[MAX_BINDS]      = { 0x0022,     VK_INVALID, VK_INVALID   };
-unsigned int configKeyDLeft[MAX_BINDS]      = { 0x0021,     VK_INVALID, VK_INVALID   };
-unsigned int configKeyDRight[MAX_BINDS]     = { 0x0023,     VK_INVALID, VK_INVALID   };
-unsigned int configKeyStickUp[MAX_BINDS]    = { 0x0148,     VK_INVALID, VK_INVALID   };
-unsigned int configKeyStickDown[MAX_BINDS]  = { 0x0150,     VK_INVALID, VK_INVALID   };
-unsigned int configKeyStickLeft[MAX_BINDS]  = { 0x014B,     VK_INVALID, VK_INVALID   };
-unsigned int configKeyStickRight[MAX_BINDS] = { 0x014D,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyA[MAX_BINDS]          = { 0x1101,     0x0039,     VK_INVALID   };
+unsigned int configKeyB[MAX_BINDS]          = { 0x1103,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyX[MAX_BINDS]          = { 0x0038,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyY[MAX_BINDS]          = { 0x001D,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyStart[MAX_BINDS]      = { 0x1102,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyL[MAX_BINDS]          = { 0x0012,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyR[MAX_BINDS]          = { 0x0010,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyZL[MAX_BINDS]         = { 0x002A,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyZR[MAX_BINDS]         = { 0x002A,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyCUp[MAX_BINDS]        = { 0x0017,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyCDown[MAX_BINDS]      = { 0x0025,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyCLeft[MAX_BINDS]      = { 0x0024,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyCRight[MAX_BINDS]     = { 0x0026,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyDUp[MAX_BINDS]        = { 0x0148,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyDDown[MAX_BINDS]      = { 0x0150,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyDLeft[MAX_BINDS]      = { 0x014B,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyDRight[MAX_BINDS]     = { 0x014D,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyStickUp[MAX_BINDS]    = { 0x0011,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyStickDown[MAX_BINDS]  = { 0x001F,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyStickLeft[MAX_BINDS]  = { 0x001E,     VK_INVALID, VK_INVALID   };
+unsigned int configKeyStickRight[MAX_BINDS] = { 0x0020,     VK_INVALID, VK_INVALID   };
 unsigned int configStickDeadzone = 16; // 16*DEADZONE_STEP=4960 (the original default deadzone)
 unsigned int configRumbleStrength = 50;
 
@@ -104,7 +104,7 @@ bool configDiscordRPC = true;
 bool configSkipIntro = false;
 bool configHUD = true;
 bool configWallslide = true;
-unsigned int configDash = 1;
+unsigned int configDash = 2;
 bool configDive = true;
 
 static const struct ConfigOption options[] = {

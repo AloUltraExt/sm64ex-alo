@@ -65,8 +65,8 @@ static void controller_switch_nx_read(OSContPad *pad) {
     if(pressed & HidNpadButton_Plus)       pad->button |= START_BUTTON;
     if(pressed & HidNpadButton_Minus)     pad->button |= START_BUTTON;
 
-    if(pressed & HidNpadButton_B)             pad->button |= B_BUTTON;
-    if(pressed & HidNpadButton_A)             pad->button |= A_BUTTON;
+    if(pressed & HidNpadButton_B)             pad->button |= A_BUTTON;
+    if(pressed & HidNpadButton_A)             pad->button |= B_BUTTON;
     if(pressed & HidNpadButton_Y)             pad->button |= Y_BUTTON;
     if(pressed & HidNpadButton_X)             pad->button |= X_BUTTON;
 

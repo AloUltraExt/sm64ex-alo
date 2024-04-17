@@ -9,7 +9,7 @@
 
 #include "config.h"
 
-#define CONFIGFILE_DEFAULT "sm64config.txt"
+#define CONFIGFILE_DEFAULT "sm64dsr_config.txt"
 
 #define MAX_BINDS  3
 #define MAX_VOLUME 127
