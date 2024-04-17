@@ -996,6 +996,7 @@ s32 perform_air_step(struct MarioState *m, u32 stepArg) {
         if (quarterStepResult != AIR_STEP_NONE) {
             stepResult = quarterStepResult;
         }
+
         if (configWallslide) {
             if (quarterStepResult == AIR_STEP_HIT_WALL && m->wall != NULL) {
                 wall = m->wall;
@@ -1022,6 +1023,12 @@ s32 perform_air_step(struct MarioState *m, u32 stepArg) {
 
     vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
     vec3s_set(m->marioObj->header.gfx.angle, 0, m->faceAngle[1], 0);
+
+    if (configWallslide) {
+        if (stepResult == AIR_STEP_HIT_WALL) {
+            m->wall = wall;
+        }
+    }
 
     return stepResult;
 }
