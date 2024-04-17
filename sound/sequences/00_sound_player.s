@@ -3470,7 +3470,6 @@ layer_end
 .layer_14E3:
 layer_loop 2
 layer_note1 34, 0x19, 100
-#endif
 layer_loopend
 layer_end
 
