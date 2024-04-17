@@ -247,11 +247,7 @@ void print_course_number(void) {
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
 }
 
-#ifdef VERSION_JP
-#define ACT_NAME_X 158
-#else
 #define ACT_NAME_X 163
-#endif
 
 /**
  * Print act selector strings, some with special checks.
@@ -420,11 +416,7 @@ s32 lvl_update_obj_and_load_act_button_actions(UNUSED s32 arg, UNUSED s32 unused
         if ((gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | B_BUTTON | ZL_TRIG | ZR_TRIG))) 
 #endif
         {
-#ifdef VERSION_JP
-            play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
-#else
             play_sound(SOUND_MENU_STAR_SOUND_LETS_A_GO, gGlobalSoundSource);
-#endif
 #ifdef RUMBLE_FEEDBACK
             queue_rumble_data(60, 70);
             queue_rumble_decay(1);

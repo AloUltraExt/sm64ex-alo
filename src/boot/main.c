@@ -449,8 +449,6 @@ void thread1_idle(UNUSED void *arg) {
     } else {
         osViSetMode(&osViModeTable[OS_VI_PAL_LAN1]);
     }
-#elif defined(VERSION_JP)
-    osViSetMode(&osViModeTable[OS_VI_NTSC_LAN1]);
 #else // VERSION_EU
     osViSetMode(&osViModeTable[OS_VI_PAL_LAN1]);
 #endif

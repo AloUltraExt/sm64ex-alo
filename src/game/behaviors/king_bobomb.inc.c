@@ -20,10 +20,8 @@ void bhv_bobomb_anchor_mario_loop(void) {
 }
 
 void king_bobomb_act_0(void) {
-#ifndef VERSION_JP
     o->oForwardVel = 0.0f;
     o->oVelY = 0.0f;
-#endif
 
     if (o->oSubAction == 0) {
         cur_obj_become_intangible();
@@ -214,9 +212,6 @@ void king_bobomb_act_7(void) {
         spawn_mist_particles_variable(0, 0, 200.0f);
         spawn_triangle_break_particles(20, MODEL_DIRT_ANIMATION, 3.0f, 4);
         cur_obj_shake_screen(SHAKE_POS_SMALL);
-#ifdef VERSION_JP
-        o->oPosY += 100.0f;
-#endif
 #ifdef RM2C_HAS_CUSTOM_STAR_POS
         cur_obj_spawn_star_at_y_offset(KingBobOmbStarPos, 200.0f);
 #else

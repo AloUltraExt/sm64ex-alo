@@ -3289,7 +3289,6 @@ void init_camera(struct Camera *c) {
         // Note: This replaced an "old" way to call these cutscenes using
         // a camEvent value: CAM_EVENT_BOWSER_INIT
         case LEVEL_BOWSER_1:
-#ifndef VERSION_JP
             // Since Bowser 1 has a demo entry, check for it
             // If it is, then set CamAct to the end to directly activate Bowser
             // If it isn't, then start cutscene
@@ -3298,9 +3297,6 @@ void init_camera(struct Camera *c) {
             } else if (gSecondCameraFocus != NULL) {
                 gSecondCameraFocus->oBowserCamAct = BOWSER_CAM_ACT_END;
             }
-#else
-            start_cutscene(c, CUTSCENE_ENTER_BOWSER_ARENA);
-#endif
             break;
         case LEVEL_BOWSER_2:
             start_cutscene(c, CUTSCENE_ENTER_BOWSER_ARENA);
@@ -4643,9 +4639,7 @@ void radial_camera_input(struct Camera *c) {
     if (gPlayer1Controller->buttonPressed & D_CBUTTONS) {
         if (gCameraMovementFlags & CAM_MOVE_ZOOMED_OUT) {
             gCameraMovementFlags |= CAM_MOVE_ALREADY_ZOOMED_OUT;
-#ifndef VERSION_JP
             play_camera_buzz_if_cdown();
-#endif
         } else {
             gCameraMovementFlags |= CAM_MOVE_ZOOMED_OUT;
             play_sound_cbutton_down();
@@ -4692,9 +4686,7 @@ void handle_c_button_movement(struct Camera *c) {
             if (gCameraMovementFlags & CAM_MOVE_ZOOMED_OUT) {
                 gCameraMovementFlags |= CAM_MOVE_ALREADY_ZOOMED_OUT;
                 sZoomAmount = gCameraZoomDist + 400.f;
-#ifndef VERSION_JP
                 play_camera_buzz_if_cdown();
-#endif
             } else {
                 gCameraMovementFlags |= CAM_MOVE_ZOOMED_OUT;
                 sZoomAmount = gCameraZoomDist + 400.f;
@@ -5376,10 +5368,8 @@ BAD_RETURN(s32) cam_hmc_enter_maze(struct Camera *c) {
         vec3f_get_dist_and_angle(c->focus, gLakituState.goalPos, &dist, &pitch, &yaw);
         vec3f_set_dist_and_angle(c->focus, gLakituState.goalPos, 300.f, pitch, yaw);
         gLakituState.goalPos[1] = -800.f;
-#ifndef VERSION_JP
         c->pos[1] = gLakituState.goalPos[1];
         gLakituState.curPos[1] = gLakituState.goalPos[1];
-#endif
         sStatusFlags &= ~CAM_FLAG_SMOOTH_MOVEMENT;
     }
 }
@@ -6546,9 +6536,7 @@ BAD_RETURN(s32) cutscene_intro_peach_start_letter_music(UNUSED struct Camera *c)
  * Raise the volume (not in JP) and start the flying music.
  */
 BAD_RETURN(s32) cutscene_intro_peach_start_flying_music(UNUSED struct Camera *c) {
-#ifndef VERSION_JP
     seq_player_unlower_volume(SEQ_PLAYER_LEVEL, 60);
-#endif
     cutscene_intro_peach_play_lakitu_flying_music();
 }
 
@@ -8418,16 +8406,12 @@ BAD_RETURN(s32) cutscene_dialog_start(struct Camera *c) {
     cutscene_soften_music(c);
     set_time_stop_flags(TIME_STOP_ENABLED | TIME_STOP_DIALOG);
 
-#ifndef VERSION_JP
     if (c->mode == CAMERA_MODE_BOSS_FIGHT) {
         vec3f_copy(sCameraStoreCutscene.focus, c->focus);
         vec3f_copy(sCameraStoreCutscene.pos, c->pos);
     } else {
-#endif
         store_info_star(c);
-#ifndef VERSION_JP
     }
-#endif
 
     // Store Mario's position and faceAngle
     sCutsceneVars[8].angle[0] = 0;
@@ -9034,11 +9018,9 @@ BAD_RETURN(s32) peach_letter_text(UNUSED struct Camera *c) {
     create_dialog_box(DIALOG_020);
 }
 
-#ifndef VERSION_JP
 BAD_RETURN(s32) play_sound_peach_reading_letter(UNUSED struct Camera *c) {
     play_sound(SOUND_PEACH_DEAR_MARIO, gGlobalSoundSource);
 }
-#endif
 
 /**
  * Move the camera from peach reading the letter all the way to Mario's warp pipe. Follow the
@@ -9104,11 +9086,9 @@ BAD_RETURN(s32) intro_pipe_exit_text(UNUSED struct Camera *c) {
     create_dialog_box(DIALOG_033);
 }
 
-#ifndef VERSION_JP
 BAD_RETURN(s32) play_sound_intro_turn_on_hud(UNUSED struct Camera *c) {
     play_sound_rbutton_changed();
 }
-#endif
 
 /**
  * Fly to the pipe. Near the end, the camera jumps to Lakitu's position and the hud turns on.
@@ -9173,9 +9153,7 @@ BAD_RETURN(s32) cutscene_intro_peach_letter(struct Camera *c) {
 #endif
     cutscene_event(cutscene_intro_peach_start_to_pipe_spline, c, 0, 0);
     cutscene_event(peach_letter_text, c, 65, 65);
-#ifndef VERSION_JP
     cutscene_event(play_sound_peach_reading_letter, c, 83, 83);
-#endif
 
     if ((gCutsceneTimer > 120) && (get_dialog_id() == DIALOG_NONE)) {
         // Start the next scene

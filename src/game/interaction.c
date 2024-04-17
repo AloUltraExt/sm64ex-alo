@@ -826,9 +826,7 @@ u32 interact_star_or_key(struct MarioState *m, UNUSED u32 interactType, struct O
         }
 
         play_sound(SOUND_MENU_STAR_SOUND, m->marioObj->header.gfx.cameraToObject);
-#ifndef VERSION_JP
         update_mario_sound_and_camera(m);
-#endif
 
         if (grandStar) {
             return set_mario_action(m, ACT_JUMBO_STAR_CUTSCENE, 0);
@@ -1356,9 +1354,7 @@ u32 interact_hit_from_below(struct MarioState *m, UNUSED u32 interactType, struc
             if (o->oInteractionSubtype & INT_SUBTYPE_TWIRL_BOUNCE) {
                 bounce_off_object(m, o, 80.0f);
                 reset_mario_pitch(m);
-#ifndef VERSION_JP
                 play_sound(SOUND_MARIO_TWIRL_BOUNCE, m->marioObj->header.gfx.cameraToObject);
-#endif
                 return SET_MARIO_ACT(m, ACT_TWIRLING, 0);
             } else {
                 bounce_off_object(m, o, BOOST(m->input & INPUT_A_DOWN, 50.0f, 30.0f));
@@ -1394,9 +1390,7 @@ u32 interact_bounce_top(struct MarioState *m, UNUSED u32 interactType, struct Ob
             if (o->oInteractionSubtype & INT_SUBTYPE_TWIRL_BOUNCE) {
                 bounce_off_object(m, o, 80.0f);
                 reset_mario_pitch(m);
-#ifndef VERSION_JP
                 play_sound(SOUND_MARIO_TWIRL_BOUNCE, m->marioObj->header.gfx.cameraToObject);
-#endif
                 return SET_MARIO_ACT(m, ACT_TWIRLING, 0);
             } else {
                 bounce_off_object(m, o, BOOST(m->input & INPUT_A_DOWN, 50.0f, 30.0f));
@@ -1714,11 +1708,7 @@ u32 mario_can_talk(struct MarioState *m, u32 arg) {
 #define READ_MASK (INPUT_B_PRESSED | INPUT_A_PRESSED)
 #endif
 
-#ifdef VERSION_JP
-#define SIGN_RANGE 0x38E3
-#else
 #define SIGN_RANGE 0x4000
-#endif
 
 u32 check_read_sign(struct MarioState *m, struct Object *o) {
     if ((m->input & READ_MASK) && mario_can_talk(m, 0) && object_facing_mario(m, o, SIGN_RANGE)) {

@@ -21,7 +21,7 @@
 #define HUD_LUT_GLOBAL 2
 
 // For file select JP HUD difference
-#if defined(VERSION_JP) || defined(VERSION_SH)
+#if defined(VERSION_SH)
 #define HUD_LUT_DIFF HUD_LUT_JPMENU
 #else
 #define HUD_LUT_DIFF HUD_LUT_GLOBAL
@@ -29,12 +29,7 @@
 
 // Japanese font use the same width string size
 #define JP_DIALOG_CHAR_WIDTH 10
-
-#ifdef VERSION_JP
-#define HUD_LUT_STRIDE_GLOBAL   14
-#else
 #define HUD_LUT_STRIDE_GLOBAL   12
-#endif
 
 enum MenuMode {
     MENU_MODE_NONE = -1,
@@ -153,10 +148,10 @@ void handle_menu_scrolling(s8 scrollDirection, s8 *currentIndex, s8 minIndex, s8
 #if defined(VERSION_US) || defined(VERSION_EU)
 s16 get_str_x_pos_from_center(s16 centerPos, u8 *str, f32 scale);
 #endif
-#if defined(VERSION_JP) || defined(VERSION_SH)
+#if defined(VERSION_SH)
 #define get_str_x_pos_from_center get_str_x_pos_from_center_scale
 #endif
-#if defined(VERSION_JP) || defined(VERSION_EU) || defined(VERSION_SH)
+#if defined(VERSION_EU) || defined(VERSION_SH)
 s16 get_str_x_pos_from_center_scale(s16 centerPos, u8 *str, f32 scale);
 #endif
 s16 get_string_width(u8 *str);

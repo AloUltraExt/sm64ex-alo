@@ -44,7 +44,7 @@
 #define TEXT_PJ64_2 _("If you are using PJ64 2.X, go to:\nOptions > Settings > Config: > Memory Size, select 8 MB")
 #endif
 
-#if defined(VERSION_JP) || defined(VERSION_SH)
+#if defined(VERSION_SH)
 
 /**
  * File Select Text

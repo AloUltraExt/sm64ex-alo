@@ -112,18 +112,6 @@ ALIGNED8 static const Texture inside_castle_seg7_texture_0700F800[] = {
 #include "levels/castle_inside/22.rgba16.inc.c"
 };
 
-#ifdef VERSION_JP
-// 0x07010800 - 0x07011800
-ALIGNED8 static const Texture inside_castle_seg7_texture_07010800[] = {
-#include "levels/castle_inside/23.rgba16.inc.c"
-};
-
-// 0x07011800 - 0x0701200
-ALIGNED8 static const Texture inside_castle_seg7_texture_07011800[] = {
-#include "levels/castle_inside/24.rgba16.inc.c"
-};
-
-#else
 // 0x07010800 - 0x07011800
 ALIGNED8 static const Texture inside_castle_seg7_texture_07010800[] = {
 #include "levels/castle_inside/23_us.rgba16.inc.c"
@@ -133,7 +121,6 @@ ALIGNED8 static const Texture inside_castle_seg7_texture_07010800[] = {
 ALIGNED8 static const Texture inside_castle_seg7_texture_07011800[] = {
 #include "levels/castle_inside/24_us.rgba16.inc.c"
 };
-#endif
 
 // 0x07012800 - 0x07013800
 ALIGNED8 static const Texture inside_castle_seg7_texture_07012800[] = {

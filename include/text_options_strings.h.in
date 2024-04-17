@@ -21,7 +21,7 @@
 
 // Language specific strings
 
-#if defined(VERSION_JP) || defined(VERSION_SH)
+#if defined(VERSION_SH)
 
 // TODO: Actually translate this to JP
 

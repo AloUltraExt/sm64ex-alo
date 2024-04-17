@@ -137,10 +137,7 @@ static void racing_penguin_act_show_final_text(void) {
             }
         } else {
             cur_obj_init_animation_with_sound(0);
-
-#ifndef VERSION_JP
             play_penguin_walking_sound(1);
-#endif
 
             o->oForwardVel = 4.0f;
         }

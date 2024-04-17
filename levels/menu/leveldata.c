@@ -773,7 +773,7 @@ const Texture *const menu_hud_lut[] = {
     texture_menu_hud_char_katakana_sa,       texture_menu_hud_char_katakana_u,         texture_menu_hud_char_katakana_n, texture_menu_hud_char_kana_dakuten_do,
 };
 
-#if defined(VERSION_JP) || defined(VERSION_SH)
+#if defined(VERSION_SH)
 UNUSED static const u64 menu_unused_0 = 0;
 
 // 0x0700AC48
@@ -1717,7 +1717,7 @@ ALIGNED8 static const Texture texture_menu_font_char_colon[] = {
 // Menu small font print table
 // 0x0700CD08
 const Texture *const menu_font_lut[] = {
-#if defined(VERSION_JP) || defined(VERSION_SH)
+#if defined(VERSION_SH)
     texture_menu_font_char_jp_0, texture_menu_font_char_jp_1, texture_menu_font_char_jp_2, texture_menu_font_char_jp_3,
     texture_menu_font_char_jp_4, texture_menu_font_char_jp_5, texture_menu_font_char_jp_6, texture_menu_font_char_jp_7,
     texture_menu_font_char_jp_8, texture_menu_font_char_jp_9, texture_menu_font_char_jp_A, texture_menu_font_char_jp_B,

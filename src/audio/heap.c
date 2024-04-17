@@ -22,7 +22,7 @@ struct PoolSplit2 {
     u32 wantTemporary;
 }; // size = 0x8
 
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
 s16 gVolume;
 s8 gReverbDownsampleRate;
 #endif
@@ -380,7 +380,7 @@ void temporary_pools_init(struct PoolSplit *a) {
 }
 #undef SOUND_ALLOC_FUNC
 
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
 UNUSED static void unused_803163D4(void) {
 }
 #endif
@@ -399,7 +399,7 @@ void *alloc_bank_or_seq(struct SoundMultiPool *arg0, s32 arg1, s32 size, s32 arg
     struct TemporaryPool *tp;
     struct SoundAllocPool *pool;
     void *ret;
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
     u16 UNUSED _firstVal;
     u16 UNUSED _secondVal;
 #else
@@ -412,7 +412,7 @@ void *alloc_bank_or_seq(struct SoundMultiPool *arg0, s32 arg1, s32 size, s32 arg
 #ifndef VERSION_SH
     u8 isSound = FALSE;
 #endif
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
     u16 firstVal;
     u16 secondVal;
     u32 bothDiscardable;
@@ -468,7 +468,7 @@ void *alloc_bank_or_seq(struct SoundMultiPool *arg0, s32 arg1, s32 size, s32 arg
         secondVal = (tp->entries[1].id == (s8)nullID ? SOUND_LOAD_STATUS_NOT_LOADED : table[tp->entries[1].id]);
 #endif
 
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
         leftNotLoaded = (firstVal == SOUND_LOAD_STATUS_NOT_LOADED);
         leftDiscardable = (firstVal == SOUND_LOAD_STATUS_DISCARDABLE);
         leftAvail = (firstVal != SOUND_LOAD_STATUS_IN_PROGRESS);
@@ -958,7 +958,7 @@ void decrease_reverb_gain(void) {
     for (i = 0; i < gNumSynthesisReverbs; i++) {
         gSynthesisReverbs[i].reverbGain -= gSynthesisReverbs[i].reverbGain / 8;
     }
-#elif defined(VERSION_JP) || defined(VERSION_US)
+#elif defined(VERSION_US)
     gSynthesisReverb.reverbGain -= gSynthesisReverb.reverbGain / 4;
 #else
     s32 i, j;
@@ -1083,7 +1083,7 @@ void wait_for_audio_frames(UNUSED s32 frames) {
 }
 #endif
 
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
 #define AUDIO_SESSION_STRUCT AudioSessionSettings
 void audio_reset_session(s32 presetId)
 #else
@@ -1093,7 +1093,7 @@ void audio_reset_session(void)
 {
     struct AUDIO_SESSION_STRUCT *preset = &gAudioSessionPresets[0];
     s16 *mem;
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
     s8 updatesPerFrame;
     s32 reverbWindowSize;
     s32 k;
@@ -1104,7 +1104,7 @@ void audio_reset_session(void)
     s32 temporaryMem;
     s32 totalMem;
     s32 wantMisc;
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
     s32 frames;
     s32 remainingDmas;
 #else
@@ -1113,7 +1113,7 @@ void audio_reset_session(void)
 #endif
     eu_stubbed_printf_1("Heap Reconstruct Start %x\n", gAudioResetPresetIdToLoad);
 
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
     if (gAudioLoadLock != AUDIO_LOCK_UNINITIALIZED) {
         decrease_reverb_gain();
         for (i = 0; i < gMaxSimultaneousNotes; i++) {
@@ -1257,11 +1257,7 @@ void audio_reset_session(void)
     // Compute conversion ratio from the internal unit tatums/tick to the
     // external beats/minute (JP) or tatums/minute (US). In practice this is
     // 300 on JP and 14360 on US.
-#ifdef VERSION_JP
-    gTempoInternalToExternal = updatesPerFrame * 3600 / gTatumsPerBeat;
-#else
     gTempoInternalToExternal = (u32)(updatesPerFrame * 2880000.0f / gTatumsPerBeat / 16.713f);
-#endif
     gMaxAudioCmds = gMaxSimultaneousNotes * 20 * updatesPerFrame + 320;
 #endif
 
@@ -1304,7 +1300,7 @@ void audio_reset_session(void)
 #endif
     reset_bank_and_seq_load_status();
 
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
     for (j = 0; j < 2; j++) {
         gAudioCmdBuffers[j] = soundAlloc(&gNotesAndBuffersPool, gMaxAudioCmds * sizeof(u64));
     }
@@ -1441,7 +1437,7 @@ void audio_reset_session(void)
 
     osWritebackDCacheAll();
 
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
     if (gAudioLoadLock != AUDIO_LOCK_UNINITIALIZED) {
         gAudioLoadLock = AUDIO_LOCK_NOT_LOADING;
     }

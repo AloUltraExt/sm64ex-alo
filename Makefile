@@ -281,9 +281,7 @@ NUMRIC_VERSION ?= 0.01
 VERSION ?= us
 $(eval $(call validate-option,VERSION,jp us eu sh))
 
-ifeq      ($(VERSION),jp)
-  VER_DEFINES   += VERSION_JP=1
-else ifeq ($(VERSION),us)
+ifeq ($(VERSION),us)
   VER_DEFINES   += VERSION_US=1
 else ifeq ($(VERSION),eu)
   VER_DEFINES   += VERSION_EU=1

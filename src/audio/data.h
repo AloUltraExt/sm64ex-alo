@@ -140,7 +140,7 @@ extern u16 gUnused80226E98[0x10];
 
 extern u32 gAudioRandom;
 
-#if defined(VERSION_US) || defined(VERSION_JP)
+#if defined(VERSION_US)
 #define NOTES_BUFFER_SIZE \
 ( \
     MAX_SIMULTANEOUS_NOTES * ((4 /* updatesPerFrame */ * 20 * 2 * sizeof(u64)) \

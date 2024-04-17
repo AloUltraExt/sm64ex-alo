@@ -7,7 +7,7 @@
 # '--fix-errors` due to generated text_strings.h as well as the enhancement inc.c files
 TIDY_OPTS="-p . --fix --fix-errors" 
 COMPILER_OPTS="-nostdinc -fno-builtin -std=gnu90 -Iinclude -Isrc -D_LANGUAGE_C"
-VERSIONS="-DVERSION_US -DVERSION_JP -DVERSION_EU"
+VERSIONS="-DVERSION_US -DVERSION_EU"
 
 # run script from the root of the repository
 cd "$( dirname $0 )" >/dev/null 2>&1; cd ../

@@ -4,7 +4,7 @@
 #define TEXT_OPT_DEBUG          _("DEBUG")
 #define TEXT_OPT_DEBUG_WARP     _("WARP DEBUG")
 
-#if defined(VERSION_JP) || defined(VERSION_SH)
+#if defined(VERSION_SH)
 // TODO: Actually translate this to JP
 #define TEXT_OPT_DEBUG0         _("SIMPLE DEBUG DISPLAY")
 #define TEXT_OPT_DEBUG1         _("COMPLEX DEBUG DISPLAY")

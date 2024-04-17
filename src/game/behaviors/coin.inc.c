@@ -95,22 +95,16 @@ void bhv_spawned_coin_loop(void) {
 
 #if QOL_FEATURE_COIN_LAVA_FLICKER
     if (o->oMoveFlags & OBJ_MOVE_LANDED) {
-    #ifndef VERSION_JP
         if (o->oMoveFlags & OBJ_MOVE_ABOVE_DEATH_BARRIER) {
             obj_mark_for_deletion(o);
         }
-    #endif
         if (o->oMoveFlags & OBJ_MOVE_ABOVE_LAVA && cur_obj_wait_then_blink(0, 20)) {
             obj_mark_for_deletion(o);
         }
     }
 #else
     if (o->oMoveFlags & OBJ_MOVE_LANDED) {
-    #ifndef VERSION_JP
         if (o->oMoveFlags & (OBJ_MOVE_ABOVE_DEATH_BARRIER | OBJ_MOVE_ABOVE_LAVA))
-    #else
-        if (o->oMoveFlags & OBJ_MOVE_ABOVE_LAVA)
-    #endif
         {
             obj_mark_for_deletion(o);
         }
@@ -118,14 +112,10 @@ void bhv_spawned_coin_loop(void) {
 #endif
 
     if (o->oMoveFlags & OBJ_MOVE_BOUNCE) {
-#ifndef VERSION_JP
         if (o->oCoinNumBounceSoundPlayed < 5) {
-#endif
             cur_obj_play_sound_2(SOUND_GENERAL_COIN_DROP);
-#ifndef VERSION_JP
         }
         o->oCoinNumBounceSoundPlayed++;
-#endif
     }
 
     if (cur_obj_wait_then_blink(400, 20)) {

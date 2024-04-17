@@ -19,7 +19,7 @@
 #define TUXIES_MOTHER_SAD_EYES (0 || QOL_FEATURES)
 
 /// Adds japanese text at the bottom of the logo like in modern games.
-#define INTRO_JAPANESE_GAME_TEXT (0 || ((VERSION_JP || VERSION_SH) && QOL_FEATURES))
+#define INTRO_JAPANESE_GAME_TEXT (0 || ((VERSION_SH) && QOL_FEATURES))
 
 /// Changes credit text font to the one used by generic strings.
 #define CREDITS_TEXT_STRING_FONT (0 || QOL_FEATURES)

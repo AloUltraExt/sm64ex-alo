@@ -16,11 +16,7 @@
 #define SAMPLES_TO_OVERPRODUCE 0x10
 #define EXTRA_BUFFERED_AI_SAMPLES_TARGET 0x40
 
-#ifdef VERSION_JP
-typedef u16 FadeT;
-#else
 typedef s32 FadeT;
-#endif
 
 extern volatile u8 gAudioResetStatus;
 extern u8 gAudioResetPresetIdToLoad;

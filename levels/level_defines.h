@@ -1,8 +1,4 @@
-#ifdef VERSION_JP
-#define VAL_DIFF 25000
-#else
 #define VAL_DIFF 60000
-#endif
 
 // Define lists for list of level for macros. Each of the following fields are described:
 // Argument 1: Internal ROM name of the level.

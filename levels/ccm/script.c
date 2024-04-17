@@ -43,9 +43,7 @@ static const LevelScript script_func_local_4[] = {
     OBJECT_WITH_ACTS(/*model*/ MODEL_PENGUIN, /*pos*/ -4952,  6656, -6075, /*angle*/ 0, 270, 0, /*bhvParam*/ BPARAM1(STAR_INDEX_ACT_3) | BPARAM2(RACING_PENGUIN_BP_THIN), /*bhv*/ bhvRacingPenguin,   /*acts*/ ACT_2 | ACT_3 | ACT_4 | ACT_5 | ACT_6),
     OBJECT          (/*model*/ MODEL_NONE,    /*pos*/ -6500, -5836, -6400, /*angle*/ 0,   0, 0, /*bhvParam*/ 0, /*bhv*/ bhvPenguinRaceFinishLine),
     OBJECT          (/*model*/ MODEL_NONE,    /*pos*/ -6393,  -716,  7503, /*angle*/ 0,   0, 0, /*bhvParam*/ 0, /*bhv*/ bhvPenguinRaceShortcutCheck),
-#ifndef VERSION_JP
     OBJECT          (/*model*/ MODEL_NONE,    /*pos*/ -4943,  1321,   667, /*angle*/ 0,   0, 0, /*bhvParam*/ 0, /*bhv*/ bhvPlaysMusicTrackWhenTouched),
-#endif
     RETURN(),
 };
 

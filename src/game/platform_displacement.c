@@ -179,12 +179,10 @@ void apply_mario_platform_displacement(void) {
     }
 }
 
-#ifndef VERSION_JP
 /**
  * Set Mario's platform to NULL.
  */
 void clear_mario_platform(void) {
     gMarioPlatform = NULL;
 }
-#endif
 #endif

@@ -132,7 +132,7 @@ s32 sDialogSpeakerVoice[] = {
     SOUND_OBJ2_BOSS_DIALOG_GRUNT,
     SOUND_OBJ_WIGGLER_TALK,
     SOUND_GENERAL_YOSHI_TALK,
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
     NO_SOUND,
     NO_SOUND,
     NO_SOUND,
@@ -262,19 +262,10 @@ u16 sLevelAcousticReaches[LEVEL_COUNT] = {
 
 #define AUDIO_MAX_DISTANCE US_FLOAT(22000.0)
 
-#ifdef VERSION_JP
-#define LOW_VOLUME_REVERB 48.0
-#else
 #define LOW_VOLUME_REVERB 40.0f
-#endif
 
-#ifdef VERSION_JP
-#define VOLUME_RANGE_UNK1 0.8f
-#define VOLUME_RANGE_UNK2 1.0f
-#else
 #define VOLUME_RANGE_UNK1 0.9f
 #define VOLUME_RANGE_UNK2 0.8f
-#endif
 
 // sBackgroundMusicDefaultVolume represents the default volume for background music sequences using the level player (deprecated).
 // This code block is simply commented out for now as to not destroy compatibility with any streamed audio tools.
@@ -357,13 +348,11 @@ u8 D_EU_80300558 = 0;
 
 u8 sBackgroundMusicQueueSize = 0;
 
-#ifndef VERSION_JP
 u8 sUnused8033323C = 0; // never read, set to 0
-#endif
 
 
 // bss
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
 s16 *gCurrAiBuffer;
 #endif
 #ifdef VERSION_SH
@@ -419,11 +408,7 @@ extern OSMesgQueue *D_SH_80350F88;
 extern OSMesgQueue *D_SH_80350FA8;
 #endif
 
-#ifdef VERSION_JP
-typedef u16 FadeT;
-#else
 typedef s32 FadeT;
-#endif
 
 // some sort of main thread -> sound thread dispatchers
 extern void func_802ad728(u32 bits, f32 arg);
@@ -437,7 +422,6 @@ void process_level_music_dynamics(void);
 static u8 begin_background_music_fade(u16 fadeDuration);
 void func_80320ED8(void);
 
-#ifndef VERSION_JP
 void unused_8031E4F0(void) {
     // This is a debug function which is almost entirely optimized away,
     // except for loops, string literals, and a read of a volatile variable.
@@ -505,7 +489,6 @@ void unused_8031E4F0(void) {
 void unused_8031E568(void) {
     stubbed_printf("COUNT %8d\n", gAudioFrameCount);
 }
-#endif
 
 #if defined(VERSION_EU) || defined(VERSION_SH)
 const char unusedErrorStr1[] = "Error : Queue is not empty ( %x ) \n";
@@ -538,19 +521,17 @@ void audio_reset_session_eu(s32 presetId) {
 }
 #endif
 
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
 /**
  * Called from threads: thread3_main, thread5_game_loop
  */
 static void seq_player_fade_to_zero_volume(s32 player, FadeT fadeDuration) {
     struct SequencePlayer *seqPlayer = &gSequencePlayers[player];
 
-#ifndef VERSION_JP
     // fadeDuration is never 0 in practice
     if (fadeDuration == 0) {
         fadeDuration++;
     }
-#endif
 
     seqPlayer->fadeVelocity = -(seqPlayer->fadeVolume / fadeDuration);
     seqPlayer->state = SEQUENCE_PLAYER_STATE_FADE_OUT;
@@ -646,7 +627,7 @@ static void seq_player_fade_to_normal_volume(s32 player, FadeT fadeDuration) {
 static void seq_player_fade_to_target_volume(s32 player, FadeT fadeDuration, u8 targetVolume) {
     struct SequencePlayer *seqPlayer = &gSequencePlayers[player];
 
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
     if (seqPlayer->state == SEQUENCE_PLAYER_STATE_FADE_OUT) {
         return;
     }
@@ -1104,9 +1085,7 @@ static void select_current_sounds(u8 bank) {
 //  interrupted in this way, it will keep the background music low afterward.
 //  There are only a few of these sounds, and it probably isn't possible to do
 //  it in practice without using a time stop glitch like triple star spawn.
-#ifndef VERSION_JP
                     update_background_music_after_sound(bank, sCurrentSound[bank][i]);
-#endif
 
                     sSoundBanks[bank][sCurrentSound[bank][i]].soundBits = NO_SOUND;
                     sSoundBanks[bank][sCurrentSound[bank][i]].soundStatus = SOUND_STATUS_STOPPED;
@@ -1209,20 +1188,9 @@ static f32 get_sound_pan(f32 x, f32 z) {
 static f32 get_sound_volume(u8 bank, u8 soundIndex, f32 volumeRange) {
     f32 maxSoundDistance;
     f32 intensity;
-#ifndef VERSION_JP
     s32 div = bank < 3 ? 2 : 3;
-#endif
 
     if (!(sSoundBanks[bank][soundIndex].soundBits & SOUND_NO_VOLUME_LOSS)) {
-#ifdef VERSION_JP
-        // Intensity linearly lowers from 1 at the camera to 0 at maxSoundDistance
-        maxSoundDistance = sLevelAcousticReaches[gCurrLevelNum];
-        if (maxSoundDistance < sSoundBanks[bank][soundIndex].distance) {
-            intensity = 0.0f;
-        } else {
-            intensity = 1.0 - sSoundBanks[bank][soundIndex].distance / maxSoundDistance;
-        }
-#else
         // Intensity linearly lowers from 1 at the camera to 1 - volumeRange at maxSoundDistance,
         // then it goes from 1 - volumeRange at maxSoundDistance to 0 at AUDIO_MAX_DISTANCE
         if (sSoundBanks[bank][soundIndex].distance > AUDIO_MAX_DISTANCE) {
@@ -1238,17 +1206,9 @@ static f32 get_sound_volume(u8 bank, u8 soundIndex, f32 volumeRange) {
                     1.0f - sSoundBanks[bank][soundIndex].distance / maxSoundDistance * volumeRange;
             }
         }
-#endif
 
         if (sSoundBanks[bank][soundIndex].soundBits & SOUND_VIBRATO) {
-#ifdef VERSION_JP
-            //! @bug Intensity is 0 when the sound is far away. Due to the subtraction below, it is possible to end up with a negative intensity.
-            // When it is, objects with a volumeRange of 1 can still occasionally be lightly heard.
-            if (intensity != 0.0)
-#else
-            if (intensity >= 0.08f)
-#endif
-            {
+            if (intensity >= 0.08f) {
                 intensity -= (f32)(gAudioRandom & 0xf) / US_FLOAT(192.0);
             }
         }
@@ -1288,21 +1248,17 @@ static u8 get_sound_reverb(UNUSED u8 bank, UNUSED u8 soundIndex, u8 channelIndex
     u8 level;
     u8 reverb;
 
-#ifndef VERSION_JP
     // Disable level reverb if NO_ECHO is set
     if (sSoundBanks[bank][soundIndex].soundBits & SOUND_NO_ECHO) {
         level = 0;
         area = 0;
     } else {
-#endif
         level = (gCurrLevelNum > LEVEL_MAX ? LEVEL_MAX : gCurrLevelNum);
         area = gCurrAreaIndex - 1;
         if (area > 2) {
             area = 2;
         }
-#ifndef VERSION_JP
     }
-#endif
 
     // reverb = reverb adjustment + level reverb + a volume-dependent value
     // The volume-dependent value is 0 when volume is at maximum, and raises to
@@ -1345,7 +1301,7 @@ static void update_game_sound(void) {
     u8 bank;
     u8 channelIndex = 0;
     u8 soundIndex;
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
     f32 value;
 #endif
 
@@ -1522,22 +1478,6 @@ static void update_game_sound(void) {
                             break;
                     }
                 }
-#ifdef VERSION_JP
-                // If the sound was marked for deletion (bits set to NO_SOUND), then stop playing it
-                // and delete it
-                // @bug (JP double red coin sound) If the sound finished within the same frame as
-                // being marked for deletion, the signal to stop playing will be interpreted as a
-                // signal to *start* playing, as .main_loop_023589 in 00_sound_player does not check
-                // for soundScriptIO[0] being zero. This happens most commonly for red coin sounds
-                // whose sound spawners deactivate 30 frames after the sound starts to play, while
-                // the sound itself runs for 1.20 seconds. With enough lag these may coincide.
-                // Fixed on US by checking that layer0->finished is FALSE.
-                else if (soundStatus == SOUND_STATUS_STOPPED) {
-                    update_background_music_after_sound(bank, soundIndex);
-                    gSequencePlayers[SEQ_PLAYER_SFX].channels[channelIndex]->soundScriptIO[0] = 0;
-                    delete_sound_from_bank(bank, soundIndex);
-                }
-#else
                 else if (gSequencePlayers[SEQ_PLAYER_SFX].channels[channelIndex]->layers[0] == NULL) {
                     update_background_music_after_sound(bank, soundIndex);
                     sSoundBanks[bank][soundIndex].soundStatus = SOUND_STATUS_STOPPED;
@@ -1549,7 +1489,6 @@ static void update_game_sound(void) {
                     gSequencePlayers[SEQ_PLAYER_SFX].channels[channelIndex]->soundScriptIO[0] = 0;
                     delete_sound_from_bank(bank, soundIndex);
                 }
-#endif
                 // If sound has finished playing, then delete it
                 // @bug (JP sound glitch) On JP, ...->layers[0] has not been checked for null,
                 // so this access can crash if an earlier layer allocation failed due to too
@@ -2091,7 +2030,7 @@ static u8 begin_background_music_fade(u16 fadeDuration) {
         if (targetVolume != 0xff) {
             seq_player_fade_to_target_volume(SEQ_PLAYER_LEVEL, fadeDuration, targetVolume);
         } else {
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
             gSequencePlayers[SEQ_PLAYER_LEVEL].volume = gSequencePlayers[SEQ_PLAYER_LEVEL].volumeDefault;
 #endif
             seq_player_fade_to_normal_volume(SEQ_PLAYER_LEVEL, fadeDuration);
@@ -2352,12 +2291,10 @@ void play_dialog_sound(u8 dialogID) {
         }
     }
 
-#ifndef VERSION_JP
     // "You've stepped on the (Wing|Metal|Vanish) Cap Switch"
     if (dialogID == DIALOG_010 || dialogID == DIALOG_011 || dialogID == DIALOG_012) {
         play_puzzle_jingle();
     }
-#endif
 }
 
 void set_sequence_player_volume(s32 player, f32 volume) {
@@ -2700,19 +2637,17 @@ void play_toads_jingle(void) {
  * Called from threads: thread5_game_loop
  */
 void sound_reset(u8 presetId) {
-#ifndef VERSION_JP
     if (presetId >= 8) {
         presetId = 0;
         sUnused8033323C = 0;
     }
-#endif
     sGameLoopTicked = 0;
     disable_all_sequence_players();
     sound_init();
 #ifdef VERSION_SH
     func_802ad74c(0xF2000000, 0);
 #endif
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
     audio_reset_session(presetId);
 #else
     audio_reset_session_eu(presetId);
@@ -2737,7 +2672,7 @@ void audio_set_sound_mode(u8 soundMode) {
     gSoundMode = soundMode;
 }
 
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
 void unused_80321460(UNUSED s32 arg0, UNUSED s32 arg1, UNUSED s32 arg2, UNUSED s32 arg3) {
 }
 

@@ -26,7 +26,7 @@
 #define REVERB_WINDOW_SIZE_MAX 0x1000
 #endif
 
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
 #define REVERB_WINDOW_HEAP_SIZE \
 ( \
     (REVERB_WINDOW_SIZE_MAX * sizeof(s16) * 2) \
@@ -111,7 +111,7 @@ extern s16 D_SH_803479B4;
 #endif
 
 u64 *synthesis_execute(u64 *cmdBuf, s32 *writtenCmds, s16 *aiBuf, s32 bufLen);
-#if defined(VERSION_JP) || defined(VERSION_US)
+#if defined(VERSION_US)
 void note_init_volume(struct Note *note);
 void note_set_vel_pan_reverb(struct Note *note, f32 velocity, f32 pan, u8 reverbVol);
 void note_set_frequency(struct Note *note, f32 frequency);

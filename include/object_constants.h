@@ -95,9 +95,7 @@
 #define OBJ_MOVE_ABOVE_LAVA            (1 << 11) // 0x0800
 #define OBJ_MOVE_LEAVING_WATER         (1 << 12) // 0x1000
 #define OBJ_MOVE_BOUNCE                (1 << 13) // 0x2000
-#ifndef VERSION_JP
 #define OBJ_MOVE_ABOVE_DEATH_BARRIER   (1 << 14) // 0x4000
-#endif
 
 #define OBJ_MOVE_MASK_ON_GROUND (OBJ_MOVE_LANDED | OBJ_MOVE_ON_GROUND)
 #define OBJ_MOVE_MASK_IN_WATER ( \
