@@ -212,12 +212,10 @@ static struct Option optsControls[] = {
 };
 #endif
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) || !defined (TARGET_PORT_CONSOLE)
 static struct Option optsVideo[] = {
-#ifndef TARGET_PORT_CONSOLE
     DEF_OPT_TOGGLE( optsVideoStr[0], &configWindow.fullscreen ),
     DEF_OPT_TOGGLE( optsVideoStr[5], &configWindow.vsync ),
-#endif
 #if !defined(TARGET_PORT_CONSOLE) && !defined(TARGET_ANDROID)
     DEF_OPT_BUTTON( optsVideoStr[4], optvideo_reset_window ),
 #endif
