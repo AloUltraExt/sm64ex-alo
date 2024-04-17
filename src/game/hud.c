@@ -293,12 +293,20 @@ void render_hud_power_meter(void) {
 }
 
 /**
- * Renders the amount of lives Mario has.
+ * Renders the amount of lives and red coinsMario has.
  */
+void render_red_coins(void) {
+    s8 x;
+    for (x = 0; x < gRedCoinsCollected; x++) {
+        render_hud_tex_lut(GFX_DIMENSIONS_FROM_LEFT_EDGE(22) + x * 20, 40, "textures/hud/ds_redcoin.rgba16");
+    }
+}
+
 void render_hud_mario_lives(void) {
     print_text(set_hud_auto_x_pos(HUD_LIVES_MARIO_X), HUD_LIVES_MARIO_Y, ","); // 'Mario Head' glyph
     print_text(set_hud_auto_x_pos(HUD_LIVES_CROSS_X), HUD_LIVES_CROSS_Y, "*"); // 'X' glyph
     print_text_fmt_int(set_hud_auto_x_pos(HUD_LIVES_NUM_X), HUD_LIVES_NUM_Y, "%d", gHudDisplay.lives);
+    render_red_coins();
 }
 
 /**
