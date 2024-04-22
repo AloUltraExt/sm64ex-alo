@@ -60,6 +60,11 @@ extern unsigned int configRumbleStrength;
 #ifdef EXTERNAL_DATA
 extern bool         configPrecacheRes;
 #endif
+typedef struct {
+    bool cUpSounds;
+} ConfigVanillaCam;
+
+extern ConfigVanillaCam configVanillaCam;
 
 extern bool         configHUD;
 extern bool         configWallslide;
