@@ -15,10 +15,6 @@ enum LevelScriptIntroArgs {
     LVL_INTRO_LEVEL_SELECT
 };
 
-#if ZELDA_STYLE_LEVEL_SELECT
-#include "extras/redone/title_screen.inc.h"
-#endif
-
 s32 lvl_intro_update(s16 arg, UNUSED s32 unusedArg);
 
 #endif // TITLE_SCREEN_H

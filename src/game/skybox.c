@@ -100,12 +100,8 @@ struct Skybox {
 struct Skybox sSkyBoxInfo[2];
 
 typedef const u8 *const SkyboxTexture[SKYBOX_ROWS * SKYBOX_COLS]; // originally 80
-
-#if QOL_FEATURE_BETTER_SKYBOX
-typedef f32 SkyboxType;
-#else
 typedef s32 SkyboxType;
-#endif
+
 #define SKYBOX_FOV_X(fov) degrees_to_angle(fov)
 #define SKYBOX_FOV_Y(fov) fov
 
@@ -170,20 +166,12 @@ SkyboxType calculate_skybox_scaled_x(s8 player, f32 fov) {
 
     f32 yawScaled = ((SCREEN_WIDTH * yaw) / SKYBOX_FOV_X(fov));
 
-#if QOL_FEATURE_BETTER_SKYBOX
-    f32 scaledX = yawScaled;
-
-    if (scaledX > SKYBOX_WIDTH) {
-        scaledX -= (s32) scaledX / SKYBOX_WIDTH * SKYBOX_WIDTH;
-    }
-#else
     // Round the scaled yaw. Since yaw is a u16, it doesn't need to check for < 0
     s32 scaledX = yawScaled + 0.5f;
 
     if (scaledX > SKYBOX_WIDTH) {
         scaledX -= scaledX / SKYBOX_WIDTH * SKYBOX_WIDTH;
     }
-#endif
 
     return SKYBOX_WIDTH - scaledX;
 }
@@ -200,16 +188,11 @@ SkyboxType calculate_skybox_scaled_y(s8 player, f32 fov) {
 
     // Scale by 360 / fov
     f32 degreesToScale = pitchInDegrees * (360.0f / SKYBOX_FOV_Y(fov));
-
-#if QOL_FEATURE_BETTER_SKYBOX
-    f32 scaledY = degreesToScale + 5 * SKYBOX_TILE_HEIGHT;
-#else
     s32 roundedY = round_float(degreesToScale);
 
     // Since pitch can be negative, and the tile grid starts 1 octant above the camera's focus, add
     // 5 octants to the y position
     s32 scaledY = roundedY + 5 * SKYBOX_TILE_HEIGHT;
-#endif
 
     if (scaledY > SKYBOX_HEIGHT) {
         scaledY = SKYBOX_HEIGHT;

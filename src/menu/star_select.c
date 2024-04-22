@@ -408,14 +408,9 @@ s32 lvl_init_act_selector_values_and_stars(UNUSED s32 arg, UNUSED s32 unused) {
 s32 lvl_update_obj_and_load_act_button_actions(UNUSED s32 arg, UNUSED s32 unused) {
     if (sActSelectorMenuTimer > 10) {
         // If any of these buttons are pressed, play sound and go to course act
-#if !QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
         if ((gPlayer3Controller->buttonPressed & A_BUTTON)
          || (gPlayer3Controller->buttonPressed & START_BUTTON)
-         || (gPlayer3Controller->buttonPressed & B_BUTTON)) 
-#else
-        if ((gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | B_BUTTON | ZL_TRIG | ZR_TRIG))) 
-#endif
-        {
+         || (gPlayer3Controller->buttonPressed & B_BUTTON)) {
             play_sound(SOUND_MENU_STAR_SOUND_LETS_A_GO, gGlobalSoundSource);
 #ifdef RUMBLE_FEEDBACK
             queue_rumble_data(60, 70);

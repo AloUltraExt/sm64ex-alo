@@ -123,26 +123,6 @@ const Texture *const game_over_texture_table[] = {
 
 UNUSED static const u64 title_screen_bg_unused_0 = 0;
 
-#if QOL_FEATURE_MARIO_HEAD_EASTER_EGG
-const Gfx title_screen_bg_dl_0A0065E8[] = {
-    gsDPPipeSync(),
-    gsDPSetCycleType(G_CYC_COPY),
-    gsDPSetTexturePersp(G_TP_NONE),
-    gsDPSetTextureFilter(G_TF_POINT),
-    gsDPSetRenderMode(G_RM_NOOP, G_RM_NOOP2),
-    gsSPEndDisplayList(),
-};
-
-const Gfx title_screen_bg_dl_0A006618[] = {
-    gsDPPipeSync(),
-    gsDPSetCycleType(G_CYC_1CYCLE),
-    gsDPSetTexturePersp(G_TP_PERSP),
-    gsDPSetTextureFilter(G_TF_BILERP),
-    gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
-    gsSPEndDisplayList(),
-};
-#endif
-
 #ifdef RUMBLE_FEEDBACK
 
 #if defined(VERSION_SH)

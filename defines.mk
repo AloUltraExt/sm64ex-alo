@@ -33,8 +33,6 @@ RM2C ?= 0
 QOL_FIXES ?= 0
 # Quality of life features
 QOL_FEATURES ?= 0
-# Quality of life redone files
-QOL_REDONE ?= 0
 
 # --------------------------------------
 # Port Only Defines
@@ -190,9 +188,4 @@ endif
 # Check for QoL features option
 ifeq ($(QOL_FEATURES),1)
   CUSTOM_C_DEFINES += -DQOL_FEATURES
-endif
-
-# Check for QoL features option
-ifeq ($(QOL_REDONE),1)
-  CUSTOM_C_DEFINES += -DQOL_REDONE
 endif

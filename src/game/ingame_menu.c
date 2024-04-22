@@ -2678,13 +2678,8 @@ s16 render_pause_screen(void) {
                 render_pause_course_options(99, 93, &gMenuLineNum, 15);
             }
 #endif
-
-#if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
-            if (gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | ZL_TRIG | ZR_TRIG))
-#else
             if (gPlayer3Controller->buttonPressed & A_BUTTON
                 || (gPlayer3Controller->buttonPressed & START_BUTTON))
-#endif
             {
                 level_set_transition(0, NULL);
                 play_sound(SOUND_MENU_PAUSE_CLOSE, gGlobalSoundSource);
@@ -2707,13 +2702,7 @@ s16 render_pause_screen(void) {
             render_pause_castle_menu_box(160, 143);
             render_pause_castle_main_strings(104, 60);
 
-#if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
-            if (gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | (ZL_TRIG | ZR_TRIG)))
-#else
-            if ((gPlayer3Controller->buttonPressed & A_BUTTON)
-             || (gPlayer3Controller->buttonPressed & START_BUTTON))
-#endif
-            {
+            if ((gPlayer3Controller->buttonPressed & A_BUTTON) || (gPlayer3Controller->buttonPressed & START_BUTTON)) {
                 level_set_transition(0, NULL);
                 play_sound(SOUND_MENU_PAUSE_CLOSE, gGlobalSoundSource);
                 gMenuMode = MENU_MODE_NONE;
@@ -3108,12 +3097,7 @@ s16 render_course_complete_screen(void) {
 #endif
 
             if (gCourseCompleteScreenTimer > 110
-                && (gPlayer3Controller->buttonPressed & A_BUTTON
-                 || gPlayer3Controller->buttonPressed & START_BUTTON
-#if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
-                 || gPlayer3Controller->buttonPressed & (ZL_TRIG | ZR_TRIG)
-#endif
-                )) {
+                && (gPlayer3Controller->buttonPressed & A_BUTTON || gPlayer3Controller->buttonPressed & START_BUTTON)) {
                 level_set_transition(0, NULL);
                 play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
                 gMenuState = MENU_STATE_DEFAULT;

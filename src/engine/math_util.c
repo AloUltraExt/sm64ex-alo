@@ -746,7 +746,6 @@ static void vec3f_create_axis_normals_from_up_dir(Vec3f colX, Vec3f colY, Vec3f 
     vec3f_normalize(colZ);
 }
 
-#if OPTIMIZED_SHADOWS
 /**
 + * Mostly the same as 'mtxf_align_terrain_normal', but also applies a scale and multiplication.
 + * 'src' is the matrix to multiply from
@@ -776,7 +775,6 @@ void mtxf_shadow(Mat4 dest, Mat4 src, Vec3f upDir, Vec3f pos, Vec3f scale, s32 y
     vec3f_add(dest[3], src[3]);
     MTXF_END(dest);
 }
-#endif
 
 /**
  * Set 'dest' to a transformation matrix that aligns an object with the terrain

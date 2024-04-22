@@ -156,9 +156,6 @@ const LevelScript level_intro_entry_4[] = {
 #ifdef GODDARD_MFACE
     FIXED_LOAD(/*loadAddr*/ _goddardSegmentStart, /*romStart*/ _goddardSegmentRomStart, /*romEnd*/ _goddardSegmentRomEnd),
 #endif
-#if ZELDA_STYLE_LEVEL_SELECT
-    CALL(/*arg*/ 0, /*func*/ lvl_init_intro_level_select),
-#endif
     ALLOC_LEVEL_POOL(),
 
     AREA(/*index*/ 1, intro_geo_000414),

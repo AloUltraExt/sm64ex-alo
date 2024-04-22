@@ -15,27 +15,6 @@
 #define HAS_FRAMEBUFFER 0
 #endif
 
-// --| Quality of life redone files
-/// Adds Zelda level select used on OOT, MM and Animal Forest
-#define ZELDA_STYLE_LEVEL_SELECT (0 || QOL_REDONE)
-/// Adds improved platform displacement with intertia
-#define PLATFORM_DISPLACEMENT_2 (0 || QOL_REDONE)
-/// Uses optimized shadows which are faster than vanilla
-#define OPTIMIZED_SHADOWS (1 || QOL_REDONE)
-
-// --| Quality of life features
-/// Adds an extra Z button trig for some menu files (Originally defined in EU)
-#define QOL_FEATURE_Z_BUTTON_EXTRA_OPTION (0 || VERSION_EU || QOL_FEATURES)
-/// Adds Mario's Face Easter Egg (Originally defined in SH)
-#define QOL_FEATURE_MARIO_HEAD_EASTER_EGG (0 || VERSION_SH || (QOL_FEATURES && GODDARD_MFACE && HAS_FRAMEBUFFER))
-/// Makes ending screen go back to title screen when pressing start
-#define QOL_FEATURE_ENDING_SCREEN_START (0 || QOL_FEATURES)
-/// Makes skybox have better precision movement and fixes fov
-#define QOL_FEATURE_BETTER_SKYBOX (0 || QOL_FEATURES)
-
-// --| Quality of life fixes
-// --| Code Fixes
-
 /// Fixes complete coins not giving lives every 50 coins after 150 coins
 #define QOL_FIX_COMPLETE_COURSE_50_COINS (0 || QOL_FIXES)
 /// Fixes instant warp offset not working when warping across different areas

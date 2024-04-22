@@ -768,7 +768,6 @@ void load_object_surfaces(TerrainData **data, TerrainData *vertexData, u32 dynam
     }
 }
 
-#if AUTO_COLLISION_DISTANCE
 // From Kaze
 static f32 get_optimal_collision_distance(struct Object *obj) {
     f32 thisVertDist, maxDist = 0.0f;
@@ -802,7 +801,6 @@ static f32 get_optimal_collision_distance(struct Object *obj) {
     // Only run sqrtf once.
     return (sqrtf(maxDist) + 100.0f);
 }
-#endif
 
 static TerrainData sDynamicVertices[600];
 
@@ -814,7 +812,6 @@ void load_object_collision_model(void) {
 
     TerrainData *collisionData = obj->collisionData;
 
-#if AUTO_COLLISION_DISTANCE
     f32 sqrLateralDist;
     vec3f_get_lateral_dist_squared(&obj->oPosX, &gMarioObject->oPosX, &sqrLateralDist);
 
@@ -832,9 +829,6 @@ void load_object_collision_model(void) {
         // Use existing collision distance.
         colDist = obj->oCollisionDistance;
     }
-#else
-    f32 colDist = obj->oCollisionDistance;
-#endif
 
     f32 drawDist = obj->oDrawingDistance;
 
@@ -856,16 +850,12 @@ void load_object_collision_model(void) {
 
     int isInit = (marioDist == F32_MAX);
 
-#if AUTO_COLLISION_DISTANCE
     // A value higher than 500.0f causes crashes with surfaces
     s32 inColRadius = (
            (sqrLateralDist < sqr(colDist))
         && (verticalMarioDiff > 0 || verticalMarioDiff > -colDist)
         && (verticalMarioDiff < 0 || verticalMarioDiff < (colDist + 500.0f))
     );
-#else
-    s32 inColRadius = (marioDist < colDist);
-#endif
 
     // Update if no Time Stop, in range, and in the current room.
     if (!(gTimeStopState & TIME_STOP_ACTIVE) && inColRadius

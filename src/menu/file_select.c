@@ -1661,11 +1661,7 @@ void handle_cursor_button_input(void) {
         || sSelectedButtonID == MENU_BUTTON_SCORE_FILE_C
         || sSelectedButtonID == MENU_BUTTON_SCORE_FILE_D) {
         if (gPlayer3Controller->buttonPressed 
-            & (B_BUTTON | START_BUTTON 
-#if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
-            | ZL_TRIG | ZR_TRIG
-#endif
-            )) {
+            & (B_BUTTON | START_BUTTON )) {
             sClickPos[0] = sCursorPos[0];
             sClickPos[1] = sCursorPos[1];
             sCursorClickingTimer = 1;
@@ -1675,11 +1671,7 @@ void handle_cursor_button_input(void) {
         }
     } else { // If cursor is clicked
         if (gPlayer3Controller->buttonPressed
-            & (A_BUTTON | B_BUTTON | START_BUTTON 
-#if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
-            | ZL_TRIG | ZR_TRIG
-#endif
-            )) {
+            & (A_BUTTON | B_BUTTON | START_BUTTON )) {
             sClickPos[0] = sCursorPos[0];
             sClickPos[1] = sCursorPos[1];
             sCursorClickingTimer = 1;

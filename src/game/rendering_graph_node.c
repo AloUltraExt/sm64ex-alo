@@ -861,11 +861,7 @@ void geo_set_animation_globals(struct AnimInfo *node, s32 hasAnimation) {
 void geo_process_shadow(struct GraphNodeShadow *node) {
     if (gCurGraphNodeCamera != NULL && gCurGraphNodeObject != NULL) {
         Vec3f shadowPos;
-#if OPTIMIZED_SHADOWS
         f32 shadowScale = node->shadowScale * 0.5f;
-#else
-        f32 shadowScale = node->shadowScale;
-#endif
         if (gCurGraphNodeHeldObject != NULL) {
             get_pos_from_transform_mtx(shadowPos, gMatStack[gMatStackIndex],
                                        *gCurGraphNodeCamera->matrixPtr);
@@ -902,11 +898,10 @@ void geo_process_shadow(struct GraphNodeShadow *node) {
             shadowPos[2] += (-animOffset[0] * sinAng) + (animOffset[2] * cosAng);
         }
 
-#if OPTIMIZED_SHADOWS
         Vec3f floorNormal;
         Vec3f scaleVec;
         s8 isDecal;
-#endif
+
 #ifdef HIGH_FPS_PC
         Vec3f shadowPosInterpolated;
         if (gCurGraphNodeHeldObject != NULL) {
@@ -928,62 +923,27 @@ void geo_process_shadow(struct GraphNodeShadow *node) {
             gCurGraphNodeObject->prevShadowPosTimestamp = gGlobalTimer;
         }
 
-    #if OPTIMIZED_SHADOWS
         Gfx *shadowListInterpolated = create_shadow_below_xyz(shadowPosInterpolated, floorNormal, scaleVec, shadowScale,
                                                          node->shadowSolidity, node->shadowType, shifted, &isDecal);
-    #else
-        Gfx *shadowListInterpolated = create_shadow_below_xyz(shadowPosInterpolated[0], shadowPosInterpolated[1],
-                                                         shadowPosInterpolated[2], shadowScale,
-                                                         node->shadowSolidity, node->shadowType);
-    #endif
 #endif
 
-#if OPTIMIZED_SHADOWS
         Gfx *shadowList = create_shadow_below_xyz(shadowPos, floorNormal, scaleVec, shadowScale,
                                                   node->shadowSolidity, node->shadowType, shifted, &isDecal);
-#else
-        Gfx *shadowList = create_shadow_below_xyz(shadowPos[0], shadowPos[1], shadowPos[2], shadowScale,
-                                             node->shadowSolidity, node->shadowType);
-#endif
 #ifdef HIGH_FPS_PC
         if (shadowListInterpolated != NULL && shadowList != NULL)
 #else
         if (shadowList != NULL)
 #endif
         {
-#if OPTIMIZED_SHADOWS
             mtxf_shadow(gMatStack[gMatStackIndex + 1], *gCurGraphNodeCamera->matrixPtr,
                 floorNormal, shadowPos, scaleVec, gCurGraphNodeObject->angle[1]);
     #ifdef HIGH_FPS_PC
             mtxf_shadow(gMatStackInterpolated[gMatStackIndex + 1], *gCurGraphNodeCamera->matrixPtrInterpolated,
                 floorNormal, shadowPosInterpolated, scaleVec, gCurGraphNodeObject->angle[1]);
     #endif
-#else
-            Mat4 mtxf;
-            mtxf_translate(mtxf, shadowPos);
-            mtxf_mul(gMatStack[gMatStackIndex + 1], mtxf, *gCurGraphNodeCamera->matrixPtr);
-    #ifdef HIGH_FPS_PC
-            mtxf_translate(mtxf, shadowPosInterpolated);
-            mtxf_mul(gMatStackInterpolated[gMatStackIndex + 1], mtxf, *gCurGraphNodeCamera->matrixPtrInterpolated);
-    #endif
-#endif
             inc_mat_stack();
 
-#if OPTIMIZED_SHADOWS
             GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, isDecal ? LAYER_TRANSPARENT_DECAL : LAYER_TRANSPARENT);
-#else
-            if (gShadowAboveWaterOrLava == TRUE) {
-                GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_ALPHA);
-            } else if (gMarioOnIceOrCarpet == TRUE) {
-                GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT);
-    #if WATER_SURFACES
-            } else if (gShadowAboveCustomWater == TRUE) {
-                GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT);
-    #endif
-            } else {
-                GEO_APPEND_DISPLAY_LIST_EXTRA(shadowList, LAYER_TRANSPARENT_DECAL);
-            }
-#endif
             gMatStackIndex--;
         }
     }
