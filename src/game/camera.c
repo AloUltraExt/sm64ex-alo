@@ -75,14 +75,6 @@
  *
  */
 
-#ifdef TARGET_N64
-ConfigVanillaCam configVanillaCam = {
-    .cUpSounds = TRUE,
-};
-#endif
-
-s16 sParallelCamLOverride = FALSE;
-
 // BSS
 /**
  * Stores Lakitu's position from the last frame, used for transitioning in next_lakitu_state()
@@ -1126,61 +1118,6 @@ void mode_radial_camera(struct Camera *c) {
     pan_ahead_of_player(c);
 }
 
-#define CAMERA_COLLISION_MIN_DIST 300.0f
-
-/**
- * Reonucam collision handler, handles collision detection using ray casting.
- */
- 
-void update_camera_collision_handler(struct Camera *c) {
-    struct Surface *surf;
-    Vec3f camdir;
-    Vec3f origin;
-    Vec3f thick;
-    Vec3f hitpos;
-    vec3f_copy(origin, gMarioState->pos);
-    origin[1] += 50.0f;
-    camdir[0] = c->pos[0] - origin[0];
-    camdir[1] = c->pos[1] - origin[1];
-    camdir[2] = c->pos[2] - origin[2];
-    find_surface_on_ray(origin, camdir, &surf, hitpos, (RAYCAST_FIND_FLOOR | RAYCAST_FIND_WALL | RAYCAST_FIND_CEIL));
-    if (surf) {
-        f32 distFromSurf = 100.0f;
-        f32 dist;
-        f32 yDist = 0;
-        Vec3f camToMario;
-        vec3f_diff(camToMario, gMarioState->pos, hitpos);
-        s16 yaw = atan2s(camToMario[2], camToMario[0]);
-        vec3f_get_lateral_dist(hitpos, gMarioState->pos, &dist);
-        if (dist < CAMERA_COLLISION_MIN_DIST) {
-            distFromSurf += (dist - CAMERA_COLLISION_MIN_DIST);
-            yDist = CAMERA_COLLISION_MIN_DIST - CLAMP(dist, 0, CAMERA_COLLISION_MIN_DIST);
-        }
-        thick[0] = sins(yaw) * distFromSurf;
-        thick[1] = yDist;
-        thick[2] = coss(yaw) * distFromSurf;
-        vec3f_add(hitpos,thick);
-        vec3f_copy(c->pos,hitpos);
-
-    }
-    c->yaw = atan2s(c->pos[2] - gMarioState->pos[2], c->pos[0] - gMarioState->pos[0]);
-}
-
-s32 snap_to_45_degrees(s16 angle) {
-    if (angle % DEGREES(45)) {
-        s16 d1 = ABS(angle) % DEGREES(45);
-        s16 d2 = DEGREES(45) - d1;
-        if (angle > 0) {
-            if (d1 < d2) return angle - d1;
-            else return angle + d2;
-        } else {
-            if (d1 < d2) return angle + d1;
-            else return angle - d2;
-        }
-    }
-    return angle;
-}
-
 /**
  * A mode that only has 8 camera angles, 45 degrees apart
  */
@@ -1198,13 +1135,13 @@ void mode_8_directions_camera(struct Camera *c) {
         s8DirModeYawOffset -= DEGREES(45);
         play_sound_cbutton_side();
     }
-    
+
     lakitu_zoom(400.f, 0x900);
     c->nextYaw = update_8_directions_camera(c, c->focus, pos);
-    set_camera_height(c, pos[1]);
     c->pos[0] = pos[0];
     c->pos[2] = pos[2];
     sAreaYawChange = sAreaYaw - oldAreaYaw;
+    set_camera_height(c, pos[1]);
 }
 
 /**
@@ -2895,11 +2832,6 @@ void set_camera_mode(struct Camera *c, s16 mode, s16 frames) {
     vec3f_copy(end->pos, c->pos);
     vec3f_sub(end->pos, sMarioCamState->pos);
 
-    if (mode == CAMERA_MODE_8_DIRECTIONS) {
-        // Helps transition from any camera mode to 8dir
-        s8DirModeYawOffset = snap_to_45_degrees(c->yaw);
-    }
-
     sAreaYaw = sModeTransitions[sModeInfo.newMode](c, end->focus, end->pos);
 
     // End was updated by sModeTransitions
@@ -4587,17 +4519,14 @@ void play_camera_buzz_if_c_sideways(void) {
 }
 
 void play_sound_cbutton_up(void) {
-    if (!configVanillaCam.cUpSounds) return;
     play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
 }
 
 void play_sound_cbutton_down(void) {
-    if (!configVanillaCam.cUpSounds) return;
     play_sound(SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource);
 }
 
 void play_sound_cbutton_side(void) {
-    if (!configVanillaCam.cUpSounds) return;
     play_sound(SOUND_MENU_CAMERA_TURN, gGlobalSoundSource);
 }
 
@@ -5246,7 +5175,7 @@ void set_camera_mode_8_directions(struct Camera *c) {
     if (c->mode != CAMERA_MODE_8_DIRECTIONS) {
         c->mode = CAMERA_MODE_8_DIRECTIONS;
         sStatusFlags &= ~CAM_FLAG_SMOOTH_MOVEMENT;
-        s8DirModeBaseYaw = snap_to_45_degrees(s8DirModeBaseYaw);
+        s8DirModeBaseYaw = 0;
         s8DirModeYawOffset = 0;
     }
 }

@@ -75,7 +75,11 @@ static const u8 optMainStr[][32] = {
 };
 
 const u8 optsCameraStr[][32] = {
+    { TEXT_OPT_VANILLA_CAM },
+    { TEXT_OPT_LAKITU_PARALLEL },
+    { TEXT_OPT_SR_MARIO_CAM },
     { TEXT_OPT_CAM_C_UP_SOUNDS },
+    { TEXT_OPT_CAM_PARALLEL_COL },
 };
 
 #ifndef TARGET_N64
@@ -176,10 +180,6 @@ static void optvideo_apply(UNUSED struct Option *self, s32 arg) {
 #endif
 
 /* submenu option lists */
-static struct Option optsVanillaCamera[] = {
-    DEF_OPT_TOGGLE( optsCameraStr[0], &configVanillaCam.cUpSounds ),
-};
-
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct Option optsControls[] = {
     DEF_OPT_BIND( optBindStr[ 2], configKeyA ),
@@ -245,8 +245,6 @@ static struct Option optsDsSettings[] = {
 
 /* submenu definitions */
 
-struct SubMenu menuCamera = DEF_SUBMENU( optMainStr[1], optsVanillaCamera );
-
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct SubMenu menuControls = DEF_SUBMENU( optMainStr[2], optsControls );
 #endif
@@ -262,7 +260,6 @@ static struct SubMenu menuDsSettings = DEF_SUBMENU( optMainStr[6], optsDsSetting
 /* main options menu definition */
 
 static struct Option optsMain[] = {
-    DEF_OPT_SUBMENU( optMainStr[1], &menuCamera ),
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
     DEF_OPT_SUBMENU( optMainStr[2], &menuControls ),
 #endif
