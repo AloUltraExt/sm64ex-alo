@@ -364,8 +364,6 @@
 "actors/power_meter/power_meter_six_segments.rgba16.png": [32,32,2048,{"jp":[2094912,156640],"us":[2102288,156640],"eu":[1974256,156640],"sh":[1950768,156640]}],
 "actors/power_meter/power_meter_three_segments.rgba16.png": [32,32,2048,{"jp":[2094912,162784],"us":[2102288,162784],"eu":[1974256,162784],"sh":[1950768,162784]}],
 "actors/power_meter/power_meter_two_segments.rgba16.png": [32,32,2048,{"jp":[2094912,164832],"us":[2102288,164832],"eu":[1974256,164832],"sh":[1950768,164832]}],
-"actors/purple_switch/purple_switch_base.rgba16.png": [16,4,128,{"jp":[2032944,49320],"us":[2040320,49320],"eu":[1912288,49320],"sh":[1888800,49320]}],
-"actors/purple_switch/purple_switch_exclamation_point.rgba16.png": [16,32,1024,{"jp":[2032944,49448],"us":[2040320,49448],"eu":[1912288,49448],"sh":[1888800,49448]}],
 "actors/sand/sand_particle.rgba16.png": [16,16,512,{"jp":[2094912,178896],"us":[2102288,178896],"eu":[1974256,178896],"sh":[1950768,178896]}],
 "actors/scuttlebug/scuttlebug_eye.rgba16.png": [32,32,2048,{"jp":[1991184,65800],"us":[1998560,65800],"eu":[1870528,65800],"sh":[1847040,65800]}],
 "actors/scuttlebug/scuttlebug_iris.rgba16.png": [32,32,2048,{"jp":[1991184,76040],"us":[1998560,76040],"eu":[1870528,76040],"sh":[1847040,76040]}],

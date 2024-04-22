@@ -37,7 +37,7 @@ void bhv_animates_on_floor_switch_press_init(void) {
 
 void bhv_animates_on_floor_switch_press_loop(void) {
     if (o->oFloorSwitchPressAnimationUnk100 != 0) {
-        if (o->parentObj->oAction != PURPLE_SWITCH_ACT_TICKING) {
+        if (o->parentObj->oAction != RED_SWITCH_ACT_TICKING) {
             o->oFloorSwitchPressAnimationUnk100 = 0;
         }
 
@@ -46,7 +46,7 @@ void bhv_animates_on_floor_switch_press_loop(void) {
         } else {
             o->oFloorSwitchPressAnimationUnkF4 = 0;
         }
-    } else if (o->parentObj->oAction == PURPLE_SWITCH_ACT_TICKING) {
+    } else if (o->parentObj->oAction == RED_SWITCH_ACT_TICKING) {
         o->oFloorSwitchPressAnimationUnkFC ^= 1;
         o->oFloorSwitchPressAnimationUnk100 = 1;
     }

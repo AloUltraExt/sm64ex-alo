@@ -179,16 +179,13 @@ extern const Gfx metal_box_seg8_dl_08024B18[];
 extern const Gfx metal_box_dl[];
 extern const Collision metal_box_seg8_collision_08024C28[];
 
-// purple_switch
-extern const GeoLayout purple_switch_geo[];
-extern const Gfx purple_switch_seg8_dl_0800C668[];
-extern const Gfx purple_switch_seg8_dl_0800C6E0[];
-extern const Gfx purple_switch_seg8_dl_0800C718[];
-extern const Collision purple_switch_seg8_collision_0800C7A8[];
-
 // test_platform
 extern const GeoLayout test_platform_geo[];
 extern const Gfx unknown_seg8_dl_08026260[];
 extern const Collision unknown_seg8_collision_080262F8[];
+
+#include "red_switch/geo_header.h"
+
+#include "red_switch/collision_header.h"
 
 #endif

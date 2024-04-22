@@ -56,10 +56,6 @@
 #include "make_const_nonconst.h"
 #include "behavior_data.h"
 
-#ifdef PORT_MOP_OBJS
-#include "src/extras/mop/include_code.h"
-#endif
-
 #define BC_B(a) _SHIFTL(a, 24, 8)
 #define BC_BB(a, b) (_SHIFTL(a, 24, 8) | _SHIFTL(b, 16, 8))
 #define BC_BBBB(a, b, c, d) (_SHIFTL(a, 24, 8) | _SHIFTL(b, 16, 8) | _SHIFTL(c, 8, 8) | _SHIFTL(d, 0, 8))
@@ -1735,9 +1731,9 @@ const BehaviorScript bhvFloorSwitchHardcodedModel[] = {
     BEGIN(OBJ_LIST_SURFACE),
     // Floor switch - common:
     OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
-    LOAD_COLLISION_DATA(purple_switch_seg8_collision_0800C7A8),
+    LOAD_COLLISION_DATA(red_switch_collision),
     BEGIN_LOOP(),
-        CALL_NATIVE(bhv_purple_switch_loop),
+        CALL_NATIVE(bhv_red_switch_loop),
         CALL_NATIVE(load_object_collision_model),
     END_LOOP(),
 };
@@ -6127,10 +6123,6 @@ const BehaviorScript bhvLegacyScrollTexture[] = {
         CALL_NATIVE(uv_update_scroll),
     END_LOOP(),
 };
-
-#ifdef PORT_MOP_OBJS
-#include "src/extras/mop/behaviors.inc.c"
-#endif
 
 #ifdef RM2C_HAS_SCROLLING_TEXTURES
 // Scrolling textures from RM and Editor need manual fixing to work on both PC and N64

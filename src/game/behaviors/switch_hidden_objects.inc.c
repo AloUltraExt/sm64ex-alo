@@ -49,7 +49,7 @@ void hidden_breakable_box_actions(void) {
                 cur_obj_nearest_object_with_behavior(bhvFloorSwitchHiddenObjects);
         }
         if ((purpleSwitch = o->oHiddenObjectPurpleSwitch) != NULL) {
-            if (purpleSwitch->oAction == PURPLE_SWITCH_ACT_TICKING) {
+            if (purpleSwitch->oAction == RED_SWITCH_ACT_TICKING) {
                 o->oAction++;
                 cur_obj_enable_rendering();
                 cur_obj_unhide();
@@ -72,7 +72,7 @@ void hidden_breakable_box_actions(void) {
         cur_obj_disable_rendering();
         o->oInteractStatus = 0;
         if ((purpleSwitch = o->oHiddenObjectPurpleSwitch) != NULL) {
-            if (purpleSwitch->oAction == PURPLE_SWITCH_ACT_IDLE) {
+            if (purpleSwitch->oAction == RED_SWITCH_ACT_IDLE) {
                 o->oAction = HIDDEN_OBJECT_ACT_INACTIVE;
             }
         }
@@ -92,7 +92,7 @@ void hidden_wdw_platform_actions(void) {
                 cur_obj_nearest_object_with_behavior(bhvFloorSwitchHiddenObjects);
         }
         if ((purpleSwitch = o->oHiddenObjectPurpleSwitch) != NULL) {
-            if (purpleSwitch->oAction == PURPLE_SWITCH_ACT_TICKING) {
+            if (purpleSwitch->oAction == RED_SWITCH_ACT_TICKING) {
                 o->oAction++;
                 cur_obj_enable_rendering();
                 cur_obj_unhide();

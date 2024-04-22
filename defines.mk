@@ -16,8 +16,6 @@ RUMBLE_FEEDBACK ?= 1
 NODRAWINGDISTANCE ?= 0
 # Enable Goddard (Mario Face)
 GODDARD_MFACE ?= 1
-# Kaze MOP Objects Port, disabled by default
-PORT_MOP_OBJS ?= 0
 # Enable level vanilla checks
 VANILLA_CHECKS ?= 1
 # Enable extended bounds
@@ -158,11 +156,6 @@ endif
 # Check for Goddard option
 ifeq ($(GODDARD_MFACE),1)
   CUSTOM_C_DEFINES += -DGODDARD_MFACE
-endif
-
-# Check for MOP option
-ifeq ($(PORT_MOP_OBJS),1)
-  CUSTOM_C_DEFINES += -DPORT_MOP_OBJS
 endif
 
 # Check for Vanilla checks

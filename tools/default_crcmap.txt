@@ -300,8 +300,6 @@
 0xd836de6b, actors/power_meter/power_meter_six_segments.rgba16.png
 0x5ae71e0c, actors/power_meter/power_meter_three_segments.rgba16.png
 0xb7a9ee70, actors/power_meter/power_meter_two_segments.rgba16.png
-0x998b4dba, actors/purple_switch/purple_switch_base.rgba16.png
-0xea1f2eda, actors/purple_switch/purple_switch_exclamation_point.rgba16.png
 0x0f99a13e, actors/sand/sand_particle.rgba16.png
 0x89d3117c, actors/scuttlebug/scuttlebug_eye.rgba16.png
 0x24542211, actors/scuttlebug/scuttlebug_iris.rgba16.png

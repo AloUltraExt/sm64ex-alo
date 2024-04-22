@@ -322,7 +322,6 @@
 0xcd71304b, textures/sky/rr_textures.00000.rgba16.png
 0xcd5f7595, actors/heart/spinning_heart.rgba16.png
 0xcd56c1f2, textures/skybox_tiles/wdw.42.rgba16.png
-0xcd381281, actors/purple_switch/purple_switch_base.rgba16.png
 0xcd2a5787, actors/sand/sand_particle.rgba16.png
 0xccfdae7d, levels/lll/20.rgba16.png
 0xccfb8478, textures/skybox_tiles/ccm.40.rgba16.png
@@ -1200,7 +1199,6 @@
 0x3b111d77, actors/heave_ho/heave-ho_turnkey.rgba16.png
 0x3b0d1e46, actors/koopa/koopa_shoe.rgba16.png
 0x3ae6bec9, textures/skybox_tiles/water.47.rgba16.png
-0x3ac6c19c, actors/purple_switch/purple_switch_exclamation_point.rgba16.png
 0x3aadb102, textures/skybox_tiles/water.16.rgba16.png
 0x3a9a3561, levels/lll/10.rgba16.png
 0x39f5a629, actors/toad/toad_face.rgba16.png

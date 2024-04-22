@@ -80,7 +80,7 @@ static struct MacroPreset sMacroObjectPresets[] = {
     /* macro_breakable_box_three_coins   */ { bhvBreakableBox, MODEL_BREAKABLE_BOX, BREAKABLE_BOX_BP_3_COINS },
     /* macro_pushable_metal_box          */ { bhvPushableMetalBox, MODEL_METAL_BOX, 0 },
     /* macro_breakable_box_small         */ { bhvBreakableBoxSmall, MODEL_BREAKABLE_BOX_SMALL, 0 },
-    /* macro_floor_switch_hidden_objects */ { bhvFloorSwitchHiddenObjects, MODEL_PURPLE_SWITCH, 0 },
+    /* macro_floor_switch_hidden_objects */ { bhvFloorSwitchHiddenObjects, MODEL_RED_SWITCH, 0 },
     /* macro_hidden_breakable_box        */ { bhvHiddenObject, MODEL_BREAKABLE_BOX, HIDDEN_OBJECT_BP_BREAKABLE_BOX },
     /* macro_hidden_unbreakable_box_1    */ { bhvHiddenObject, MODEL_BREAKABLE_BOX, HIDDEN_OBJECT_BP_UNBREAKABLE_BOX_UNUSED_1 }, // unused
     /* macro_hidden_unbreakable_box_2    */ { bhvHiddenObject, MODEL_BREAKABLE_BOX, HIDDEN_OBJECT_BP_UNBREAKABLE_BOX_UNUSED_2 }, // unused

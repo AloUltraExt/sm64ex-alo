@@ -28,7 +28,7 @@ static const LevelScript script_func_local_1[] = {
     OBJECT(/*model*/ MODEL_BITDW_SLIDING_PLATFORM,  /*pos*/ -5728,   819, -2151, /*angle*/ 0, 0, 0,  /*bhvParam*/ BPARAM1(0x03) | BPARAM2(0xCE), /*bhv*/ bhvSlidingPlatform2),
     OBJECT(/*model*/ MODEL_BITDW_FERRIS_WHEEL_AXLE, /*pos*/  -204, -1924,  3381, /*angle*/ 0, 0, 0,  /*bhvParam*/ BPARAM2(0x01), /*bhv*/ bhvFerrisWheelAxle),
     OBJECT(/*model*/ MODEL_BITDW_STAIRCASE,         /*pos*/  5279,  1740,    -6, /*angle*/ 0, 0, 0,  /*bhvParam*/ BPARAM2(0x01), /*bhv*/ bhvAnimatesOnFloorSwitchPress),
-    OBJECT(/*model*/ MODEL_PURPLE_SWITCH,           /*pos*/  3922,  1740,    -7, /*angle*/ 0, 0, 0,  /*bhvParam*/ 0, /*bhv*/ bhvFloorSwitchAnimatesObject),
+    OBJECT(/*model*/ MODEL_RED_SWITCH,           /*pos*/  3922,  1740,    -7, /*angle*/ 0, 0, 0,  /*bhvParam*/ 0, /*bhv*/ bhvFloorSwitchAnimatesObject),
     RETURN(),
 };
 

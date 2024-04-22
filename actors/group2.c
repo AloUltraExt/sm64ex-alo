@@ -11,11 +11,7 @@
 #include "bully/anims/table.inc.c"
 UNUSED static const u64 binid_0 = 0;
 
-#ifdef PORT_MOP_OBJS
-#include "src/extras/mop/actors/Blargg_MOP/model.inc.c"
-#else
 #include "blargg/model.inc.c"
-#endif
 
 #include "blargg/anims/data.inc.c"
 #include "blargg/anims/table.inc.c"

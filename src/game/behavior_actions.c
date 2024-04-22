@@ -44,9 +44,6 @@
 #include "spawn_object.h"
 #include "spawn_sound.h"
 #include "rumble_init.h"
-#ifdef PORT_MOP_OBJS
-#include "src/extras/mop/include_code.h"
-#endif
 
 #define o gCurrentObject
 
@@ -146,7 +143,7 @@ void spawn_mist_particles_variable(s32 count, s32 offsetY, f32 size) {
 #include "behaviors/tree_particles.inc.c"
 #include "behaviors/square_platform_cycle.inc.c"
 #include "behaviors/piranha_bubbles.inc.c"
-#include "behaviors/purple_switch.inc.c"
+#include "behaviors/red_switch.inc.c"
 #include "behaviors/metal_box.inc.c"
 #include "behaviors/switch_hidden_objects.inc.c"
 #include "behaviors/breakable_box.inc.c"
@@ -169,9 +166,7 @@ Gfx *geo_move_mario_part_from_parent(s32 run, UNUSED struct GraphNode *node, Mat
 #include "behaviors/heave_ho.inc.c"
 #include "behaviors/spawn_star_exit.inc.c"
 #include "behaviors/unused_poundable_platform.inc.c"
-#ifndef PORT_MOP_OBJS
 #include "behaviors/beta_trampoline.inc.c"
-#endif
 #include "behaviors/jumping_box.inc.c"
 #include "behaviors/boo_cage.inc.c"
 
@@ -276,7 +271,3 @@ s32 set_obj_anim_with_accel_and_sound(s16 a0, s16 a1, s32 a2) {
 
 #include "behaviors/2d_physics.inc.c"
 #include "behaviors/legacy_tex_scroll.inc.c"
-
-#ifdef PORT_MOP_OBJS
-#include "src/extras/mop/code.inc.c"
-#endif

@@ -538,7 +538,7 @@
 #define MODEL_BOWSER_KEY                  0xCC        // bowser_key_geo
 #define MODEL_EXPLOSION                   0xCD        // explosion_geo
 #define MODEL_SNUFIT                      0xCE        // snufit_geo
-#define MODEL_PURPLE_SWITCH               0xCF        // purple_switch_geo
+#define MODEL_RED_SWITCH               0xCF        // red_switch_geo
 #define MODEL_CASTLE_STAR_DOOR_30_STARS   0xD0        // castle_geo_000F00
 #define MODEL_CASTLE_STAR_DOOR_50_STARS   0xD1        // castle_geo_000F00
 #define MODEL_CCM_SNOWMAN_BASE            0xD2        // ccm_geo_0003F0
@@ -557,27 +557,6 @@
 #define MODEL_CHUCKYA                     0xDF        // chuckya_geo
 #define MODEL_WHITE_PUFF                  0xE0        // white_puff_geo
 #define MODEL_TRAJECTORY_MARKER_BALL      0xE1        // bowling_ball_track_geo - duplicate used in SSL Pyramid small sized and as a track ball
-
-#ifdef PORT_MOP_OBJS
-#define MODEL_MOP_NOTEBLOCK                 0x7B
-#define MODEL_MOP_CHECKPOINT_FLAG           0x2E
-#define MODEL_MOP_FLIPBLOCK                 0xF0
-#define MODEL_MOP_FLIPSWAP_PLATFORM         0x2F
-#define MODEL_MOP_FLIPSWAP_PLATFORM_BORDER  0x30
-#define MODEL_MOP_FLIPSWITCH_PANEL          0x2A
-#define MODEL_MOP_SWITCHBOARD               0x2B
-#define MODEL_MOP_SWITCHBOARD_GEARS         0x2C
-#define MODEL_MOP_SHRINKPLAT_BORDER         0x97
-#define MODEL_MOP_SPRING                    0x92
-#define MODEL_MOP_ROTATING_BLOCK            0x2D
-#define MODEL_MOP_SANDBLOCK                 0x99
-#define MODEL_MOP_SHELL_GREEN               0x9B
-#define MODEL_MOP_SHELL_RED                 0x9D
-#define MODEL_MOP_SHRINKPLAT                0x98
-#define MODEL_MOP_SWITCHBLOCK               0xF1
-#define MODEL_MOP_SWITCHBLOCK_SWITCH        0xF2
-#define MODEL_MOP_EMITTER_SPARKLES          0xF3
-#endif
 
 // Menu Models (overwrites Level Geometry IDs)
 #define MODEL_MAIN_MENU_MARIO_SAVE_BUTTON         MODEL_LEVEL_GEOMETRY_03   // main_menu_geo_0001D0

@@ -92,64 +92,6 @@ static const LevelScript script_func_local_4[] = {
     RETURN(),
 };
 
-#ifdef PORT_MOP_OBJS
-static const LevelScript script_func_local_mop[] = {
-    // MOP 1 Objects
-    OBJECT(/*model*/ MODEL_MOP_SHELL_GREEN,     /*pos*/ -1025,  260,  5102, /*angle*/  0, 180, 0, /*bhvParam*/ 0, /*bhv*/ bhvBreakableBoxSmall),
-    OBJECT(/*model*/ MODEL_MOP_SHELL_RED,       /*pos*/ -1630,  260,  5116, /*angle*/  0, 180, 0, /*bhvParam*/ 0, /*bhv*/ bhvBreakableBoxSmall),
-    OBJECT(/*model*/ MODEL_MOP_NOTEBLOCK,       /*pos*/ -4070,  485,  4614, /*angle*/  0, 0, 0, /*bhvParam*/ BPARAM2(0x30), /*bhv*/ bhvNoteblock_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SANDBLOCK,       /*pos*/ -4822,  890,  4614, /*angle*/  0, 0, 0, /*bhvParam*/ BPARAM2(0x01), /*bhv*/ bhvSandblock_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SPRING,          /*pos*/ -1835,  534,  3527, /*angle*/ 20, 180, 0, /*bhvParam*/ BPARAM1(0xC0) | BPARAM2(0xC0), /*bhv*/ bhvSpring_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SHRINKPLAT,      /*pos*/  -671,  934, -1361, /*angle*/  0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvShrink_Platform_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SHRINKPLAT,      /*pos*/  -921,  934, -1361, /*angle*/  0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvShrink_Platform_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SHRINKPLAT,      /*pos*/ -1171,  934, -1361, /*angle*/  0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvShrink_Platform_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SHRINKPLAT,      /*pos*/ -1471,  934, -1361, /*angle*/  0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvShrink_Platform_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SHRINKPLAT,      /*pos*/ -1671,  934, -1361, /*angle*/  0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvShrink_Platform_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SHRINKPLAT,      /*pos*/ -1921,  934, -1361, /*angle*/  0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvShrink_Platform_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SHRINKPLAT,      /*pos*/ -1921,  934, -1661, /*angle*/  0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvShrink_Platform_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SHRINKPLAT,      /*pos*/ -1921,  994, -1851, /*angle*/ 30, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvShrink_Platform_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SHRINKPLAT,      /*pos*/ -1921, 1114, -2061, /*angle*/ 30, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvShrink_Platform_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SHRINKPLAT,      /*pos*/ -1921, 1174, -2291, /*angle*/  0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvShrink_Platform_MOP),
-    OBJECT(/*model*/ MODEL_RED_FLAME,           /*pos*/ -1427,  458,  4393, /*angle*/  0, 0, 0, /*bhvParam*/ BPARAM2(0x02), /*bhv*/ bhvFlameBouncing),
-    OBJECT(/*model*/ MODEL_BREAKABLE_BOX_SMALL, /*pos*/ -1223,  260,  4110, /*angle*/  0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvBreakableBoxSmall),
-    // MOP 2 Objects
-    OBJECT(/*model*/ MODEL_NONE,                    /*pos*/  3634,  545, -5986, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x8F) | BPARAM2(0x00), /*bhv*/ bhvEmitter_MOP),
-    OBJECT(/*model*/ MODEL_NONE,                    /*pos*/  3934,  545, -5986, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x80) | BPARAM2(0xF0), /*bhv*/ bhvEmitter_MOP),
-    OBJECT(/*model*/ MODEL_NONE,                    /*pos*/  3634,  545, -5686, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x80) | BPARAM2(0x0F), /*bhv*/ bhvEmitter_MOP),
-    OBJECT(/*model*/ MODEL_NONE,                    /*pos*/  3934,  545, -5686, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x8F) | BPARAM2(0xF0), /*bhv*/ bhvEmitter_MOP),
-    OBJECT(/*model*/ MODEL_NONE,                    /*pos*/  3850,  545, -5850, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x05) | BPARAM2(0x09), /*bhv*/ bhvJukebox_MOP),
-    OBJECT(/*model*/ MODEL_MOP_FLIPBLOCK,           /*pos*/   363, 1279,   -18, /*angle*/ 0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvFlipBlock_MOP),
-    OBJECT(/*model*/ MODEL_YELLOW_COIN,             /*pos*/  -979, 1250,  -517, /*angle*/ 0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvYellowCoin),
-    OBJECT(/*model*/ MODEL_YELLOW_COIN,             /*pos*/ -1810,  803,   441, /*angle*/ 0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvYellowCoin),
-    OBJECT(/*model*/ MODEL_YELLOW_COIN,             /*pos*/ -2474,  400,  -505, /*angle*/ 0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvYellowCoin),
-    OBJECT(/*model*/ MODEL_BREAKABLE_BOX,           /*pos*/ -3503,  430,   578, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM2(0x01), /*bhv*/ bhvBreakableBox),
-    OBJECT(/*model*/ MODEL_BREAKABLE_BOX,           /*pos*/ -3874,  430,   551, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM2(0x01), /*bhv*/ bhvBreakableBox),
-    OBJECT(/*model*/ MODEL_BREAKABLE_BOX,           /*pos*/ -3628,  413,   450, /*angle*/ 0, 180, 0, /*bhvParam*/ 0, /*bhv*/ bhvBreakableBox),
-    OBJECT(/*model*/ MODEL_PURPLE_SWITCH,           /*pos*/  -278,  804,   967, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM2(0x04), /*bhv*/ bhvPSwitch_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SWITCHBLOCK,         /*pos*/ -4917,  846,   525, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x02) | BPARAM2(0x02), /*bhv*/ bhvSwitchblock_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SWITCHBLOCK,         /*pos*/ -6002,  846,   -15, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x02) | BPARAM2(0x02), /*bhv*/ bhvSwitchblock_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SWITCHBLOCK,         /*pos*/ -5733,  846,  1178, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x02) | BPARAM2(0x02), /*bhv*/ bhvSwitchblock_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SWITCHBLOCK,         /*pos*/ -3452,  776,  1578, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x02) | BPARAM2(0x00), /*bhv*/ bhvSwitchblock_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SWITCHBLOCK,         /*pos*/ -4273,  803,  1346, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x02) | BPARAM2(0x02), /*bhv*/ bhvSwitchblock_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SWITCHBLOCK_SWITCH,  /*pos*/ -5565,  291,  2329, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM2(0x01), /*bhv*/ bhvSwitchblock_Switch_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SWITCHBLOCK_SWITCH,  /*pos*/ -3640,  299,  2084, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM2(0x01), /*bhv*/ bhvSwitchblock_Switch_MOP),
-    OBJECT(/*model*/ MODEL_MOP_SWITCHBLOCK_SWITCH,  /*pos*/ -4817,  280,  1969, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM2(0x00), /*bhv*/ bhvSwitchblock_Switch_MOP),
-    // MOP 3 Objects
-    OBJECT(/*model*/ MODEL_MOP_SWITCHBOARD,       /*pos*/  -351,  984,  2435, /*angle*/ 0, 93, 0, /*bhvParam*/ BPARAM1(0xFF), /*bhv*/ bhvGreen_Switchboard_MOP),
-    OBJECT(/*model*/ MODEL_MOP_ROTATING_BLOCK,    /*pos*/ -2900,  906, -1473, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x01) | BPARAM2(0x01), /*bhv*/ bhvMoving_Rotating_Block_MOP),
-    OBJECT(/*model*/ MODEL_MOP_ROTATING_BLOCK,    /*pos*/ -2142, 1009,  2422, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x01) | BPARAM2(0x00), /*bhv*/ bhvMoving_Rotating_Block_MOP),
-    OBJECT(/*model*/ MODEL_MOP_ROTATING_BLOCK,    /*pos*/  2048,  906, -1273, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x00) | BPARAM2(0x02), /*bhv*/ bhvMoving_Rotating_Block_MOP),
-    OBJECT(/*model*/ MODEL_MOP_FLIPSWITCH_PANEL,  /*pos*/  1517,  694,   768, /*angle*/ 0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvFlipswitch_Panel_MOP),
-    OBJECT(/*model*/ MODEL_MOP_FLIPSWITCH_PANEL,  /*pos*/    20,  856, -2217, /*angle*/ 0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvFlipswitch_Panel_MOP),
-    OBJECT(/*model*/ MODEL_MOP_FLIPSWITCH_PANEL,  /*pos*/   180, 1093,  1120, /*angle*/ 0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvFlipswitch_Panel_MOP),
-    OBJECT(/*model*/ MODEL_MOP_FLIPSWITCH_PANEL,  /*pos*/   543, 1093,   927, /*angle*/ 0, 0, 0, /*bhvParam*/ 0, /*bhv*/ bhvFlipswitch_Panel_MOP),
-    OBJECT(/*model*/ MODEL_NONE,                  /*pos*/   368, 1069, -1836, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(STAR_INDEX_ACT_3), /*bhv*/ bhvFlipswitch_Panel_StarSpawn_MOP),
-    OBJECT(/*model*/ MODEL_MOP_CHECKPOINT_FLAG,   /*pos*/    13,  808, -2757, /*angle*/ 0, 180, 0, /*bhvParam*/ BPARAM2(0x01), /*bhv*/ bhvCheckpoint_Flag_MOP),
-    OBJECT(/*model*/ MODEL_MOP_FLIPSWAP_PLATFORM, /*pos*/  -506,  502,  4011, /*angle*/ 0, 0, 0, /*bhvParam*/ BPARAM1(0x02) | BPARAM2(0x02), /*bhv*/ bhvFlipswap_Platform_MOP),
-    RETURN(),
-};
-#endif
-
 const LevelScript level_castle_grounds_entry[] = {
     INIT_LEVEL(),
     LOAD_MIO0        (/*seg*/ 0x07, _castle_grounds_segment_7SegmentRomStart, _castle_grounds_segment_7SegmentRomEnd),
@@ -181,9 +123,6 @@ const LevelScript level_castle_grounds_entry[] = {
         JUMP_LINK(script_func_local_2),
         JUMP_LINK(script_func_local_3),
         JUMP_LINK(script_func_local_4),
-#ifdef PORT_MOP_OBJS
-        JUMP_LINK(script_func_local_mop),
-#endif
         TERRAIN(/*terrainData*/ castle_grounds_seg7_collision_level),
         MACRO_OBJECTS(/*objList*/ castle_grounds_seg7_macro_objs),
         SET_BACKGROUND_MUSIC(/*settingsPreset*/ 0x0000, /*seq*/ SEQ_SOUND_PLAYER),

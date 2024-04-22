@@ -14,10 +14,6 @@ TEXTURE_DIRS := \
     $(wildcard textures/*/custom/) \
     $(filter %/,$(wildcard actors/*/))
 
-ifeq ($(PORT_MOP_OBJS),1)
-  TEXTURE_DIRS += $(filter %/,$(wildcard src/extras/mop/actors/*/))
-endif
-
 # NOTE: textures assume naming convention "texture.<encoding>.png" generates "texture.<encoding>"
 
 ACTOR_GROUPS := \
@@ -78,16 +74,12 @@ BUBBA_DIRS       := bubba wiggler wiggler_body_part lakitu_enemy spiny_egg spiny
 SKEETER_DIRS     := skeeter seaweed water_mine cyan_fish bub water_ring treasure_chest
 KLEPTO_DIRS      := klepto eyerok pokey tornado
 SEA_DIRS         := clam_shell manta sushi unagi whirlpool
-AMP_DIRS         := blue_coin_switch amp cannon_lid cannon_base cannon_barrel chuckya purple_switch checkerboard_platform heart flyguy breakable_box exclamation_box goomba bobomb metal_box exclamation_box_outline test_platform koopa_shell
+AMP_DIRS         := blue_coin_switch amp cannon_lid cannon_base cannon_barrel chuckya red_switch checkerboard_platform heart flyguy breakable_box exclamation_box goomba bobomb metal_box exclamation_box_outline test_platform koopa_shell
 MOLE_DIRS        := monty_mole_hole monty_mole smoke ukiki fwoosh
 LAKITU_DIRS      := lakitu_cameraman toad mips boo_castle
 PEACH_DIRS       := bird peach yoshi
 BOWSER_DIRS      := bowser_flame impact_ring yellow_sphere bowser bomb impact_smoke
 MARIO_DIRS       := mario bubble walk_smoke burn_smoke stomp_smoke water_wave sparkle water_splash white_particle_small sparkle_animation
-
-ifeq ($(PORT_MOP_OBJS),1)
-  MOP_DIRS       := Blargg_MOP Checkpoint_Flag_MOP FlipBlock_MOP Flipswap_Platform_MOP Flipswap_Platform_Border_MOP Flipswitch_Panel_MOP Green_Switchboard_MOP Green_Switchboard_Gears_MOP Moving_Rotating_Block_MOP Noteblock_MOP SandBlock_MOP Shrink_Platform_MOP Shrink_Platform_Border_MOP Spring_MOP Switchblock_MOP Switchblock_Switch_MOP 
-endif
 
 # Custom RM2C leveldata rules
 ifeq ($(RM2C),1)
@@ -116,10 +108,6 @@ SEA_CREATURES_TEXTURES          := $(foreach dir,$(SEA_DIRS),        $(wildcard 
 SKEETER_FISH_TEXTURES           := $(foreach dir,$(SKEETER_DIRS),    $(wildcard actors/$(dir)/*.png))
 SPINDRIFT_PENGUIN_TEXTURES      := $(foreach dir,$(SPINDRIFT_DIRS),  $(wildcard actors/$(dir)/*.png))
 
-ifeq ($(PORT_MOP_OBJS),1)
-  MORE_OBJECTS_PATCH_TEXTURES   := $(foreach dir,$(MOP_DIRS),  $(wildcard src/extras/mop/actors/$(dir)/*.png))
-endif
-
 # Actor dependencies
 $(BUILD_DIR)/actors/group0.o:  $(MARIO_WATER_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
 $(BUILD_DIR)/actors/group1.o:  $(HOOT_THWOMP_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
@@ -141,10 +129,6 @@ $(BUILD_DIR)/actors/group16.o: $(CHILLYCHIEF_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c
 $(BUILD_DIR)/actors/group17.o: $(MR_I_SWOOP_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
 $(BUILD_DIR)/actors/common0.o: $(AMP_CHUCKYA_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
 $(BUILD_DIR)/actors/common1.o: $(COINS_PIPE_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
-
-ifeq ($(PORT_MOP_OBJS),1)
-  $(BUILD_DIR)/actors/common1.o: $(MORE_OBJECTS_PATCH_TEXTURES:%.png=$(BUILD_DIR)/%.inc.c)
-endif
 
 # Actor Elf Files
 $(BUILD_DIR)/actors/group0.elf:  SEGMENT_ADDRESS := 0x04000000

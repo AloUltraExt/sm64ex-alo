@@ -1156,19 +1156,4 @@
 #define /*0x0FC*/ oYoshiChosenHome OBJECT_FIELD_S32(0x1D)
 #define /*0x100*/ oYoshiTargetYaw  OBJECT_FIELD_S32(0x1E)
 
-#ifdef PORT_MOP_OBJS
-
-/* Moving Rotating */
-#define oMopMovingRotatingPath      OBJECT_FIELD_S32(0x1B)
-#define oMopMovingRotatingTimer     OBJECT_FIELD_S32(0x1D)
-
-/* Green Switchboard */
-#define oMopGreenSwitchboardGear    OBJECT_FIELD_VPTR(0x1B)
-
-/* Jukebox */
-#define oMopJukeboxChangeMusic      OBJECT_FIELD_S32(0x1B)
-#define oMopJukeboxIndexMusic       OBJECT_FIELD_S32(0x1C)
-
-#endif
-
 #endif // OBJECT_FIELDS_H

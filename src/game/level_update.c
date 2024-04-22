@@ -1146,10 +1146,6 @@ void reset_misc_level_object_values(void) {
 #if QOL_FIX_RESET_PSS_SLIDE_STARTED
     gPSSSlideStarted = FALSE;
 #endif
-#ifdef PORT_MOP_OBJS
-    gMOPSwitchBlockState = 1;
-    gMOPFlipSwitchStarSpawned = FALSE;
-#endif
 }
 
 s32 update_level(void) {

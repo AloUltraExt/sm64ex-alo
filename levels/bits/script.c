@@ -29,7 +29,7 @@ static const LevelScript script_func_local_1[] = {
     OBJECT(/*model*/ MODEL_BITS_SEESAW_PLATFORM,        /*pos*/    27, -1555,  -713, /*angle*/ 0, 90, 0,  /*bhvParam*/ BPARAM2(0x01), /*bhv*/ bhvSeesawPlatform),
     OBJECT(/*model*/ MODEL_BITS_TILTING_W_PLATFORM,     /*pos*/  -306, -4300,     0, /*angle*/ 0, 0, 0,   /*bhvParam*/ BPARAM2(0x02), /*bhv*/ bhvSeesawPlatform),
     OBJECT(/*model*/ MODEL_BITS_STAIRCASE,              /*pos*/  1769,  -234,  -899, /*angle*/ 0, 0, 0,   /*bhvParam*/ 0, /*bhv*/ bhvAnimatesOnFloorSwitchPress),
-    OBJECT(/*model*/ MODEL_PURPLE_SWITCH,               /*pos*/  -279,  -234,  -900, /*angle*/ 0, 0, 0,   /*bhvParam*/ 0, /*bhv*/ bhvFloorSwitchAnimatesObject),
+    OBJECT(/*model*/ MODEL_RED_SWITCH,               /*pos*/  -279,  -234,  -900, /*angle*/ 0, 0, 0,   /*bhvParam*/ 0, /*bhv*/ bhvFloorSwitchAnimatesObject),
     OBJECT(/*model*/ MODEL_NONE,                        /*pos*/ -6460,  2039,  -905, /*angle*/ 0, 0, 0,   /*bhvParam*/ BPARAM2(207),  /*bhv*/ bhvPoleGrabbing),
     OBJECT(/*model*/ MODEL_NONE,                        /*pos*/ -3326,  3227,  -905, /*angle*/ 0, 0, 0,   /*bhvParam*/ BPARAM2(77),   /*bhv*/ bhvPoleGrabbing),
     OBJECT(/*model*/ MODEL_NONE,                        /*pos*/  5518,  3184, -4019, /*angle*/ 0, 0, 0,   /*bhvParam*/ 0, /*bhv*/ bhvFlamethrower),

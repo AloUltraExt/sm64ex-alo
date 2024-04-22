@@ -135,10 +135,6 @@ extern s16 gNumRoomedObjectsInMarioRoom;
 extern s16 gNumRoomedObjectsNotInMarioRoom;
 extern s16 gWDWWaterLevelChanging;
 extern s16 gMarioOnMerryGoRound;
-#ifdef PORT_MOP_OBJS
-extern s16 gMOPSwitchBlockState;
-extern s16 gMOPFlipSwitchStarSpawned;
-#endif
 
 void bhv_mario_update(void);
 void set_object_respawn_info_bits(struct Object *obj, u8 bits);

@@ -83,16 +83,6 @@ static const LevelScript script_func_local_4[] = {
     OBJECT          (/*model*/ MODEL_NONE,            /*pos*/  5423,    2, -1991, /*angle*/ 0, 315, 0, /*bhvParam*/ 0, /*bhv*/ bhvBouncingFireball),
     OBJECT          (/*model*/ MODEL_NONE,            /*pos*/  4921,    2, -1504, /*angle*/ 0,  90, 0, /*bhvParam*/ 0, /*bhv*/ bhvBouncingFireball),
     OBJECT_WITH_ACTS(/*model*/ MODEL_EXCLAMATION_BOX, /*pos*/  1050,  550,  6200, /*angle*/ 0,   0, 0, /*bhvParam*/ BPARAM2(EXCLAMATION_BOX_BP_KOOPA_SHELL), /*bhv*/ bhvExclamationBox, /*acts*/ ACT_5 | ACT_6),
-#ifdef PORT_MOP_OBJS // Blargg object list from Render96
-    OBJECT          (/*model*/ MODEL_BLARGG,          /*pos*/ -6766,    0,  3033, /*angle*/ 0,  90, 0, /*bhvParam*/ 0, /*bhv*/ bhvBlargg),
-    OBJECT          (/*model*/ MODEL_BLARGG,          /*pos*/ -6018,    0, -5512, /*angle*/ 0,  90, 0, /*bhvParam*/ 0, /*bhv*/ bhvBlargg),
-    OBJECT          (/*model*/ MODEL_BLARGG,          /*pos*/ -2151,    0, -5254, /*angle*/ 0,  90, 0, /*bhvParam*/ 0, /*bhv*/ bhvBlargg),
-    OBJECT          (/*model*/ MODEL_BLARGG,          /*pos*/  2012,    0, -3440, /*angle*/ 0,  90, 0, /*bhvParam*/ 0, /*bhv*/ bhvBlargg),
-    OBJECT          (/*model*/ MODEL_BLARGG,          /*pos*/  7408,    0, -4223, /*angle*/ 0,  90, 0, /*bhvParam*/ 0, /*bhv*/ bhvBlargg),
-    OBJECT          (/*model*/ MODEL_BLARGG,          /*pos*/  6318,    0,   752, /*angle*/ 0,  90, 0, /*bhvParam*/ 0, /*bhv*/ bhvBlargg),
-    OBJECT          (/*model*/ MODEL_BLARGG,          /*pos*/  5647,    0,  3426, /*angle*/ 0,  90, 0, /*bhvParam*/ 0, /*bhv*/ bhvBlargg),
-    OBJECT          (/*model*/ MODEL_BLARGG,          /*pos*/ -5315,    0,  7493, /*angle*/ 0,  90, 0, /*bhvParam*/ 0, /*bhv*/ bhvBlargg),
-#endif
     RETURN(),
 };
 

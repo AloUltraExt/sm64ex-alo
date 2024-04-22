@@ -31,7 +31,7 @@ static const LevelScript script_func_local_1[] = {
     OBJECT(/*model*/ MODEL_WDW_WATER_LEVEL_DIAMOND,           /*pos*/  2048, 1792,  2176, /*angle*/ 0,   0, 0, /*bhvParam*/ 0, /*bhv*/ bhvWaterLevelDiamond),
     OBJECT(/*model*/ MODEL_WDW_WATER_LEVEL_DIAMOND,           /*pos*/   640, 1024,  3712, /*angle*/ 0,   0, 0, /*bhvParam*/ 0, /*bhv*/ bhvWaterLevelDiamond),
     OBJECT(/*model*/ MODEL_WDW_WATER_LEVEL_DIAMOND,           /*pos*/  1810,   40, -3118, /*angle*/ 0,   0, 0, /*bhvParam*/ 0, /*bhv*/ bhvWaterLevelDiamond),
-    OBJECT(/*model*/ MODEL_PURPLE_SWITCH,                     /*pos*/  3360, 1280,  3420, /*angle*/ 0,   0, 0, /*bhvParam*/ 0, /*bhv*/ bhvFloorSwitchHiddenObjects),
+    OBJECT(/*model*/ MODEL_RED_SWITCH,                     /*pos*/  3360, 1280,  3420, /*angle*/ 0,   0, 0, /*bhvParam*/ 0, /*bhv*/ bhvFloorSwitchHiddenObjects),
     OBJECT(/*model*/ MODEL_WDW_HIDDEN_PLATFORM,               /*pos*/  2239, 1126,  3391, /*angle*/ 0,   0, 0, /*bhvParam*/ BPARAM2(HIDDEN_OBJECT_BP_WDW_PLATFORM), /*bhv*/ bhvHiddenObject),
     OBJECT(/*model*/ MODEL_WDW_HIDDEN_PLATFORM,               /*pos*/  1215, 1357,  2751, /*angle*/ 0,   0, 0, /*bhvParam*/ BPARAM2(HIDDEN_OBJECT_BP_WDW_PLATFORM), /*bhv*/ bhvHiddenObject),
     OBJECT(/*model*/ MODEL_WDW_HIDDEN_PLATFORM,               /*pos*/  1215, 1229,  3391, /*angle*/ 0,   0, 0, /*bhvParam*/ BPARAM2(HIDDEN_OBJECT_BP_WDW_PLATFORM), /*bhv*/ bhvHiddenObject),
