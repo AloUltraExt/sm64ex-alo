@@ -188,4 +188,8 @@ extern const Collision unknown_seg8_collision_080262F8[];
 
 #include "red_switch/collision_header.h"
 
+#include "star_switch/geo_header.h"
+
+#include "star_switch/collision_header.h"
+
 #endif

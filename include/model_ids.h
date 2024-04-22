@@ -538,7 +538,8 @@
 #define MODEL_BOWSER_KEY                  0xCC        // bowser_key_geo
 #define MODEL_EXPLOSION                   0xCD        // explosion_geo
 #define MODEL_SNUFIT                      0xCE        // snufit_geo
-#define MODEL_RED_SWITCH               0xCF        // red_switch_geo
+#define MODEL_RED_SWITCH                  0xCF        // red_switch_geo
+#define MODEL_STAR_SWITCH                 0xF1        // star_switch_geo
 #define MODEL_CASTLE_STAR_DOOR_30_STARS   0xD0        // castle_geo_000F00
 #define MODEL_CASTLE_STAR_DOOR_50_STARS   0xD1        // castle_geo_000F00
 #define MODEL_CCM_SNOWMAN_BASE            0xD2        // ccm_geo_0003F0

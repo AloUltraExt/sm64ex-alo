@@ -1738,6 +1738,25 @@ const BehaviorScript bhvFloorSwitchHardcodedModel[] = {
     END_LOOP(),
 };
 
+const BehaviorScript bhvStarSwitch[] = {
+    BEGIN(OBJ_LIST_SURFACE),
+    OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
+    LOAD_COLLISION_DATA(star_switch_collision),
+    BEGIN_LOOP(),
+        CALL_NATIVE(bhv_star_switch_loop),
+        CALL_NATIVE(load_object_collision_model),
+    END_LOOP(),
+};
+
+const BehaviorScript bhvStarSwitchSpawnCondition[] = {
+    BEGIN(OBJ_LIST_SURFACE),
+    OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
+    CALL_NATIVE(bhv_star_switch_spawn_condition_init),
+    BEGIN_LOOP(),
+        CALL_NATIVE(bhv_star_switch_spawn_condition_loop),
+    END_LOOP(),
+};
+
 const BehaviorScript bhvFloorSwitchHiddenObjects[] = {
     BEGIN(OBJ_LIST_SURFACE),
     SET_INT(oBhvParams2ndByte, 2),
@@ -4610,6 +4629,16 @@ const BehaviorScript bhvStarSpawnCoordinates[] = {
     CALL_NATIVE(bhv_star_spawn_init),
     BEGIN_LOOP(),
         CALL_NATIVE(bhv_star_spawn_loop),
+    END_LOOP(),
+};
+
+const BehaviorScript bhvTimedStarSpawnCoordinates[] = {
+    BEGIN(OBJ_LIST_LEVEL),
+    OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE),
+    CALL_NATIVE(bhv_collect_star_init),
+    CALL_NATIVE(bhv_star_spawn_init),
+    BEGIN_LOOP(),
+        CALL_NATIVE(bhv_timed_star_spawn_loop),
     END_LOOP(),
 };
 

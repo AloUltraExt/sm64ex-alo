@@ -200,7 +200,8 @@ static const LevelScript script_exec_ ## folder [] = { \
 const LevelScript script_func_global_1[] = {
     LOAD_MODEL_FROM_GEO(MODEL_BLUE_COIN_SWITCH,        blue_coin_switch_geo),
     LOAD_MODEL_FROM_GEO(MODEL_AMP,                     dAmpGeo),
-    LOAD_MODEL_FROM_GEO(MODEL_RED_SWITCH,           red_switch_geo),
+    LOAD_MODEL_FROM_GEO(MODEL_RED_SWITCH,              red_switch_geo),
+    LOAD_MODEL_FROM_GEO(MODEL_STAR_SWITCH,             star_switch_geo),
     LOAD_MODEL_FROM_GEO(MODEL_CHECKERBOARD_PLATFORM,   checkerboard_platform_geo),
     LOAD_MODEL_FROM_GEO(MODEL_BREAKABLE_BOX,           breakable_box_geo),
     LOAD_MODEL_FROM_GEO(MODEL_BREAKABLE_BOX_SMALL,     breakable_box_small_geo),

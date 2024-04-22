@@ -378,6 +378,7 @@ void bhv_collect_star_init(void);
 void bhv_collect_star_loop(void);
 void bhv_star_spawn_init(void);
 void bhv_star_spawn_loop(void);
+void bhv_timed_star_spawn_loop(void);
 void bhv_hidden_red_coin_star_init(void);
 void bhv_hidden_red_coin_star_loop(void);
 void bhv_red_coin_init(void);
@@ -552,6 +553,9 @@ void bhv_intro_scene_loop(void);
 void bhv_dust_smoke_loop(void);
 void bhv_yoshi_loop(void);
 void bhv_volcano_trap_loop(void);
+void bhv_star_switch_loop(void);
+void bhv_star_switch_spawn_condition_init(void);
+void bhv_star_switch_spawn_condition_loop(void);
 
 void bhv_2d_physics_loop(void);
 void uv_update_scroll(void);
