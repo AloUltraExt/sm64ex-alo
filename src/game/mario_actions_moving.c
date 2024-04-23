@@ -814,29 +814,29 @@ void tilt_body_walking(struct MarioState *m, s16 startYaw) {
     UNUSED struct Object *marioObj = m->marioObj;
     s16 animID = m->marioObj->header.gfx.animInfo.animID;
 
-    if (((animID == MARIO_ANIM_WALKING && !(gPlayer1Controller->buttonDown & Y_BUTTON) & (configDash == 0))) || animID == MARIO_ANIM_RUNNING) {
+    if (((animID == MARIO_ANIM_WALKING & (configDash == 0))) || animID == MARIO_ANIM_RUNNING) {
         s16 dYaw = m->faceAngle[1] - startYaw;
         //! (Speed Crash) These casts can cause a crash if (dYaw * forwardVel / 12) or
         //! (forwardVel * 170) exceed or equal 2^31.
-        /*s16 val02 = -(s16)(dYaw * m->forwardVel / 12.0f);
+        s16 val02 = -(s16)(dYaw * m->forwardVel / 12.0f);
         s16 val00 = (s16)(m->forwardVel * 170.0f);
 
-        if (val02 > 0x1555) {
-            val02 = 0x1555;
+        if (val02 > 0x1000) {
+            val02 = 0x1000;
         }
-        if (val02 < -0x1555) {
-            val02 = -0x1555;
+        if (val02 < -0x1000) {
+            val02 = -0x1000;
         }
 
-        if (val00 > 0x1555) {
-            val00 = 0x1555;
+        if (val00 > 0x1000) {
+            val00 = 0x1000;
         }
         if (val00 < 0) {
             val00 = 0;
         }
 
         val0C->torsoAngle[2] = approach_s32(val0C->torsoAngle[2], val02, 0x400, 0x400);
-        val0C->torsoAngle[0] = approach_s32(val0C->torsoAngle[0], val00, 0x400, 0x400);*/
+        val0C->torsoAngle[0] = approach_s32(val0C->torsoAngle[0], val00, 0x400, 0x400);
     } else {
         val0C->torsoAngle[2] = 0;
         val0C->torsoAngle[0] = 0;
