@@ -481,11 +481,11 @@ void update_walking_speed(struct MarioState *m) {
         if (!(gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 1)) {
             maxTargetSpeed = 24.0f;
         } else if ((gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 1)) {
-            maxTargetSpeed = 10.0f;
+            maxTargetSpeed = 12.0f;
         } else if ((gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 2)) {
             maxTargetSpeed = 24.0f;
         } else if (!(gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 2)) {
-            maxTargetSpeed = 10.0f;
+            maxTargetSpeed = 12.0f;
         } else {
             maxTargetSpeed = 24.0f;
         }
@@ -493,11 +493,11 @@ void update_walking_speed(struct MarioState *m) {
         if (!(gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 1)) {
             maxTargetSpeed = 32.0f;
         } else if ((gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 1)) {
-            maxTargetSpeed = 14.0f;
+            maxTargetSpeed = 16.0f;
         } else if ((gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 2)) {
             maxTargetSpeed = 32.0f;
         } else if (!(gPlayer1Controller->buttonDown & Y_BUTTON) && (configDash == 2)) {
-            maxTargetSpeed = 14.0f;
+            maxTargetSpeed = 16.0f;
         } else {
             maxTargetSpeed = 32.0f;
         }
@@ -671,7 +671,7 @@ void anim_and_audio_for_walk(struct MarioState *m) {
                         val14 = (s32)(val04 / 4.0f * 0x10000);
 
                     if (configDash == 1 || configDash == 2) {
-                        set_mario_anim_with_accel(m, MARIO_ANIM_WALKING, (val14 / 2.4));
+                        set_mario_anim_with_accel(m, MARIO_ANIM_WALKING, (val14 / 1.2));
                     } else {
                         set_mario_anim_with_accel(m, MARIO_ANIM_WALKING, val14);
                     }
