@@ -12,6 +12,8 @@
 #define SAVE_FILE_MAGIC 0x4441
 
 #define NUM_SAVE_FILES 4
+#define NUM_STARS_PER_COURSE 8
+#define NUM_ACTS_PER_COURSE 7
 
 // Support both types of endianness on PC Port (little and big)
 #ifndef TARGET_N64
@@ -34,8 +36,6 @@ struct SaveFile {
     u32 flags;
 
     // Star flags for each course.
-    // The most significant bit of the byte *following* each course is set if the
-    // cannon is open.
     u8 courseStars[COURSE_COUNT];
 
     u8 courseCoinScores[COURSE_STAGES_COUNT];
@@ -152,7 +152,6 @@ u32 save_file_get_cannon_flags(s32 fileIndex, s32 courseIndex);
 void save_file_set_star_flags(s32 fileIndex, s32 courseIndex, u32 starFlags);
 s32 save_file_get_course_coin_score(s32 fileIndex, s32 courseIndex);
 s32 save_file_is_cannon_unlocked(void);
-void save_file_set_cannon_unlocked(void);
 void save_file_set_cap_pos(s16 x, s16 y, s16 z);
 s32 save_file_get_cap_pos(Vec3s capPos);
 void save_file_set_sound_mode(u16 mode);

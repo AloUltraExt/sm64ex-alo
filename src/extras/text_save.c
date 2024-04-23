@@ -135,7 +135,7 @@ s32 write_text_save(s32 fileIndex) {
         stars = save_file_get_star_flags(fileIndex, i);
         coins = save_file_get_course_coin_score(fileIndex, i);
         cannonFlag = save_file_get_cannon_flags(fileIndex, i);
-        starFlags = int_to_bin(stars);      // 63 -> 111111
+        starFlags = int_to_bin(stars);      // 63 -> 1111111
             
         fprintf(file, "%s = \"%d, %07d, %d\"\n", sav_courses[i], coins, starFlags, cannonFlag);
     }
