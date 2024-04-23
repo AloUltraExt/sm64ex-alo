@@ -212,7 +212,7 @@ static struct Option optsControls[] = {
 };
 #endif
 
-#if !defined(TARGET_N64) || !defined (TARGET_PORT_CONSOLE)
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct Option optsVideo[] = {
     DEF_OPT_TOGGLE( optsVideoStr[0], &configWindow.fullscreen ),
     DEF_OPT_TOGGLE( optsVideoStr[5], &configWindow.vsync ),
@@ -249,7 +249,7 @@ static struct Option optsDsSettings[] = {
 static struct SubMenu menuControls = DEF_SUBMENU( optMainStr[2], optsControls );
 #endif
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct SubMenu menuVideo      = DEF_SUBMENU( optMainStr[3], optsVideo );
 #endif
 
@@ -264,7 +264,7 @@ static struct Option optsMain[] = {
     DEF_OPT_SUBMENU( optMainStr[2], &menuControls ),
 #endif
 
-#ifndef TARGET_N64
+#if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
     DEF_OPT_SUBMENU( optMainStr[3], &menuVideo ),
 #endif
 
