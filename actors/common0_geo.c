@@ -29,3 +29,4 @@
 #include "koopa_shell/geo.inc.c"
 
 #include "star_switch/geo.inc.c"
+#include "question_box/geo.inc.c"

@@ -510,7 +510,6 @@
 0xa7c0a6eb, levels/totwc/3.ia16.png
 0xa7bdd88f, actors/whirlpool/whirlpool.ia16.png
 0xa7bdd88f, actors/tornado/tornado.ia16.png
-0xa765aaa8, actors/exclamation_box/wing_cap_box_front.rgba16.png
 0xa742c5e3, textures/skybox_tiles/wdw.60.rgba16.png
 0xa7398f08, textures/segment2/segment2.081D0.rgba16.png
 0xa72c7c50, textures/skybox_tiles/wdw.46.rgba16.png
@@ -747,7 +746,6 @@
 0x846a6656, levels/menu/main_menu_seg7_us.0B080.ia8.png
 0x84651765, textures/skybox_tiles/cloud_floor.32.rgba16.png
 0x8464cc0c, actors/whomp/whomp_surface.rgba16.png
-0x8413a8fa, actors/exclamation_box/metal_cap_box_side.rgba16.png
 0x83d5ba14, textures/machine/ttc_textures.04000.rgba16.png
 0x83101fa2, levels/rr/quarter_flying_carpet.rgba16.png
 0x8300dd14, levels/castle_inside/25.rgba16.png
@@ -787,11 +785,9 @@
 0x7f5468e5, textures/skybox_tiles/bidw.43.rgba16.png
 0x7f0c0d1a, textures/skybox_tiles/bbh.35.rgba16.png
 0x7ecf9e44, textures/fire/lll_textures.04000.rgba16.png
-0x7ebe7d5e, actors/exclamation_box/vanish_cap_box_front.rgba16.png
 0x7eb3fe85, actors/bowser/bowser_shell_edge.rgba16.png
 0x7e91d91e, textures/skybox_tiles/cloud_floor.37.rgba16.png
 0x7e7433a6, levels/vcutm/3.rgba16.png
-0x7e5c3a04, actors/exclamation_box/metal_cap_box_front.rgba16.png
 0x7e5c24f7, textures/sky/rr_textures.07000.rgba16.png
 0x7e28666b, textures/water/jrb_textures.0B800.rgba16.png
 0x7e27e43f, textures/skybox_tiles/ssl.17.rgba16.png
@@ -1155,7 +1151,6 @@
 0x431e1944, levels/menu/main_menu_seg7.03C68.rgba16.png
 0x42f2325a, textures/skybox_tiles/bits.13.rgba16.png
 0x42a20f7e, actors/explosion/explosion_5.rgba16.png
-0x428d4124, actors/exclamation_box/exclamation_box_side.rgba16.png
 0x428bef9c, textures/water/jrb_textures.00800.rgba16.png
 0x4276db5e, levels/ccm/7.rgba16.png
 0x41d56401, textures/skybox_tiles/bits.22.rgba16.png
@@ -1331,7 +1326,6 @@
 0x2465b806, actors/sparkle_animation/sparkle_animation_0.ia16.png
 0x245ea00f, levels/bob/2.rgba16.png
 0x2447b7f9, textures/segment2/segment2.06680.rgba16.png
-0x23f84d6a, actors/exclamation_box/exclamation_box_front.rgba16.png
 0x239f9e44, levels/castle_inside/38.rgba16.png
 0x2395da7b, actors/snowman/mr_blizzard_left_side.rgba16.png
 0x22f743bf, textures/outside/castle_grounds_textures.06800.rgba16.png
@@ -1558,8 +1552,6 @@
 0x006a1516, textures/skybox_tiles/wdw.58.rgba16.png
 0x0010fdc4, actors/sushi/sushi_snout.rgba16.png
 0x1195aecc, actors/chair/chair_bottom.rgba16.png
-0xb16edfa9, actors/exclamation_box/vanish_cap_box_side.rgba16.png
-0x4838a16e, actors/exclamation_box/wing_cap_box_side.rgba16.png
 0x2c14636c, actors/eyerok/eyerok_eye_mostly_closed.rgba16.png
 0x761e51a0, actors/eyerok/eyerok_eye_mostly_open.rgba16.png
 0x93944d54, actors/eyerok/eyerok_eye_open.rgba16.png
