@@ -1,0 +1,34 @@
+{
+    "date": "2004-03-19",
+    "sample_bank": "sfx_env",
+    "envelopes": {
+        "envelope0": [
+            [2, 32700],
+            [1, 32700],
+            [32700, 29430],
+            "hang"
+        ],
+        "envelope1": [
+            [2, 32700],
+            [1, 32700],
+            [32700, 29430],
+            "hang"
+        ]
+    },
+    "instruments": {
+        "inst0": {
+            "release_rate": 208,
+            "envelope": "envelope0",
+            "sound": "00_timed_star_appear"
+        },
+        "inst1": {
+            "release_rate": 208,
+            "envelope": "envelope1",
+            "sound": "01_timed_star_disappear"
+        }
+    },
+    "instrument_list": [
+        "inst0",
+        "inst1"
+    ]
+}

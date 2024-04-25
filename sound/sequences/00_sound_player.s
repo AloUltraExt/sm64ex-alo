@@ -355,6 +355,26 @@ sound_ref .sound_action_jump_default
 sound_ref .sound_action_jump_default
 sound_ref .sound_action_jump_default
 sound_ref .sound_action_jump_default
+sound_ref .sound_timed_star_spawn_00
+sound_ref .sound_timed_star_despawn_01
+
+.sound_timed_star_spawn_00:
+chan_setbank 11
+chan_setinstr 0
+chan_setlayer 0, .layer_timed_star_spawn_00
+chan_end
+.layer_timed_star_spawn_00:
+layer_note1 39, 0xc8, 127
+layer_end
+
+.sound_timed_star_despawn_01:
+chan_setbank 11
+chan_setinstr 0
+chan_setlayer 0, .layer_timed_star_despawn_01
+chan_end
+.layer_timed_star_despawn_01:
+layer_note1 39, 0xc8, 127
+layer_end
 
 .sound_action_jump_default:
 chan_setbank 1

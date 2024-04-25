@@ -12,6 +12,7 @@ void bhv_timed_star_spawn_loop(void) {
         case 1:
             obj_move_xyz_using_fvel_and_yaw(o);
             o->oFaceAngleYaw += 0x800;
+            play_sound(SOUND_TIMED_STAR_00, gGlobalSoundSource);
             if (o->oTimer == 30) {
                 o->oAction = 2;
                 o->oForwardVel = 0;
