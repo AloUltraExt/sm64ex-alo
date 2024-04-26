@@ -2004,7 +2004,6 @@
 "sound/samples/sfx_mario/19_mario_yippee.aiff": [0,{"us":["@sound",109],"eu":["@sound",109],"sh":["@sound",109]}],
 "sound/samples/sfx_mario/1A_mario_lets_a_go.aiff": [0,{"us":["@sound",110],"eu":["@sound",110],"sh":["@sound",110]}],
 "sound/samples/sfx_mario_peach/00_mario_waaaooow.aiff": [0,{"jp":["@sound",106],"us":["@sound",118],"eu":["@sound",118],"sh":["@sound",118]}],
-"sound/samples/sfx_mario_peach/01_mario_hoohoo.aiff": [0,{"jp":["@sound",107],"us":["@sound",119],"eu":["@sound",119],"sh":["@sound",119]}],
 "sound/samples/sfx_mario_peach/02_mario_panting.aiff": [0,{"jp":["@sound",108],"us":["@sound",120],"eu":["@sound",120],"sh":["@sound",120]}],
 "sound/samples/sfx_mario_peach/03_mario_dying.aiff": [0,{"jp":["@sound",109],"us":["@sound",121],"eu":["@sound",121],"sh":["@sound",121]}],
 "sound/samples/sfx_mario_peach/04_mario_on_fire.aiff": [0,{"jp":["@sound",110],"us":["@sound",122],"eu":["@sound",122],"sh":["@sound",122]}],

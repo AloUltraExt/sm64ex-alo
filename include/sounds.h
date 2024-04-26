@@ -188,7 +188,7 @@ enum SoundBank {
 /* Mario Sound Effects */
 // A random number 0-2 is added to the sound ID before playing, producing Yah/Wah/Hoo
 #define SOUND_MARIO_YAH_WAH_HOO                  /* 0x24008081 */ SOUND_ARG_LOAD(SOUND_BANK_VOICE,    0x00, 0x80, SOUND_NO_PRIORITY_LOSS | SOUND_DISCRETE)
-#define SOUND_MARIO_HOOHOO                       /* 0x24038081 */ SOUND_ARG_LOAD(SOUND_BANK_VOICE,    0x03, 0x80, SOUND_NO_PRIORITY_LOSS | SOUND_DISCRETE) // unverified
+#define SOUND_MARIO_MUH                          /* 0x24038081 */ SOUND_ARG_LOAD(SOUND_BANK_VOICE,    0x03, 0x80, SOUND_NO_PRIORITY_LOSS | SOUND_DISCRETE) // unverified
 #define SOUND_MARIO_YAHOO                        /* 0x24048081 */ SOUND_ARG_LOAD(SOUND_BANK_VOICE,    0x04, 0x80, SOUND_NO_PRIORITY_LOSS | SOUND_DISCRETE) // unverified
 #define SOUND_MARIO_UH                           /* 0x24058081 */ SOUND_ARG_LOAD(SOUND_BANK_VOICE,    0x05, 0x80, SOUND_NO_PRIORITY_LOSS | SOUND_DISCRETE) // unverified
 #define SOUND_MARIO_HRMM                         /* 0x24068081 */ SOUND_ARG_LOAD(SOUND_BANK_VOICE,    0x06, 0x80, SOUND_NO_PRIORITY_LOSS | SOUND_DISCRETE) // unverified

@@ -81,6 +81,8 @@ sm64dsr_config.txt
 !/sound/**/ds_*/**/*.aiff
 !/assets/**/ds_*.bin
 !/assets/**/ds_*/**/*.bin
+!/sound/**/01_mario_muh.aiff
+!/sound/samples/sfx_env/*.aiff
 
 # Android files
 !/textures/touchcontrols/*.png

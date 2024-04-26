@@ -43,7 +43,6 @@ void bhv_star_switch_spawn_condition_loop(void) {
             struct Object *star = o->parentObj;
             if (star && star->activeFlags && star->behavior == bhvTimedStarSpawnCoordinates) {
                 gCurrentObject = star;
-                spawn_mist_particles();
                 gCurrentObject = o;
                 obj_mark_for_deletion(star);
             }
