@@ -28,7 +28,8 @@ u32 __osLeoPresent = 0;
 u32 __osFinalrom;
 #endif
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
+// This function is static only in 2.0J
 void __createSpeedParam(void) {
     __Dom1SpeedParam.type = DEVICE_TYPE_INIT;
     __Dom1SpeedParam.latency = IO_READ(PI_BSD_DOM1_LAT_REG);
@@ -46,7 +47,7 @@ void __createSpeedParam(void) {
 
 void __osInitialize_common(void) {
     u32 pifdata;
-#if LIBULTRA_VERSION < OS_VER_K
+#if LIBULTRA_VERSION < OS_VER_J
     u32 clock = 0;
 #endif
 
@@ -94,13 +95,13 @@ void __osInitialize_common(void) {
 
     osWritebackDCache((void *) UT_VEC, E_VEC - UT_VEC + sizeof(__osExceptionVector));
     osInvalICache((void *) UT_VEC, E_VEC - UT_VEC + sizeof(__osExceptionVector));
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     __createSpeedParam();
     osUnmapTLBAll();
 #endif
     osMapTLBRdb();
 
-#if LIBULTRA_VERSION < OS_VER_K
+#if LIBULTRA_VERSION < OS_VER_J
     osPiRawReadIo(4, &clock);
     clock &= ~0xf;
     if (clock) {
@@ -134,8 +135,8 @@ void __osInitialize_common(void) {
         }
     }
 #endif
-#if LIBULTRA_VERSION >= OS_VER_K
-    // If PreNMI is pending, loop until reset
+#if LIBULTRA_VERSION >= OS_VER_J
+    // Wait until there are no RCP interrupts
     if (__osGetCause() & CAUSE_IP5) {
         while (TRUE) {
         }
@@ -163,7 +164,7 @@ void __osInitialize_common(void) {
         IO_WRITE(SI_1C_REG, (IO_READ(SI_1C_REG) & 0x80FFFFFF) | 0x2F400000);
     }
 #endif
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     IO_WRITE(AI_CONTROL_REG, AI_CONTROL_DMA_ON);
     IO_WRITE(AI_DACRATE_REG, AI_MAX_DAC_RATE - 1);
     IO_WRITE(AI_BITRATE_REG, AI_MAX_BIT_RATE - 1);

@@ -3,11 +3,10 @@
 #include "PR/rcp.h"
 #include "PR/os.h"
 #include "piint.h"
+#include "macros.h"
 
-OSPiHandle __Dom1SpeedParam;
-
-#if LIBULTRA_VERSION >= OS_VER_K
-OSPiHandle __CartRomHandle;
+#if LIBULTRA_VERSION >= OS_VER_J
+ALIGNED8 OSPiHandle __CartRomHandle;
 
 OSPiHandle* osCartRomInit(void) {
     u32 value = 0;
@@ -66,35 +65,36 @@ OSPiHandle* osCartRomInit(void) {
 }
 
 #else
+ALIGNED8 OSPiHandle CartRomHandle;
 
 OSPiHandle *osCartRomInit(void) {
     u32 domain = 0;
-    u32 saveMask;    
+    u32 saveMask;
 
-    if (__Dom1SpeedParam.baseAddress == PHYS_TO_K1(PI_DOM1_ADDR2)) {
-        return &__Dom1SpeedParam;
+    if (CartRomHandle.baseAddress == PHYS_TO_K1(PI_DOM1_ADDR2)) {
+        return &CartRomHandle;
     }
 
-    __Dom1SpeedParam.type = DEVICE_TYPE_CART;
-    __Dom1SpeedParam.baseAddress = PHYS_TO_K1(PI_DOM1_ADDR2);
+    CartRomHandle.type = DEVICE_TYPE_CART;
+    CartRomHandle.baseAddress = PHYS_TO_K1(PI_DOM1_ADDR2);
     osPiRawReadIo(0, &domain);
-    __Dom1SpeedParam.latency = domain & 0xff;
-    __Dom1SpeedParam.pulse = (domain >> 8) & 0xff;
-    __Dom1SpeedParam.pageSize = (domain >> 0x10) & 0xf;
-    __Dom1SpeedParam.relDuration = (domain >> 0x14) & 0xf;
-    __Dom1SpeedParam.domain = PI_DOMAIN1;
+    CartRomHandle.latency = domain & 0xff;
+    CartRomHandle.pulse = (domain >> 8) & 0xff;
+    CartRomHandle.pageSize = (domain >> 0x10) & 0xf;
+    CartRomHandle.relDuration = (domain >> 0x14) & 0xf;
+    CartRomHandle.domain = PI_DOMAIN1;
 #if LIBULTRA_VERSION >= OS_VER_I
-    __Dom1SpeedParam.speed = 0;
+    CartRomHandle.speed = 0;
 #endif
 
-    bzero(&__Dom1SpeedParam.transferInfo, sizeof(__OSTranxInfo));
+    bzero(&CartRomHandle.transferInfo, sizeof(__OSTranxInfo));
 
     saveMask = __osDisableInt();
-    __Dom1SpeedParam.next = __osPiTable;
-    __osPiTable = &__Dom1SpeedParam;
+    CartRomHandle.next = __osPiTable;
+    __osPiTable = &CartRomHandle;
     __osRestoreInt(saveMask);
 
-    return &__Dom1SpeedParam;
+    return &CartRomHandle;
 }
 
 #endif

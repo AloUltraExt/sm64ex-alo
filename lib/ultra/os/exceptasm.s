@@ -23,7 +23,7 @@
 #define XOR_VALUE ~0
 #endif
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
 #define INT_TABLE(arg1, arg2) .word arg1, arg2
 #else
 #define INT_TABLE(arg1, arg2) .word arg1
@@ -345,7 +345,7 @@ cart:
 #if LIBULTRA_VERSION > OS_VER_D
     and     s0, s0, ~CAUSE_IP4
 #endif
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     la      t1, __osHwIntTable
     add     t1, HWINTR_SIZE
     lw      t2, HWINTR_CALLBACK(t1)
@@ -360,12 +360,12 @@ cart:
 	la      sp, leoDiskStack
 	li      a0, MESG(OS_EVENT_CART)
 
-    addiu   sp, sp, OS_LEO_STACKSIZE-16
+    addiu   sp, sp, OS_LEO_STACKSIZE-16 # Stack size minus initial frame
 #endif
 	beqz    t2, 1f
 #endif
     jalr    t2
-#if LIBULTRA_VERSION >= OS_VER_H && LIBULTRA_VERSION < OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_H && LIBULTRA_VERSION < OS_VER_J
     li      a0, MESG(OS_EVENT_CART)
 #endif
 #if LIBULTRA_VERSION > OS_VER_D
@@ -544,7 +544,7 @@ pi:
 
     li      t1, PI_STATUS_CLR_INTR
     sw      t1, PHYS_TO_K1(PI_STATUS_REG)
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     la      t1, __osPiIntTable
     lw      t2, (t1)
     beqz    t2, 1f
@@ -558,7 +558,9 @@ pi:
 1:
     li      a0, MESG(OS_EVENT_PI)
     jal     send_mesg
+#if LIBULTRA_VERSION >= OS_VER_J
 2:
+#endif
     beqz    s1, NoMoreRcpInts
 
 dp:

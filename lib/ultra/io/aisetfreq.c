@@ -3,7 +3,7 @@
 
 s32 osAiSetFrequency(u32 frequency) {
     register u32 dacRate;
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     register u32 bitRate;
 #else
     register s32 bitRate;
@@ -25,7 +25,7 @@ s32 osAiSetFrequency(u32 frequency) {
 
     IO_WRITE(AI_DACRATE_REG, dacRate - 1);
     IO_WRITE(AI_BITRATE_REG, bitRate - 1);
-#if LIBULTRA_VERSION < OS_VER_K
+#if LIBULTRA_VERSION < OS_VER_J
     IO_WRITE(AI_CONTROL_REG, AI_CONTROL_DMA_ON);
 #endif
     return osViClock / (s32) dacRate;

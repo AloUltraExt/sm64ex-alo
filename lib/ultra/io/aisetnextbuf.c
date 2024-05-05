@@ -20,7 +20,7 @@ s32 osAiSetNextBuffer(void *bufPtr, u32 size) {
     static u8 hdwrBugFlag = FALSE;
     char *bptr;
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     if (__osAiDeviceBusy()) {
         return -1;
     }
@@ -43,7 +43,7 @@ s32 osAiSetNextBuffer(void *bufPtr, u32 size) {
         hdwrBugFlag = FALSE;
     }
 
-#if LIBULTRA_VERSION < OS_VER_K
+#if LIBULTRA_VERSION < OS_VER_J
     if (__osAiDeviceBusy()) {
         return -1;
     }

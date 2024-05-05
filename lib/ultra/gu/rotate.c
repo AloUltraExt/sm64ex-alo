@@ -18,14 +18,10 @@ void guRotateF(float mf[4][4], float a, float x, float y, float z)
 	float	sine;
 	float	cosine;
 	float	ab, bc, ca, t;
-#if LIBULTRA_VERSION >= OS_VER_I
-    float xxsine, yxsine, zxsine;
-/* 2.0I onwards replaced these to t to reduce variables */
-#define xx t
-#define yy t
-#define zz t
-#else
-    f32 xx, yy, zz;
+#if LIBULTRA_VERSION >= OS_VER_K
+	float xxsine;
+	float yxsine;
+	float zxsine;
 #endif
 
 	guNormalize(&x, &y, &z);
@@ -39,31 +35,30 @@ void guRotateF(float mf[4][4], float a, float x, float y, float z)
 
 	guMtxIdentF(mf);
 
-/* Slight optimization */
 #if LIBULTRA_VERSION >= OS_VER_K
-#define MULT(s, p, t) s = p*sine; t = p*p;
-#define MTX_ADD(c, p, s) c+s;
-#define MTX_SUB(c, p, s) c-s;
+    xxsine = x * sine;
+    yxsine = y * sine;
+    zxsine = z * sine;
 #else
-#define MULT(s, p, t) t = p*p;
-#define MTX_ADD(c, p, s) c+(p*sine);
-#define MTX_SUB(c, p, s) c-(p*sine);
+    #define xxsine (x * sine)
+    #define yxsine (y * sine)
+    #define zxsine (z * sine)
 #endif
 
-    MULT(xxsine, x, xx);
-    mf[0][0] = xx+cosine*(1-xx);
-    mf[2][1] = MTX_SUB(bc, x, xxsine);
-    mf[1][2] = MTX_ADD(bc, x, xxsine);
+	t = x*x;
+	mf[0][0] = t+cosine*(1-t);
+	mf[2][1] = bc-xxsine;
+	mf[1][2] = bc+xxsine;
 
-    MULT(yxsine, y, yy);
-    mf[1][1] = yy+cosine*(1-yy);
-    mf[2][0] = MTX_ADD(ca, y, yxsine);
-    mf[0][2] = MTX_SUB(ca, y, yxsine);
+	t = y*y;
+	mf[1][1] = t+cosine*(1-t);
+	mf[2][0] = ca+yxsine;
+	mf[0][2] = ca-yxsine;
 
-    MULT(zxsine, z, zz);
-    mf[2][2] = zz+cosine*(1-zz);
-    mf[1][0] = MTX_SUB(ab, z, zxsine);
-    mf[0][1] = MTX_ADD(ab, z, zxsine);
+	t = z*z;
+	mf[2][2] = t+cosine*(1-t);
+	mf[1][0] = ab-zxsine;
+	mf[0][1] = ab+zxsine;
 }
 
 void guRotate(Mtx *m, float a, float x, float y, float z)

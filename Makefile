@@ -360,7 +360,7 @@ LIBULTRA ?= L
 LIBULTRA_REVISION ?= 0
 
 # LIBULTRA - sets the libultra OS version to use
-$(eval $(call validate-option,LIBULTRA,D F H I K L BB))
+$(eval $(call validate-option,LIBULTRA,D F H I J K L BB))
 
 # Libultra number revision (only used on 2.0D)
 LIBULTRA_REVISION ?= 0

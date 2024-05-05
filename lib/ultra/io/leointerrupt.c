@@ -8,13 +8,14 @@ extern u32 __osLeoPresent;
 static void __osLeoResume(void);
 static void __osLeoAbnormalResume(void);
 
-u8 leoDiskStack[OS_LEO_STACKSIZE];
+ALIGNED16 u8 leoDiskStack[OS_LEO_STACKSIZE];
 
 s32 __osLeoInterrupt(void) {
-    u32 stat;
 #if LIBULTRA_VERSION == OS_VER_F
+    u32 stat;
     u32 pistat;
 #else
+    u32 stat = 0;
     volatile u32 pistat;
 #endif
     u32 bmstat;
@@ -25,8 +26,6 @@ s32 __osLeoInterrupt(void) {
     if (!__osLeoPresent) {
         return 0;
     }
-#else
-    stat = 0;
 #endif
 
     info = &__osDiskHandle->transferInfo;
@@ -248,30 +247,32 @@ s32 __osLeoInterrupt(void) {
 }
 
 static void __osLeoAbnormalResume(void) {
-    __OSTranxInfo *info;
+    __OSTranxInfo *info = &__osDiskHandle->transferInfo;
     u32 pistat;
-    info = &__osDiskHandle->transferInfo;
+
     WAIT_ON_LEO_IO_BUSY(pistat);
     IO_WRITE(LEO_BM_CTL, info->bmCtlShadow | LEO_BM_CTL_RESET);
     WAIT_ON_LEO_IO_BUSY(pistat);
     IO_WRITE(LEO_BM_CTL, info->bmCtlShadow);
     __osLeoResume();
     IO_WRITE(PI_STATUS_REG, PI_STATUS_CLR_INTR);
+
     __OSGlobalIntMask |= OS_IM_PI;
 }
 
 static void __osLeoResume(void) {
-    __OSEventState *es;
-    OSMesgQueue *mq;
+    __OSEventState *es = &__osEventStateTab[OS_EVENT_PI];
+    OSMesgQueue *mq = es->messageQueue;
     s32 last;
-    es = &__osEventStateTab[OS_EVENT_PI];
-    mq = es->messageQueue;
+
     if (mq == NULL || MQ_IS_FULL(mq)) {
         return;
     }
+
     last = (mq->first + mq->validCount) % mq->msgCount;
     mq->msg[last] = es->message;
     mq->validCount++;
+
     if (mq->mtqueue->next != NULL) {
         __osEnqueueThread(&__osRunQueue, __osPopThread(&mq->mtqueue));
     }

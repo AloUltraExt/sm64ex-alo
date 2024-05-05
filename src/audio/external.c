@@ -372,7 +372,6 @@ s32 D_SH_80343CF0;
 s8 D_SH_80343CF8_pad[0x8];
 struct UnkStruct80343D00 D_SH_80343D00;
 s8 D_SH_8034DC8_pad[0x8];
-OSPiHandle DriveRomHandle; // used in osDriveRomInit.c. Why here?
 s8 D_SH_80343E48_pad[0x8];
 #endif
 

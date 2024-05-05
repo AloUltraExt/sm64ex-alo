@@ -39,7 +39,7 @@ extern u32 __osViIntrCount;
 extern u32 __osTimerCounter;
 extern u32 __osShutdown;
 
-extern __OSEventState __osEventStateTab[OS_NUM_EVENTS];
+extern __OSEventState __osEventStateTab[];
 
 
 //not sure if this should be here

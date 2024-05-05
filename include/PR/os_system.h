@@ -76,7 +76,7 @@ void osInitialize(void);
 void __osInitialize_common(void);
 void __osInitialize_autodetect(void);
 #else
-#if LIBULTRA_VERSION >= OS_VER_K 
+#if LIBULTRA_VERSION >= OS_VER_K
 void __osInitialize_common(void);
 void __osInitialize_autodetect(void);
 #define osInitialize()          \
