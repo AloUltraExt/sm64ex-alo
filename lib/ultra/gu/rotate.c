@@ -1,39 +1,39 @@
 /**************************************************************************
- *									  *
- *		 Copyright (C) 1994, Silicon Graphics, Inc.		  *
- *									  *
+ *                                      *
+ *         Copyright (C) 1994, Silicon Graphics, Inc.          *
+ *                                      *
  *  These coded instructions, statements, and computer programs  contain  *
  *  unpublished  proprietary  information of Silicon Graphics, Inc., and  *
  *  are protected by Federal copyright law.  They  may  not be disclosed  *
  *  to  third  parties  or copied or duplicated in any form, in whole or  *
  *  in part, without the prior written consent of Silicon Graphics, Inc.  *
- *									  *
+ *                                      *
  **************************************************************************/
 
 #include "guint.h"
 
 void guRotateF(float mf[4][4], float a, float x, float y, float z)
 {
-	static float	dtor = GU_PI / 180.0;
-	float	sine;
-	float	cosine;
-	float	ab, bc, ca, t;
+    static float    dtor = GU_PI / 180.0;
+    float    sine;
+    float    cosine;
+    float    ab, bc, ca, t;
 #if LIBULTRA_VERSION >= OS_VER_K
-	float xxsine;
-	float yxsine;
-	float zxsine;
+    float xxsine;
+    float yxsine;
+    float zxsine;
 #endif
 
-	guNormalize(&x, &y, &z);
-	a *= dtor;
-	sine = sinf(a);
-	cosine = cosf(a);
-	t = (1-cosine);
-	ab = x*y*t;
-	bc = y*z*t;
-	ca = z*x*t;
+    guNormalize(&x, &y, &z);
+    a *= dtor;
+    sine = sinf(a);
+    cosine = cosf(a);
+    t = (1-cosine);
+    ab = x*y*t;
+    bc = y*z*t;
+    ca = z*x*t;
 
-	guMtxIdentF(mf);
+    guMtxIdentF(mf);
 
 #if LIBULTRA_VERSION >= OS_VER_K
     xxsine = x * sine;
@@ -45,27 +45,27 @@ void guRotateF(float mf[4][4], float a, float x, float y, float z)
     #define zxsine (z * sine)
 #endif
 
-	t = x*x;
-	mf[0][0] = t+cosine*(1-t);
-	mf[2][1] = bc-xxsine;
-	mf[1][2] = bc+xxsine;
+    t = x*x;
+    mf[0][0] = t+cosine*(1-t);
+    mf[2][1] = bc-xxsine;
+    mf[1][2] = bc+xxsine;
 
-	t = y*y;
-	mf[1][1] = t+cosine*(1-t);
-	mf[2][0] = ca+yxsine;
-	mf[0][2] = ca-yxsine;
+    t = y*y;
+    mf[1][1] = t+cosine*(1-t);
+    mf[2][0] = ca+yxsine;
+    mf[0][2] = ca-yxsine;
 
-	t = z*z;
-	mf[2][2] = t+cosine*(1-t);
-	mf[1][0] = ab-zxsine;
-	mf[0][1] = ab+zxsine;
+    t = z*z;
+    mf[2][2] = t+cosine*(1-t);
+    mf[1][0] = ab-zxsine;
+    mf[0][1] = ab+zxsine;
 }
 
 void guRotate(Mtx *m, float a, float x, float y, float z)
 {
-	Matrix	mf;
+    Matrix    mf;
 
-	guRotateF(mf, a, x, y, z);
+    guRotateF(mf, a, x, y, z);
 
-	guMtxF2L(mf, m);
+    guMtxF2L(mf, m);
 }

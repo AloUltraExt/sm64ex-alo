@@ -138,12 +138,12 @@ s32 __osContRamWrite(OSMesgQueue *mq, int channel, u16 address, u8 *buffer, s32 
         if (ret == 0) {
             if (__osContDataCrc(buffer) != ramreadformat.datacrc) {
                 ret = __osPfsGetStatus(mq, channel);
-                
+
                 if (ret != 0) {
                     __osSiRelAccess();
                     return ret;
                 }
-                
+
                 ret = PFS_ERR_CONTRFAIL;
             }
         } else {

@@ -354,15 +354,15 @@ cart:
 
     lw      sp, HWINTR_SP(t1)
 #else
-	li      t2, HWINTR_SIZE
-	lw      t2, __osHwIntTable(t2)
+    li      t2, HWINTR_SIZE
+    lw      t2, __osHwIntTable(t2)
 #if LIBULTRA_VERSION >= OS_VER_F
-	la      sp, leoDiskStack
-	li      a0, MESG(OS_EVENT_CART)
+    la      sp, leoDiskStack
+    li      a0, MESG(OS_EVENT_CART)
 
     addiu   sp, sp, OS_LEO_STACKSIZE-16 # Stack size minus initial frame
 #endif
-	beqz    t2, 1f
+    beqz    t2, 1f
 #endif
     jalr    t2
 #if LIBULTRA_VERSION >= OS_VER_H && LIBULTRA_VERSION < OS_VER_J
@@ -912,7 +912,7 @@ STAY2(ctc1  k1, fcr31)
     addu    k1, k1, k0
     lhu     k1, 0(k1)
     la      k0, PHYS_TO_K1(MI_INTR_MASK_REG)
-    sw      k1, 0(k0)   
+    sw      k1, 0(k0)
     nop
     nop
     nop
@@ -921,7 +921,7 @@ STAY2(ctc1  k1, fcr31)
 .set reorder
 END(__osDispatchThread)
 
-LEAF(__osCleanupThread)  
+LEAF(__osCleanupThread)
     move    a0, zero
     jal     osDestroyThread
 END(__osCleanupThread)

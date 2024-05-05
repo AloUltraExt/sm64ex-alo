@@ -1,7 +1,7 @@
 #include "PR/os_internal.h"
 #include "osint.h"
 #include "macros.h"
-    
+
 ALIGNED8 __OSEventState __osEventStateTab[OS_NUM_EVENTS];
 #if LIBULTRA_VERSION >= OS_VER_J
 u32 __osPreNMI = FALSE;

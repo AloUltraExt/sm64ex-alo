@@ -66,10 +66,10 @@ s32 osEepromWrite(OSMesgQueue *mq, u8 address, u8 *buffer) {
     type = sdata.type & (CONT_EEPROM | CONT_EEP16K);
 
 #if LIBULTRA_VERSION < OS_VER_J
-	if (ret != 0) {
-		__osSiRelAccess();
-		return CONT_NO_RESPONSE_ERROR;
-	}
+    if (ret != 0) {
+        __osSiRelAccess();
+        return CONT_NO_RESPONSE_ERROR;
+    }
 #else
     if (ret == 0) {
 #endif
