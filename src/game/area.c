@@ -116,6 +116,9 @@ static int scale_x_to_correct_aspect_center(int x) {
 }
 
 void print_intro_text(void) {
+#ifdef VERSION_CN
+    u8 sp18[] = { 0xB0, 0x00 }; // 按
+#endif
 #ifdef VERSION_EU
     s32 language = eu_get_language();
 #endif
@@ -130,7 +133,11 @@ void print_intro_text(void) {
 #ifdef VERSION_EU
             print_text(GFX_DIMENSIONS_FROM_LEFT_EDGE(20), 20, "START");
 #else
+#ifdef VERSION_CN
+            print_text_centered(GFX_DIMENSIONS_FROM_LEFT_EDGE(60), 38, (char *) sp18);
+#else
             print_text_centered(GFX_DIMENSIONS_FROM_LEFT_EDGE(60), 38, "PRESS");
+#endif
             print_text_centered(GFX_DIMENSIONS_FROM_LEFT_EDGE(60), 20, "START");
 #endif
         }

@@ -7060,7 +7060,7 @@ static UNUSED void unused_cutscene_mario_dialog_looking_up(UNUSED struct Camera 
  * Lower the volume (US only) and start the peach letter background music
  */
 BAD_RETURN(s32) cutscene_intro_peach_start_letter_music(UNUSED struct Camera *c) {
-#if defined(VERSION_US) || defined(VERSION_SH)
+#if defined(VERSION_US) || defined(VERSION_SH) || defined(VERSION_CN)
     seq_player_lower_volume(SEQ_PLAYER_LEVEL, 60, 40);
 #endif
     cutscene_intro_peach_play_message_music();
@@ -9638,7 +9638,7 @@ BAD_RETURN(s32) play_sound_intro_turn_on_hud(UNUSED struct Camera *c) {
  * Fly to the pipe. Near the end, the camera jumps to Lakitu's position and the hud turns on.
  */
 BAD_RETURN(s32) cutscene_intro_peach_fly_to_pipe(struct Camera *c) {
-#if defined(VERSION_US) || defined(VERSION_SH)
+#if defined(VERSION_US) || defined(VERSION_SH) || defined(VERSION_CN)
     cutscene_event(play_sound_intro_turn_on_hud, c, 818, 818);
 #elif defined(VERSION_EU)
     cutscene_event(play_sound_intro_turn_on_hud, c, 673, 673);
@@ -10420,7 +10420,7 @@ struct Cutscene sCutsceneEnding[] = {
     { cutscene_ending_kiss, 0x10b },
 #else
     { cutscene_ending_mario_land_closeup, 75 },
-#ifdef VERSION_SH
+#if defined(VERSION_SH) || defined(VERSION_CN)
     { cutscene_ending_stars_free_peach, 431 },
 #else
     { cutscene_ending_stars_free_peach, 386 },
@@ -10428,7 +10428,7 @@ struct Cutscene sCutsceneEnding[] = {
     { cutscene_ending_peach_appears, 139 },
     { cutscene_ending_peach_descends, 590 },
     { cutscene_ending_mario_to_peach, 95 },
-#ifdef VERSION_SH
+#if defined(VERSION_SH) || defined(VERSION_CN)
     { cutscene_ending_peach_wakeup, 455 },
     { cutscene_ending_dialog, 286 },
 #else

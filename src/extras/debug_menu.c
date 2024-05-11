@@ -40,12 +40,18 @@ extern void set_play_mode(s16 playMode);
 
 struct DebugOptList DebugOpt;
 
-const u8 optDebugMenuStr[][32] = {
+#ifdef VERSION_CN // hack, todo remove
+#define SIZEOPTC(n) n * 2
+#else
+#define SIZEOPTC(n) n
+#endif
+
+const u8 optDebugMenuStr[][200] = {
     { TEXT_OPT_DEBUG },
     { TEXT_OPT_DEBUG_WARP },
 };
 
-static const u8 optsDebugStr[][64] = {
+static const u8 optsDebugStr[][SIZEOPTC(64)] = {
     { TEXT_OPT_DEBUG0 },
     { TEXT_OPT_DEBUG1 },
     { TEXT_OPT_DEBUG2 },
@@ -57,7 +63,7 @@ static const u8 optsDebugStr[][64] = {
     { TEXT_OPT_DEBUG8 },
 };
 
-static const u8 optsDebugWarpDestStr[][64] = {
+static const u8 optsDebugWarpDestStr[][SIZEOPTC(64)] = {
     { TEXT_DEBUG_WARP0 },
     { TEXT_DEBUG_WARP1 },
     { TEXT_DEBUG_WARP2 },

@@ -23,13 +23,19 @@
 
 struct CheatList Cheats;
 
-const u8 optCheatMenuStr[][32] = {
+#ifdef VERSION_CN // hack, todo remove
+#define SIZEOPTC(n) n * 2
+#else
+#define SIZEOPTC(n) n
+#endif
+
+const u8 optCheatMenuStr[][200] = {
     { TEXT_OPT_CHEATS },
     { TEXT_OPT_CHEATS_WALKON },
     { TEXT_OPT_CHEATS_BLJANY },
 };
 
-static const u8 optsCheatsStr[][64] = {
+static const u8 optsCheatsStr[][SIZEOPTC(64)] = {
     { TEXT_OPT_CHEAT0 },
     { TEXT_OPT_CHEAT1 },
     { TEXT_OPT_CHEAT2 },
@@ -44,7 +50,7 @@ static const u8 optsCheatsStr[][64] = {
     { TEXT_OPT_CHEAT11 },
 };
 
-static const u8 optsMarioSizeCheatStr[][64] = {
+static const u8 optsMarioSizeCheatStr[][SIZEOPTC(64)] = {
     { TEXT_CHEAT_MSIZE0 },
     { TEXT_CHEAT_MSIZE1 },
     { TEXT_CHEAT_MSIZE2 },
@@ -56,7 +62,7 @@ static const u8 *cheatChoicesMarioSize[] = {
     optsMarioSizeCheatStr[2],
 };
 
-static const u8 optsWalkOnCheatStr[][64] = {
+static const u8 optsWalkOnCheatStr[][SIZEOPTC(64)] = {
     { TEXT_CHEAT_WALKON0 },
     { TEXT_CHEAT_WALKON1 },
     { TEXT_CHEAT_WALKON2 },
@@ -65,7 +71,7 @@ static const u8 optsWalkOnCheatStr[][64] = {
     { TEXT_CHEAT_WALKON5 },
 };
 
-static const u8 optsBljOptAnyCheatStr[][64] = {
+static const u8 optsBljOptAnyCheatStr[][SIZEOPTC(64)] = {
     { TEXT_CHEAT_BLJOPT0 },
     { TEXT_CHEAT_BLJOPT1 },
     { TEXT_CHEAT_BLJOPT2 },
@@ -77,7 +83,7 @@ static const u8 *cheatChoicesBljOptAny[] = {
     optsBljOptAnyCheatStr[2],
 };
 
-static const u8 optsBljAnyCheatStr[][64] = {
+static const u8 optsBljAnyCheatStr[][SIZEOPTC(64)] = {
     { TEXT_CHEAT_BLJANY0 },
     { TEXT_CHEAT_BLJANY1 },
 };

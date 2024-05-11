@@ -53,4 +53,3 @@ glabel ipl3_font
 .incbin "textures/ipl3_raw/ipl3_font_48.ia1"
 .incbin "textures/ipl3_raw/ipl3_font_49.ia1"
 .fill 0x12
-

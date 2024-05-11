@@ -7,6 +7,8 @@
 #include "print.h"
 #include "segment2.h"
 
+#include "gfx_dimensions.h"
+
 /**
  * This file handles printing and formatting the colorful text that
  * appears when printing things such as "PRESS START".
@@ -98,11 +100,10 @@ void format_integer(s32 n, s32 base, char *dest, s32 *totalLength, u8 width, s8 
             powBase = int_pow(base, i);
             digit = n / powBase;
 
-            // FIXME: Why doesn't [] match?
             if (digit < 10) {
-                *(dest + len + numDigits - 1 - i) = digit + '0';
+                *(dest + len + (numDigits - 1) - i) = digit + '0';
             } else {
-                *(dest + len + numDigits - 1 - i) = digit + '7';
+                *(dest + len + (numDigits - 1) - i) = digit + '7';
             }
 
             n -= digit * powBase;
@@ -153,7 +154,7 @@ void parse_width_field(const char *str, s32 *srcIndex, u8 *width, s8 *zeroPad) {
 
     // Sum the digits to calculate the total width.
     for (i = 0; i < digitsLen - 1; i++) {
-        *width = *width + digits[i] * ((digitsLen - i - 1) * 10);
+        *width = *width + ((digitsLen - i - 1) * 10) * digits[i];
     }
 
     *width = *width + digits[digitsLen - 1];
@@ -256,6 +257,9 @@ void print_text_centered(s32 x, s32 y, const char *str) {
     UNUSED s32 unused2 = 0;
     s32 length = 0;
     s32 srcIndex = 0;
+#ifdef VERSION_CN
+    s32 width = 0;
+#endif
 
     // Don't continue if there is no memory to do so.
     if ((sTextLabels[sTextLabelsCount] = mem_pool_alloc(gEffectsMemoryPool,
@@ -267,6 +271,13 @@ void print_text_centered(s32 x, s32 y, const char *str) {
 
     // Set the array with the text to print while finding length.
     while (c != '\0') {
+#ifdef VERSION_CN
+        if ((u8) c == 0xB0 || (u8) c == 0xC0) {
+            width = 16;
+        } else {
+            width = 12;
+        }
+#endif
         sTextLabels[sTextLabelsCount]->buffer[length] = c;
         length++;
         srcIndex++;
@@ -274,7 +285,11 @@ void print_text_centered(s32 x, s32 y, const char *str) {
     }
 
     sTextLabels[sTextLabelsCount]->length = length;
-    sTextLabels[sTextLabelsCount]->x = x - length * 12 / 2;
+#ifdef VERSION_CN
+    sTextLabels[sTextLabelsCount]->x = x - width * length / 2;
+#else
+    sTextLabels[sTextLabelsCount]->x = x - 12 * length / 2;
+#endif
     sTextLabels[sTextLabelsCount]->y = y;
     sTextLabelsCount++;
 }
@@ -349,7 +364,7 @@ s8 char_to_glyph_index(char c) {
 /**
  * Adds an individual glyph to be rendered.
  */
-void add_glyph_texture(s8 glyphIndex) {
+void add_glyph_texture(u8 glyphIndex) {
     const u8 *const *glyphs = segmented_to_virtual(main_hud_lut);
 
     gDPPipeSync(gDisplayListHead++);
@@ -360,8 +375,13 @@ void add_glyph_texture(s8 glyphIndex) {
 /**
  * Renders the glyph that's set at the given position.
  */
+#ifdef VERSION_CN
+void render_textrect(s32 x, s32 y, s32 pos, s32 width) {
+    s32 rectBaseX = x + pos * width;
+#else
 void render_textrect(s32 x, s32 y, s32 pos) {
     s32 rectBaseX = x + pos * 12;
+#endif
     s32 rectBaseY = 224 - y;
     s32 rectX;
     s32 rectY;
@@ -400,7 +420,19 @@ void render_text_labels(void) {
 
     for (i = 0; i < sTextLabelsCount; i++) {
         for (j = 0; j < sTextLabels[i]->length; j++) {
+#ifdef VERSION_CN
+            if ((u8) sTextLabels[i]->buffer[j] < 0xA0) {
+                glyphIndex = char_to_glyph_index(sTextLabels[i]->buffer[j]);
+            } else if ((u8) sTextLabels[i]->buffer[j] == 0xB0) {
+                glyphIndex = 0xB0;
+            } else if ((u8) sTextLabels[i]->buffer[j] == 0xC0) {
+                glyphIndex = 0xC0;
+            } else {
+                glyphIndex = GLYPH_SPACE;
+            }
+#else
             glyphIndex = char_to_glyph_index(sTextLabels[i]->buffer[j]);
+#endif
 
             if (glyphIndex != GLYPH_SPACE) {
 #ifdef VERSION_EU
@@ -415,6 +447,37 @@ void render_text_labels(void) {
                 } else {
                     add_glyph_texture(glyphIndex);
                     render_textrect(sTextLabels[i]->x, sTextLabels[i]->y, j);
+                }
+#elif defined(VERSION_CN)
+                if ((u8) glyphIndex == 0xB0) { // 按 (Press)
+                    add_glyph_texture(0x92);
+                    render_textrect(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(45), 50, 0, 16);
+                    add_glyph_texture(0x93);
+                    render_textrect(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(45), 50, 1, 16);
+                    add_glyph_texture(0x94);
+                    render_textrect(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(45), 34, 0, 16);
+                    add_glyph_texture(0x95);
+                    render_textrect(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(45), 34, 1, 16);
+                } else if ((u8) glyphIndex == 0xC0) { //  时间 (Time)
+                    add_glyph_texture(0xAE);
+                    render_textrect(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 193, 0, 16);
+                    add_glyph_texture(0xAF);
+                    render_textrect(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 193, 1, 16);
+                    add_glyph_texture(0xB0);
+                    render_textrect(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 177, 0, 16);
+                    add_glyph_texture(0xB1);
+                    render_textrect(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 177, 1, 16);
+                    add_glyph_texture(0xB2);
+                    render_textrect(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 193, 2, 16);
+                    add_glyph_texture(0xB3);
+                    render_textrect(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 193, 3, 16);
+                    add_glyph_texture(0xB4);
+                    render_textrect(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 177, 2, 16);
+                    add_glyph_texture(0xB5);
+                    render_textrect(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 177, 3, 16);
+                } else {
+                    add_glyph_texture(glyphIndex);
+                    render_textrect(sTextLabels[i]->x, sTextLabels[i]->y, j, 12);
                 }
 #else
                 add_glyph_texture(glyphIndex);

@@ -149,7 +149,7 @@ void bhv_act_selector_init(void) {
     for (i = 0; i < sVisibleStars; i++) {
         sStarSelectorModels[i] =
             spawn_object_abs_with_rot(gCurrentObject, 0, selectorModelIDs[i], bhvActSelectorStarType,
-                                      75 + sVisibleStars * -75 + i * 152, 248, -300, 0, 0, 0);
+                                      (sVisibleStars - 1) * -75 + i * 152, 248, -300, 0, 0, 0);
         sStarSelectorModels[i]->oStarSelectorSize = 1.0f;
     }
 
@@ -176,7 +176,7 @@ void bhv_act_selector_loop(void) {
         starIndexCounter = sSelectableStarIndex;
         for (i = 0; i < sVisibleStars; i++) {
             // Can the star be selected (is it either already completed or the first non-completed mission)
-            if ((stars & (1 << i)) || i + 1 == sInitSelectedActNum) {
+            if ((stars & (1 << i)) || i == sInitSelectedActNum - 1) {
                 if (starIndexCounter == 0) { // We have reached the sSelectableStarIndex-th selectable star.
                     sSelectedActIndex = i;
                     break;
@@ -262,6 +262,7 @@ void print_act_selector_strings(void) {
 #else
     unsigned char myScore[] = { TEXT_MYSCORE };
 #endif
+
     unsigned char starNumbers[] = { TEXT_ZERO };
 
 #ifdef VERSION_EU
@@ -310,15 +311,23 @@ void print_act_selector_strings(void) {
     gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
     // Print the "MY SCORE" text if the coin score is more than 0
     if (save_file_get_course_coin_score(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum)) != 0) {
+        // TODO: Macros for all these hardcoded positions would be nice
 #ifdef VERSION_EU
         print_generic_string(95, 118, myScore[language]);
+#elif defined(VERSION_CN)
+        print_generic_string(89, 118, myScore);
 #else
         print_generic_string(102, 118, myScore);
 #endif
     }
 
+#ifdef VERSION_CN
+    lvlNameX = get_str_x_pos_from_center(160, currLevelName + 6, 16.0f);
+    print_generic_string(lvlNameX, 30, currLevelName + 6);
+#else
     lvlNameX = get_str_x_pos_from_center(160, currLevelName + 3, 10.0f);
     print_generic_string(lvlNameX, 33, currLevelName + 3);
+#endif
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 
@@ -328,23 +337,39 @@ void print_act_selector_strings(void) {
     print_course_number();
 #endif
 
+#ifdef VERSION_CN
+    gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
+#else
     gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
+#endif
     gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
     // Print the name of the selected act.
     if (sVisibleStars != 0) {
         selectedActName = segmented_to_virtual(actNameTbl[COURSE_NUM_TO_INDEX(gCurrCourseNum) * 6 + sSelectedActIndex]);
 
+#ifdef VERSION_CN
+        actNameX = get_str_x_pos_from_center(ACT_NAME_X, selectedActName, 16.0f);
+        print_generic_string(actNameX, 141, selectedActName);
+#else
         actNameX = get_str_x_pos_from_center(ACT_NAME_X, selectedActName, 8.0f);
         print_menu_generic_string(actNameX, 81, selectedActName);
+#endif
     }
+
+#ifdef VERSION_CN
+    gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
+
+    gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
+    gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
+#endif
 
     // Print the numbers above each star.
     for (i = 1; i <= sVisibleStars; i++) {
         starNumbers[0] = i;
 #ifdef VERSION_EU
-        print_menu_generic_string(143 - sVisibleStars * 15 + i * 30, 38, starNumbers);
+        print_menu_generic_string(128 - (sVisibleStars - 1) * 15 + i * 30, 38, starNumbers);
 #else
-        print_menu_generic_string(139 - sVisibleStars * 17 + i * 34, 38, starNumbers);
+        print_menu_generic_string(122 - (sVisibleStars - 1) * 17 + i * 34, 38, starNumbers);
 #endif
     }
 

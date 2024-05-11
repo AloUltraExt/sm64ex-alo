@@ -74,7 +74,13 @@ ConfigPuppyCam configPuppyCam = {
 
 /// CONFIG
 
-const u8 optsPuppyCamStr[][32] = {
+#ifdef VERSION_CN // hack, todo remove
+#define SIZEOPTC(n) n * 2
+#else
+#define SIZEOPTC(n) n
+#endif
+
+const u8 optsPuppyCamStr[][200] = {
     // Title and toggle
     { TEXT_OPT_PUPPYCAM },
     { TEXT_OPT_PUPPYON },
@@ -94,7 +100,7 @@ const u8 optsPuppyCamStr[][32] = {
     { TEXT_OPT_CAMOPA },
 };
 
-static const u8 optsPuppyCamSchemeStr[][64] = {
+static const u8 optsPuppyCamSchemeStr[][SIZEOPTC(64)] = {
     { TEXT_OPT_CAM_SCH1 },
     { TEXT_OPT_CAM_SCH2 },
     { TEXT_OPT_CAM_SCH3 },

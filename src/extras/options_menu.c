@@ -48,6 +48,12 @@ static u8 optmenu_bind_idx = 0;
 /* Keeps track of how many times the user has pressed L while in the options menu, so cheats can be unlocked */
 static s32 l_counter = 0;
 
+#ifdef VERSION_CN // hack, todo remove
+#define SIZEOPTC(n) n * 2
+#else
+#define SIZEOPTC(n) n
+#endif
+
 // How to add stuff:
 // strings: add them to include/text_strings.h.in
 //          and to optMainStr[] / opts*Str[]
@@ -55,19 +61,19 @@ static s32 l_counter = 0;
 // menus:   add a new submenu definition and a new
 //          option to the optsMain list
 
-static const u8 toggleStr[][16] = {
+static const u8 toggleStr[][SIZEOPTC(16)] = {
     { TEXT_OPT_DISABLED },
     { TEXT_OPT_ENABLED },
 };
 
-static const u8 optSmallStr[][32] = {
+static const u8 optSmallStr[][SIZEOPTC(32)] = {
     { TEXT_OPT_BUTTON1 },
     { TEXT_OPT_BUTTON2 },
     { TEXT_OPT_L_HIGHLIGHT },
     { TEXT_OPT_R_HIGHLIGHT },
 };
 
-static const u8 optMainStr[][32] = {
+static const u8 optMainStr[][SIZEOPTC(32)] = {
     { TEXT_OPT_OPTIONS },
     { TEXT_OPT_CAMERA },
     { TEXT_OPT_CONTROLS },
@@ -77,7 +83,7 @@ static const u8 optMainStr[][32] = {
     { TEXT_EXIT_GAME },
 };
 
-const u8 optsCameraStr[][32] = {
+const u8 optsCameraStr[][SIZEOPTC(32)] = {
     { TEXT_OPT_VANILLA_CAM },
     { TEXT_OPT_LAKITU_PARALLEL },
     { TEXT_OPT_SR_MARIO_CAM },
@@ -86,7 +92,7 @@ const u8 optsCameraStr[][32] = {
 };
 
 #ifndef TARGET_N64
-static const u8 optsVideoStr[][32] = {
+static const u8 optsVideoStr[][SIZEOPTC(32)] = {
     { TEXT_OPT_FSCREEN },
     { TEXT_OPT_TEXFILTER },
     { TEXT_OPT_NEAREST },
@@ -97,20 +103,20 @@ static const u8 optsVideoStr[][32] = {
 };
 #endif
 
-static const u8 optsAudioStr[][32] = {
+static const u8 optsAudioStr[][SIZEOPTC(32)] = {
     { TEXT_OPT_MVOLUME },
     { TEXT_OPT_MUSVOLUME },
     { TEXT_OPT_SFXVOLUME },
     { TEXT_OPT_ENVVOLUME },
 };
 
-static const u8 optsSettingsStr[][32] = {
+static const u8 optsSettingsStr[][SIZEOPTC(32)] = {
     { TEXT_OPT_HUD },
     { TEXT_OPT_MOUSE },
 };
 
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
-static const u8 optBindStr[][32] = {
+static const u8 optBindStr[][SIZEOPTC(32)] = {
     { TEXT_OPT_UNBOUND },
     { TEXT_OPT_PRESSKEY },
     { TEXT_BIND_A },
@@ -372,7 +378,7 @@ static void optmenu_draw_opt(const struct Option *opt, s16 x, s16 y, u8 sel, s16
             break;
 
         case OPT_SCROLL:
-            int_to_str(*opt->uval, buf);
+            INT_TO_STR_DIFF(*opt->uval, buf);
             optmenu_draw_text(x, y-13, buf, sel);
             optmenu_draw_opt_scroll(opt, iScrl);
             break;
@@ -389,7 +395,11 @@ static void optmenu_draw_opt(const struct Option *opt, s16 x, s16 y, u8 sel, s16
                     else
                         optmenu_draw_text(x, y-13, optBindStr[0], white);
                 } else {
+#ifdef VERSION_CN
+                    INT_TO_STR_DIFF(opt->uval[i], buf);
+#else
                     uint_to_hex(opt->uval[i], buf);
+#endif
                     optmenu_draw_text(x, y-13, buf, white);
                 }
             }

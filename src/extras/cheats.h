@@ -22,7 +22,7 @@
 #define bool int
 #endif
 
-extern const u8 optCheatMenuStr[][32];
+extern const u8 optCheatMenuStr[][200];
 
 struct CheatListWalkOn {
     bool    Lava;

@@ -76,7 +76,7 @@ def main():
         clean_assets(local_asset_file)
         sys.exit(0)
 
-    all_langs = ["jp", "us", "eu", "sh"]
+    all_langs = ["jp", "us", "eu", "sh", "cn"]
     if not langs or not all(a in all_langs for a in langs):
         langs_str = " ".join("[" + lang + "]" for lang in all_langs)
         print("Usage: " + sys.argv[0] + " " + langs_str)
@@ -192,13 +192,14 @@ def main():
                 "baserom." + lang + ".z64",
             ]
             def append_args(key):
-                size, locs = asset_map["@sound " + key + " " + lang]
+                sound_ver = "sh" if lang == "cn" else lang
+                size, locs = asset_map["@sound " + key + " " + sound_ver]
                 offset = locs[lang][0]
                 args.append(str(offset))
                 args.append(str(size))
             append_args("ctl")
             append_args("tbl")
-            if lang == "sh":
+            if lang in ("sh", "cn"):
                 args.append("--shindou-headers")
                 append_args("ctl header")
                 append_args("tbl header")
@@ -239,7 +240,8 @@ def main():
                         if asset.startswith("textures/skyboxes/"):
                             imagetype = "sky"
                         else:
-                            imagetype =  "cake" + ("-eu" if "eu" in asset else "")
+                            imagetype = "cake" + ("-cn" if "cn" in asset else "-eu" if "eu" in asset else "")
+                        print(imagetype, png_file.name, asset)
                         subprocess.run(
                             [
                                 "./tools/skyconv" + winext,

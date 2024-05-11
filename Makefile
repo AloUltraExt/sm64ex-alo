@@ -276,8 +276,11 @@ BASEPACK ?= base.zip
 #   us - builds the 1996 North American version
 #   eu - builds the 1997 PAL version
 #   sh - builds the 1997 Japanese Shindou version, with rumble pak support
+#   cn - builds the 2003 Chinese iQue version
 VERSION ?= us
-$(eval $(call validate-option,VERSION,jp us eu sh))
+$(eval $(call validate-option,VERSION,jp us eu sh cn))
+
+NEW_AUDIO_REV ?= false
 
 ifeq      ($(VERSION),jp)
   VER_DEFINES   += VERSION_JP=1
@@ -287,6 +290,10 @@ else ifeq ($(VERSION),eu)
   VER_DEFINES   += VERSION_EU=1
 else ifeq ($(VERSION),sh)
   VER_DEFINES   += VERSION_SH=1
+  NEW_AUDIO_REV := true
+else ifeq ($(VERSION),cn)
+  VER_DEFINES   += VERSION_CN=1
+  NEW_AUDIO_REV := true
 endif
 
 DEFINES += $(VER_DEFINES)
@@ -560,12 +567,14 @@ endif
 
 ELF := $(BUILD_DIR)/$(TARGET).elf
 
-LD_SCRIPT := sm64.ld
-MIO0_DIR := $(BUILD_DIR)/bin
-SOUND_BIN_DIR := $(BUILD_DIR)/sound
-TEXTURE_DIR := textures
-ACTOR_DIR := actors
-LEVEL_DIRS := $(patsubst levels/%,%,$(dir $(wildcard levels/*/header.h)))
+LD_SCRIPT      := sm64.ld
+CHARMAP        := charmap.txt
+CHARMAP_DEBUG  := charmap.debug.txt
+MIO0_DIR       := $(BUILD_DIR)/bin
+SOUND_BIN_DIR  := $(BUILD_DIR)/sound
+TEXTURE_DIR    := textures
+ACTOR_DIR      := actors
+LEVEL_DIRS     := $(patsubst levels/%,%,$(dir $(wildcard levels/*/header.h)))
 
 # Directories containing source files
 SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers src/extras actors levels bin bin/$(VERSION) data assets sound
@@ -669,7 +678,11 @@ endif
 # "If we're not N64, use the above"
 
 SOUND_BANK_FILES := $(wildcard sound/sound_banks/*.json)
-SOUND_SEQUENCE_DIRS := sound/sequences sound/sequences/$(VERSION)
+ifeq ($(VERSION),cn)
+  SOUND_SEQUENCE_DIRS := sound/sequences sound/sequences/sh
+else
+  SOUND_SEQUENCE_DIRS := sound/sequences sound/sequences/$(VERSION)
+endif
 # all .m64 files in SOUND_SEQUENCE_DIRS, plus all .m64 files that are generated from .s files in SOUND_SEQUENCE_DIRS
 SOUND_SEQUENCE_FILES := \
   $(foreach dir,$(SOUND_SEQUENCE_DIRS),\
@@ -1285,7 +1298,7 @@ $(BUILD_DIR)/$(RPC_LIBS):
 
 # Extra object file dependencies
 ifeq ($(TARGET_N64),1)
-  $(BUILD_DIR)/asm/boot.o: $(IPL3_RAW_FILES)
+  $(BUILD_DIR)/asm/ipl3_font.o: $(IPL3_RAW_FILES)
   $(BUILD_DIR)/src/boot/crash_screen.o: $(CRASH_TEXTURE_C_FILES)
   $(CRASH_TEXTURE_C_FILES): TEXTURE_ENCODING := u32
 
@@ -1297,7 +1310,7 @@ endif
 
 SOUND_FILES := $(SOUND_BIN_DIR)/sound_data.ctl $(SOUND_BIN_DIR)/sound_data.tbl $(SOUND_BIN_DIR)/sequences.bin $(SOUND_BIN_DIR)/bank_sets
 SOUND_FILES_SH :=
-ifeq ($(VERSION),sh)
+ifeq ($(NEW_AUDIO_REV),true)
   ifeq ($(EXTERNAL_DATA),1)
     SOUND_FILES_SH := $(SOUND_BIN_DIR)/sequences_header $(SOUND_BIN_DIR)/ctl_header $(SOUND_BIN_DIR)/tbl_header
     SOUND_FILES += $(SOUND_FILES_SH)
@@ -1331,6 +1344,7 @@ else
     $(BUILD_DIR)/bin/segment2.o: $(BUILD_DIR)/text/$(VERSION)/define_text.inc.c
   endif
 endif
+$(BUILD_DIR)/bin/segment2.o: $(BUILD_DIR)/text/debug_text.raw.inc.c
 
 # N64 specific optimization files
 ifeq ($(TARGET_N64),1)
@@ -1571,37 +1585,43 @@ $(BUILD_DIR)/assets/demo_data.c: assets/demo_data.json $(wildcard assets/demos/*
 	$(V)$(PYTHON) tools/demo_data_converter.py assets/demo_data.json $(DEF_INC_CFLAGS) > $@
 
 # Encode in-game text strings
-$(BUILD_DIR)/include/text_strings.h: include/text_strings.h.in
+$(BUILD_DIR)/$(CHARMAP): $(CHARMAP)
+	$(call print,Preprocessing charmap:,$<,$@)
+	$(V)$(CPP) $(CPPFLAGS) -DBUILD_DIR=$(BUILD_DIR) -MMD -MP -MT $@ -MF $@.d -o $@ $<
+$(BUILD_DIR)/$(CHARMAP_DEBUG): $(CHARMAP)
+	$(call print,Preprocessing charmap:,$<,$@)
+	$(V)$(CPP) $(CPPFLAGS) -DCHARMAP_DEBUG -DBUILD_DIR=$(BUILD_DIR) -MMD -MP -MT $@ -MF $@.d -o $@ $<
+$(BUILD_DIR)/include/text_strings.h: include/text_strings.h.in $(BUILD_DIR)/$(CHARMAP)
 	$(call print,Encoding:,$<,$@)
-	$(V)$(TEXTCONV) charmap.txt $< $@
-
+	$(V)$(TEXTCONV) $(BUILD_DIR)/$(CHARMAP) $< $@
 $(BUILD_DIR)/include/text_menu_strings.h: include/text_menu_strings.h.in
 	$(call print,Encoding:,$<,$@)
 	$(V)$(TEXTCONV) charmap_menu.txt $< $@
-
 $(BUILD_DIR)/text/%/define_courses.inc.c: text/define_courses.inc.c text/%/courses.h
 	@$(PRINT) "$(GREEN)Preprocessing: $(BLUE)$@ $(NO_COL)\n"
-	$(V)$(CPP) $(CPPFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) charmap.txt - $@
-
+	$(V)$(CPP) $(CPPFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) $(BUILD_DIR)/$(CHARMAP) - $@
 $(BUILD_DIR)/text/%/define_text.inc.c: text/define_text.inc.c text/%/courses.h text/%/dialogs.h
 	@$(PRINT) "$(GREEN)Preprocessing: $(BLUE)$@ $(NO_COL)\n"
-	$(V)$(CPP) $(CPPFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) charmap.txt - $@
+	$(V)$(CPP) $(CPPFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) $(BUILD_DIR)/$(CHARMAP) - $@
+$(BUILD_DIR)/text/debug_text.raw.inc.c: text/debug_text.inc.c $(BUILD_DIR)/$(CHARMAP_DEBUG)
+	@$(PRINT) "$(GREEN)Preprocessing: $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(CPP) $(CPPFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) $(BUILD_DIR)/$(CHARMAP_DEBUG) - $@
 
 ifeq ($(EXT_OPTIONS_MENU),1)
 $(BUILD_DIR)/include/text_options_strings.h: include/text_options_strings.h.in
 	$(call print,Encoding:,$<,$@)
-	$(V)$(TEXTCONV) charmap.txt $< $@
+	$(V)$(TEXTCONV) $(BUILD_DIR)/$(CHARMAP) $< $@
 
 ifeq ($(CHEATS_ACTIONS),1)
 $(BUILD_DIR)/include/text_cheats_strings.h: include/text_cheats_strings.h.in
 	$(call print,Encoding:,$<,$@)
-	$(V)$(TEXTCONV) charmap.txt $< $@
+	$(V)$(TEXTCONV) $(BUILD_DIR)/$(CHARMAP) $< $@
 endif
 
 ifeq ($(EXT_DEBUG_MENU),1)
 $(BUILD_DIR)/include/text_debug_strings.h: include/text_debug_strings.h.in
 	$(call print,Encoding:,$<,$@)
-	$(V)$(TEXTCONV) charmap.txt $< $@
+	$(V)$(TEXTCONV) $(BUILD_DIR)/$(CHARMAP) $< $@
 endif
 
 endif

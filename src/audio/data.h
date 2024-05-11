@@ -41,7 +41,7 @@
 #define SEQ_BANK_MEM (PERSISTENT_SEQ_MEM + PERSISTENT_BANK_MEM + TEMPORARY_SEQ_MEM + TEMPORARY_BANK_MEM)
 
 // constant .data
-#if defined(VERSION_EU) || defined(VERSION_SH)
+#if defined(VERSION_EU) || defined(VERSION_SH) || defined(VERSION_CN)
 extern struct AudioSessionSettingsEU gAudioSessionPresets[];
 extern struct ReverbSettingsEU sReverbSettings[8];
 #else
@@ -51,7 +51,7 @@ extern struct ReverbSettingsUS gReverbSettings[18];
 
 extern u16 D_80332388[128]; // unused
 
-#if defined(VERSION_EU) || defined(VERSION_SH)
+#if defined(VERSION_EU) || defined(VERSION_SH) || defined(VERSION_CN)
 extern f32 gPitchBendFrequencyScale[256];
 #else
 extern f32 gPitchBendFrequencyScale[255];
@@ -63,14 +63,14 @@ extern u8 gDefaultShortNoteDurationTable[16];
 extern s8 gVibratoCurve[16];
 extern struct AdsrEnvelope gDefaultEnvelope[3];
 
-#if defined(VERSION_EU) || defined(VERSION_SH)
+#if defined(VERSION_EU) || defined(VERSION_SH) || defined(VERSION_CN)
 extern s16 gEuUnknownWave7[256];
 extern s16 *gWaveSamples[6];
 #else
 extern s16 *gWaveSamples[4];
 #endif
 
-#if defined(VERSION_EU) || defined(VERSION_SH)
+#if defined(VERSION_EU) || defined(VERSION_SH) || defined(VERSION_CN)
 extern u8 euUnknownData_8030194c[4];
 #ifdef VERSION_EU
 extern u16 gHeadsetPanQuantization[0x10];
@@ -105,7 +105,7 @@ extern volatile s32 gAudioLoadLock;
 extern volatile s32 gAudioFrameCount;
 
 // number of DMAs performed during this frame
-#if defined(VERSION_EU) || defined(VERSION_SH)
+#if defined(VERSION_EU) || defined(VERSION_SH) || defined(VERSION_CN)
 extern s32 gCurrAudioFrameDmaCount;
 #else
 extern volatile s32 gCurrAudioFrameDmaCount;
@@ -120,14 +120,14 @@ extern u64 *gAudioCmd;
 extern struct SPTask *gAudioTask;
 extern struct SPTask gAudioTasks[2];
 
-#if defined(VERSION_EU) || defined(VERSION_SH)
+#if defined(VERSION_EU) || defined(VERSION_SH) || defined(VERSION_CN)
 extern f32 D_EU_802298D0;
 extern s32 gRefreshRate;
 #endif
 
 extern s16 *gAiBuffers[NUMAIBUFFERS];
 extern s16 gAiBufferLengths[NUMAIBUFFERS];
-#if defined(VERSION_SH)
+#if defined(VERSION_SH) || defined(VERSION_CN)
 #define AIBUFFER_LEN 0xb00
 #elif defined(VERSION_EU)
 #define AIBUFFER_LEN (0xa0 * 17)
@@ -163,7 +163,7 @@ extern u32 gAudioRandom;
 )
 #endif
 
-#ifdef VERSION_SH
+#if defined(VERSION_SH) || defined(VERSION_CN)
 extern f32 unk_sh_data_1[];
 
 extern volatile u32 gAudioLoadLockSH;
@@ -188,7 +188,7 @@ extern OSMesgQueue D_SH_80350F90; // address written to D_SH_80350F90
 extern OSMesgQueue *D_SH_80350FA8;
 #endif
 
-#if defined(VERSION_EU) || defined(VERSION_SH)
+#if defined(VERSION_EU) || defined(VERSION_SH) || defined(VERSION_CN)
 #define AUDIO_INIT_POOL_SIZE (0x2B00 + (MAX_NUM_SOUNDBANKS * sizeof(s32)) + EXT_AUDIO_INIT_POOL_SIZE)
 #else
 #define AUDIO_INIT_POOL_SIZE (0x2400 + (MAX_NUM_SOUNDBANKS * sizeof(s32)) + EXT_AUDIO_INIT_POOL_SIZE)
@@ -196,7 +196,7 @@ extern OSMesgQueue *D_SH_80350FA8;
 
 #define AUDIO_HEAP_SIZE (SEQ_BANK_MEM + AUDIO_INIT_POOL_SIZE + NOTES_BUFFER_SIZE + REVERB_WINDOW_HEAP_SIZE)
 
-#ifdef VERSION_SH
+#if defined(VERSION_SH) || defined(VERSION_CN)
 extern u32 D_SH_80315EF0;
 extern u16 D_SH_80315EF4;
 extern u16 D_SH_80315EF8;
