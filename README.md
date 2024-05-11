@@ -49,7 +49,7 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex) with additional featur
 
   #### Install build dependencies:
   ```sh
-  sudo apt install -y binutils-mips-linux-gnu build-essential git libcapstone-dev pkgconf python3 gcc-mips-linux-gnu
+  sudo apt install -y binutils-mips-linux-gnu build-essential git pkgconf python3 gcc-mips-linux-gnu
   ```
 
   #### Build:
