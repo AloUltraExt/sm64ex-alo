@@ -1,4 +1,4 @@
-#ifdef VERSION_SH
+#if defined(VERSION_SH) || defined(VERSION_CN)
 #include <ultra64.h>
 
 #include "data.h"
@@ -835,11 +835,6 @@ void func_sh_802f3d78(uintptr_t devAddr, void *vAddr, size_t nbytes, s32 arg3) {
     osInvalDCache(vAddr, nbytes);
     func_sh_802f3ed4(func_sh_802f3ec4(arg3, &sp1C), sp1C, vAddr, nbytes);
 }
-
-// from PR/os.h, includes needs cleanup
-extern OSPiHandle *osCartRomInit(void);
-extern OSPiHandle *osDriveRomInit(void);
-extern s32 osEPiStartDma(OSPiHandle *, OSIoMesg *, s32);
 
 s32 func_sh_802f3dd0(OSIoMesg *m, s32 pri, s32 direction, uintptr_t devAddr, void *dramAddr, s32 size, OSMesgQueue *retQueue, s32 medium, UNUSED const char *reason) {
     OSPiHandle *handle;

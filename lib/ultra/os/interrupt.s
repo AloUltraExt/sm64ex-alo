@@ -10,16 +10,16 @@
 .text
 .set noreorder
 LEAF(__osDisableInt)
-#if LIBULTRA_VERSION >= OS_VER_K
-	la    t2, __OSGlobalIntMask
-	lw    t3, (t2)
-	andi  t3, SR_IMASK
+#if LIBULTRA_VERSION >= OS_VER_J
+    la    t2, __OSGlobalIntMask
+    lw    t3, (t2)
+    andi  t3, SR_IMASK
 #endif
     mfc0  t0, C0_SR
     and   t1, t0, ~SR_IE
     mtc0  t1, C0_SR
     andi  v0, t0, SR_IE
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     lw    t0, (t2)
     andi  t0, SR_IMASK
     beq   t0, t3, ret
@@ -31,9 +31,9 @@ LEAF(__osDisableInt)
     or    t1, t2
     and   t1, ~SR_IE
     mtc0  t1, $12
-	nop
+    nop
 #endif
-	nop
+    nop
 ret:
     jr ra
     nop

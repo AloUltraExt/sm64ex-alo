@@ -19,6 +19,7 @@
 #include "game/segment7.h"
 #include "game/spawn_object.h"
 #include "game/rumble_init.h"
+#include "gfx_dimensions.h"
 #include "sm64.h"
 #include <stdio.h> // non-n64
 
@@ -31,6 +32,16 @@ enum CurrSaveFileNum {
     SAVE_FILE_NUM_C,
     SAVE_FILE_NUM_D,
 };
+
+#ifdef VERSION_CN
+#define FILE_SELECT_PRINT_STRING print_generic_string
+#define FILE_SELECT_TEXT_DL_BEGIN dl_ia_text_begin
+#define FILE_SELECT_TEXT_DL_END dl_ia_text_end
+#else
+#define FILE_SELECT_PRINT_STRING print_menu_generic_string
+#define FILE_SELECT_TEXT_DL_BEGIN dl_menu_ia8_text_begin
+#define FILE_SELECT_TEXT_DL_END dl_menu_ia8_text_end
+#endif
 
 /**
  * @file file_select.c
@@ -49,6 +60,12 @@ static u8 sYesNoColor[2];
 
 // The button that is selected when it is clicked.
 static s8 sSelectedButtonID = MENU_BUTTON_NONE;
+
+// On iQue, the courses can't all fit on one screen; there are two pages,
+// switched between with the L and R triggers.
+#ifdef VERSION_CN
+static s8 sScorePage = 0;
+#endif
 
 // Whether we are on the main menu or one of the submenus.
 static s8 sCurrentMenuLevel = MENU_LAYER_MAIN;
@@ -576,7 +593,7 @@ void copy_action_file_button(struct Object *copyButton, s32 copyFileButtonID) {
                     gLoadedGraphNodes[MODEL_MAIN_MENU_MARIO_SAVE_BUTTON_FADE];
             } else {
                 // If clicked in a existing save file, play buzz sound
-                if (MENU_BUTTON_COPY_FILE_A + sSelectedFileIndex == copyFileButtonID) {
+                if (copyFileButtonID == MENU_BUTTON_COPY_FILE_A + sSelectedFileIndex) {
                     play_sound(SOUND_MENU_CAMERA_BUZZ, gGlobalSoundSource);
 #if ENABLE_RUMBLE
                     queue_rumble_data(5, 80);
@@ -675,7 +692,7 @@ void erase_action_file_button(struct Object *eraseButton, s32 eraseFileButtonID)
             }
             break;
         case ERASE_PHASE_PROMPT: // Erase Menu "SURE? YES NO" Phase (after a file is selected)
-            if (MENU_BUTTON_ERASE_MIN + sSelectedFileIndex == eraseFileButtonID) {
+            if (eraseFileButtonID == MENU_BUTTON_ERASE_MIN + sSelectedFileIndex) {
                 // If clicked in a existing save file, play click sound and zoom out button
                 // Note: The prompt functions are actually called when the ERASE_MSG_PROMPT
                 // message is displayed with print_erase_menu_prompt
@@ -1114,6 +1131,11 @@ void handle_cursor_button_input(void) {
         } else if (gPlayer3Controller->buttonPressed & A_BUTTON) {
             sScoreFileCoinScoreMode = 1 - sScoreFileCoinScoreMode;
             play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource);
+#ifdef VERSION_CN
+        } else if ((gPlayer3Controller->buttonPressed & L_TRIG) || (gPlayer3Controller->buttonPressed & R_TRIG)) {
+            sScorePage = 1 - sScorePage;
+            play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource);
+#endif
         }
     } else { // If cursor is clicked
         if (gPlayer3Controller->buttonPressed
@@ -2017,6 +2039,7 @@ void print_score_file_star_score(s8 fileIndex, s16 courseIndex, s16 x, s16 y) {
     s16 i = 0;
     char starScoreText[30];
     char *entries[6];
+
     u8 stars = save_file_get_star_flags(fileIndex, courseIndex);
     s8 starCount = save_file_get_course_star_count(fileIndex, courseIndex);
     // Don't count 100 coin star
@@ -2047,6 +2070,14 @@ LangArray textHiScore = DEFINE_LANGUAGE_ARRAY(
     "ハイスコア");
 
 extern LangArray textMyScore;
+
+#define PRINT_COURSE_NAME_CN(courseIndex, shift) \
+    FILE_SELECT_PRINT_STRING(LEVEL_NAME_X, 14 + 21 * (9 - courseIndex) + shift, \
+                             segmented_to_virtual(levelNameTable[courseIndex - 1]));
+
+#define PRINT_COURSE_SCORES_CN(courseIndex, shift) \
+    print_score_file_star_score(fileIndex, courseIndex - 1, STAR_SCORE_X, 14 + 21 * (9 - courseIndex) + shift); \
+    print_score_file_course_coin_score(fileIndex, courseIndex - 1, 213, 14 + 21 * (9 - courseIndex) + shift);
 
 /**
  * Prints save file score strings that shows when a save file is chosen inside the score menu.
@@ -2098,8 +2129,129 @@ void print_save_file_scores(s8 fileIndex) {
         print_menu_generic_string_aligned(262, 24, LANG_ARRAY(textHiScore), TEXT_ALIGN_CENTER);
     }
 
-    gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_end);
+#ifdef VERSION_CN
+    // Print L and R button indicators
+    FILE_SELECT_PRINT_STRING(30, 17, textArrowL);
+    FILE_SELECT_PRINT_STRING(270, 17, textRArrow);
+#endif
+
+    gSPDisplayList(gDisplayListHead++, FILE_SELECT_TEXT_DL_END);
 }
+
+#ifdef WIDESCREEN
+/**
+ * Copy of the X values of the vertices so they can be intialized independently.
+ */
+const short sGeneralButtonVtxPosXGroup1[] = {
+  -163,  -122,  -163,  -143,  -133,  -133,  -133,   133,  -133,   133,   133,  -133,  -143,   143,   133,   143,
+};
+
+const short sGeneralButtonVtxPosXGroup2[] = {
+   143,   133,   133,   133,  -143,   143,  -143,   133,   143,  -133,  -143,  -133,  -143,   163,  -143,  -163,
+};
+
+const short sGeneralButtonVtxPosXGroup3[] = {
+   163,   143,  -143,   143,   163,  -163,  -143,  -163,   163,   122,  -122,  -122,  -122,  -163,
+};
+
+const short sGeneralButtonVtxPosXGroup4[] = {
+  -122,  -122,   122,  -163,   163,  -122,  -122,   122,   163,  -163,   122,   163,   122,   163,   122,
+};
+
+const short sSaveButtonBackVtxPosX[] = {
+   163,  -163,   163,  -163,
+};
+
+extern Vtx vertex_menu_main_button_dynamic_group1[];
+extern Vtx vertex_menu_main_button_dynamic_group2[];
+extern Vtx vertex_menu_main_button_dynamic_group3[];
+extern Vtx vertex_menu_main_button_dynamic_group4[];
+extern Vtx vertex_menu_save_button_back[];
+
+void file_select_fit_screen(void) {
+    // color buttons vtx
+    Vtx *vtxColorButton1 = segmented_to_virtual(vertex_menu_main_button_dynamic_group1);
+    Vtx *vtxColorButton2 = segmented_to_virtual(vertex_menu_main_button_dynamic_group2);
+    Vtx *vtxColorButton3 = segmented_to_virtual(vertex_menu_main_button_dynamic_group3);
+    Vtx *vtxColorButton4 = segmented_to_virtual(vertex_menu_main_button_dynamic_group4);
+    // save button vtx
+    Vtx *vtxSaveBackButton = segmented_to_virtual(vertex_menu_save_button_back);
+    
+    // NOTE: This may look like a hack but this is better than scaling because it doesn't
+    // look weird when it gets more wide, lighting also gets weird with scaling.
+    // This workaround moves the tris to adapt the screen without looking weird.
+
+    vtxColorButton1[0].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup1[0]);
+    vtxColorButton1[1].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup1[1]);
+    vtxColorButton1[2].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup1[2]);
+    vtxColorButton1[3].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup1[3]);
+    vtxColorButton1[4].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup1[4]);
+    vtxColorButton1[5].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup1[5]);
+    vtxColorButton1[6].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup1[6]);
+    vtxColorButton1[7].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup1[7]);
+    vtxColorButton1[8].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup1[8]);
+    vtxColorButton1[9].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup1[9]);
+    vtxColorButton1[10].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup1[10]);
+    vtxColorButton1[11].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup1[11]);
+    vtxColorButton1[12].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup1[12]);
+    vtxColorButton1[13].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup1[13]);
+    vtxColorButton1[14].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup1[14]);
+    vtxColorButton1[15].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup1[15]);
+    
+    vtxColorButton2[0].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup2[0]);
+    vtxColorButton2[1].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup2[1]);
+    vtxColorButton2[2].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup2[2]);
+    vtxColorButton2[3].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup2[3]);
+    vtxColorButton2[4].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup2[4]);
+    vtxColorButton2[5].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup2[5]);
+    vtxColorButton2[6].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup2[6]);
+    vtxColorButton2[7].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup2[7]);
+    vtxColorButton2[8].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup2[8]);
+    vtxColorButton2[9].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup2[9]);
+    vtxColorButton2[10].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup2[10]);
+    vtxColorButton2[11].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup2[11]);
+    vtxColorButton2[12].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup2[12]);
+    vtxColorButton2[13].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup2[13]);
+    vtxColorButton2[14].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup2[14]);
+    vtxColorButton2[15].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup2[15]);
+    
+    vtxColorButton3[0].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup3[0]);
+    vtxColorButton3[1].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup3[1]);
+    vtxColorButton3[2].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup3[2]);
+    vtxColorButton3[3].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup3[3]);
+    vtxColorButton3[4].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup3[4]);
+    vtxColorButton3[5].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup3[5]);
+    vtxColorButton3[6].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup3[6]);
+    vtxColorButton3[7].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup3[7]);
+    vtxColorButton3[8].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup3[8]);
+    vtxColorButton3[9].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup3[9]);
+    vtxColorButton3[10].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup3[10]);
+    vtxColorButton3[11].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup3[11]);
+    vtxColorButton3[12].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup3[12]);
+    vtxColorButton3[13].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup3[13]);
+    
+    vtxColorButton4[0].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup4[0]);
+    vtxColorButton4[1].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup4[1]);
+    vtxColorButton4[2].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup4[2]);
+    vtxColorButton4[3].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup4[3]);
+    vtxColorButton4[4].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup4[4]);
+    vtxColorButton4[5].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup4[5]);
+    vtxColorButton4[6].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup4[6]);
+    vtxColorButton4[7].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup4[7]);
+    vtxColorButton4[8].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup4[8]);
+    vtxColorButton4[9].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup4[9]);
+    vtxColorButton4[10].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup4[10]);
+    vtxColorButton4[11].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup4[11]);
+    vtxColorButton4[12].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup4[12]);
+    vtxColorButton4[13].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup4[13]);
+    vtxColorButton4[14].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sGeneralButtonVtxPosXGroup4[14]);
+
+    vtxSaveBackButton[0].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sSaveButtonBackVtxPosX[0]);
+    vtxSaveBackButton[1].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sSaveButtonBackVtxPosX[1]);
+    vtxSaveBackButton[2].n.ob[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - sSaveButtonBackVtxPosX[2]);
+    vtxSaveBackButton[3].n.ob[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(sGeneralButtonVtxPosXGroup4[3]);
+}
+#endif
 
 /**
  * Prints file select strings depending on the menu selected.
@@ -2226,3 +2378,7 @@ s32 lvl_update_obj_and_load_file_selected(UNUSED s32 arg, UNUSED s32 unused) {
     area_update_objects();
     return sSelectedFileNum;
 }
+
+#undef FILE_SELECT_PRINT_STRING
+#undef FILE_SELECT_TEXT_DL_BEGIN
+#undef FILE_SELECT_TEXT_DL_END

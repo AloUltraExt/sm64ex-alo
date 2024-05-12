@@ -5,6 +5,8 @@
 
 #include "level_commands.h"
 
+//#define PUPPYCAM_SAMPLES
+
 //How many times to store the terrain pitch. This stores it over 10 frames to help smooth over changes in curvature.
 #define NUM_PITCH_ITERATIONS 10
 
@@ -38,18 +40,10 @@ enum PuppyVolumeShapes {
     PUPPYVOLUME_SHAPE_CYLINDER,
 };
 
-enum PuppyCamInputTypes
-{
+enum PuppyCamInputTypes {
     PUPPYCAM_INPUT_TYPE_DOUBLE_TAP,
     PUPPYCAM_INPUT_TYPE_SINGLE_PRESS,
     PUPPYCAM_INPUT_TYPE_CLASSIC
-};
-
-enum PuppyCamOpacityTypes
-{
-    PUPPYCAM_OPACITY_TYPE_OFF,
-    PUPPYCAM_OPACITY_TYPE_FADE,
-    PUPPYCAM_OPACITY_TYPE_POP
 };
 
 #include "include/command_macros_base.h"
@@ -71,15 +65,24 @@ extern struct SubMenu menuPuppyCam;
 
 struct gPuppyOptions
 {
-    s16 analogue;
-    s16 sensitivityX;
-    s16 sensitivityY;
-    s16 invertX;
-    s16 invertY;
-    s16 turnAggression;
-    s16 inputType;
-    s16 opacityType;
-    s16 debugCam;
+    // Schemes and Types
+    s16 inputType;              // Sets camera input control type (Single tap, Double Tap and Classic).
+    s16 analogue;               // Sets analogue camera (Uses right stick on PC but on N64 uses stick on a second controller).
+#ifdef MOUSE_ACTIONS
+    s16 mouse;                  // Sets camera mouse control if the target supports it.
+#endif
+#ifdef EXT_DEBUG_MENU
+    s16 debugCam;               // Sets debug free camera mode.
+#endif
+    s16 sensitivityX;           // Sets camera speed horizontally.
+    s16 sensitivityY;           // Sets camera speed vertically.
+#ifdef MOUSE_ACTIONS
+    s16 mouseSpeed;             // Sets mouse camera speed.
+#endif
+    s16 invertX;                // Sets camera inverted controls horizontally.
+    s16 invertY;                // Sets camera inverted controls vertically.
+    s16 turnHelper;             // Sets camera centering around Mario automatically.
+    s16 opaque;                 // Sets Mario opacity when the camera is closer.
 };
 
 struct gPuppyStruct
@@ -91,13 +94,12 @@ struct gPuppyStruct
     s16 pitchTarget;            // Vertical Direction that pitch tries to be.
     f32 pitchAcceleration;      // Vertical Direction that sets pitchTarget.
     s16 zoom;                   // How far the camera is currently zoomed out
-    u8  zoomSet;                // The current setting of which zoompoint to set the target to.
     s16 zoomTarget;             // The value that zoom tries to be.
     s16 zoomPoints[3];          // An array containing distances.
     s16 targetFloorHeight;      // Mario's current floor height
     s16 lastTargetFloorHeight;  // Mirror's mario's floor height when his velocity is not above 0.
-    Vec3s pos;                  // Where the camera is
-    Vec3s focus;                // Where the camera's looking
+    Vec3f pos;                  // Where the camera is
+    Vec3f focus;                // Where the camera's looking
     Vec3s pan;                  // An offset of the camera's focus
     s32 intendedFlags;          // The flagset the camera tries to be when it's not held hostage.
     s32 flags;                  // Behaviour flags that affect different properties of the camera's behaviour
@@ -118,7 +120,7 @@ struct gPuppyStruct
     s16 edgePitch;              // Pitch adjustment that's applied when stood near an edge. All pitch adjustment is clamped.
     s16 moveZoom;               // A small zoom value that's added on top of the regular zoom when moving. It's pretty subtle, but gives the feeling of a bit of speed.
     u8  mode3Flags;             // A flagset for classic mode.
-    u8  moveFlagAdd;            // A bit that multiplies movement rate of axes when moving, to centre them faster.
+    u8  movementPitchVel;       // A bit that multiplies movement rate of axes when moving, to centre them faster.
     s16 targetDist[2];          // Used with secondary view targets to smooth out the between status.
     s16 intendedTerrainPitch;   // The pitch that the game wants the game to tilt towards, following the terrain.
     s16 terrainPitch;           // The pitch the game tilts towards, when following terrain inclines.
@@ -134,7 +136,7 @@ struct gPuppyStruct
     f32 splineProgress;         // Determines how far along the index the spline is.
 
 #ifdef MOUSE_ACTIONS
-    u8  mouse;                  // A boolean that decides whenever mouse should be used if the port target supports it.
+    s32 framesSinceMouse;       // Counts the number of frames since the camera mouse stops moving.
 #endif
     struct gPuppyOptions options;
 
@@ -153,9 +155,9 @@ struct sPuppyAngles
 // Structurally, it's exactly the same as CutsceneSplinePoint
 struct sPuppySpline
 {
-    Vec3s pos; // The vector pos of the spline index itself.
     s8 index;  // The index of the spline. Ends with -1
     u8 speed;  // The amount of frames it takes to get through this index.
+    Vec3s pos; // The vector pos of the spline index itself.
 };
 
 // A bounding volume for activating puppycamera scripts and angles.
@@ -225,6 +227,59 @@ extern void puppycam_warp(f32 displacementX, f32 displacementY, f32 displacement
 extern s32 puppycam_move_spline(struct sPuppySpline splinePos[], struct sPuppySpline splineFocus[], s32 mode, s32 index);
 extern void puppycam_script_clear(void);
 extern void puppycam_hud(void);
+extern void puppycam_mario_inputs(struct MarioState *m);
+
+/** 
+ * Backwards compatability additions from Puppycam 1.
+ * This adds support for the original volume format, so you can directly import them in
+ * without having to make any further changes.
+ * Naturally, because it's the old format, they will be severely more limited in flexibility.
+ */
+#define NC_FLAG_XTURN PUPPYCAM_BEHAVIOUR_YAW_ROTATION
+#define NC_FLAG_YTURN PUPPYCAM_BEHAVIOUR_PITCH_ROTATION
+#define NC_FLAG_ZOOM 0 // Stub
+#define NC_FLAG_8D PUPPYCAM_BEHAVIOUR_INPUT_8DIR
+#define NC_FLAG_4D PUPPYCAM_BEHAVIOUR_INPUT_4DIR
+#define NC_FLAG_2D PUPPYCAM_BEHAVIOUR_INPUT_2D
+#define NC_FLAG_FOCUSX PUPPYCAM_BEHAVIOUR_X_MOVEMENT
+#define NC_FLAG_FOCUSY PUPPYCAM_BEHAVIOUR_Y_MOVEMENT
+#define NC_FLAG_FOCUSZ PUPPYCAM_BEHAVIOUR_Z_MOVEMENT
+#define NC_FLAG_POSX PUPPYCAM_BEHAVIOUR_X_MOVEMENT
+#define NC_FLAG_POSY PUPPYCAM_BEHAVIOUR_Y_MOVEMENT
+#define NC_FLAG_POSZ PUPPYCAM_BEHAVIOUR_Z_MOVEMENT
+#define NC_FLAG_COLLISION PUPPYCAM_BEHAVIOUR_COLLISION
+#define NC_FLAG_SLIDECORRECT 0 // Stub
+
+#define NC_MODE_NORMAL 1
+#define NC_MODE_SLIDE 2
+#define NC_MODE_FIXED 3
+#define NC_MODE_2D 4
+#define NC_MODE_8D 5
+#define NC_MODE_FIXED_NOMOVE 6
+#define NC_MODE_FIXED_NOTURN 7
+#define NC_MODE_NOROTATE 8
+
+struct newcam_hardpos {
+    u8 newcam_hard_levelID;
+    u8 newcam_hard_areaID;
+    u8 newcam_hard_permaswap;
+    u16 newcam_hard_modeset;
+    void *newcam_hard_script;
+    s16 newcam_hard_X1;
+    s16 newcam_hard_Y1;
+    s16 newcam_hard_Z1;
+    s16 newcam_hard_X2;
+    s16 newcam_hard_Y2;
+    s16 newcam_hard_Z2;
+    s16 newcam_hard_camX;
+    s16 newcam_hard_camY;
+    s16 newcam_hard_camZ;
+    s16 newcam_hard_lookX;
+    s16 newcam_hard_lookY;
+    s16 newcam_hard_lookZ;
+};
+extern struct newcam_hardpos newcam_fixedcam[];
+
 #endif
 
 #endif // BETTERCAMERA_H

@@ -25,14 +25,14 @@ SOUND_FILE("sound/sequences.bin")
 SKIP(4)
 .balign 16
 
-#ifndef VERSION_SH
+#if !defined(VERSION_SH) && !defined(VERSION_CN)
 glabel gBankSetsData
 SOUND_FILE("sound/bank_sets")
 SKIP(4)
 .balign 16
 #endif
 
-#if defined(EXTERNAL_DATA) && defined(VERSION_SH)
+#if defined(EXTERNAL_DATA) && (defined(VERSION_SH) || defined(VERSION_CN))
 glabel gBankSetsData
 SOUND_FILE("sound/bank_sets")
 SKIP(4)

@@ -27,7 +27,7 @@
 /// Adds an extra Z button trig for some menu files (Originally defined in EU)
 #define QOL_FEATURE_Z_BUTTON_EXTRA_OPTION (0 || VERSION_EU || QOL_FEATURES)
 /// Adds Mario's Face Easter Egg (Originally defined in SH)
-#define QOL_FEATURE_MARIO_HEAD_EASTER_EGG (0 || VERSION_SH || (QOL_FEATURES && GODDARD_MFACE && HAS_FRAMEBUFFER))
+#define QOL_FEATURE_MARIO_HEAD_EASTER_EGG (0 || VERSION_SH || VERSION_CN || (QOL_FEATURES && GODDARD_MFACE && HAS_FRAMEBUFFER))
 /// Makes ending screen go back to title screen when pressing start
 #define QOL_FEATURE_ENDING_SCREEN_START (0 || QOL_FEATURES)
 /// Makes skybox have better precision movement and fixes fov

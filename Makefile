@@ -41,7 +41,7 @@ COMPILER_TYPE ?= gcc
 $(eval $(call validate-option,COMPILER_TYPE,gcc clang))
 
 COMPILER_OPT ?= default
-$(eval $(call validate-option,COMPILER_OPT,debug default fast))
+$(eval $(call validate-option,COMPILER_OPT,debug debugmax default fast))
 
 # Automatic target defines
 
@@ -61,9 +61,13 @@ PC_PORT_DEFINES ?= 0
 TARGET_PORT_CONSOLE ?= 0
 
 # Various workarounds for weird and/or old toolchains
+CPP_ASSEMBLY ?= 0
 NO_BZERO_BCOPY ?= 0
 NO_LDIV ?= 0
 NO_PIE ?= 1
+
+# Use vendor-gnostic GLVND implementation, instead of the old/legacy GLX X11-only implementation.
+USE_GLVND ?= 0
 
 # Backend selection
 
@@ -149,6 +153,15 @@ ifeq ($(TARGET_ANDROID),1)
   TOUCH_CONTROLS := 1
 endif
 
+# Enforce C preprocessor on these targets
+ifeq ($(COMPILER_TYPE),clang)
+  CPP_ASSEMBLY := 1
+endif
+
+ifeq ($(TARGET_PORT_CONSOLE),1)
+  CPP_ASSEMBLY := 1
+endif
+
 # Custom Defines
 include defines.mk
 
@@ -188,6 +201,7 @@ endif
 # macOS overrides
 ifeq ($(HOST_OS),Darwin)
   OSX_BUILD := 1
+  CPP_ASSEMBLY := 1
   # Using Homebrew?
   ifeq ($(shell which brew >/dev/null 2>&1 && echo y),y)
     OSX_GCC_VER = $(shell find `brew --prefix`/bin/gcc* | grep -oE '[[:digit:]]+' | sort -n | uniq | tail -1)
@@ -262,8 +276,11 @@ BASEPACK ?= base.zip
 #   us - builds the 1996 North American version
 #   eu - builds the 1997 PAL version
 #   sh - builds the 1997 Japanese Shindou version, with rumble pak support
+#   cn - builds the 2003 Chinese iQue version
 VERSION ?= us
-$(eval $(call validate-option,VERSION,jp us eu sh))
+$(eval $(call validate-option,VERSION,jp us eu sh cn))
+
+NEW_AUDIO_REV ?= false
 
 ifeq      ($(VERSION),jp)
   VER_DEFINES   += VERSION_JP=1
@@ -273,6 +290,10 @@ else ifeq ($(VERSION),eu)
   VER_DEFINES   += VERSION_EU=1
 else ifeq ($(VERSION),sh)
   VER_DEFINES   += VERSION_SH=1
+  NEW_AUDIO_REV := true
+else ifeq ($(VERSION),cn)
+  VER_DEFINES   += VERSION_CN=1
+  NEW_AUDIO_REV := true
 endif
 
 DEFINES += $(VER_DEFINES)
@@ -334,6 +355,11 @@ else ifeq ($(TARGET_SWITCH),1)
   DEFINES += TARGET_SWITCH=1 USE_GLES=1
 endif
 
+# OpenGL defines
+ifeq ($(USE_GLES),1) # GLES can be used outside Raspberry Pi, Android or Switch
+  DEFINES += USE_GLES=1
+endif
+
 # Libultra defines
 LIBULTRA ?= L
 
@@ -341,7 +367,7 @@ LIBULTRA ?= L
 LIBULTRA_REVISION ?= 0
 
 # LIBULTRA - sets the libultra OS version to use
-$(eval $(call validate-option,LIBULTRA,D F H I K L BB))
+$(eval $(call validate-option,LIBULTRA,D F H I J K L BB))
 
 # Libultra number revision (only used on 2.0D)
 LIBULTRA_REVISION ?= 0
@@ -357,12 +383,14 @@ ULTRA_VER_K := 8
 ULTRA_VER_L := 9
 
 ifeq ($(LIBULTRA),BB)
-  ULTRA_VER_DEF  := LIBULTRA_VERSION=$(ULTRA_VER_L) BBPLAYER LIBULTRA_STR_VER=\"L\"
+  ULTRA_VER_DEF  := LIBULTRA_VERSION=$(ULTRA_VER_L) BBPLAYER
+  ULTRA_VER_STR  := LIBULTRA_STR_VER=\"L\"
 else
-  ULTRA_VER_DEF  := LIBULTRA_VERSION=$(ULTRA_VER_$(LIBULTRA)) LIBULTRA_REVISION=$(LIBULTRA_REVISION) LIBULTRA_STR_VER=\"$(LIBULTRA)\"
+  ULTRA_VER_DEF  := LIBULTRA_VERSION=$(ULTRA_VER_$(LIBULTRA)) LIBULTRA_REVISION=$(LIBULTRA_REVISION)
+  ULTRA_VER_STR  := LIBULTRA_STR_VER=\"$(LIBULTRA)\"
 endif
 
-DEFINES += $(ULTRA_VER_DEF)
+DEFINES += $(ULTRA_VER_DEF) $(ULTRA_VER_STR)
 
 # Important defines
 
@@ -377,6 +405,11 @@ endif
 # Use internal ldiv()/lldiv()
 ifeq ($(NO_LDIV),1)
   DEFINES += NO_LDIV=1
+endif
+
+# Set no-pie if compiler supports it
+ifeq ($(NO_PIE),1)
+  NO_PIE_DEF := -no-pie
 endif
 
 ifeq ($(TARGET_N64),1)
@@ -438,6 +471,42 @@ endif
 endif
 
 #==============================================================================#
+# Optimization flags                                                           #
+#==============================================================================#
+
+ifeq ($(TARGET_N64),1)
+  ifeq ($(COMPILER_TYPE),gcc)
+    MIPSISET     := -mips3
+    OPT_FLAGS    := -Ofast
+  else ifeq ($(COMPILER_TYPE),clang)
+    # clang doesn't support ABI 'o32' for 'mips3'
+    MIPSISET     := -mips2
+    OPT_FLAGS    := -Ofast
+  endif
+else
+  ifeq ($(COMPILER_OPT),default)
+    OPT_FLAGS := -O2
+  else ifeq ($(COMPILER_OPT),debug)
+    OPT_FLAGS := -g
+  else ifeq ($(COMPILER_OPT),debugmax)
+    OPT_FLAGS := -O2 -g3
+  else ifeq ($(COMPILER_OPT),fast)
+    OPT_FLAGS := -Ofast
+  endif
+
+  # Set BITS (32/64) to compile for
+  OPT_FLAGS += $(BITS)
+endif
+
+ifeq ($(TARGET_WEB),1)
+  OPT_FLAGS := -O2 -g4 --source-map-base http://localhost:8080/
+endif
+
+ifeq ($(TARGET_RPI),1)
+  OPT_FLAGS := -O3 -march=native -mtune=native
+endif
+
+#==============================================================================#
 # Target Executable and Sources                                                #
 #==============================================================================#
 
@@ -481,20 +550,29 @@ else # Linux/Unix builds/binary namer
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_pc
   ifeq ($(TARGET_RPI),1) # us_rpi (to be renamed)
     EXE := $(BUILD_DIR)/$(TARGET).arm
-  else # us_unix (to be renamed)
+  else # us_tux (to be renamed)
     EXE := $(BUILD_DIR)/$(TARGET)
   endif
-  TARGET_NAME := Unix-based system
+
+  ifeq ($(OSX_BUILD),1)
+    TARGET_NAME := macOS
+  else ifeq ($(HOST_OS),Haiku)
+    TARGET_NAME := Haiku OS
+  else ifeq ($(TARGET_RPI),1)
+    TARGET_NAME := Raspberry Pi
+  else
+    TARGET_NAME := Linux-Unix system
+  endif
 endif
 
-LD_SCRIPT := sm64.ld
-
 ELF := $(BUILD_DIR)/$(TARGET).elf
-MIO0_DIR := $(BUILD_DIR)/bin
-SOUND_BIN_DIR := $(BUILD_DIR)/sound
-TEXTURE_DIR := textures
-ACTOR_DIR := actors
-LEVEL_DIRS := $(patsubst levels/%,%,$(dir $(wildcard levels/*/header.h)))
+
+LD_SCRIPT      := sm64.ld
+MIO0_DIR       := $(BUILD_DIR)/bin
+SOUND_BIN_DIR  := $(BUILD_DIR)/sound
+TEXTURE_DIR    := textures
+ACTOR_DIR      := actors
+LEVEL_DIRS     := $(patsubst levels/%,%,$(dir $(wildcard levels/*/header.h)))
 
 # Directories containing source files
 SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers src/extras actors levels bin bin/$(VERSION) data assets sound
@@ -505,7 +583,7 @@ else
 # Specify target folders
   PLATFORM_DIR := platform
 
-  SRC_DIRS += src/pc src/pc/gfx src/pc/audio src/pc/controller src/pc/fs src/pc/fs/packtypes
+  SRC_DIRS += src/pc src/pc/audio src/pc/controller src/pc/crash src/pc/fs src/pc/fs/packtypes src/pc/gfx
   ifeq ($(WINDOWS_BUILD),1)
     PLATFORM_DIR := $(PLATFORM_DIR)/win
   else ifeq ($(TARGET_N3DS),1)
@@ -536,65 +614,6 @@ LIBGCC_SRC_DIRS := lib/gcc
 
 ifeq ($(GODDARD_MFACE),1)
   GODDARD_SRC_DIRS := src/goddard src/goddard/dynlists
-endif
-
-#==============================================================================#
-# Optimization flags                                                           #
-#==============================================================================#
-
-ifeq ($(TARGET_N64),1)
-  ifeq ($(COMPILER_TYPE),gcc)
-    MIPSISET     := -mips3
-    OPT_FLAGS    := -Ofast
-  else ifeq ($(COMPILER_TYPE),clang)
-    # clang doesn't support ABI 'o32' for 'mips3'
-    MIPSISET     := -mips2
-    OPT_FLAGS    := -Ofast
-  endif
-else
-  ifeq ($(COMPILER_OPT),default)
-    OPT_FLAGS := -O2
-  else ifeq ($(COMPILER_OPT),debug)
-    OPT_FLAGS := -g
-  else ifeq ($(COMPILER_OPT),fast)
-    OPT_FLAGS := -Ofast
-  endif
-
-  # Set BITS (32/64) to compile for
-  OPT_FLAGS += $(BITS)
-endif
-
-ifeq ($(TARGET_WEB),1)
-  OPT_FLAGS := -O2 -g4 --source-map-base http://localhost:8080/
-endif
-
-ifeq ($(TARGET_RPI),1)
-  machine = $(shell sh -c 'uname -m 2>/dev/null || echo unknown')
-# Raspberry Pi B+, Zero, etc
-  ifneq (,$(findstring armv6l,$(machine)))
-   OPT_FLAGS := -march=armv6zk+fp -mfpu=vfp -Ofast
-  endif
-
-# Raspberry Pi 2 and 3 in ARM 32bit mode
-  ifneq (,$(findstring armv7l,$(machine)))
-    model = $(shell sh -c 'cat /sys/firmware/devicetree/base/model 2>/dev/null || echo unknown')
-    ifneq (,$(findstring 3,$(model)))
-      OPT_FLAGS := -march=armv8-a+crc -mtune=cortex-a53 -mfpu=neon-fp-armv8 -O3
-    else
-      OPT_FLAGS := -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -O3
-    endif
-  endif
-
-# RPi3 or RPi4, in ARM64 (aarch64) mode. NEEDS TESTING 32BIT.
-# DO NOT pass -mfpu stuff here, thats for 32bit ARM only and will fail for 64bit ARM.
-  ifneq (,$(findstring aarch64,$(machine)))
-    model = $(shell sh -c 'cat /sys/firmware/devicetree/base/model 2>/dev/null || echo unknown')
-    ifneq (,$(findstring 3,$(model)))
-      OPT_FLAGS := -march=armv8-a+crc -mtune=cortex-a53 -O3
-    else ifneq (,$(findstring 4,$(model)))
-      OPT_FLAGS := -march=armv8-a+crc+simd -mtune=cortex-a72 -O3
-    endif
-  endif
 endif
 
 # Whether to hide commands or not
@@ -657,7 +676,11 @@ endif
 # "If we're not N64, use the above"
 
 SOUND_BANK_FILES := $(wildcard sound/sound_banks/*.json)
-SOUND_SEQUENCE_DIRS := sound/sequences sound/sequences/$(VERSION)
+ifeq ($(VERSION),cn)
+  SOUND_SEQUENCE_DIRS := sound/sequences sound/sequences/sh
+else
+  SOUND_SEQUENCE_DIRS := sound/sequences sound/sequences/$(VERSION)
+endif
 # all .m64 files in SOUND_SEQUENCE_DIRS, plus all .m64 files that are generated from .s files in SOUND_SEQUENCE_DIRS
 SOUND_SEQUENCE_FILES := \
   $(foreach dir,$(SOUND_SEQUENCE_DIRS),\
@@ -759,19 +782,21 @@ endif
 
 CPPFLAGS += $(DEF_INC_CFLAGS) $(CUSTOM_C_DEFINES)
 
+ASMDEFINES := $(VER_DEFINES) $(GRU_DEFINES) $(ULTRA_VER_DEF)
+
 # 3DS Minimap flags
 ifeq ($(TARGET_N3DS),1)
-MINIMAP := $(PLATFORM_DIR)/minimap
+  MINIMAP := $(PLATFORM_DIR)/minimap
 
-MINIMAP_C := $(wildcard $(MINIMAP)/*.c)
-MINIMAP_O := $(foreach file,$(MINIMAP_C),$(BUILD_DIR)/$(file:.c=.o))
+  MINIMAP_C := $(wildcard $(MINIMAP)/*.c)
+  MINIMAP_O := $(foreach file,$(MINIMAP_C),$(BUILD_DIR)/$(file:.c=.o))
 
-MINIMAP_TEXTURES := $(MINIMAP)/textures
-MINIMAP_PNG := $(wildcard $(MINIMAP_TEXTURES)/*.png)
-MINIMAP_T3S := $(foreach file,$(MINIMAP_PNG),$(BUILD_DIR)/$(file:.png=.t3s))
-MINIMAP_T3X := $(foreach file,$(MINIMAP_T3S),$(file:.t3s=.t3x))
-MINIMAP_T3X_O := $(foreach file,$(MINIMAP_T3X),$(file:.t3x=.t3x.o))
-MINIMAP_T3X_HEADERS := $(foreach file,$(MINIMAP_PNG),$(BUILD_DIR)/$(file:.png=_t3x.h))
+  MINIMAP_TEXTURES := $(MINIMAP)/textures
+  MINIMAP_PNG := $(wildcard $(MINIMAP_TEXTURES)/*.png)
+  MINIMAP_T3S := $(foreach file,$(MINIMAP_PNG),$(BUILD_DIR)/$(file:.png=.t3s))
+  MINIMAP_T3X := $(foreach file,$(MINIMAP_T3S),$(file:.t3s=.t3x))
+  MINIMAP_T3X_O := $(foreach file,$(MINIMAP_T3X),$(file:.t3x=.t3x.o))
+  MINIMAP_T3X_HEADERS := $(foreach file,$(MINIMAP_PNG),$(BUILD_DIR)/$(file:.png=_t3x.h))
 endif
 
 ifeq ($(TARGET_N64),1)
@@ -795,10 +820,11 @@ endif
 # change the compiler to gcc, to use the default, install the gcc-mips-linux-gnu package
 ifeq ($(COMPILER_TYPE),gcc)
   CC      := $(CROSS)gcc
+  CPP     := cpp
 else ifeq ($(COMPILER_TYPE),clang)
   CC      := clang
+  CPP     := clang
 endif
-CPP       := cpp
 # use GNU binutils for assembler, linker, archiver, and object tools
 AS        := $(CROSS)as
 LD        := $(CROSS)ld
@@ -819,16 +845,20 @@ else
   CFLAGS += -non_shared -Wab,-r4300_mul -Xcpluscomm -Xfullwarn -signed -32
 endif
 
-ASMFLAGS = -G 0 $(DEF_INC_CFLAGS) -w -nostdinc -c -march=vr4300 -mfix4300 -mno-abicalls -DMIPSEB -D_LANGUAGE_ASSEMBLY -D_MIPS_SIM=1 -D_MIPS_SZLONG=32
+ifeq ($(CPP_ASSEMBLY),1)
+  ASFLAGS := -march=vr4300 -mabi=32 $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(ASMDEFINES),--defsym $(d))
+else
+  ASMFLAGS := -G 0 $(DEF_INC_CFLAGS) -w -nostdinc -c -march=vr4300 -mfix4300 -mno-abicalls -DMIPSEB -D_LANGUAGE_ASSEMBLY -D_MIPS_SIM=1 -D_MIPS_SZLONG=32
+endif
 
-RSPDEFINES := $(VER_DEFINES) $(GRU_DEFINES)
-RSPASMFLAGS := $(foreach d,$(RSPDEFINES),-definelabel $(subst =, ,$(d)))
+RSPASMFLAGS := $(foreach d,$(ASMDEFINES),-definelabel $(subst =, ,$(d)))
 
 OBJCOPYFLAGS := --pad-to=0x800000 --gap-fill=0xFF
 SYMBOL_LINKING_FLAGS := --no-check-sections $(addprefix -R ,$(SEG_FILES))
 LDFLAGS := -T $(BUILD_DIR)/$(LD_SCRIPT) -Map $(BUILD_DIR)/sm64.$(VERSION).map $(SYMBOL_LINKING_FLAGS)
 
 CFLAGS += $(CUSTOM_C_DEFINES)
+ASMFLAGS += $(CUSTOM_C_DEFINES)
 
 else # TARGET_N64
 
@@ -858,10 +888,10 @@ else
 # for some reason sdl-config in dka64 is not prefixed, while pkg-config is
 SDLCROSS ?= $(CROSS)
 
-AS := $(CROSS)as
+AS ?= $(CROSS)as
 
-ifeq ($(OSX_BUILD),1)
-  AS := i686-w64-mingw32-as
+ifeq ($(OSX_BUILD),1) # As in, not using macOS
+  AS := /usr/bin/as
 endif
 
 ifneq ($(TARGET_WEB),1) # As in, not-web PC port
@@ -872,6 +902,7 @@ else
   CXX := emcc
 endif
 
+AS_MINGW := i686-w64-mingw32-as
 LD := $(CXX)
 
 ifeq ($(DISCORDRPC),1)
@@ -902,7 +933,11 @@ else ifeq ($(TARGET_ANDROID),1) # Termux has clang
   OBJCOPY := $(CROSS)objcopy
   OBJDUMP := $(CROSS)objdump
 else # Linux & other builds
-  CPP := $(CROSS)cpp
+  ifeq ($(COMPILER_TYPE),clang)
+    CPP      := clang
+  else
+    CPP      := $(CROSS)cpp
+  endif
   OBJCOPY := $(CROSS)objcopy
   OBJDUMP := $(CROSS)objdump
 endif
@@ -940,8 +975,12 @@ else ifeq ($(findstring SDL,$(WINDOW_API)),SDL)
     BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(TARGET_SWITCH),1)
     BACKEND_LDFLAGS += -lGLESv2
+  else ifeq ($(USE_GLES),1)
+    BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(OSX_BUILD),1)
     BACKEND_LDFLAGS += -framework OpenGL $(shell pkg-config --libs glew)
+  else ifeq ($(USE_GLVND),1)
+    BACKEND_LDFLAGS += -lOpenGL
   else
     BACKEND_LDFLAGS += -lGL
   endif
@@ -1005,6 +1044,9 @@ else ifeq ($(TARGET_WEB),1)
 # Linux / Other builds below
 else
   CFLAGS := $(PLATFORM_CFLAGS) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -fwrapv
+  ifeq ($(TARGET_PORT_CONSOLE),0)
+    BACKEND_LDFLAGS += -rdynamic
+  endif
 endif
 
 ifeq ($(TARGET_WII_U),1)
@@ -1029,7 +1071,18 @@ ifeq ($(TARGET_SWITCH),1)
   CFLAGS := $(NXARCH) $(BACKEND_CFLAGS) $(DEF_INC_CFLAGS) -fno-strict-aliasing -ftls-model=local-exec -fPIC -fwrapv -D__SWITCH__=1
 endif
 
+ifeq ($(CPP_ASSEMBLY),1)
+  ASFLAGS := $(foreach i,$(INCLUDE_DIRS),-I$(i))
+  ASFLAGS_DEFSYM := $(foreach d,$(ASMDEFINES),--defsym $(d))
+  ifeq ($(OSX_BUILD),0)
+    ASFLAGS += $(ASFLAGS_DEFSYM)
+  endif
+else
+  ASMFLAGS := $(DEF_INC_CFLAGS) -D_LANGUAGE_ASSEMBLY
+endif
+
 CFLAGS += $(CUSTOM_C_DEFINES)
+ASMFLAGS += $(CUSTOM_C_DEFINES)
 
 # Load external textures
 ifeq ($(EXTERNAL_DATA),1)
@@ -1039,13 +1092,11 @@ ifeq ($(EXTERNAL_DATA),1)
   SKYCONV_ARGS := --store-names --write-tiles "$(SKYTILE_DIR)"
 endif
 
-ASMFLAGS = $(DEF_INC_CFLAGS) -D_LANGUAGE_ASSEMBLY
-
 ifeq ($(TARGET_WEB),1)
-LDFLAGS := -lm -lGL -lSDL2 -no-pie -s TOTAL_MEMORY=64MB -g4 --source-map-base http://localhost:8080/ -s "EXTRA_EXPORTED_RUNTIME_METHODS=['callMain']"
+LDFLAGS := -lm -lGL -lSDL2 $(NO_PIE_DEF) -s TOTAL_MEMORY=64MB -g4 --source-map-base http://localhost:8080/ -s "EXTRA_EXPORTED_RUNTIME_METHODS=['callMain']"
 
 else ifeq ($(TARGET_WII_U),1)
-LDFLAGS := -lm -no-pie $(BACKEND_LDFLAGS) $(MACHDEP) $(RPXSPECS) $(LIBPATHS)
+LDFLAGS := -lm $(NO_PIE_DEF) $(BACKEND_LDFLAGS) $(MACHDEP) $(RPXSPECS) $(LIBPATHS)
 
 else ifeq ($(TARGET_N3DS),1)
 LDFLAGS := $(LIBPATHS) -lcitro3d -lctru -lm -specs=3dsx.specs -g -marm -mthumb-interwork -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft # -Wl,-Map,$(notdir $*.map)
@@ -1056,14 +1107,14 @@ else ifeq ($(TARGET_SWITCH),1)
 else ifeq ($(WINDOWS_BUILD),1)
   LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -Llib -lpthread $(BACKEND_LDFLAGS) -static
   ifeq ($(CROSS),)
-    LDFLAGS += -no-pie
+    LDFLAGS += $(NO_PIE_DEF)
   endif
-  ifeq ($(COMPILER_OPT),debug)
+  ifneq ($(DEBUG),0)
     LDFLAGS += -mconsole
   endif
 
 else ifeq ($(TARGET_RPI),1)
-  LDFLAGS := -lm $(BACKEND_LDFLAGS) -no-pie
+  LDFLAGS := -lm $(BACKEND_LDFLAGS) $(NO_PIE_DEF)
 
 else ifeq ($(TARGET_ANDROID),1)
   ifneq ($(shell uname -m | grep "i.86"),)
@@ -1082,13 +1133,10 @@ else ifeq ($(OSX_BUILD),1)
   LDFLAGS := -lm $(PLATFORM_LDFLAGS) $(BACKEND_LDFLAGS) -lpthread
 
 else ifeq ($(HOST_OS),Haiku)
-  LDFLAGS := $(BACKEND_LDFLAGS) -no-pie
+  LDFLAGS := $(BACKEND_LDFLAGS) $(NO_PIE_DEF)
 
 else
-  LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -lm $(BACKEND_LDFLAGS) -lpthread -ldl
-  ifeq ($(NO_PIE), 1)
-    LDFLAGS += -no-pie
-  endif
+  LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -lm $(BACKEND_LDFLAGS) -lpthread -ldl $(NO_PIE_DEF)
   ifeq ($(DISCORDRPC),1)
     LDFLAGS += -Wl,-rpath .
   endif
@@ -1192,7 +1240,6 @@ else
 endif
 
 ifeq ($(EXTERNAL_DATA),1)
-
 BASEPACK_PATH := $(BUILD_DIR)/$(BASEDIR)/$(BASEPACK)
 BASEPACK_LST := $(BUILD_DIR)/basepack.lst
 
@@ -1204,6 +1251,7 @@ res: $(BASEPACK_PATH)
 
 # prepares the basepack.lst
 $(BASEPACK_LST): $(EXE_DEPEND)
+	@$(PRINT) "$(GREEN)Generating external data list: $(BLUE)$@ $(NO_COL)\n"
 	@mkdir -p $(BUILD_DIR)/$(BASEDIR)
 	@echo "$(BUILD_DIR)/sound/bank_sets sound/bank_sets" > $(BASEPACK_LST)
 	@echo "$(BUILD_DIR)/sound/sequences.bin sound/sequences.bin" >> $(BASEPACK_LST)
@@ -1224,7 +1272,8 @@ $(BASEPACK_LST): $(EXE_DEPEND)
 
 # prepares the resource ZIP with base data
 $(BASEPACK_PATH): $(BASEPACK_LST)
-	@$(PYTHON) $(TOOLS_DIR)/mkzip.py $(BASEPACK_LST) $(BASEPACK_PATH)
+	$(call print,Zipping from list:,$<,$@)
+	$(V)$(PYTHON) $(TOOLS_DIR)/mkzip.py $(BASEPACK_LST) $(BASEPACK_PATH)
 
 endif
 
@@ -1246,19 +1295,19 @@ $(BUILD_DIR)/$(RPC_LIBS):
 
 # Extra object file dependencies
 ifeq ($(TARGET_N64),1)
-  $(BUILD_DIR)/asm/boot.o: $(IPL3_RAW_FILES)
+  $(BUILD_DIR)/asm/ipl3_font.o: $(IPL3_RAW_FILES)
   $(BUILD_DIR)/src/boot/crash_screen.o: $(CRASH_TEXTURE_C_FILES)
   $(CRASH_TEXTURE_C_FILES): TEXTURE_ENCODING := u32
 
   RSP_DIR := $(BUILD_DIR)/rsp
   $(BUILD_DIR)/lib/rsp.o: $(RSP_DIR)/rspboot.bin $(RSP_DIR)/fast3d.bin $(RSP_DIR)/audio.bin
 else
-  $(BUILD_DIR)/src/pc/crash_screen_pc.o: $(CRASH_TEXTURE_PC_C_FILES)
+  $(BUILD_DIR)/src/pc/crash/crash_handler.o: $(CRASH_TEXTURE_PC_C_FILES)
 endif
 
 SOUND_FILES := $(SOUND_BIN_DIR)/sound_data.ctl $(SOUND_BIN_DIR)/sound_data.tbl $(SOUND_BIN_DIR)/sequences.bin $(SOUND_BIN_DIR)/bank_sets
 SOUND_FILES_SH :=
-ifeq ($(VERSION),sh)
+ifeq ($(NEW_AUDIO_REV),true)
   ifeq ($(EXTERNAL_DATA),1)
     SOUND_FILES_SH := $(SOUND_BIN_DIR)/sequences_header $(SOUND_BIN_DIR)/ctl_header $(SOUND_BIN_DIR)/tbl_header
     SOUND_FILES += $(SOUND_FILES_SH)
@@ -1412,7 +1461,7 @@ $(SOUND_BIN_DIR)/tbl_header: $(SOUND_BIN_DIR)/sound_data.ctl
 	@true
 
 $(SOUND_BIN_DIR)/sequences.bin: $(SOUND_BANK_FILES) sound/sequences.json $(SOUND_SEQUENCE_DIRS) $(SOUND_SEQUENCE_FILES) $(ENDIAN_BITWIDTH)
-	@$(PRINT) "$(GREEN)Generating:  $(BLUE)$@ $(NO_COL)\n"
+	@$(PRINT) "$(GREEN)Generating: $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(PYTHON) $(TOOLS_DIR)/assemble_sound.py --sequences $@ $(SOUND_BIN_DIR)/sequences_header $(SOUND_BIN_DIR)/bank_sets sound/sound_banks/ sound/sequences.json $(SOUND_SEQUENCE_FILES) $(C_DEFINES) $$(cat $(ENDIAN_BITWIDTH))
 
 $(SOUND_BIN_DIR)/bank_sets: $(SOUND_BIN_DIR)/sequences.bin
@@ -1424,6 +1473,19 @@ $(SOUND_BIN_DIR)/sequences_header: $(SOUND_BIN_DIR)/sequences.bin
 $(SOUND_BIN_DIR)/%.m64: $(SOUND_BIN_DIR)/%.o
 	$(call print,Converting to M64:,$<,$@)
 	$(V)$(OBJCOPY) -j .rodata $< -O binary $@
+
+# Assemble 00_sound_player.s using mingw64 on macOS
+ifeq ($(OSX_BUILD),1)
+  ifeq ($(TARGET_PORT_CONSOLE),0)
+   ifneq ($(call find-command,i686-w64-mingw32-as),)
+$(SOUND_BIN_DIR)/sequences/%.o: sound/sequences/%.s
+	$(call print,Assembling:,$<,$@)
+	$(V)$(CPP) $(CPPFLAGS) -D_LANGUAGE_ASSEMBLY $< | $(AS_MINGW) $(ASFLAGS) $(ASFLAGS_DEFSYM) -MD $(BUILD_DIR)/$*.d -o $@
+    else
+      $(warning Compiling sequence file without mingw32 assembly)
+    endif
+  endif
+endif
 
 #==============================================================================#
 # Generated Source Code Files                                                  #
@@ -1466,12 +1528,16 @@ $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
 # Compile C++ code
 $(BUILD_DIR)/%.o: %.cpp
 	$(call print,Compiling:,$<,$@)
-	$(V)$(CXX) -c $(CFLAGS) $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
+	$(V)$(CXX) -c $(CFLAGS) -D_LANGUAGE_C_PLUS_PLUS=1 $(OPT_FLAGS) -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
 
 # Assemble assembly code
 $(BUILD_DIR)/%.o: %.s
 	$(call print,Assembling:,$<,$@)
+ifeq ($(CPP_ASSEMBLY),1)
+	$(V)$(CPP) $(CPPFLAGS) -D_LANGUAGE_ASSEMBLY $< | $(AS) $(ASFLAGS) -o $@
+else
 	$(V)$(CC) -c $(ASMFLAGS) -x assembler-with-cpp -MMD -MF $(BUILD_DIR)/$*.d -o $@ $<
+endif
 
 ifeq ($(TARGET_N64),1)
 # Assemble RSP assembly code
@@ -1480,10 +1546,10 @@ $(BUILD_DIR)/rsp/%.bin $(BUILD_DIR)/rsp/%_data.bin: rsp/%.s
 	$(V)$(RSPASM) -sym $@.sym $(RSPASMFLAGS) -strequ CODE_FILE $(BUILD_DIR)/rsp/$*.bin -strequ DATA_FILE $(BUILD_DIR)/rsp/$*_data.bin $<
 endif
 
-# Compile Windows icon
 ifeq ($(WINDOWS_BUILD),1)
+# Compile Windows icon
 $(BUILD_DIR)/%.o: %.rc
-	$(call print,Applying Windows Icon:,$<,$@)
+	$(call print,Compiling Windows resource:,$<,$@)
 	$(V)$(WINDRES) -o $@ -i $<
 endif
 
@@ -1492,7 +1558,6 @@ endif
 #==============================================================================#
 
 ifeq ($(TARGET_N64),1)
-
 # Link libgcc
 $(BUILD_DIR)/libgcc.a: $(LIBGCC_O_FILES)
 	@$(PRINT) "$(GREEN)Linking libgcc:  $(BLUE)$@ $(NO_COL)\n"
@@ -1653,8 +1718,8 @@ $(APK_SIGNED): $(APK)
 endif
 endif
 
-# For the crash handler on Windows
-ifeq ($(WINDOWS_BUILD),1)
+# For the crash handler on Windows and Linux
+ifeq ($(TARGET_PORT_CONSOLE),0)
 all: PC_EXE_MAP
 PC_EXE_MAP: $(EXE)
 	$(V)objdump -t $(EXE) > $(BUILD_DIR)/sm64pc.map

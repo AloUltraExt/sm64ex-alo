@@ -10,7 +10,7 @@ u32 osSetTimer(OSTimer *t, OSTime countdown, OSTime interval, OSMesgQueue *mq, O
     u32 value;
     u32 saveMask;
 #else
-    OSTime time; 
+    OSTime time;
 #endif
 
     t->next = NULL;

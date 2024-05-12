@@ -7,6 +7,9 @@
 #include "segment2.h"
 #include "ingame_menu.h"
 
+#include "gfx_dimensions.h"
+#include <stdio.h> // non-n64
+
 /**
  * This file handles printing and formatting the colorful text that
  * appears when printing things such as "PRESS START".

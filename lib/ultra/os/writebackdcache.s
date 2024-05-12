@@ -14,10 +14,10 @@ LEAF(osWritebackDCache)
     subu    t0, t0, t2
 1:
     CACHE(  (C_HWB|CACH_PD), (t0))
-	.set noreorder
+    .set noreorder
     bltu    t0, t1, 1b
     addiu  t0, t0, DCACHE_LINESIZE
-	.set reorder
+    .set reorder
 2:
     jr      ra
 3:
@@ -26,9 +26,9 @@ LEAF(osWritebackDCache)
     addiu   t1, t1, -DCACHE_LINESIZE
 4:
     CACHE(  (C_IWBINV|CACH_PD), (t0))
-	.set noreorder
+    .set noreorder
     bltu    t0, t1, 4b
     addiu  t0, t0, DCACHE_LINESIZE
-	.set reorder
+    .set reorder
     jr      ra
 END(osWritebackDCache)

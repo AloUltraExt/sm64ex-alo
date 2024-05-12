@@ -205,9 +205,17 @@ s16 cur_obj_reflect_move_angle_off_wall(void);
 #define WAYPOINT_MASK_00FF 0x00FF
 #define WAYPOINT_FLAGS_PLATFORM_ON_TRACK_PAUSE 3
 
-#define PATH_NONE 0
-#define PATH_REACHED_END -1
-#define PATH_REACHED_WAYPOINT 1
+enum PathStatus {
+    PATH_REACHED_END = -1,
+    PATH_NONE,
+    PATH_REACHED_WAYPOINT,
+};
+
+enum MarioRoomStates {
+    MARIO_ROOM_UNDEFINED = -1,
+    MARIO_OUTSIDE_ROOM,
+    MARIO_INSIDE_ROOM
+};
 
 void obj_set_hitbox(struct Object *obj, struct ObjectHitbox *hitbox);
 s32 cur_obj_wait_then_blink(s32 timeUntilBlinking, s32 numBlinks);
@@ -228,7 +236,9 @@ void spawn_base_star_with_no_lvl_exit(void);
 s32 cur_obj_mario_far_away(void);
 s32 is_mario_moving_fast_or_in_air(s32 speedThreshold);
 s32 is_item_in_array(s8 item, s8 *array);
-void cur_obj_enable_rendering_if_mario_in_room(void);
+s32 cur_obj_is_mario_in_room(void);
+void cur_obj_enable_rendering_in_room(void);
+void cur_obj_disable_rendering_in_room(void);
 s32 cur_obj_set_hitbox_and_die_if_attacked(struct ObjectHitbox *hitbox, s32 deathSound, s32 noLootCoins);
 void obj_explode_and_spawn_coins(f32 mistParticleSize, s32 sp1C);
 void obj_set_collision_data(struct Object *obj, const void *segAddr);

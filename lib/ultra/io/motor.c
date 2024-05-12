@@ -14,18 +14,18 @@ s32 osMotorInit(UNUSED OSMesgQueue *mq, UNUSED OSPfs *pfs, UNUSED int channel) {
 
 #else
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
 static OSPifRam __MotorDataBuf[MAXCONTROLLERS];
 #else
 void __osMakeMotorData(int channel, u16 address, u8 *buffer, OSPifRam *mdata);
-u32 __osMotorinitialized[MAXCONTROLLERS] = { FALSE, FALSE, FALSE, FALSE };
+u32 __osMotorinitialized[MAXCONTROLLERS] = { 0, 0, 0, 0 };
 OSPifRam _MotorStopData[MAXCONTROLLERS];
 OSPifRam _MotorStartData[MAXCONTROLLERS];
-u8 _motorstopbuf[32];
-u8 _motorstartbuf[32];
+ALIGNED8 u8 _motorstopbuf[32];
+ALIGNED8 u8 _motorstartbuf[32];
 #endif
 
-#if LIBULTRA_VERSION > OS_VER_I
+#if LIBULTRA_VERSION >= OS_VER_J
 s32 __osMotorAccess(OSPfs* pfs, s32 flag) {
     int i;
     s32 ret;
@@ -142,9 +142,9 @@ s32 osMotorStart(OSPfs *pfs) {
 }
 #endif
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
 void __osMakeMotorData(int channel, OSPifRam* mdata)
-#else
+#else // _MakeMotorData
 void __osMakeMotorData(int channel, u16 address, u8 *buffer, OSPifRam *mdata)
 #endif
 {
@@ -152,7 +152,7 @@ void __osMakeMotorData(int channel, u16 address, u8 *buffer, OSPifRam *mdata)
     __OSContRamReadFormat ramreadformat;
     int i;
 
-#if LIBULTRA_VERSION < OS_VER_K
+#if LIBULTRA_VERSION < OS_VER_J
     for (i = 0; i < ARRAY_COUNT(mdata->ramarray); i++) {
         mdata->ramarray[i] = 0;
     }
@@ -164,7 +164,7 @@ void __osMakeMotorData(int channel, u16 address, u8 *buffer, OSPifRam *mdata)
     ramreadformat.rxsize = CONT_CMD_WRITE_PAK_RX;
     ramreadformat.cmd = CONT_CMD_WRITE_PAK;
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     ramreadformat.addrh = CONT_BLOCK_RUMBLE >> 3;
     ramreadformat.addrl = (u8)(__osContAddressCrc(CONT_BLOCK_RUMBLE) | (CONT_BLOCK_RUMBLE << 5));
 #else
@@ -188,7 +188,7 @@ void __osMakeMotorData(int channel, u16 address, u8 *buffer, OSPifRam *mdata)
 }
 
 s32 osMotorInit(OSMesgQueue *mq, OSPfs *pfs, int channel) {
-#if LIBULTRA_VERSION < OS_VER_K
+#if LIBULTRA_VERSION < OS_VER_J
     int i;
 #endif
     s32 ret;
@@ -196,14 +196,14 @@ s32 osMotorInit(OSMesgQueue *mq, OSPfs *pfs, int channel) {
 
     pfs->queue = mq;
     pfs->channel = channel;
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     pfs->activebank = 0xFF;
     pfs->status = 0;
 
-    ret = __osPfsSelectBank(pfs, 0xFE);
+    ret = SELECT_BANK(pfs, 0xFE);
 
     if (ret == PFS_ERR_NEW_PACK) {
-        ret = __osPfsSelectBank(pfs, 0x80);
+        ret = SELECT_BANK(pfs, 0x80);
     }
 #else
     pfs->status = 0;
@@ -230,11 +230,13 @@ s32 osMotorInit(OSMesgQueue *mq, OSPfs *pfs, int channel) {
 
     if (ret != 0) {
         return ret;
-    } else if (temp[31] == 254) {
+    }
+
+    if (temp[31] == 254) {
         return PFS_ERR_DEVICE;
     }
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     ret = __osPfsSelectBank(pfs, 0x80);
     if (ret == PFS_ERR_NEW_PACK) {
         ret = PFS_ERR_CONTRFAIL;
@@ -260,11 +262,13 @@ s32 osMotorInit(OSMesgQueue *mq, OSPfs *pfs, int channel) {
 
     if (ret != 0) {
         return ret;
-    } else if (temp[31] != 0x80) {
+    }
+
+    if (temp[31] != 0x80) {
         return PFS_ERR_DEVICE;
     }
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     if (!(pfs->status & PFS_MOTOR_INITIALIZED)) {
         __osMakeMotorData(channel, &__MotorDataBuf[channel]);
     }

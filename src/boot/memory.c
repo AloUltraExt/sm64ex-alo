@@ -452,7 +452,9 @@ void *load_segment_decompress(s32 segment, u8 *srcStart, u8 *srcEnd) {
         dma_read(compressed, srcStart, srcEnd);
         dest = main_pool_alloc(*size, MEMORY_POOL_LEFT);
         if (dest != NULL) {
+            CN_DEBUG_PRINTF(("start decompress\n"));
             decompress(compressed, dest);
+            CN_DEBUG_PRINTF(("end decompress\n"));
             set_segment_base_addr(segment, dest);
             main_pool_free(compressed);
         } else {

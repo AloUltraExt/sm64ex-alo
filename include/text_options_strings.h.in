@@ -1,0 +1,175 @@
+#ifndef TEXT_OPTIONS_STRINGS_H
+#define TEXT_OPTIONS_STRINGS_H
+
+/* Extended options menu text */
+
+// Menu title strings
+
+#define TEXT_OPT_OPTIONS   _("OPTIONS")
+#define TEXT_OPT_CAMERA    _("CAMERA")
+#define TEXT_OPT_CONTROLS  _("CONTROLS")
+#define TEXT_OPT_VIDEO     _("DISPLAY")
+#define TEXT_OPT_AUDIO     _("SOUND")
+#define TEXT_OPT_SETTINGS  _("SETTINGS")
+
+// Markers
+
+#define TEXT_OPT_L_HIGHLIGHT _("▶")
+#define TEXT_OPT_R_HIGHLIGHT _("◀")
+#define TEXT_OPT_UNBOUND   _("NONE")
+
+// Language specific strings
+
+#if defined(VERSION_JP) || defined(VERSION_SH)
+
+// TODO: Actually translate this to JP
+
+// No . in JP
+
+#define TEXT_OPT_PRESSKEY  _("・・・")
+
+// Option strings
+
+#define TEXT_OPT_BUTTON1   _("Ｒ OPTIONS")
+#define TEXT_OPT_BUTTON2   _("Ｒ RETURN")
+
+#define TEXT_OPT_ENABLED   _("ENABLED")
+#define TEXT_OPT_DISABLED  _("DISABLED")
+
+#define TEXT_OPT_VANILLA_CAM      _("VANILLA CAMERA")
+#define TEXT_OPT_LAKITU_PARALLEL  _("PARALLEL LAKITU CAM")
+#define TEXT_OPT_SR_MARIO_CAM     _("STAR ROAD MARIO CAM")
+#define TEXT_OPT_CAM_C_UP_SOUNDS  _("CAMERA SOUND EFFECTS")
+#define TEXT_OPT_CAM_PARALLEL_COL _("PARALLEL CAM COLLISION")
+
+#define TEXT_OPT_PUPPYCAM  _("PUPPY CAMERA")
+#define TEXT_OPT_PUPPYON   _("PUPPYCAM 2")
+#define TEXT_OPT_CAMSCHEME _("CONTROL SCHEME")
+#define TEXT_OPT_CAMANALOG _("ANALOGUE CAMERA")
+#define TEXT_OPT_CAMMOUSE  _("MOUSE CAMERA")
+#define TEXT_OPT_CAMDEBUG  _("DEBUG CAMERA")
+#define TEXT_OPT_CAMSENSX  _("CAMERA SENSITIVITY")
+#define TEXT_OPT_CAMSENSY  _("VERTICAL CAMERA SENSITIVITY")
+#define TEXT_OPT_MOUSESPD  _("MOUSE CAMERA SPEED")
+#define TEXT_OPT_INVERTX   _("INVERT CAMERA")
+#define TEXT_OPT_INVERTY   _("VERTICAL INVERT CAMERA")
+#define TEXT_OPT_CAMTURN   _("AUTO TURN CAMERA")
+#define TEXT_OPT_CAMOPA    _("OPAQUE CLOSE UP")
+
+#define TEXT_OPT_CAM_SCH1  _("DOUBLE TAP")
+#define TEXT_OPT_CAM_SCH2  _("SINGLE PRESS")
+#define TEXT_OPT_CAM_SCH3  _("CLASSIC")
+
+#define TEXT_OPT_TEXFILTER _("TEXTURE FILTERING")
+#define TEXT_OPT_FSCREEN   _("FULLSCREEN")
+#define TEXT_OPT_NEAREST   _("NEAREST")
+#define TEXT_OPT_LINEAR    _("LINEAR")
+#define TEXT_OPT_MVOLUME   _("MASTER VOLUME")
+#define TEXT_OPT_MUSVOLUME _("MUSIC VOLUME")
+#define TEXT_OPT_SFXVOLUME _("SFX VOLUME")
+#define TEXT_OPT_ENVVOLUME _("ENV VOLUME")
+#define TEXT_OPT_VSYNC     _("VERTICAL SYNC")
+#define TEXT_OPT_APPLY     _("APPLY")
+#define TEXT_OPT_RESETWND  _("RESET WINDOW")
+
+#define TEXT_OPT_HUD       _("HUD")
+#define TEXT_OPT_MOUSE     _("MOUSE")
+
+#define TEXT_BIND_A        _("A BUTTON")
+#define TEXT_BIND_B        _("B BUTTON")
+#define TEXT_BIND_START    _("START BUTTON")
+#define TEXT_BIND_L        _("L TRIGGER")
+#define TEXT_BIND_R        _("R TRIGGER")
+#define TEXT_BIND_Z        _("Z TRIGGER")
+#define TEXT_BIND_C_UP     _("C-UP")
+#define TEXT_BIND_C_DOWN   _("C-DOWN")
+#define TEXT_BIND_C_LEFT   _("C-LEFT")
+#define TEXT_BIND_C_RIGHT  _("C-RIGHT")
+#define TEXT_BIND_D_UP     _("D-UP")
+#define TEXT_BIND_D_DOWN   _("D-DOWN")
+#define TEXT_BIND_D_LEFT   _("D-LEFT")
+#define TEXT_BIND_D_RIGHT  _("D-RIGHT")
+#define TEXT_BIND_UP       _("STICK UP")
+#define TEXT_BIND_DOWN     _("STICK DOWN")
+#define TEXT_BIND_LEFT     _("STICK LEFT")
+#define TEXT_BIND_RIGHT    _("STICK RIGHT")
+#define TEXT_OPT_DEADZONE  _("STICK DEADZONE")
+#define TEXT_OPT_RUMBLE    _("RUMBLE STRENGTH")
+
+#else // VERSION
+
+// Markers
+
+#define TEXT_OPT_PRESSKEY  _("...")
+
+// Option strings
+
+#define TEXT_OPT_BUTTON1   _("[R] Options")
+#define TEXT_OPT_BUTTON2   _("[R] Return")
+
+#define TEXT_OPT_ENABLED   _("Enabled")
+#define TEXT_OPT_DISABLED  _("Disabled")
+
+#define TEXT_OPT_VANILLA_CAM      _("VANILLA CAMERA")
+#define TEXT_OPT_LAKITU_PARALLEL  _("Parallel Lakitu Cam")
+#define TEXT_OPT_SR_MARIO_CAM     _("Star Road Mario Cam")
+#define TEXT_OPT_CAM_C_UP_SOUNDS  _("Camera Sound Effects")
+#define TEXT_OPT_CAM_PARALLEL_COL _("Parallel Cam Collision")
+
+#define TEXT_OPT_PUPPYCAM  _("PUPPY CAMERA")
+#define TEXT_OPT_PUPPYON   _("PuppyCam 2")
+#define TEXT_OPT_CAMSCHEME _("Control Scheme")
+#define TEXT_OPT_CAMANALOG _("Analogue Camera")
+#define TEXT_OPT_CAMMOUSE  _("Mouse Camera")
+#define TEXT_OPT_CAMDEBUG  _("Debug Camera")
+#define TEXT_OPT_CAMSENSX  _("Camera Sensitivity")
+#define TEXT_OPT_CAMSENSY  _("Vertical Camera Sensitivity")
+#define TEXT_OPT_MOUSESPD  _("Mouse Camera Speed")
+#define TEXT_OPT_INVERTX   _("Invert Camera")
+#define TEXT_OPT_INVERTY   _("Vertical Invert Camera")
+#define TEXT_OPT_CAMTURN   _("Auto Turn Camera")
+#define TEXT_OPT_CAMOPA    _("Opaque Close Up")
+
+#define TEXT_OPT_CAM_SCH1  _("Double Tap")
+#define TEXT_OPT_CAM_SCH2  _("Single Press")
+#define TEXT_OPT_CAM_SCH3  _("Classic")
+
+#define TEXT_OPT_TEXFILTER _("Texture Filtering")
+#define TEXT_OPT_FSCREEN   _("Fullscreen")
+#define TEXT_OPT_NEAREST   _("Nearest")
+#define TEXT_OPT_LINEAR    _("Linear")
+#define TEXT_OPT_MVOLUME   _("Master Volume")
+#define TEXT_OPT_MUSVOLUME _("Music Volume")
+#define TEXT_OPT_SFXVOLUME _("Sfx Volume")
+#define TEXT_OPT_ENVVOLUME _("Env Volume")
+#define TEXT_OPT_VSYNC     _("Vertical Sync")
+#define TEXT_OPT_APPLY     _("Apply")
+#define TEXT_OPT_RESETWND  _("Reset Window")
+
+#define TEXT_OPT_HUD       _("HUD")
+#define TEXT_OPT_MOUSE     _("Mouse")
+
+#define TEXT_BIND_A        _("A Button")
+#define TEXT_BIND_B        _("B Button")
+#define TEXT_BIND_START    _("Start Button")
+#define TEXT_BIND_L        _("L Trigger")
+#define TEXT_BIND_R        _("R Trigger")
+#define TEXT_BIND_Z        _("Z Trigger")
+#define TEXT_BIND_C_UP     _("C-Up")
+#define TEXT_BIND_C_DOWN   _("C-Down")
+#define TEXT_BIND_C_LEFT   _("C-Left")
+#define TEXT_BIND_C_RIGHT  _("C-Right")
+#define TEXT_BIND_D_UP     _("D-Up")
+#define TEXT_BIND_D_DOWN   _("D-Down")
+#define TEXT_BIND_D_LEFT   _("D-Left")
+#define TEXT_BIND_D_RIGHT  _("D-Right")
+#define TEXT_BIND_UP       _("Stick Up")
+#define TEXT_BIND_DOWN     _("Stick Down")
+#define TEXT_BIND_LEFT     _("Stick Left")
+#define TEXT_BIND_RIGHT    _("Stick Right")
+#define TEXT_OPT_DEADZONE  _("Stick Deadzone")
+#define TEXT_OPT_RUMBLE    _("Rumble Strength")
+
+#endif // VERSION
+
+#endif // TEXT_OPTIONS_STRINGS_H

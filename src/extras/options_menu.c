@@ -361,7 +361,7 @@ static void optmenu_draw_opt(const struct Option *opt, s16 x, s16 y, u8 sel, s16
             break;
 
         case OPT_SCROLL:
-            int_to_str(*opt->uval, buf);
+            format_int_to_string(buf, *opt->uval);
             optmenu_draw_text(x, y-13, buf, sel);
             optmenu_draw_opt_scroll(opt, iScrl);
             break;

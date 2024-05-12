@@ -38,8 +38,8 @@
 /// Properly adds unused SSL Pyramid cutscene after standing on the 4 pillars
 #define SSL_PYRAMID_CUTSCENE (0 || QOL_FEATURES)
 
-/// If Mario is high enough above the ground or above an unsafe floor, he will perform the star dance in midair instead of falling.
-#define MIDAIR_STAR_DANCE (0 || QOL_FEATURES)
+/// Makes Mario dance in midair if he's way above a floor and uses default cam for nonstop stars
+#define BETTER_STAR_INTERACTION (0 || QOL_FEATURES)
 
 /// Makes cutscene object camera correctly focus an object in a room
 #define ROOM_OBJECT_CAMERA_FOCUS (0 || QOL_FEATURES || !VANILLA_CHECKS)

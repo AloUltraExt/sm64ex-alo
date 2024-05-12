@@ -33,7 +33,7 @@ s32 __osContRamWrite(UNUSED OSMesgQueue *mq, int channel, u16 address, u8 *buffe
 }
 #else
 
-#if LIBULTRA_VERSION > OS_VER_I
+#if LIBULTRA_VERSION >= OS_VER_J
 s32 __osContRamWrite(OSMesgQueue* mq, int channel, u16 address, u8* buffer, int force) {
     s32 ret = 0;
     s32 i;
@@ -106,16 +106,13 @@ extern s32 __osPfsGetStatus(OSMesgQueue *, s32);
 void __osPackRamWriteData(s32 channel, u16 address, u8 *buffer);
 
 s32 __osContRamWrite(OSMesgQueue *mq, int channel, u16 address, u8 *buffer, s32 force) {
-    s32 ret;
+    s32 ret = 0;
     s32 i;
-    u8 *ptr;
+    u8* ptr = (u8*)&__osPfsPifRam;
     __OSContRamReadFormat ramreadformat;
-    s32 retry;
+    s32 retry = 2;
 
-    ret = 0;
-    ptr = (u8 *)&__osPfsPifRam;
-    retry = 2;
-    if (force != 1 && address < PFS_LABEL_AREA && address != 0) {
+    if (force != TRUE && address < PFS_LABEL_AREA && address != 0) {
         return 0;
     }
     __osSiGetAccess();
@@ -123,10 +120,12 @@ s32 __osContRamWrite(OSMesgQueue *mq, int channel, u16 address, u8 *buffer, s32 
     __osPackRamWriteData(channel, address, buffer);
     ret = __osSiRawStartDma(OS_WRITE, &__osPfsPifRam);
     osRecvMesg(mq, NULL, OS_MESG_BLOCK);
+
     do {
         ret = __osSiRawStartDma(OS_READ, &__osPfsPifRam);
         osRecvMesg(mq, NULL, OS_MESG_BLOCK);
         ptr = (u8 *)&__osPfsPifRam;
+
         if (channel != 0) {
             for (i = 0; i < channel; i++) {
                 ptr++;
@@ -139,19 +138,19 @@ s32 __osContRamWrite(OSMesgQueue *mq, int channel, u16 address, u8 *buffer, s32 
         if (ret == 0) {
             if (__osContDataCrc(buffer) != ramreadformat.datacrc) {
                 ret = __osPfsGetStatus(mq, channel);
+
                 if (ret != 0) {
                     __osSiRelAccess();
                     return ret;
                 }
+
                 ret = PFS_ERR_CONTRFAIL;
             }
         } else {
             ret = PFS_ERR_NOPACK;
         }
-        if (ret != PFS_ERR_CONTRFAIL) {
-            break;
-        }
-    } while ((retry-- >= 0));
+    } while ((ret == PFS_ERR_CONTRFAIL) && retry-- >= 0);
+
     __osSiRelAccess();
     return ret;
 }

@@ -16,7 +16,7 @@
 /// Fixes Mario interact shell start action while in air
 #define FIX_MARIO_KOOPA_SHELL_ACTION (0 || QOL_FIXES)
 
-/// Hold A when bouncing on an enemy to go higher like in classic games.
+/// Hold A when bouncing on an enemy to go higher like in classic games
 #define JUMP_ENEMY_BOUNCE_BOOST (0 || QOL_FEATURES)
 
 /// Changes obj_resolve_object_collisions to work consistently
@@ -25,7 +25,7 @@
 /// Fixes missing floor update in push_mario_out_of_object
 #define FIX_PUSH_MARIO_OUT_OF_OBJECT_FLOOR (0 || QOL_FIXES || COLLISION_FIXES)
 
-/// Makes rooms code use find_room_floor, and improves bhv_init_room
+/// Makes rooms code use room ids to check for a room rather than a floor
 #define BETTER_ROOM_CHECKS (0 || QOL_FEATURES || COLLISION_FIXES)
 
 /*******************
@@ -95,6 +95,9 @@
 /// Fixes NPC interaction button so it's like the japanese version
 #define FIX_INTERACT_READING_BUTTON (0 || QOL_FIXES)
 
+/// Fixes doors still being visible outside of it's room when changing areas
+#define FIX_DOOR_NO_ROOM_VISIBLE (0 || QOL_FIXES)
+
 /// Fixes hardcoded snow tree leaf particles
 #define FIX_HARDCODED_TREE_PARTICLES (0 || QOL_FIXES || !VANILLA_CHECKS)
 
@@ -128,8 +131,14 @@
 /// Makes Koopa Shell respawn on exclamation boxes like caps
 #define KOOPA_SHELL_BOXES_RESPAWN (0 || QOL_FEATURES)
 
-/// Makes Mr I being able to shoot his particle in any direction.
+/// Makes Mr I being able to shoot his particle in any direction
 #define MR_I_PITCH_SHOOTING (0 || QOL_FEATURES)
+
+/// Makes an object active only if it's on it's room if it exists
+#define PROCESS_ONLY_ON_ROOM_PARENT (0 || QOL_FEATURES)
+
+/// Makes collected stars fly up instead of disappearing
+#define FLY_UP_COLLECTED_STARS (0 || QOL_FEATURES)
 
 /// Makes coin formation on ground have better coin position, fixes misaligned coins
 #define BETTER_COIN_FORMATION_GROUND (0 || QOL_FEATURES || COLLISION_FIXES)

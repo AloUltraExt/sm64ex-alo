@@ -1,7 +1,7 @@
 #include "stdarg.h"
 #include "macros.h"
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
 void __osSyncVPrintf(UNUSED const char *fmt, UNUSED va_list args) {
     // these functions intentionally left blank.  ifdeffed out in rom release
 }

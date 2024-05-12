@@ -111,6 +111,7 @@ void __osDevMgrMain(void *);
 void __osPiCreateAccessQueue(void);
 void __osPiRelAccess(void);
 void __osPiGetAccess(void);
+// These functions had underscores before being removed in 2.0J
 s32 osPiRawStartDma(s32, u32, void *, size_t);
 s32 osPiRawReadIo(u32, u32 *);
 s32 osEPiRawWriteIo(OSPiHandle *, u32 , u32);
@@ -138,7 +139,7 @@ s32 __osLeoInterrupt(void);
     if (cHandle->var != pihandle->var) \
         IO_WRITE(reg, pihandle->var);
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
 #define EPI_SYNC(pihandle, stat, domain)                   \
                                                            \
     WAIT_ON_IO_BUSY(stat)                                  \

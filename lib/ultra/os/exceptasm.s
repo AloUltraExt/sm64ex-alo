@@ -23,7 +23,7 @@
 #define XOR_VALUE ~0
 #endif
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
 #define INT_TABLE(arg1, arg2) .word arg1, arg2
 #else
 #define INT_TABLE(arg1, arg2) .word arg1
@@ -345,7 +345,7 @@ cart:
 #if LIBULTRA_VERSION > OS_VER_D
     and     s0, s0, ~CAUSE_IP4
 #endif
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     la      t1, __osHwIntTable
     add     t1, HWINTR_SIZE
     lw      t2, HWINTR_CALLBACK(t1)
@@ -354,18 +354,18 @@ cart:
 
     lw      sp, HWINTR_SP(t1)
 #else
-	li      t2, HWINTR_SIZE
-	lw      t2, __osHwIntTable(t2)
+    li      t2, HWINTR_SIZE
+    lw      t2, __osHwIntTable(t2)
 #if LIBULTRA_VERSION >= OS_VER_F
-	la      sp, leoDiskStack
-	li      a0, MESG(OS_EVENT_CART)
+    la      sp, leoDiskStack
+    li      a0, MESG(OS_EVENT_CART)
 
-    addiu   sp, sp, OS_LEO_STACKSIZE-16
+    addiu   sp, sp, OS_LEO_STACKSIZE-16 # Stack size minus initial frame
 #endif
-	beqz    t2, 1f
+    beqz    t2, 1f
 #endif
     jalr    t2
-#if LIBULTRA_VERSION >= OS_VER_H && LIBULTRA_VERSION < OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_H && LIBULTRA_VERSION < OS_VER_J
     li      a0, MESG(OS_EVENT_CART)
 #endif
 #if LIBULTRA_VERSION > OS_VER_D
@@ -544,7 +544,7 @@ pi:
 
     li      t1, PI_STATUS_CLR_INTR
     sw      t1, PHYS_TO_K1(PI_STATUS_REG)
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     la      t1, __osPiIntTable
     lw      t2, (t1)
     beqz    t2, 1f
@@ -558,7 +558,9 @@ pi:
 1:
     li      a0, MESG(OS_EVENT_PI)
     jal     send_mesg
+#if LIBULTRA_VERSION >= OS_VER_J
 2:
+#endif
     beqz    s1, NoMoreRcpInts
 
 dp:
@@ -910,7 +912,7 @@ STAY2(ctc1  k1, fcr31)
     addu    k1, k1, k0
     lhu     k1, 0(k1)
     la      k0, PHYS_TO_K1(MI_INTR_MASK_REG)
-    sw      k1, 0(k0)   
+    sw      k1, 0(k0)
     nop
     nop
     nop
@@ -919,7 +921,7 @@ STAY2(ctc1  k1, fcr31)
 .set reorder
 END(__osDispatchThread)
 
-LEAF(__osCleanupThread)  
+LEAF(__osCleanupThread)
     move    a0, zero
     jal     osDestroyThread
 END(__osCleanupThread)

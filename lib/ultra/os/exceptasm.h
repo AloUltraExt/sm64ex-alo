@@ -18,7 +18,7 @@
 #define HWINTR_SP       0x04
 
 /* __osHwInt struct size */
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
 #define HWINTR_SIZE     0x8
 #else
 #define HWINTR_SIZE     0x4

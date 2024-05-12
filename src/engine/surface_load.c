@@ -373,6 +373,7 @@ static s32 surface_has_force(TerrainData surfaceType) {
         default:
             break;
     }
+
     return hasForce;
 }
 
@@ -464,6 +465,7 @@ static void load_environmental_regions(TerrainData **data) {
     numRegions = *(*data)++;
 
     if (numRegions > 20) {
+        CN_DEBUG_PRINTF(("Error Water Over\n"));
     }
 
     for (i = 0; i < numRegions; i++) {
@@ -610,7 +612,8 @@ void load_area_terrain(s16 index, TerrainData *data, RoomData *surfaceRooms, s16
             break;
         } else if (TERRAIN_LOAD_IS_SURFACE_TYPE_HIGH(terrainLoadType)) {
             load_static_surfaces(&data, vertexData, terrainLoadType, &surfaceRooms);
-            continue;
+        } else {
+            CN_DEBUG_PRINTF((" BGCode Error \n"));
         }
     }
 
@@ -804,43 +807,44 @@ static f32 get_optimal_collision_distance(struct Object *obj) {
 }
 #endif
 
-TerrainData sDynamicVertices[900];
+static TerrainData sDynamicVertices[600];
 
 /**
  * Transform an object's vertices, reload them, and render the object.
  */
 void load_object_collision_model(void) {
-    TerrainData *collisionData = gCurrentObject->collisionData;
-    f32 marioDist = gCurrentObject->oDistanceToMario;
+    struct Object* obj = gCurrentObject;
 
-    // On an object's first frame, the distance is set to F32_MAX.
-    // If the distance hasn't been updated, update it now.
-    if (gCurrentObject->oDistanceToMario == F32_MAX) {
-        marioDist = dist_between_objects(gCurrentObject, gMarioObject);
-    }
+    TerrainData *collisionData = obj->collisionData;
 
 #if AUTO_COLLISION_DISTANCE
+    f32 sqrLateralDist;
+    vec3f_get_lateral_dist_squared(&obj->oPosX, &gMarioObject->oPosX, &sqrLateralDist);
+
+    f32 verticalMarioDiff = (gMarioObject->oPosY - obj->oPosY);
+
     f32 colDist;
     if (collisionData == NULL) {
         // No collision data, so no collision distance.
         colDist = 0.0f;
-    } else if (!(gCurrentObject->oFlags & OBJ_FLAG_DONT_CALC_COLL_DIST)) {
-        gCurrentObject->oFlags |= OBJ_FLAG_DONT_CALC_COLL_DIST;
+    } else if (!(obj->oFlags & OBJ_FLAG_DONT_CALC_COLL_DIST)) {
+        obj->oFlags |= OBJ_FLAG_DONT_CALC_COLL_DIST;
         // Calculate a new collision distance based on the collision data.
-        colDist = get_optimal_collision_distance(gCurrentObject);
+        colDist = get_optimal_collision_distance(obj);
     } else {
         // Use existing collision distance.
-        colDist = gCurrentObject->oCollisionDistance;
+        colDist = obj->oCollisionDistance;
     }
 #else
-    f32 colDist = gCurrentObject->oCollisionDistance;
+    f32 colDist = obj->oCollisionDistance;
 #endif
 
-    f32 drawDist = gCurrentObject->oDrawingDistance;
+    f32 drawDist = obj->oDrawingDistance;
 
     // ex-alo change
-    // Ensure the object is allocated to set default collision and drawing distance
-    if (gCurrentObject->activeFlags & ACTIVE_FLAG_ALLOCATED && collisionData != NULL) {
+    // Ensure the object is allocated to set default collision and drawing distance.
+    // Distance check behave different when it comes to dynamic collision.
+    if (obj->activeFlags & ACTIVE_FLAG_ALLOCATED && collisionData != NULL) {
         if (colDist  == 0.0f) colDist = 1000.0f;
         if (drawDist == 0.0f) drawDist = 4000.0f;
     }
@@ -851,19 +855,24 @@ void load_object_collision_model(void) {
         drawDist = colDist;
     }
 
-#if LOAD_OBJECT_COLLISION_NEAR_CAMERA
-    // Ensure the object is rendered and limit max camera distance to the drawing distance.
-    if (gCurrentObject->header.gfx.node.flags & GRAPH_RENDER_ACTIVE) {
-        f32 camDist = vec3_mag(gCurrentObject->header.gfx.cameraToObject);
-        if (marioDist > camDist) {
-            marioDist = CLAMP(camDist, 1.0f, drawDist);
-        }
-    }
+    f32 marioDist = obj->oDistanceToMario;
+
+    int isInit = (marioDist == F32_MAX);
+
+#if AUTO_COLLISION_DISTANCE
+    // A value higher than 500.0f causes crashes with surfaces
+    s32 inColRadius = (
+           (sqrLateralDist < sqr(colDist))
+        && (verticalMarioDiff > 0 || verticalMarioDiff > -colDist)
+        && (verticalMarioDiff < 0 || verticalMarioDiff < (colDist + 500.0f))
+    );
+#else
+    s32 inColRadius = (marioDist < colDist);
 #endif
 
     // Update if no Time Stop, in range, and in the current room.
-    if (!(gTimeStopState & TIME_STOP_ACTIVE) && marioDist < colDist
-        && !(gCurrentObject->activeFlags & ACTIVE_FLAG_IN_DIFFERENT_ROOM)) {
+    if (!(gTimeStopState & TIME_STOP_ACTIVE) && inColRadius
+        && !(obj->activeFlags & ACTIVE_FLAG_IN_DIFFERENT_ROOM)) {
         collisionData++;
         transform_object_vertices(&collisionData, sDynamicVertices);
 
@@ -873,18 +882,24 @@ void load_object_collision_model(void) {
         }
     }
 
+    // On an object's first frame, the distance is set to F32_MAX.
+    // If the distance hasn't been updated, update it now.
+    if (isInit) {
+        marioDist = dist_between_objects(obj, gMarioObject);
+    }
+
 #ifndef NODRAWINGDISTANCE
     if (marioDist < drawDist) {
-        gCurrentObject->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
+        obj->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
     } else {
-        gCurrentObject->header.gfx.node.flags &= ~GRAPH_RENDER_ACTIVE;
+        obj->header.gfx.node.flags &= ~GRAPH_RENDER_ACTIVE;
     }
 #else
-    gCurrentObject->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
+    obj->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
 #endif
 
-    gCurrentObject->oCollisionDistance = colDist;
-    gCurrentObject->oDrawingDistance = drawDist;
+    obj->oCollisionDistance = colDist;
+    obj->oDrawingDistance = drawDist;
 }
 
 /**

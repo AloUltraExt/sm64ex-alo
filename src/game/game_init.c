@@ -125,7 +125,7 @@ void init_rdp(void) {
     gDPSetColorDither(gDisplayListHead++, G_CD_MAGICSQ);
     gDPSetCycleType(gDisplayListHead++, G_CYC_FILL);
 
-#ifdef VERSION_SH
+#if defined(VERSION_SH) || defined(VERSION_CN)
     gDPSetAlphaDither(gDisplayListHead++, G_AD_PATTERN);
 #endif
     gDPPipeSync(gDisplayListHead++);
@@ -724,11 +724,15 @@ void thread5_game_loop(UNUSED void *arg) {
     struct LevelCommand *levelCommandAddr;
 #endif
 
+    CN_DEBUG_PRINTF(("start gfx thread\n"));
+
     setup_game_memory();
 #ifdef RUMBLE_FEEDBACK
     init_rumble_pak_scheduler_queue();
 #endif
+    CN_DEBUG_PRINTF(("init ctrl\n"));
     init_controllers();
+    CN_DEBUG_PRINTF(("done ctrl\n"));
 #ifdef RUMBLE_FEEDBACK
     create_thread_6();
 #endif

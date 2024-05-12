@@ -1,4 +1,4 @@
-#ifndef VERSION_SH
+#if !defined(VERSION_SH) && !defined(VERSION_CN)
 #include <ultra64.h>
 
 #include "data.h"
@@ -76,7 +76,7 @@ struct CtlEntry *gCtlEntries; // sh: 0x803505F8
 #if defined(VERSION_EU)
 u32 padEuBss1;
 struct AudioBufferParametersEU gAudioBufferParameters;
-#elif defined(VERSION_US) || defined(VERSION_JP)
+#else
 s32 gAiFrequency;
 #endif
 

@@ -8,7 +8,15 @@
 
 #include "course_table.h"
 
+#define MENU_DATA_MAGIC 0x4849
+#define SAVE_FILE_MAGIC 0x4441
+
 #define NUM_SAVE_FILES 4
+
+// Support both types of endianness on PC Port (little and big)
+#ifndef TARGET_N64
+#define SWAP_ENDIAN_SAVE_FILE
+#endif
 
 struct SaveBlockSignature {
     u16 magic;
@@ -69,9 +77,11 @@ struct SaveBuffer {
     struct MainMenuSaveData menuData[2];
 };
 
+STATIC_ASSERT(sizeof(struct SaveBuffer) == EEPROM_SIZE, "eeprom buffer size must match");
+
 extern u8 gLastCompletedCourseNum;
 extern u8 gLastCompletedStarNum;
-extern s8 sUnusedGotGlobalCoinHiScore;
+extern u8 sUnusedGotGlobalCoinHiScore;
 extern u8 gGotFileCoinHiScore;
 extern u8 gCurrCourseStarFlags;
 extern u8 gSpecialTripleJump;
@@ -138,7 +148,7 @@ extern s8 gSaveFileModified;
 
 void save_file_do_save(s32 fileIndex);
 void save_file_erase(s32 fileIndex);
-BAD_RETURN(s32) save_file_copy(s32 srcFileIndex, s32 destFileIndex);
+void save_file_copy(s32 srcFileIndex, s32 destFileIndex);
 void save_file_load_all(void);
 void save_file_reload(void);
 void save_file_collect_star_or_key(s16 coinScore, s16 starIndex);

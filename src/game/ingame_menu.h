@@ -59,17 +59,17 @@ struct Utf8CharLUTEntry {
     u32 codepoint;
     s8 kerning;
     u16 flags; // used for diacritics and packed textures
-    Texture *texture;
+    const Texture *texture;
 };
 
 struct Utf8LUT {
-    struct Utf8CharLUTEntry *lut2Bytes;
-    struct Utf8CharLUTEntry *lut3Bytes;
-    struct Utf8CharLUTEntry *lut4Bytes;
+    const struct Utf8CharLUTEntry *lut2Bytes;
+    const struct Utf8CharLUTEntry *lut3Bytes;
+    const struct Utf8CharLUTEntry *lut4Bytes;
     u16 length2Bytes; // set these with the ARRAY_COUNT macro
     u16 length3Bytes;
     u16 length4Bytes;
-    struct Utf8CharLUTEntry *missingChar;
+    const struct Utf8CharLUTEntry *missingChar;
 };
 
 struct DiacriticLUTEntry {

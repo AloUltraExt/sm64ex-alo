@@ -30,7 +30,7 @@ extern "C" {
 #if defined(_LANGUAGE_C) || defined(_LANGUAGE_C_PLUS_PLUS)
 
 /* Routine for HW interrupt "handler" */
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
 extern void __osSetHWIntrRoutine(OSHWIntr interrupt, s32 (*handler)(void), void *stackEnd);
 #else
 extern void __osSetHWIntrRoutine(OSHWIntr interrupt, s32 (*handler)(void));

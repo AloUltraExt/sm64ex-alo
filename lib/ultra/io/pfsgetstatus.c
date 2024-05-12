@@ -7,7 +7,7 @@
 
 #if LIBULTRA_VERSION > OS_VER_H
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
 void __osPfsRequestOneChannel(int channel, u8 cmd);
 #else
 void __osPfsRequestOneChannel(int channel);
@@ -36,7 +36,7 @@ s32 __osPfsGetStatus(OSMesgQueue *queue, s32 channel) {
 #define DATA(c) data[c]
 #endif
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     __osPfsRequestOneChannel(channel, CONT_CMD_REQUEST_STATUS);
 #elif LIBULTRA_VERSION > OS_VER_H
     __osPfsRequestOneChannel(channel);
@@ -67,7 +67,7 @@ s32 __osPfsGetStatus(OSMesgQueue *queue, s32 channel) {
 
 #if LIBULTRA_VERSION > OS_VER_H
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
 void __osPfsRequestOneChannel(int channel, u8 cmd)
 #else
 void __osPfsRequestOneChannel(int channel)
@@ -77,11 +77,14 @@ void __osPfsRequestOneChannel(int channel)
     __OSContRequesFormat requestformat;
     int i;
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     __osContLastCmd = CONT_CMD_END;
-    __osPfsPifRam.pifstatus = CONT_CMD_READ_BUTTON;
 #else
     __osContLastCmd = CONT_CMD_REQUEST_STATUS;
+#endif
+#if LIBULTRA_VERSION > OS_VER_H
+    __osPfsPifRam.pifstatus = CONT_CMD_READ_BUTTON;
+#else
     __osPfsPifRam.pifstatus = CONT_CMD_EXE;
 #endif
 
@@ -89,7 +92,7 @@ void __osPfsRequestOneChannel(int channel)
 
     requestformat.txsize = CONT_CMD_REQUEST_STATUS_TX;
     requestformat.rxsize = CONT_CMD_REQUEST_STATUS_RX;
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     requestformat.cmd = cmd;
 #else
     requestformat.cmd = CONT_CMD_REQUEST_STATUS;

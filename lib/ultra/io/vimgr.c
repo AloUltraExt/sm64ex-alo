@@ -4,7 +4,7 @@
 #include "../os/osint.h"
 
 OSDevMgr __osViDevMgr = { 0 };
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
 u32 __additional_scanline = 0;
 #endif
 static OSThread viThread;
@@ -23,7 +23,7 @@ void osCreateViManager(OSPri pri) {
 
     if (!__osViDevMgr.active) {
         __osTimerServicesInit();
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
         __additional_scanline = 0;
 #endif
         osCreateMesgQueue(&viEventQueue, &viMgrMesgBuff[0], ARRAY_COUNT(viMgrMesgBuff));

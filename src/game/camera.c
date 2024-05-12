@@ -5247,6 +5247,16 @@ u8 get_cutscene_from_mario_status(struct Camera *c) {
             case ACT_ELECTROCUTION:
                 cutscene = CUTSCENE_STANDING_DEATH;
                 break;
+#if BETTER_STAR_INTERACTION
+            case ACT_STAR_DANCE_EXIT:
+            case ACT_STAR_DANCE_WATER:
+                if (sMarioCamState->cameraEvent == CAM_EVENT_NO_EXIT_STAR) {
+                    cutscene = CUTSCENE_DANCE_DEFAULT;
+                } else {
+                    cutscene = determine_dance_cutscene(c);
+                }
+                break;
+#else
             case ACT_STAR_DANCE_EXIT:
                 cutscene = determine_dance_cutscene(c);
                 break;
@@ -5256,6 +5266,7 @@ u8 get_cutscene_from_mario_status(struct Camera *c) {
             case ACT_STAR_DANCE_NO_EXIT:
                 cutscene = CUTSCENE_DANCE_DEFAULT;
                 break;
+#endif
         }
         switch (sMarioCamState->cameraEvent) {
             case CAM_EVENT_START_INTRO:
@@ -7060,7 +7071,7 @@ static UNUSED void unused_cutscene_mario_dialog_looking_up(UNUSED struct Camera 
  * Lower the volume (US only) and start the peach letter background music
  */
 BAD_RETURN(s32) cutscene_intro_peach_start_letter_music(UNUSED struct Camera *c) {
-#if defined(VERSION_US) || defined(VERSION_SH)
+#if defined(VERSION_US) || defined(VERSION_SH) || defined(VERSION_CN)
     seq_player_lower_volume(SEQ_PLAYER_LEVEL, 60, 40);
 #endif
     cutscene_intro_peach_play_message_music();
@@ -7782,6 +7793,9 @@ BAD_RETURN(s32) cutscene_dance_default_rotate(struct Camera *c) {
         if ((sMarioCamState->action != ACT_STAR_DANCE_NO_EXIT)
             && (sMarioCamState->action != ACT_STAR_DANCE_WATER)
             && (sMarioCamState->action != ACT_STAR_DANCE_EXIT)) {
+#if BETTER_STAR_INTERACTION
+            sMarioCamState->cameraEvent = 0;
+#endif
             gCutsceneTimer = CUTSCENE_STOP;
             c->cutscene = 0;
             transition_next_state(c, 20);
@@ -9638,7 +9652,7 @@ BAD_RETURN(s32) play_sound_intro_turn_on_hud(UNUSED struct Camera *c) {
  * Fly to the pipe. Near the end, the camera jumps to Lakitu's position and the hud turns on.
  */
 BAD_RETURN(s32) cutscene_intro_peach_fly_to_pipe(struct Camera *c) {
-#if defined(VERSION_US) || defined(VERSION_SH)
+#if defined(VERSION_US) || defined(VERSION_SH) || defined(VERSION_CN)
     cutscene_event(play_sound_intro_turn_on_hud, c, 818, 818);
 #elif defined(VERSION_EU)
     cutscene_event(play_sound_intro_turn_on_hud, c, 673, 673);
@@ -10420,7 +10434,7 @@ struct Cutscene sCutsceneEnding[] = {
     { cutscene_ending_kiss, 0x10b },
 #else
     { cutscene_ending_mario_land_closeup, 75 },
-#ifdef VERSION_SH
+#if defined(VERSION_SH) || defined(VERSION_CN)
     { cutscene_ending_stars_free_peach, 431 },
 #else
     { cutscene_ending_stars_free_peach, 386 },
@@ -10428,7 +10442,7 @@ struct Cutscene sCutsceneEnding[] = {
     { cutscene_ending_peach_appears, 139 },
     { cutscene_ending_peach_descends, 590 },
     { cutscene_ending_mario_to_peach, 95 },
-#ifdef VERSION_SH
+#if defined(VERSION_SH) || defined(VERSION_CN)
     { cutscene_ending_peach_wakeup, 455 },
     { cutscene_ending_dialog, 286 },
 #else

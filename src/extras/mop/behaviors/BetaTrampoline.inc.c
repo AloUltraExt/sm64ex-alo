@@ -74,7 +74,7 @@ void bhv_beta_trampoline_top_loop(void) {
     } else {
         if (o->oBetaTrampolineMarioOnTrampoline) {
             gMarioStates[0].vel[1] += o->oBetaTrampolineAdditiveYVel;
-            cur_obj_play_sound_2(SOUND_GENERAL_BOING3);
+            cur_obj_play_sound_2(SOUND_GENERAL_BOING_UNUSED);
 
             o->oBetaTrampolineMarioOnTrampoline = FALSE;
         } else {

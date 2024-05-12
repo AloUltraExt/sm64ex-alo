@@ -7,7 +7,7 @@
 // from main menu segment 7
 #include "levels/menu/header.h"
 
-// from intro_segment7
+// from intro segment 7
 #include "levels/intro/header.h"
 
 #endif // SEGMENT7_H

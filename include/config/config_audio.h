@@ -23,18 +23,6 @@
     #define MAX_SIMULTANEOUS_NOTES MAX_SIMULTANEOUS_NOTES_CONSOLE
 #endif
 
-/// Fixes intro castle dialog music so it plays current stage music
-#define FIX_INTRO_CASTLE_DIALOG_MUSIC (0 || QOL_FIXES)
-
-/// Fixes missing sounds in key exit cutscene
-#define RESTORE_MISSING_SOUNDS_KEY_EXIT (0 || QOL_FIXES)
-
-/// Fixes drowing sound continously playing while being Metal Mario
-#define NO_DROWING_SOUND_METAL (0 || QOL_FIXES)
-
-/// Do not restart the music on cap grabs
-#define PERSISTENT_CAP_MUSIC (0 || QOL_FEATURES)
-
 /// SAFEGUARDS
 
 // Anything higher than 64 will most likely crash on boot. Even if it doesn't, it's still dangerous.

@@ -1,7 +1,7 @@
 #include "internal.h"
 #include "data.h"
 
-#ifdef VERSION_SH
+#if defined(VERSION_SH) || defined(VERSION_CN)
 struct ReverbSettingsEU sReverbSettings[8] = {
     { /*Downsample Rate*/ 1, /*Window Size*/ 64, /*Gain*/ 0x2FFF, 0x0000, 0x0000, -1, 0x3000, 0x0000, 0x0000 },
     { /*Downsample Rate*/ 1, /*Window Size*/ 40, /*Gain*/ 0x47FF, 0x0000, 0x0000, -1, 0x3000, 0x0000, 0x0000 },

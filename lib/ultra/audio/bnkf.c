@@ -102,13 +102,13 @@ void _bnkfPatchWaveTable(ALWaveTable *wvtbl, ALBankFile *file, s32 table)
     /* sct 2/14/96 - patch wavetable loop info based on type. */
     if (wvtbl->type == AL_ADPCM_WAVE)
     {
-	wvtbl->waveInfo.adpcmWave.book  = ALBnkfPatch(wvtbl->waveInfo.adpcmWave.book, file, ALADPCMBook *);
-	if (wvtbl->waveInfo.adpcmWave.loop)
-	    wvtbl->waveInfo.adpcmWave.loop = ALBnkfPatch(wvtbl->waveInfo.adpcmWave.loop, file, ALADPCMloop *);
+    wvtbl->waveInfo.adpcmWave.book  = ALBnkfPatch(wvtbl->waveInfo.adpcmWave.book, file, ALADPCMBook *);
+    if (wvtbl->waveInfo.adpcmWave.loop)
+        wvtbl->waveInfo.adpcmWave.loop = ALBnkfPatch(wvtbl->waveInfo.adpcmWave.loop, file, ALADPCMloop *);
     }
     else if (wvtbl->type == AL_RAW16_WAVE)
     {
-	if (wvtbl->waveInfo.rawWave.loop)
-	    wvtbl->waveInfo.rawWave.loop = ALBnkfPatch(wvtbl->waveInfo.rawWave.loop, file, ALRawLoop *);
+    if (wvtbl->waveInfo.rawWave.loop)
+        wvtbl->waveInfo.rawWave.loop = ALBnkfPatch(wvtbl->waveInfo.rawWave.loop, file, ALRawLoop *);
     }
 }

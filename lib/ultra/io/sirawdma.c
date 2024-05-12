@@ -7,7 +7,7 @@
 #define PIF_RAM_SIZE (PIF_RAM_END + 1 - PIF_RAM_START)
 
 s32 __osSiRawStartDma(s32 direction, void *dramAddr) {
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     if (IO_READ(SI_STATUS_REG) & (SI_STATUS_DMA_BUSY | SI_STATUS_RD_BUSY)) {
         return -1;
     }

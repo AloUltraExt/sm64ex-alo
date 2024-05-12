@@ -64,7 +64,7 @@ void audio_set_sound_mode(u8 arg0);
 
 void audio_init(void); // in load.c
 
-#if defined(VERSION_EU) || defined(VERSION_SH)
+#if defined(VERSION_EU) || defined(VERSION_SH) || defined(VERSION_CN)
 struct SPTask *unused_80321460();
 struct SPTask *unused_80321460(void);
 #endif

@@ -28,7 +28,7 @@ void bhv_flip_block_loop(void) {
         if (o->oTimer == 0) {
             o->oAngleVelPitch = 0x1680;
             o->header.gfx.scale[2] = 0.1f;
-            cur_obj_play_sound_1(SOUND_GENERAL_SWISH_WATER);
+            cur_obj_play_sound_1(SOUND_GENERAL_WING_FLAP);
         }
 
         o->oFaceAnglePitch += o->oAngleVelPitch;
@@ -41,7 +41,7 @@ void bhv_flip_block_loop(void) {
         }
 
         if (o->oFaceAnglePitch & 0x4000) {
-            cur_obj_play_sound_1(SOUND_GENERAL_SWISH_WATER);
+            cur_obj_play_sound_1(SOUND_GENERAL_WING_FLAP);
         }
     }
 }

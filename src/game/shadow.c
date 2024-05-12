@@ -331,12 +331,11 @@ void get_texture_coords_4_vertices(s8 vertexNum, s16 *textureX, s16 *textureY) {
  * @param alpha Opacity of the vertex
  * @param shadowVertexType One of SHADOW_WITH_9_VERTS or SHADOW_WITH_4_VERTS
  */
-void make_shadow_vertex_at_xyz(Vtx *vertices, s8 index, f32 relX, f32 relY, f32 relZ, u8 alpha,
-                               s8 shadowVertexType) {
+void make_shadow_vertex_at_xyz(Vtx *vertices, s8 index, f32 relX, f32 relY, f32 relZ, u8 alpha, s8 shadowVertexType) {
     s16 vtxX = round_float(relX);
     s16 vtxY = round_float(relY);
     s16 vtxZ = round_float(relZ);
-    s16 textureX, textureY;
+    s16 textureX = 0, textureY = 0;
 
     switch (shadowVertexType) {
         case SHADOW_WITH_9_VERTS:
@@ -353,9 +352,8 @@ void make_shadow_vertex_at_xyz(Vtx *vertices, s8 index, f32 relX, f32 relY, f32 
         vtxY += 5;
         vtxZ += 5;
     }
-    make_vertex( // shadows are black
-        vertices, index, vtxX, vtxY, vtxZ, textureX << 5, textureY << 5, 255, 255, 255, alpha
-    );
+    // shadows are black
+    make_vertex(vertices, index, vtxX, vtxY, vtxZ, textureX << 5, textureY << 5, 255, 255, 255, alpha);
 }
 
 /**
@@ -571,7 +569,7 @@ void linearly_interpolate_solidity_negative(struct Shadow *s, u8 initialSolidity
  * Change a shadow's solidity based on the player's current animation frame.
  */
 s8 correct_shadow_solidity_for_animations(s32 isLuigi, u8 initialSolidity, struct Shadow *shadow) {
-    struct Object *player;
+    struct Object *player = NULL;
     s8 ret;
     s16 animFrame;
 
@@ -590,6 +588,10 @@ s8 correct_shadow_solidity_for_animations(s32 isLuigi, u8 initialSolidity, struc
              */
             player = gLuigiObject;
             break;
+    }
+
+    if (player == NULL) {
+        return SHADOW_SOLIDITY_NO_SHADOW;
     }
 
     animFrame = player->header.gfx.animInfo.animFrame;
@@ -645,7 +647,7 @@ Gfx *create_shadow_player(f32 xPos, f32 yPos, f32 zPos, s16 shadowScale, u8 soli
     Vtx *verts;
     Gfx *displayList;
     struct Shadow shadow;
-    s8 ret;
+    s8 initShadow = 0;
     s32 i;
 
     // Update global variables about whether Mario is on a flying carpet.
@@ -666,13 +668,13 @@ Gfx *create_shadow_player(f32 xPos, f32 yPos, f32 zPos, s16 shadowScale, u8 soli
             return NULL;
             break;
         case SHADOW_SOILDITY_ALREADY_SET:
-            ret = init_shadow(&shadow, xPos, yPos, zPos, shadowScale, /* overwriteSolidity */ 0);
+            initShadow = init_shadow(&shadow, xPos, yPos, zPos, shadowScale, /* overwriteSolidity */ 0);
             break;
         case SHADOW_SOLIDITY_NOT_YET_SET:
-            ret = init_shadow(&shadow, xPos, yPos, zPos, shadowScale, solidity);
+            initShadow = init_shadow(&shadow, xPos, yPos, zPos, shadowScale, solidity);
             break;
     }
-    if (ret != 0) {
+    if (initShadow != 0) {
         return NULL;
     }
 
@@ -682,7 +684,9 @@ Gfx *create_shadow_player(f32 xPos, f32 yPos, f32 zPos, s16 shadowScale, u8 soli
         return NULL;
     }
 
+#ifdef VANILLA_CHECKS
     correct_lava_shadow_height(&shadow);
+#endif
 
     for (i = 0; i < 9; i++) {
         make_shadow_vertex(verts, i, shadow, SHADOW_WITH_9_VERTS);

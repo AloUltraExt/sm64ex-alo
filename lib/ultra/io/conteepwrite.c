@@ -40,7 +40,9 @@ void __osPackEepWriteData(u8, u8 *);
 
 s32 osEepromWrite(OSMesgQueue *mq, u8 address, u8 *buffer) {
     s32 ret = 0;
+#if LIBULTRA_VERSION < OS_VER_J
     s32 i;
+#endif
 #if LIBULTRA_VERSION > OS_VER_H
     u16 type;
 #endif
@@ -63,11 +65,11 @@ s32 osEepromWrite(OSMesgQueue *mq, u8 address, u8 *buffer) {
 #if LIBULTRA_VERSION > OS_VER_H
     type = sdata.type & (CONT_EEPROM | CONT_EEP16K);
 
-#if LIBULTRA_VERSION < OS_VER_K
-	if (ret != 0) {
-		__osSiRelAccess();
-		return CONT_NO_RESPONSE_ERROR;
-	}
+#if LIBULTRA_VERSION < OS_VER_J
+    if (ret != 0) {
+        __osSiRelAccess();
+        return CONT_NO_RESPONSE_ERROR;
+    }
 #else
     if (ret == 0) {
 #endif
@@ -88,15 +90,14 @@ s32 osEepromWrite(OSMesgQueue *mq, u8 address, u8 *buffer) {
 #endif
                 break;
             default:
-#if LIBULTRA_VERSION < OS_VER_K
+#if LIBULTRA_VERSION < OS_VER_J
                 __osSiRelAccess();
                 return CONT_NO_RESPONSE_ERROR;
-                break;
 #else
                 ret = CONT_NO_RESPONSE_ERROR;
 #endif
         }
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     }
 
     if (ret != 0) {
@@ -128,9 +129,13 @@ s32 osEepromWrite(OSMesgQueue *mq, u8 address, u8 *buffer) {
     __osContLastCmd = CONT_CMD_WRITE_EEPROM;
     osRecvMesg(mq, NULL, OS_MESG_BLOCK);
 
+#if LIBULTRA_VERSION >= OS_VER_J
+    ptr += MAXCONTROLLERS;
+#else
     for (i = 0; i < MAXCONTROLLERS; i++) {
         ptr++;
     }
+#endif
 
     eepromformat = *(__OSContEepromFormat *) ptr;
     ret = CHNL_ERR(eepromformat);
@@ -144,7 +149,7 @@ void __osPackEepWriteData(u8 address, u8 *buffer) {
     __OSContEepromFormat eepromformat;
     s32 i;
 
-#if LIBULTRA_VERSION >= OS_VER_K
+#if LIBULTRA_VERSION >= OS_VER_J
     __osEepPifRam.pifstatus = CONT_CMD_EXE;
 #else
     CONT_PIFRAM_SET(__osEepPifRam, CONT_CMD_NOP, CONT_CMD_EXE);
@@ -198,7 +203,13 @@ s32 __osEepStatus(OSMesgQueue *mq, OSContStatus *data) {
     ret = __osSiRawStartDma(OS_WRITE, &__osEepPifRam);
     osRecvMesg(mq, NULL, OS_MESG_BLOCK);
 
+#if LIBULTRA_VERSION >= OS_VER_J
+    __osContLastCmd = CONT_CMD_END;
+#elif LIBULTRA_VERSION >= OS_VER_I
+    __osContLastCmd = CONT_CMD_REQUEST_STATUS;
+#else
     __osContLastCmd = CONT_CMD_WRITE_EEPROM;
+#endif
 
     ret = __osSiRawStartDma(OS_READ, &__osEepPifRam);
     osRecvMesg(mq, NULL, OS_MESG_BLOCK);

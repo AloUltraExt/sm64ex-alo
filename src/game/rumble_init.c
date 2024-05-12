@@ -247,9 +247,10 @@ void thread6_rumble_loop(UNUSED void *a0) {
 #ifdef TARGET_N64
     OSMesg msg;
 
+    CN_DEBUG_PRINTF(("start motor thread\n"));
     cancel_rumble();
-
     sRumblePakThreadActive = TRUE;
+    CN_DEBUG_PRINTF(("go motor thread\n"));
 #endif
 
 #ifdef TARGET_N64

@@ -120,7 +120,7 @@ void print_text_array_info(s16 *printState, const char *str, s32 number) {
             printState[DEBUG_PSTATE_DISABLED]++; // why not just = TRUE...
         } else {
             print_text_fmt_int(printState[DEBUG_PSTATE_X_CURSOR], printState[DEBUG_PSTATE_Y_CURSOR],
-                               str, number);
+                               (char *) str, number);
             printState[DEBUG_PSTATE_Y_CURSOR] += printState[DEBUG_PSTATE_LINE_Y_OFFSET];
         }
     }
@@ -292,7 +292,7 @@ void reset_debug_objectinfo(void) {
     gObjectCounter = 0;
     sDebugStringArrPrinted = FALSE;
     D_8035FEE2 = 0;
-    D_8035FEE4 = 0;
+    gNumDoorRenderCount = 0;
 
     set_print_state_info(gDebugPrintState1, 20, 185, 40, 200, -15);
     set_print_state_info(gDebugPrintState2, 180, 30, 0, 150, 15);

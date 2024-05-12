@@ -55,12 +55,6 @@ static s8 sSelectableStarIndex = 0;
 // Act Selector menu timer that keeps counting until you choose an act.
 static s32 sActSelectorMenuTimer = 0;
 
-#ifdef WIDE
-#define ACT_SELECT_WIDESCREEN_SCALE (gConfig.widescreen ? (4.f / 3) : 1.f)
-#else
-#define ACT_SELECT_WIDESCREEN_SCALE 1.f
-#endif
-
 /**
  * Act Selector Star Type Loop Action
  * Defines a select type for a star in the act selector.
@@ -101,7 +95,7 @@ void render_100_coin_star(u8 stars) {
     if (stars & STAR_FLAG_ACT_100_COINS) {
         // If the 100 coin star has been collected, create a new star selector next to the coin score.
         sStarSelectorModels[6] = spawn_object_abs_with_rot(o, 0, MODEL_STAR,
-                                                        bhvActSelectorStarType, 370 * ACT_SELECT_WIDESCREEN_SCALE, 24, -300, 0, 0, 0);
+                                                        bhvActSelectorStarType, 370, 24, -300, 0, 0, 0);
 
         sStarSelectorModels[6]->oStarSelectorSize = 0.8f;
         sStarSelectorModels[6]->oStarSelectorType = STAR_SELECTOR_100_COINS;
@@ -158,8 +152,8 @@ void bhv_act_selector_init(void) {
     // Render star selector objects
     for (i = 0; i < sVisibleStars; i++) {
         sStarSelectorModels[i] =
-            spawn_object_abs_with_rot(o, 0, selectorModelIDs[i], bhvActSelectorStarType,
-                                    (75 + (sVisibleStars * -75) + (i * 152)) * ACT_SELECT_WIDESCREEN_SCALE, 248, -300, 0, 0, 0);
+            spawn_object_abs_with_rot(gCurrentObject, 0, selectorModelIDs[i], bhvActSelectorStarType,
+                                      (sVisibleStars - 1) * -75 + i * 152, 248, -300, 0, 0, 0);
         sStarSelectorModels[i]->oStarSelectorSize = 1.0f;
     }
 
@@ -186,7 +180,7 @@ void bhv_act_selector_loop(void) {
         starIndexCounter = sSelectableStarIndex;
         for (i = 0; i < sVisibleStars; i++) {
             // Can the star be selected (is it either already completed or the first non-completed mission)
-            if ((stars & (1 << i)) || i + 1 == sInitSelectedActNum) {
+            if ((stars & (1 << i)) || i == sInitSelectedActNum - 1) {
                 if (starIndexCounter == 0) { // We have reached the sSelectableStarIndex-th selectable star.
                     sSelectedActIndex = i;
                     break;
@@ -288,19 +282,26 @@ void print_act_selector_strings(void) {
     }
 
     print_generic_string_aligned(SCREEN_CENTER_X, 33, check_number_string_in_course_name(courseName), TEXT_ALIGN_CENTER);
-
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 
     print_course_number();
 
     gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, gDialogTextAlpha);
+
     // Print the name of the selected act.
     if (sVisibleStars != 0) {
         selectedActName = segmented_to_virtual(actNameTbl[COURSE_NUM_TO_INDEX(gCurrCourseNum) * 6 + sSelectedActIndex]);
 
         print_menu_generic_string_aligned(SCREEN_CENTER_X, 81, selectedActName, TEXT_ALIGN_CENTER);
     }
+
+#ifdef VERSION_CN
+    gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
+
+    gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
+    gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
+#endif
 
     // Print the numbers above each star.
     for (i = 1; i <= sVisibleStars; i++) {

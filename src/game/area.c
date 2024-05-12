@@ -114,12 +114,26 @@ static int scale_x_to_correct_aspect_center(int x) { // x is usually SCREEN_WIDT
 }
 
 void print_intro_text(void) {
+#ifdef VERSION_CN
+    u8 sp18[] = { 0xB0, 0x00 }; // 按
+#endif
+#ifdef VERSION_EU
+    s32 language = eu_get_language();
+#endif
     if ((gGlobalTimer & 31) < 20) {
         if (gControllerBits == 0) {
             print_text_centered(SCREEN_CENTER_X, 20, LANG_ARRAY(gNoControllerMsg));
         } else {
+#ifdef VERSION_EU
+            print_text(GFX_DIMENSIONS_FROM_LEFT_EDGE(20), 20, "START");
+#else
+#ifdef VERSION_CN
+            print_text_centered(GFX_DIMENSIONS_FROM_LEFT_EDGE(60), 38, (char *) sp18);
+#else
             print_text_centered(GFX_DIMENSIONS_FROM_LEFT_EDGE(60), 38, "PRESS");
+#endif
             print_text_centered(GFX_DIMENSIONS_FROM_LEFT_EDGE(60), 20, "START");
+#endif
         }
     }
 }
@@ -231,6 +245,16 @@ void load_area(s32 index) {
         gCurrAreaIndex = gCurrentArea->index;
         main_pool_pop_state();
         main_pool_push_state();
+
+#if BETTER_ROOM_CHECKS
+        gMarioCurrentRoom = 0;
+#endif
+
+#if FIX_DOOR_NO_ROOM_VISIBLE
+        if (gCurrentArea->surfaceRooms != NULL) {
+            bzero(gDoorAdjacentRooms, sizeof(gDoorAdjacentRooms));
+        }
+#endif
 
         if (gCurrentArea->terrainData != NULL) {
             load_area_terrain(index, gCurrentArea->terrainData, gCurrentArea->surfaceRooms,

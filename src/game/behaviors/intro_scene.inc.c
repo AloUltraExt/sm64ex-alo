@@ -37,7 +37,7 @@ void bhv_intro_scene_loop(void) {
 
         switch (gCutsceneObjSpawn) {
             case 6:
-                obj = spawn_object(o, MODEL_LAKITU, bhvBeginningLakitu);
+                obj = spawn_object_at_origin(o, 0, MODEL_LAKITU, bhvBeginningLakitu);
                 break;
 
             case 5:
