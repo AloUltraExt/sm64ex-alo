@@ -797,7 +797,11 @@ u32 interact_star_or_key(struct MarioState *m, UNUSED u32 interactType, struct O
                 m->capTimer = 1;
             }
         } else {
+#if BETTER_STAR_INTERACTION
+            m->statusForCamera->cameraEvent = CAM_EVENT_NO_EXIT_STAR;
+#else
             starGrabAction = ACT_STAR_DANCE_NO_EXIT;
+#endif
         }
 
         if (m->action & ACT_FLAG_SWIMMING) {
@@ -809,7 +813,7 @@ u32 interact_star_or_key(struct MarioState *m, UNUSED u32 interactType, struct O
         }
 
         if (m->action & ACT_FLAG_AIR) {
-#if MIDAIR_STAR_DANCE
+#if BETTER_STAR_INTERACTION
             if ((m->pos[1] > m->floorHeight + 1024.0f) || ((m->floor != NULL 
                 && m->floor->type == SURFACE_DEATH_PLANE) || m->floor->type == SURFACE_VERTICAL_WIND)) {
                 starGrabAction = ACT_STAR_DANCE_WATER;

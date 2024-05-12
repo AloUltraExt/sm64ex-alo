@@ -5247,6 +5247,16 @@ u8 get_cutscene_from_mario_status(struct Camera *c) {
             case ACT_ELECTROCUTION:
                 cutscene = CUTSCENE_STANDING_DEATH;
                 break;
+#if BETTER_STAR_INTERACTION
+            case ACT_STAR_DANCE_EXIT:
+            case ACT_STAR_DANCE_WATER:
+                if (sMarioCamState->cameraEvent == CAM_EVENT_NO_EXIT_STAR) {
+                    cutscene = CUTSCENE_DANCE_DEFAULT;
+                } else {
+                    cutscene = determine_dance_cutscene(c);
+                }
+                break;
+#else
             case ACT_STAR_DANCE_EXIT:
                 cutscene = determine_dance_cutscene(c);
                 break;
@@ -5256,6 +5266,7 @@ u8 get_cutscene_from_mario_status(struct Camera *c) {
             case ACT_STAR_DANCE_NO_EXIT:
                 cutscene = CUTSCENE_DANCE_DEFAULT;
                 break;
+#endif
         }
         switch (sMarioCamState->cameraEvent) {
             case CAM_EVENT_START_INTRO:
@@ -7782,6 +7793,9 @@ BAD_RETURN(s32) cutscene_dance_default_rotate(struct Camera *c) {
         if ((sMarioCamState->action != ACT_STAR_DANCE_NO_EXIT)
             && (sMarioCamState->action != ACT_STAR_DANCE_WATER)
             && (sMarioCamState->action != ACT_STAR_DANCE_EXIT)) {
+#if BETTER_STAR_INTERACTION
+            sMarioCamState->cameraEvent = 0;
+#endif
             gCutsceneTimer = CUTSCENE_STOP;
             c->cutscene = 0;
             transition_next_state(c, 20);

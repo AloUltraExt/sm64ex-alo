@@ -931,7 +931,7 @@
 #define /*0x110*/ oUnlockDoorStarYawVel OBJECT_FIELD_S32(0x22)
 
 /* Celebration Star */
-#define /*0x0F4*/ oCelebStarUnkF4              OBJECT_FIELD_S32(0x1B)
+#define /*0x0F4*/ oCelebStarIsBowserKey        OBJECT_FIELD_S32(0x1B)
 #define /*0x108*/ oCelebStarDiameterOfRotation OBJECT_FIELD_S32(0x20)
 
 /* Star Selector */

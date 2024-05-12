@@ -137,6 +137,9 @@
 /// Makes an object active only if it's on it's room if it exists
 #define PROCESS_ONLY_ON_ROOM_PARENT (0 || QOL_FEATURES)
 
+/// Makes collected stars fly up instead of disappearing
+#define FLY_UP_COLLECTED_STARS (0 || QOL_FEATURES)
+
 /// Makes coin formation on ground have better coin position, fixes misaligned coins
 #define BETTER_COIN_FORMATION_GROUND (0 || QOL_FEATURES || COLLISION_FIXES)
 

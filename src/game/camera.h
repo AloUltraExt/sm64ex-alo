@@ -270,19 +270,22 @@
 #define CAM_FOV_ZOOM_30     12
 #define CAM_FOV_SET_29      13
 
-#define CAM_EVENT_CANNON              1
-#define CAM_EVENT_SHOT_FROM_CANNON    2
-#define CAM_EVENT_UNUSED_3            3
-#define CAM_EVENT_BOWSER_INIT         4
-#define CAM_EVENT_DOOR_WARP           5
-#define CAM_EVENT_DOOR                6
-#define CAM_EVENT_BOWSER_JUMP         7
-#define CAM_EVENT_BOWSER_THROW_BOUNCE 8
-#define CAM_EVENT_START_INTRO         9
-#define CAM_EVENT_START_GRAND_STAR    10
-#define CAM_EVENT_START_ENDING        11
-#define CAM_EVENT_START_END_WAVING    12
-#define CAM_EVENT_START_CREDITS       13
+enum CameraEvent {
+    CAM_EVENT_NONE,
+    CAM_EVENT_CANNON,
+    CAM_EVENT_SHOT_FROM_CANNON,
+    CAM_EVENT_NO_EXIT_STAR, // repurpose from unused
+    CAM_EVENT_BOWSER_INIT,
+    CAM_EVENT_DOOR_WARP,
+    CAM_EVENT_DOOR,
+    CAM_EVENT_BOWSER_JUMP,
+    CAM_EVENT_BOWSER_THROW_BOUNCE,
+    CAM_EVENT_START_INTRO,
+    CAM_EVENT_START_GRAND_STAR,
+    CAM_EVENT_START_ENDING,
+    CAM_EVENT_START_END_WAVING,
+    CAM_EVENT_START_CREDITS
+};
 
 /**
  * A copy of player information that is relevant to the camera.
