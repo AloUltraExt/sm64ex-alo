@@ -378,7 +378,7 @@ static void optmenu_draw_opt(const struct Option *opt, s16 x, s16 y, u8 sel, s16
                     else
                         optmenu_draw_text(x, y-13, optBindStr[0], white);
                 } else {
-                    sprintf(buf, "%04x", opt->uval[i]);
+                    sprintf(buf, "%04X", opt->uval[i]);
                     optmenu_draw_text(x, y-13, buf, white);
                 }
             }
