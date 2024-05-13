@@ -22,6 +22,7 @@
 #include "gfx_dimensions.h"
 #include "sm64.h"
 #include <stdio.h> // non-n64
+#include <string.h> // non-n64
 
 // from hackersm64
 #define o gCurrentObject
@@ -2036,9 +2037,9 @@ void print_score_file_course_coin_score(s8 fileIndex, s16 courseIndex, s16 x, s1
  * Prints stars collected in a score menu save file.
  */
 void print_score_file_star_score(s8 fileIndex, s16 courseIndex, s16 x, s16 y) {
-    s16 i = 0;
-    char starScoreText[30];
+    char str[30] = {'\0'};
     char *entries[6];
+    int i;
 
     u8 stars = save_file_get_star_flags(fileIndex, courseIndex);
     s8 starCount = save_file_get_course_star_count(fileIndex, courseIndex);
@@ -2053,8 +2054,10 @@ void print_score_file_star_score(s8 fileIndex, s16 courseIndex, s16 x, s16 y) {
     for (i = starCount; i < 6; i++) {
         entries[i] = "";
     }
-    sprintf(starScoreText, "%s%s%s%s%s%s", entries[0], entries[1], entries[2], entries[3], entries[4], entries[5]);
-    print_menu_generic_string(x, y, starScoreText);
+    for (i = 0; i < 6; i++) {
+        strcat(str, entries[i]);
+    }
+    print_menu_generic_string(x, y, str);
 }
 
 LangArray textScoreMenuMarioX = DEFINE_LANGUAGE_ARRAY(
@@ -2111,7 +2114,7 @@ void print_save_file_scores(s8 fileIndex) {
     for ((i = 0); (i < COURSE_STAGES_MAX); (i++)) {
         s32 lineY = 35 + (12 * i);
         format_int_to_string(str, i + 1);
-        print_menu_generic_string(41, lineY, segmented_to_virtual(levelNameTable[i]));
+        print_menu_generic_string(41, lineY, check_number_string_in_course_name(segmented_to_virtual(levelNameTable[i])));
         print_menu_generic_string_aligned(37, lineY, str, TEXT_ALIGN_RIGHT);
         print_score_file_star_score(       fileIndex, i, 171, lineY);
         print_score_file_course_coin_score(fileIndex, i, 213, lineY);

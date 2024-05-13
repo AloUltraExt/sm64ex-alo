@@ -154,7 +154,7 @@ void print_debug_level_select_settings(struct ZDebugLevelSelect *this) {
     print_generic_string(20, 28, str);
 
     if (actName != NULL && courseNum >= COURSE_MIN && courseNum <= COURSE_STAGES_MAX) {
-        print_generic_string(20 + 8 + get_string_width_preset(chrTemp, STR_PRESET_MAIN_FONT), 28, actName);
+        print_generic_string(20 + 8 + get_string_width_preset(chrTemp, TEXT_PRESET_MAIN_FONT), 28, actName);
     }
 
     chrTemp = "(C Down) - Show-Hide Controls";

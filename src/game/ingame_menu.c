@@ -24,6 +24,7 @@
 #include "config.h"
 #include "main.h" // n64
 #include <stdio.h> // non-n64
+#include <string.h> // non-n64
 
 #ifdef CHEATS_ACTIONS
 #include "extras/cheats.h"
@@ -457,14 +458,14 @@ s32 get_string_width(char *str, struct AsciiCharLUTEntry *asciiLut, struct Utf8L
  */
 s32 get_string_width_preset(char *str, u16 preset) {
     switch (preset) {
-        case STR_PRESET_HUD_FONT:
+        case TEXT_PRESET_HUD_FONT:
             return get_string_width(str, main_hud_lut, &main_hud_utf8_lut);
-        case STR_PRESET_MAIN_FONT:
+        case TEXT_PRESET_MAIN_FONT:
             return get_string_width(str, main_font_lut, &main_font_utf8_lut);
-        case STR_PRESET_MENU_FONT:
+        case TEXT_PRESET_MENU_FONT:
             return get_string_width(str, menu_font_lut, &menu_font_utf8_lut);
 #if !CREDITS_TEXT_STRING_FONT
-        case STR_PRESET_CREDIT_FONT:
+        case TEXT_PRESET_CREDIT_FONT:
             return get_string_width(str, main_credits_font_lut, NULL);
 #endif
         default:
@@ -722,14 +723,14 @@ static s32 render_main_font_text(s16 x, s16 y, char *str, s32 maxLines) {
                     strPos++;
                     format_int_to_string(dialogVarText, gDialogVariable.asInt);
                     render_main_font_text(0, 0, dialogVarText, -1);
-                    kerning = get_string_width_preset(dialogVarText, STR_PRESET_MAIN_FONT);
+                    kerning = get_string_width_preset(dialogVarText, TEXT_PRESET_MAIN_FONT);
                     create_dl_translation_matrix(MENU_MTX_NOPUSH, kerning, 0.0f, 0.0f);
                     break;
                 // %s: Display dialog var as a pointer to a string.
                 } else if (str[strPos + 1] == 's') {
                     strPos++;
                     render_main_font_text(0, 0, gDialogVariable.asStr, -1);
-                    kerning = get_string_width_preset(gDialogVariable.asStr, STR_PRESET_MAIN_FONT);
+                    kerning = get_string_width_preset(gDialogVariable.asStr, TEXT_PRESET_MAIN_FONT);
                     create_dl_translation_matrix(MENU_MTX_NOPUSH, kerning, 0.0f, 0.0f);
                     break;
                 // %%: Special case, print only a single %.
@@ -1889,8 +1890,9 @@ void print_hud_pause_colorful_str(void) {
 void render_pause_castle_course_stars(s16 x, s16 y, s16 fileIndex, s16 courseIndex) {
     s16 hasStar = 0;
 
-    char str[30];
+    char str[30] = {'\0'};
     char *entries[6];
+    int i;
 
     u8 starFlags = save_file_get_star_flags(fileIndex, courseIndex);
     u16 starCount = save_file_get_course_star_count(fileIndex, courseIndex);
@@ -1921,7 +1923,11 @@ void render_pause_castle_course_stars(s16 x, s16 y, s16 fileIndex, s16 courseInd
         nextStar++;
     }
 
-    sprintf(str, "%s %s %s %s %s %s", entries[0], entries[1], entries[2], entries[3], entries[4], entries[5]);
+    for (i = 0; i < 6; i++) {
+        strcat(str, entries[i]);
+        if (i < 5) strcat(str, " ");
+    }
+
     print_generic_string(x + 23, y + 18, str);
 }
 
@@ -2259,7 +2265,7 @@ void render_course_complete_lvl_info_and_hud_str(void) {
         gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
     } else if (gLastCompletedCourseNum == COURSE_BITDW || gLastCompletedCourseNum == COURSE_BITFS) { // Bowser courses
         name = segmented_to_virtual(courseNameTbl[COURSE_NUM_TO_INDEX(gLastCompletedCourseNum)]);
-        u32 clearX = get_string_width_preset(name, STR_PRESET_MAIN_FONT) + COURSE_COMPLETE_COURSE_X + 16;
+        u32 clearX = get_string_width_preset(name, TEXT_PRESET_MAIN_FONT) + COURSE_COMPLETE_COURSE_X + 16;
 
         // Print course name and clear text
         gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
