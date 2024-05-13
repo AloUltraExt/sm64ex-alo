@@ -354,7 +354,7 @@ void render_hud_keys(void) {
 void render_hud_timer(void) {
     u16 timerValFrames = gHudDisplay.timer;
     // 30 frames * 60 seconds (1 minute) = 1800
-    u16 timerMins = timerValFrames / (30 * 60);
+    u16 timerMins = timerValFrames / 1800;
     u16 timerSecs = (timerValFrames - (timerMins * 1800)) / 30;
     u16 timerFracSecs = ((u16) (timerValFrames - (timerMins * 1800) - (timerSecs * 30))) / 3;
 #ifdef VERSION_CN

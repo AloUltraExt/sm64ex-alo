@@ -20,9 +20,6 @@
 #include "game/main.h" // n64
 #include <stdio.h> // non-n64
 
-// from hackersm64
-#define o gCurrentObject
-
 /**
  * @file star_select.c
  * This file implements how the star select screen (act selector) function.
@@ -63,17 +60,17 @@ void bhv_act_selector_star_type_loop(void) {
     switch (gCurrentObject->oStarSelectorType) {
         // If a star is not selected, don't rotate or change size
         case STAR_SELECTOR_NOT_SELECTED:
-            gCurrentObject->oStarSelectorSize -= 0.1f;
-            if (gCurrentObject->oStarSelectorSize < 1.0f) {
-                gCurrentObject->oStarSelectorSize = 1.0f;
+            gCurrentObject->oStarSelectorSize -= 0.1;
+            if (gCurrentObject->oStarSelectorSize < 1.0) {
+                gCurrentObject->oStarSelectorSize = 1.0;
             }
             gCurrentObject->oFaceAngleYaw = 0;
             break;
         // If a star is selected, rotate and slightly increase size
         case STAR_SELECTOR_SELECTED:
-            gCurrentObject->oStarSelectorSize += 0.1f;
-            if (gCurrentObject->oStarSelectorSize > 1.3f) {
-                gCurrentObject->oStarSelectorSize = 1.3f;
+            gCurrentObject->oStarSelectorSize += 0.1;
+            if (gCurrentObject->oStarSelectorSize > 1.3) {
+                gCurrentObject->oStarSelectorSize = 1.3;
             }
             gCurrentObject->oFaceAngleYaw += 0x800;
             break;
@@ -92,9 +89,9 @@ void bhv_act_selector_star_type_loop(void) {
  * Renders the 100 coin star with an special star selector type.
  */
 void render_100_coin_star(u8 stars) {
-    if (stars & STAR_FLAG_ACT_100_COINS) {
+    if (stars & (1 << 6)) {
         // If the 100 coin star has been collected, create a new star selector next to the coin score.
-        sStarSelectorModels[6] = spawn_object_abs_with_rot(o, 0, MODEL_STAR,
+        sStarSelectorModels[6] = spawn_object_abs_with_rot(gCurrentObject, 0, MODEL_STAR,
                                                         bhvActSelectorStarType, 370, 24, -300, 0, 0, 0);
 
         sStarSelectorModels[6]->oStarSelectorSize = 0.8f;
@@ -311,14 +308,29 @@ void print_act_selector_strings(void) {
     }
 
     gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_end);
- }
+}
 
 /**
  * Geo function that Print act selector strings.
+ *!@bug: This geo function is missing the third param. Harmless in practice due to o32 convention.
  */
-Gfx *geo_act_selector_strings(s16 callContext, UNUSED struct GraphNode *node, UNUSED void *context) {
+#ifdef AVOID_UB
+Gfx *geo_act_selector_strings(s16 callContext, UNUSED struct GraphNode *node, UNUSED void *context)
+#else
+Gfx *geo_act_selector_strings(s16 callContext, UNUSED struct GraphNode *node)
+#endif
+{
     if (callContext == GEO_CONTEXT_RENDER) {
+#ifdef TARGET_N3DS
+        gDPForceFlush(gDisplayListHead++);
+        gDPSet2d(gDisplayListHead++, 1);
+        gDPSetIod(gDisplayListHead++, iodStarSelect);
+#endif
         print_act_selector_strings();
+#ifdef TARGET_N3DS
+        gDPForceFlush(gDisplayListHead++);
+        gDPSet2d(gDisplayListHead++, 0);
+#endif
     }
     return NULL;
 }
@@ -334,15 +346,22 @@ s32 lvl_init_act_selector_values_and_stars(UNUSED s32 arg, UNUSED s32 unused) {
     sInitSelectedActNum = 0;
     sVisibleStars = 0;
     sActSelectorMenuTimer = 0;
+#ifdef NO_SEGMENTED_MEMORY
+    sSelectedActIndex = 0;
+    sSelectableStarIndex = 0;
+#endif
     sObtainedStars =
         save_file_get_course_star_count(gCurrSaveFileNum - 1, COURSE_NUM_TO_INDEX(gCurrCourseNum));
 
     // Don't count 100 coin star
-    if (stars & STAR_FLAG_ACT_100_COINS) {
+    if (stars & (1 << 6)) {
         sObtainedStars--;
     }
 
+    //! no return value
+#ifdef AVOID_UB
     return 0;
+#endif
 }
 
 /**
@@ -352,9 +371,20 @@ s32 lvl_init_act_selector_values_and_stars(UNUSED s32 arg, UNUSED s32 unused) {
 s32 lvl_update_obj_and_load_act_button_actions(UNUSED s32 arg, UNUSED s32 unused) {
     if (sActSelectorMenuTimer > 10) {
         // If any of these buttons are pressed, play sound and go to course act
-        if ((gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | B_BUTTON | Z_TRIG))) {
+#if !QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
+        if ((gPlayer3Controller->buttonPressed & A_BUTTON)
+         || (gPlayer3Controller->buttonPressed & START_BUTTON)
+         || (gPlayer3Controller->buttonPressed & B_BUTTON)) 
+#else
+        if ((gPlayer3Controller->buttonPressed & (A_BUTTON | START_BUTTON | B_BUTTON | Z_TRIG))) 
+#endif
+        {
+#ifdef VERSION_JP
+            play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
+#else
             play_sound(SOUND_MENU_STAR_SOUND_LETS_A_GO, gGlobalSoundSource);
-#if ENABLE_RUMBLE
+#endif
+#ifdef RUMBLE_FEEDBACK
             queue_rumble_data(60, 70);
             queue_rumble_decay(1);
 #endif

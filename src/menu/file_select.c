@@ -2010,7 +2010,7 @@ void print_score_file_course_coin_score(s8 fileIndex, s16 courseIndex, s16 x, s1
         sprintf(str, "✪×%s", coinScoreText);
         print_menu_generic_string(x + 25, y, str);
         // If collected, print 100 coin star
-        if (stars & STAR_FLAG_ACT_100_COINS) {
+        if (stars & (1 << 6)) {
             print_menu_generic_string(x + 70, y, "★");
         }
     }
@@ -2043,7 +2043,7 @@ void print_score_file_star_score(s8 fileIndex, s16 courseIndex, s16 x, s16 y) {
     u8 stars = save_file_get_star_flags(fileIndex, courseIndex);
     s8 starCount = save_file_get_course_star_count(fileIndex, courseIndex);
     // Don't count 100 coin star
-    if (stars & STAR_FLAG_ACT_100_COINS) {
+    if (stars & (1 << 6)) {
         starCount--;
     }
     // Add 1 star character for every star collected
