@@ -46,10 +46,16 @@ def remove_file(fname):
         pass
 
 
-def clean_assets(local_asset_file):
+def clean_assets(local_asset_file, folder):
     assets = set(read_asset_map().keys())
     assets.update(read_local_asset_list(local_asset_file))
-    for fname in list(assets) + [".assets-local.txt"]:
+
+    if folder:
+        assets = {asset for asset in assets if asset.startswith(folder)}
+    else:
+        assets.add(".assets-local.txt")
+
+    for fname in list(assets):
         if fname.startswith("@"):
             continue
         try:
@@ -72,8 +78,12 @@ def main():
         local_version = -1
 
     langs = sys.argv[1:]
-    if langs == ["--clean"]:
-        clean_assets(local_asset_file)
+    if langs and langs[0] == "--clean":
+        if len(langs) > 1:
+            folder = langs[1]
+        else:
+            folder = None
+        clean_assets(local_asset_file, folder)
         sys.exit(0)
 
     all_langs = ["jp", "us", "eu", "sh", "cn"]
