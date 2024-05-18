@@ -14,6 +14,10 @@ TEXTURE_DIRS := \
     $(wildcard textures/*/custom/) \
     $(filter %/,$(wildcard actors/*/))
 
+ifeq ($(VERSION),cn)
+  TEXTURE_DIRS += $(wildcard textures/segment2/cn/)
+endif
+
 ifeq ($(PORT_MOP_OBJS),1)
   TEXTURE_DIRS += $(filter %/,$(wildcard src/extras/mop/actors/*/))
 endif
@@ -216,6 +220,9 @@ $(BUILD_DIR)/levels/ending/cake.inc.c: levels/ending/cake.png
 
 # Others
 SEGMENT2_TEXTURES               := $(wildcard $(TEXTURE_DIR)/segment2/*.png) $(wildcard $(TEXTURE_DIR)/segment2/custom/*.png)
+ifeq ($(VERSION),cn)
+  SEGMENT2_TEXTURES             += $(wildcard $(TEXTURE_DIR)/segment2/cn/*.png)
+endif
 TITLE_SCREEN_BG_TEXTURES        := $(wildcard $(TEXTURE_DIR)/title_screen_bg/*.png)
 SPOOKY_TEXTURES                 := $(wildcard $(TEXTURE_DIR)/spooky/*.png)
 GENERIC_TEXTURES                := $(wildcard $(TEXTURE_DIR)/generic/*.png)

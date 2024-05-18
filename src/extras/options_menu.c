@@ -480,7 +480,7 @@ void optmenu_draw(void) {
     const s16 labelX = get_hudstr_centered_x(SCREEN_WIDTH / 2, currentMenu->label);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
-    print_hud_lut_string(HUD_LUT_GLOBAL, labelX, 40, currentMenu->label);
+    print_hud_lut_string(HUD_LUT_CNDIFF, labelX, 40, currentMenu->label);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
 
     if (currentMenu->numOpts > 4)

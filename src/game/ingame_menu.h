@@ -19,6 +19,7 @@
 // to print specific Japanese HUD chars
 #define HUD_LUT_JPMENU 1
 #define HUD_LUT_GLOBAL 2
+#define HUD_LUT_CNFIX  3
 
 // For file select JP HUD difference
 #if defined(VERSION_JP) || defined(VERSION_SH)
@@ -27,11 +28,10 @@
 #define HUD_LUT_DIFF HUD_LUT_GLOBAL
 #endif
 
-// They didn't change it everywhere in iQue
 #ifdef VERSION_CN
-#define HUD_LUT_DIFF2 HUD_LUT_JPMENU
+#define HUD_LUT_CNDIFF HUD_LUT_CNFIX
 #else
-#define HUD_LUT_DIFF2 HUD_LUT_DIFF
+#define HUD_LUT_CNDIFF HUD_LUT_GLOBAL
 #endif
 
 // Japanese font use the same width string size

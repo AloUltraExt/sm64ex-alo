@@ -274,7 +274,7 @@ void create_dl_ortho_matrix(void) {
     // Should produce G_RDPHALF_1 in Fast3D
     gSPPerspNormalize(gDisplayListHead++, 0xFFFF);
 
-    gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(matrix), G_MTX_PROJECTION | G_MTX_MUL | G_MTX_NOPUSH)
+    gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(matrix), G_MTX_PROJECTION | G_MTX_MUL | G_MTX_NOPUSH);
 }
 
 #if defined(VERSION_JP) || defined(VERSION_SH) || defined(VERSION_CN)
@@ -750,6 +750,11 @@ void print_hud_lut_string(s8 hudLUT, s16 x, s16 y, const u8 *str) {
             case GLOBAL_CHAR_SPACE:
                 curX += 8;
                 break;
+#endif
+#ifdef VERSION_CN
+            // Hack, still broken but better than before
+            case 0x00:
+                if (hudLUT == HUD_LUT_CNFIX) break;
 #endif
             default:
 #endif
@@ -3330,7 +3335,7 @@ void render_course_complete_lvl_info_and_hud_str(void) {
         // Print course number
         gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
 
-        int_to_str(gLastCompletedCourseNum, strCourseNum);
+        INT_TO_STR_DIFF(gLastCompletedCourseNum, strCourseNum);
 
         gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, gMenuTextAlpha);
         print_generic_string(65, 165, LANGUAGE_ARRAY(textCourse));
