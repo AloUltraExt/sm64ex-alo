@@ -55,4 +55,11 @@
 /// Fixes 1up locations in CCM slide
 #define QOL_FIX_ASSET_CCM_SLIDE_1UPS (0 || QOL_FIXES)
 
+// Macro defines for qol
+#if QOL_FEATURE_Z_BUTTON_EXTRA_OPTION
+#define Z_BUTTON_DEF(b) (b | 0x2000) // CONT_G aka Z_TRIG
+#else
+#define Z_BUTTON_DEF(b) (b)
+#endif
+
 #endif // QOL_DEFINES_H
