@@ -3035,6 +3035,20 @@ s32 gCourseCompleteScreenTimer = 0;
 s32 gCourseCompleteCoins = 0;
 s8 gHudFlash = 0;
 
+// ex-alo change
+// Make this a function due to diffs
+#if EXIT_COURSE_ANYWHERE
+#define should_render_pause_options(m) TRUE
+#else
+u8 should_render_pause_options(struct MarioState *m) {
+    return (m->action & ACT_FLAG_PAUSE_EXIT)
+#ifdef CHEATS_ACTIONS
+    || (Cheats.EnableCheats && Cheats.ExitAnywhere) // Added support for the "Exit course at any time" cheat
+#endif
+    ;
+}
+#endif
+
 s16 render_pause_screen(void) {
     s16 index;
 
@@ -3065,16 +3079,9 @@ s16 render_pause_screen(void) {
             render_pause_my_score_coins();
             render_pause_red_coins();
 
-#if !EXIT_COURSE_ANYWHERE
-/* Added support for the "Exit course at any time" cheat */
-            if ((gMarioStates[0].action & ACT_FLAG_PAUSE_EXIT) 
-#ifdef CHEATS_ACTIONS
-                || (Cheats.EnableCheats && Cheats.ExitAnywhere)
-#endif
-                ) {
+            if (should_render_pause_options(gMarioState)) {
                 render_pause_course_options(99, 93, &gMenuLineNum, 15);
             }
-#endif
 
             if (gPlayer1Controller->buttonPressed & Z_BUTTON_DEF(A_BUTTON | START_BUTTON)) {
                 level_set_transition(0, NULL);
@@ -3108,10 +3115,6 @@ s16 render_pause_screen(void) {
             }
             break;
     }
-
-    if (gMenuTextAlpha < 250) {
-        gMenuTextAlpha += 25;
-    }
 #ifdef EXT_OPTIONS_MENU
     } else {
         shade_screen();
@@ -3120,6 +3123,9 @@ s16 render_pause_screen(void) {
     optmenu_check_buttons();
     optmenu_draw_prompt();
 #endif
+    if (gMenuTextAlpha < 250) {
+        gMenuTextAlpha += 25;
+    }
 
     return MENU_OPT_NONE;
 }
