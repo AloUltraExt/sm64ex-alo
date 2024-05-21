@@ -14,8 +14,8 @@ extern const GeoLayout intro_geo_mario_head_dizzy[];
 extern const GeoLayout intro_geo_000414[];
 
 // leveldata
-extern const Gfx intro_seg7_dl_0700B3A0[];
-extern const Gfx intro_seg7_dl_0700C6A0[];
+extern const Gfx intro_seg7_dl_logo[];
+extern const Gfx intro_seg7_dl_copyright[];
 extern const f32 intro_seg7_table_0700C790[];
 extern const f32 intro_seg7_table_0700C880[];
 

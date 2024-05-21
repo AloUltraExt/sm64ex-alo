@@ -300,8 +300,8 @@ void render_hud_power_meter(void) {
  * Renders the amount of lives Mario has.
  */
 void render_hud_mario_lives(void) {
-    print_text(set_hud_auto_x_pos(HUD_LIVES_MARIO_X), HUD_LIVES_MARIO_Y, ","); // 'Mario Head' glyph
-    print_text(set_hud_auto_x_pos(HUD_LIVES_CROSS_X), HUD_LIVES_CROSS_Y, "*"); // 'X' glyph
+    print_text(set_hud_auto_x_pos(HUD_LIVES_MARIO_X), HUD_LIVES_MARIO_Y, "☺"); // 'Mario Head' glyph
+    print_text(set_hud_auto_x_pos(HUD_LIVES_CROSS_X), HUD_LIVES_CROSS_Y, "×"); // 'X' glyph
     print_text_fmt_int(set_hud_auto_x_pos(HUD_LIVES_NUM_X), HUD_LIVES_NUM_Y, "%d", gHudDisplay.lives);
 }
 
@@ -309,8 +309,8 @@ void render_hud_mario_lives(void) {
  * Renders the amount of coins collected.
  */
 void render_hud_coins(void) {
-    print_text(set_hud_auto_x_pos(HUD_COINS_X), HUD_COINS_Y, "+"); // 'Coin' glyph
-    print_text(set_hud_auto_x_pos(HUD_COINS_CROSS_X), HUD_COINS_Y, "*"); // 'X' glyph
+    print_text(set_hud_auto_x_pos(HUD_COINS_X), HUD_COINS_Y, "✪"); // 'Coin' glyph
+    print_text(set_hud_auto_x_pos(HUD_COINS_CROSS_X), HUD_COINS_Y, "×"); // 'X' glyph
     print_text_fmt_int(set_hud_auto_x_pos(HUD_COINS_NUM_X), HUD_COINS_Y, "%d", gHudDisplay.coins);
 }
 
@@ -329,9 +329,9 @@ void render_hud_stars(void) {
         showX = 1;
     }
 
-    print_text(set_hud_auto_x_pos(HUD_STARS_X), HUD_STARS_Y, "-"); // 'Star' glyph
+    print_text(set_hud_auto_x_pos(HUD_STARS_X), HUD_STARS_Y, "★"); // 'Star' glyph
     if (showX == 1) {
-        print_text(set_hud_auto_x_pos(HUD_STARS_CROSS_X), HUD_STARS_CROSS_Y, "*"); // 'X' glyph
+        print_text(set_hud_auto_x_pos(HUD_STARS_CROSS_X), HUD_STARS_CROSS_Y, "×"); // 'X' glyph
     }
     print_text_fmt_int((showX * 14) + set_hud_auto_x_pos(HUD_STARS_NUM_X), HUD_STARS_NUM_Y, "%d", gHudDisplay.stars);
 }
@@ -344,7 +344,7 @@ void render_hud_keys(void) {
     s16 i;
 
     for (i = 0; i < gHudDisplay.keys; i++) {
-        print_text((i * 16) + 220, 142, "/"); // unused glyph - beta key
+        print_text((i * 16) + 220, 142, "|"); // unused glyph - beta key
     }
 }
 
@@ -352,7 +352,6 @@ void render_hud_keys(void) {
  * Renders the timer when Mario start sliding in PSS.
  */
 void render_hud_timer(void) {
-    u8 *(*hudLUT)[58] = segmented_to_virtual(&main_hud_lut);
     u16 timerValFrames = gHudDisplay.timer;
     // 30 frames * 60 seconds (1 minute) = 1800
     u16 timerMins = timerValFrames / 1800;
@@ -385,13 +384,10 @@ void render_hud_timer(void) {
 #endif
 
     print_text_fmt_int(set_hud_auto_x_pos(HUD_TIME_MIN_X), HUD_TIME_Y, "%0d", timerMins);
+    print_text(set_hud_auto_x_pos(HUD_TIME_MIN_A_X), HUD_TIME_Y, "'");
     print_text_fmt_int(set_hud_auto_x_pos(HUD_TIME_SEC_X), HUD_TIME_Y, "%02d", timerSecs);
+    print_text(set_hud_auto_x_pos(HUD_TIME_SEC_AA_X), HUD_TIME_Y, "\"");
     print_text_fmt_int(set_hud_auto_x_pos(HUD_TIME_FSEC_X), HUD_TIME_Y, "%d", timerFracSecs);
-
-    gSPDisplayList(gDisplayListHead++, dl_hud_img_begin);
-    render_hud_tex_lut(set_hud_auto_x_pos(HUD_TIME_MIN_A_X), HUD_TIME_A_Y, (*hudLUT)[GLYPH_APOSTROPHE]);
-    render_hud_tex_lut(set_hud_auto_x_pos(HUD_TIME_SEC_AA_X), HUD_TIME_A_Y, (*hudLUT)[GLYPH_DOUBLE_QUOTE]);
-    gSPDisplayList(gDisplayListHead++, dl_hud_img_end);
 }
 
 /**

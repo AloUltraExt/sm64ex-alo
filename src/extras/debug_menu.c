@@ -3,7 +3,6 @@
 #include <stdio.h>
 
 #include "sm64.h"
-#include "text_strings.h"
 #include "gfx_dimensions.h"
 #include "seq_ids.h"
 
@@ -40,34 +39,28 @@ extern void set_play_mode(s16 playMode);
 
 struct DebugOptList DebugOpt;
 
-#ifdef VERSION_CN // hack, todo remove
-#define SIZEOPTC(n) n * 2
-#else
-#define SIZEOPTC(n) n
-#endif
-
-const u8 optDebugMenuStr[][200] = {
-    { TEXT_OPT_DEBUG },
-    { TEXT_OPT_DEBUG_WARP },
+char optDebugMenuStr[][32] = {
+    "DEBUG",
+    "WARP DEBUG",
 };
 
-static const u8 optsDebugStr[][SIZEOPTC(64)] = {
-    { TEXT_OPT_DEBUG0 },
-    { TEXT_OPT_DEBUG1 },
-    { TEXT_OPT_DEBUG2 },
-    { TEXT_OPT_DEBUG3 },
-    { TEXT_OPT_DEBUG4 },
-    { TEXT_OPT_DEBUG5 },
-    { TEXT_OPT_DEBUG6 },
-    { TEXT_OPT_DEBUG7 },
-    { TEXT_OPT_DEBUG8 },
+static char optsDebugStr[][64] = {
+    "Simple Debug Display",
+    "Complex Debug Display",
+    "Level Select",
+    "Free Movement (Press L)",
+    "Debug Cap Changer",
+    "Show Profiler",
+    "Show FPS",
+    "Complete Save",
+    "Warp Debug",
 };
 
-static const u8 optsDebugWarpDestStr[][SIZEOPTC(64)] = {
-    { TEXT_DEBUG_WARP0 },
-    { TEXT_DEBUG_WARP1 },
-    { TEXT_DEBUG_WARP2 },
-    { TEXT_DEBUG_WARP3 },
+static char optsDebugWarpDestStr[][64] = {
+    "Warp to Ending",
+    "Warp to Credits",
+    "Warp to Level Success",
+    "Warp to Level Failure",
 };
 
 static void force_quit_pause_debug(void) {

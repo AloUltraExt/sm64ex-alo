@@ -10,7 +10,6 @@
 #include "types.h"
 #include "behavior_data.h"
 #include "gfx_dimensions.h"
-#include "text_strings.h"
 #include "audio/external.h"
 #include "engine/math_util.h"
 #include "engine/surface_collision.h"
@@ -74,39 +73,33 @@ ConfigPuppyCam configPuppyCam = {
 
 /// CONFIG
 
-#ifdef VERSION_CN // hack, todo remove
-#define SIZEOPTC(n) n * 2
-#else
-#define SIZEOPTC(n) n
-#endif
-
-const u8 optsPuppyCamStr[][200] = {
+char optsPuppyCamStr[][32] = {
     // Title and toggle
-    { TEXT_OPT_PUPPYCAM },
-    { TEXT_OPT_PUPPYON },
+    "PUPPY CAMERA",
+    "PuppyCam 2",
     // Schemes and Types
-    { TEXT_OPT_CAMSCHEME },
-    { TEXT_OPT_CAMANALOG },
-    { TEXT_OPT_CAMMOUSE },
-    { TEXT_OPT_CAMDEBUG },
+    "Control Scheme",
+    "Analogue Camera",
+    "Mouse Camera",
+    "Debug Camera",
     // Speed and Sens
-    { TEXT_OPT_CAMSENSX },
-    { TEXT_OPT_CAMSENSY },
-    { TEXT_OPT_MOUSESPD },
+    "Camera Sensitivity",
+    "Vertical Camera Sensitivity",
+    "Mouse Camera Speed",
     // Misc options
-    { TEXT_OPT_INVERTX },
-    { TEXT_OPT_INVERTY },
-    { TEXT_OPT_CAMTURN },
-    { TEXT_OPT_CAMOPA },
+    "Invert Camera",
+    "Vertical Invert Camera",
+    "Auto Turn Camera",
+    "Opaque Close Up",
 };
 
-static const u8 optsPuppyCamSchemeStr[][SIZEOPTC(64)] = {
-    { TEXT_OPT_CAM_SCH1 },
-    { TEXT_OPT_CAM_SCH2 },
-    { TEXT_OPT_CAM_SCH3 },
+static char optsPuppyCamSchemeStr[][64] = {
+    "Double Tap",
+    "Single Press",
+    "Classic",
 };
 
-static const u8 *puppycamChoicesInputType[] = {
+static char *puppycamChoicesInputType[] = {
     optsPuppyCamSchemeStr[0],
     optsPuppyCamSchemeStr[1],
     optsPuppyCamSchemeStr[2],
