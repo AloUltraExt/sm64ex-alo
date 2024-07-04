@@ -9,6 +9,7 @@
 #include "game/segment2.h"
 #include "game/ingame_menu.h"
 #include "extras/draw_util.h"
+#include <stdio.h>
 
 #ifdef VERSION_EU
 #include "eu_translation.h"
@@ -45,17 +46,12 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
     char *levelName;
     s32 courseNum;
     u8 *courseName;
-    s32 xPos;
-    u8 levelNumStr[4];
-    u8 courseNumStr[4];
+    u8 levelNumStr[9];
+    u8 courseNumStr[9];
 
-#ifndef VERSION_CN
-    char *chrTemp;
+    char *chrTemp = "SUPER MARIO LEVEL SELECT";
     gDPSetEnvColor(gDisplayListHead++, 255, 155, 150, 255);
-    chrTemp = "SUPER MARIO LEVEL SELECT";
-    xPos = get_str_x_pos_from_center_custom_ascii(LUT_TYPE_STR_ASCII, SCREEN_WIDTH / 2, chrTemp, FALSE, 0);
-    print_generic_string_ascii(xPos, 210, chrTemp);
-#endif
+    print_generic_string_aligned(SCREEN_CENTER_X, 210, chrTemp, TEXT_ALIGN_CENTER);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
 
     if (this->toggleControlsView) {
@@ -81,7 +77,7 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
 
     for (i = 0; i < MAX_PAGE_STRINGS; i++) {
         scene = (this->topDisplayedScene + i + this->count) % this->count;
-        INT_TO_STR_DIFF(scene + 1, levelNumStr);
+        format_int_to_string(levelNumStr, scene + 1);
 
         if (scene == this->currentScene) {
             gDPSetEnvColor(gDisplayListHead++, 255, 126, 0, 255);
@@ -95,41 +91,35 @@ void print_debug_level_select_menu(struct ZDebugLevelSelect *this) {
         }
         courseNum = gLevelToCourseNumTable[scene];
         courseName = segmented_to_virtual(courseNameTbl[courseNum - 1]);
-        INT_TO_STR_DIFF(courseNum, courseNumStr);
+        format_int_to_string(courseNumStr, courseNum);
 
-#ifndef VERSION_CN
         if (this->toggleCourseLevelView) {
             chrTemp = "LEVEL    NAME";
             print_generic_string(72, 180 - i * 11, levelNumStr);
-            print_generic_string_ascii(100, 180 - i * 11, levelName);
+            print_generic_string(100, 180 - i * 11, levelName);
         } else {
             chrTemp = "COURSE   NAME";
             print_generic_string(72, 180 - i * 11, courseNumStr);
             if (courseName != NULL && courseNum >= COURSE_MIN && courseNum <= COURSE_MAX) {
-                print_generic_string(100, 180 - i * 11, &courseName[3]);
+                print_generic_string(100, 180 - i * 11, check_number_string_in_course_name(courseName));
             }
         }
         
         gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
-        print_generic_string_ascii(60, 194, chrTemp);
-#else
-        print_generic_string(72, 210 - i * 17, courseNumStr);
-        if (courseName != NULL && courseNum >= COURSE_MIN && courseNum <= COURSE_MAX) {
-            print_generic_string(100, 210 - i * 17, &courseName[6]);
-        }
-#endif
+        print_generic_string(60, 194, chrTemp);
     }
 }
 
 void print_debug_level_select_settings(struct ZDebugLevelSelect *this) {
-    u8 strSaveNum[4];
-    u8 strActNum[4];
+    char str[20];
+    char strSaveNum[8];
+    char strActNum[8];
     char *chrTemp;
 
     s16 saveNum = gCurrSaveFileNum;
     s16 actNum = gDialogCourseActNum = gCurrActNum;
-    INT_TO_STR_DIFF(saveNum, strSaveNum);
-    INT_TO_STR_DIFF(actNum, strActNum);
+    format_int_to_string(strSaveNum, saveNum);
+    format_int_to_string(strActNum, actNum);
 
     u8 *actName;
     void **actNameTbl;
@@ -155,22 +145,23 @@ void print_debug_level_select_settings(struct ZDebugLevelSelect *this) {
 
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255);
 
-    chrTemp = "Save File: ";
-    print_generic_string_ascii(20, 42, chrTemp);
-    print_generic_string(20 + get_string_width_ascii(chrTemp), 42, strSaveNum);
+    chrTemp = "Save File: %s";
+    sprintf(str, chrTemp, strSaveNum);
+    print_generic_string(20, 42, str);
 
-    chrTemp = "Level Act: ";
-    print_generic_string_ascii(20, 28, chrTemp);
-    print_generic_string(20 + get_string_width_ascii(chrTemp), 28, strActNum);
+    chrTemp = "Level Act: %s";
+    sprintf(str, chrTemp, strActNum);
+    print_generic_string(20, 28, str);
+
     if (actName != NULL && courseNum >= COURSE_MIN && courseNum <= COURSE_STAGES_MAX) {
-        print_generic_string(20 + 20 + get_string_width_ascii(chrTemp), 28, actName);
+        print_generic_string(20 + 8 + get_string_width_preset(chrTemp, TEXT_PRESET_MAIN_FONT), 28, actName);
     }
 
     chrTemp = "(C Down) - Show-Hide Controls";
-    print_generic_string_ascii(20, 14, chrTemp);
+    print_generic_string(20, 14, chrTemp);
 }
 
-const char lvlSelectDbgCtrlStr[][40] = {
+char lvlSelectDbgCtrlStr[][40] = {
     "(D Pad) - Select Level",
     "(R) - Change List Page",
     "(Z) - Change Save File",
@@ -180,15 +171,15 @@ const char lvlSelectDbgCtrlStr[][40] = {
     "(A), (Start) - Load Level",
 };
 
-const char lvlSelectDbgCtrlViewStr[] = { "(C Down) - Show-Hide Controls" };
+char lvlSelectDbgCtrlViewStr[] = { "(C Down) - Show-Hide Controls" };
 
 void print_debug_level_select_controls(void) {
     s32 i;
     for (i = 0; i < ARRAY_COUNT(lvlSelectDbgCtrlStr); i++) {
-        print_generic_string_ascii(40, 186 - i * 16, lvlSelectDbgCtrlStr[i]);
+        print_generic_string(40, 186 - i * 16, lvlSelectDbgCtrlStr[i]);
     }
 
-    print_generic_string_ascii(40, 38, lvlSelectDbgCtrlViewStr);
+    print_generic_string(40, 38, lvlSelectDbgCtrlViewStr);
 }
 
 void print_debug_level_select_strings(struct ZDebugLevelSelect *this) {

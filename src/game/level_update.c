@@ -24,9 +24,8 @@
 #include "save_file.h"
 #include "debug_course.h"
 #include "interaction.h"
-#ifdef VERSION_EU
+#ifdef MULTILANG
 #include "memory.h"
-#include "eu_translation.h"
 #include "segment_symbols.h"
 #endif
 #include "level_table.h"
@@ -1328,23 +1327,34 @@ s32 lvl_init_or_update(s16 initOrUpdate, UNUSED s32 unused) {
     return result;
 }
 
-s32 lvl_init_from_save_file(UNUSED s16 arg0, s32 levelNum) {
-#ifdef VERSION_EU
-    s16 language = eu_get_language();
-    switch (language) {
+#ifdef MULTILANG
+void load_language_text(void) {
+    switch (gInGameLanguage) {
         case LANGUAGE_ENGLISH:
-            load_segment_decompress(0x19, _translation_en_mio0SegmentRomStart,
-                                    _translation_en_mio0SegmentRomEnd);
+            load_segment_decompress(SEGMENT_EU_TRANSLATION, _translation_en_yay0SegmentRomStart, _translation_en_yay0SegmentRomEnd);
             break;
+#ifdef ENABLE_FRENCH
         case LANGUAGE_FRENCH:
-            load_segment_decompress(0x19, _translation_fr_mio0SegmentRomStart,
-                                    _translation_fr_mio0SegmentRomEnd);
+            load_segment_decompress(SEGMENT_EU_TRANSLATION, _translation_fr_yay0SegmentRomStart, _translation_fr_yay0SegmentRomEnd);
             break;
+#endif
+#ifdef ENABLE_GERMAN
         case LANGUAGE_GERMAN:
-            load_segment_decompress(0x19, _translation_de_mio0SegmentRomStart,
-                                    _translation_de_mio0SegmentRomEnd);
+            load_segment_decompress(SEGMENT_EU_TRANSLATION, _translation_de_yay0SegmentRomStart, _translation_de_yay0SegmentRomEnd);
             break;
+#endif
+#ifdef ENABLE_JAPANESE
+        case LANGUAGE_JAPANESE:
+            load_segment_decompress(SEGMENT_EU_TRANSLATION, _translation_jp_yay0SegmentRomStart, _translation_jp_yay0SegmentRomEnd);
+            break;
+#endif
     }
+}
+#endif
+
+s32 lvl_init_from_save_file(UNUSED s16 arg0, s32 levelNum) {
+#ifdef MULTILANG
+    load_language_text();
 #endif
     sWarpDest.type = WARP_TYPE_NOT_WARPING;
     sDelayedWarpOp = WARP_OP_NONE;

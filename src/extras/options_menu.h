@@ -41,14 +41,14 @@ enum OptType {
 
 struct Option {
     enum OptType type;
-    const u8 *label;
+    char *label;
     union {
         u32 *uval;
         bool *bval;
     };
     union {
         struct {
-            const u8 **choices;
+            char **choices;
             u32 numChoices;
         };
         struct {
@@ -63,7 +63,7 @@ struct Option {
 
 struct SubMenu {
     struct SubMenu *prev; // this is set at runtime to avoid needless complication
-    const u8 *label;
+    char *label;
     struct Option *opts;
     s32 numOpts;
     s32 select;

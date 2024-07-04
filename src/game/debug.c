@@ -120,7 +120,7 @@ void print_text_array_info(s16 *printState, const char *str, s32 number) {
             printState[DEBUG_PSTATE_DISABLED]++; // why not just = TRUE...
         } else {
             print_text_fmt_int(printState[DEBUG_PSTATE_X_CURSOR], printState[DEBUG_PSTATE_Y_CURSOR],
-                               str, number);
+                               (char *) str, number);
             printState[DEBUG_PSTATE_Y_CURSOR] += printState[DEBUG_PSTATE_LINE_Y_OFFSET];
         }
     }

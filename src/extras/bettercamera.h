@@ -49,7 +49,7 @@ enum PuppyCamInputTypes {
 #include "include/command_macros_base.h"
 #include "options_menu.h"
 
-extern const u8 optsPuppyCamStr[][200];
+extern char optsPuppyCamStr[][32];
 
 extern struct SubMenu menuPuppyCam;
 

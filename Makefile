@@ -568,8 +568,6 @@ endif
 ELF := $(BUILD_DIR)/$(TARGET).elf
 
 LD_SCRIPT      := sm64.ld
-CHARMAP        := charmap.txt
-CHARMAP_DEBUG  := charmap.debug.txt
 MIO0_DIR       := $(BUILD_DIR)/bin
 SOUND_BIN_DIR  := $(BUILD_DIR)/sound
 TEXTURE_DIR    := textures
@@ -1161,7 +1159,6 @@ MIO0TOOL              := $(TOOLS_DIR)/sm64tools/mio0$(WINEXT)
 N64CKSUM              := $(TOOLS_DIR)/sm64tools/n64cksum$(WINEXT)
 N64GRAPHICS           := $(TOOLS_DIR)/sm64tools/n64graphics$(WINEXT)
 N64GRAPHICS_CI        := $(TOOLS_DIR)/sm64tools/n64graphics_ci$(WINEXT)
-TEXTCONV              := $(TOOLS_DIR)/textconv$(WINEXT)
 TABLEDESIGN           := $(TOOLS_DIR)/tabledesign$(WINEXT)
 VADPCM_ENC            := $(TOOLS_DIR)/vadpcm_enc$(WINEXT)
 EXTRACT_DATA_FOR_MIO  := $(TOOLS_DIR)/extract_data_for_mio$(WINEXT)
@@ -1195,7 +1192,7 @@ YELLOW  := \033[0;33m
 BLINK   := \033[32;5m
 endif
 
-EXTRACT_DATA_FOR_MIO := $(OBJCOPY) -O binary --only-section=.data
+EXTRACT_DATA_FOR_MIO := $(OBJCOPY) -O binary --only-section=.data --only-section=.rodata
 
 # Common build print status function
 define print
@@ -1323,29 +1320,6 @@ endif
 $(SOUND_BIN_DIR)/sound_data.o: $(SOUND_FILES)
 $(BUILD_DIR)/levels/scripts.o: $(BUILD_DIR)/include/level_headers.h
 
-ifeq ($(VERSION),eu)
-  TEXT_DIRS := text/de text/us text/fr
-
-  # EU encoded text inserted into individual segment 0x19 files,
-  # and course data also duplicated in leveldata.c
-  $(BUILD_DIR)/bin/eu/translation_en.o: $(BUILD_DIR)/text/us/define_text.inc.c
-  $(BUILD_DIR)/bin/eu/translation_de.o: $(BUILD_DIR)/text/de/define_text.inc.c
-  $(BUILD_DIR)/bin/eu/translation_fr.o: $(BUILD_DIR)/text/fr/define_text.inc.c
-  $(BUILD_DIR)/levels/menu/leveldata.o: $(BUILD_DIR)/text/us/define_courses.inc.c
-  $(BUILD_DIR)/levels/menu/leveldata.o: $(BUILD_DIR)/text/de/define_courses.inc.c
-  $(BUILD_DIR)/levels/menu/leveldata.o: $(BUILD_DIR)/text/fr/define_courses.inc.c
-else
-  ifeq ($(VERSION),sh)
-    TEXT_DIRS := text/jp
-    $(BUILD_DIR)/bin/segment2.o: $(BUILD_DIR)/text/jp/define_text.inc.c
-  else
-    TEXT_DIRS := text/$(VERSION)
-    # non-EU encoded text inserted into segment 0x02
-    $(BUILD_DIR)/bin/segment2.o: $(BUILD_DIR)/text/$(VERSION)/define_text.inc.c
-  endif
-endif
-$(BUILD_DIR)/bin/segment2.o: $(BUILD_DIR)/text/debug_text.raw.inc.c
-
 # N64 specific optimization files
 ifeq ($(TARGET_N64),1)
   $(BUILD_DIR)/actors/%.o: OPT_FLAGS := -Ofast -mlong-calls
@@ -1381,57 +1355,6 @@ endif
 
 # Make sure build directory exists before compiling anything
 DUMMY != mkdir -p $(ALL_DIRS)
-
-$(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_menu_strings.h
-
-ifeq ($(EXT_OPTIONS_MENU),1)
-  $(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_options_strings.h
-endif
-
-ifeq ($(CHEATS_ACTIONS),1)
-  $(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_cheats_strings.h
-endif
-
-ifeq ($(EXT_DEBUG_MENU),1)
-  $(BUILD_DIR)/include/text_strings.h: $(BUILD_DIR)/include/text_debug_strings.h
-endif
-
-ifeq ($(VERSION),eu)
-  LANG_O_FILES := $(BUILD_DIR)/bin/eu/translation_en.o $(BUILD_DIR)/bin/eu/translation_de.o $(BUILD_DIR)/bin/eu/translation_fr.o
-else
-  LANG_O_FILES :=
-endif
-
-$(BUILD_DIR)/src/menu/file_select.o:    $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
-$(BUILD_DIR)/src/menu/star_select.o:    $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
-$(BUILD_DIR)/src/game/ingame_menu.o:    $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
-
-ifeq ($(TARGET_N64),1)
-  $(BUILD_DIR)/src/boot/ext_mem_screen.o: $(BUILD_DIR)/include/text_strings.h
-endif
-
-ifeq ($(EXT_OPTIONS_MENU),1)
-
-  ifeq ($(BETTERCAMERA),1)
-    $(BUILD_DIR)/src/extras/bettercamera.o: $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
-  endif
-
-  ifeq ($(CHEATS_ACTIONS),1)
-    $(BUILD_DIR)/src/extras/cheats.o:       $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
-  endif
-
-  ifeq ($(EXT_DEBUG_MENU),1)
-    $(BUILD_DIR)/src/extras/debug_menu.o:   $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
-  endif
-
-  $(BUILD_DIR)/src/extras/options_menu.o:   $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
-endif
-
-ifeq ($(TARGET_PORT_CONSOLE),0)
-  ifeq ($(DISCORDRPC),1)
-    $(BUILD_DIR)/src/pc/discord/discordrpc.o: $(BUILD_DIR)/include/text_strings.h $(LANG_O_FILES)
-  endif
-endif
 
 #==============================================================================#
 # Texture Generation                                                           #
@@ -1583,48 +1506,6 @@ $(BUILD_DIR)/assets/mario_anim_data.c: $(wildcard assets/anims/*.inc.c)
 $(BUILD_DIR)/assets/demo_data.c: assets/demo_data.json $(wildcard assets/demos/*.bin)
 	@$(PRINT) "$(GREEN)Generating demo data $(NO_COL)\n"
 	$(V)$(PYTHON) tools/demo_data_converter.py assets/demo_data.json $(DEF_INC_CFLAGS) > $@
-
-# Encode in-game text strings
-$(BUILD_DIR)/$(CHARMAP): $(CHARMAP)
-	$(call print,Preprocessing charmap:,$<,$@)
-	$(V)$(CPP) $(CPPFLAGS) -DBUILD_DIR=$(BUILD_DIR) -MMD -MP -MT $@ -MF $@.d -o $@ $<
-$(BUILD_DIR)/$(CHARMAP_DEBUG): $(CHARMAP)
-	$(call print,Preprocessing charmap:,$<,$@)
-	$(V)$(CPP) $(CPPFLAGS) -DCHARMAP_DEBUG -DBUILD_DIR=$(BUILD_DIR) -MMD -MP -MT $@ -MF $@.d -o $@ $<
-$(BUILD_DIR)/include/text_strings.h: include/text_strings.h.in $(BUILD_DIR)/$(CHARMAP)
-	$(call print,Encoding:,$<,$@)
-	$(V)$(TEXTCONV) $(BUILD_DIR)/$(CHARMAP) $< $@
-$(BUILD_DIR)/include/text_menu_strings.h: include/text_menu_strings.h.in
-	$(call print,Encoding:,$<,$@)
-	$(V)$(TEXTCONV) charmap_menu.txt $< $@
-$(BUILD_DIR)/text/%/define_courses.inc.c: text/define_courses.inc.c text/%/courses.h
-	@$(PRINT) "$(GREEN)Preprocessing: $(BLUE)$@ $(NO_COL)\n"
-	$(V)$(CPP) $(CPPFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) $(BUILD_DIR)/$(CHARMAP) - $@
-$(BUILD_DIR)/text/%/define_text.inc.c: text/define_text.inc.c text/%/courses.h text/%/dialogs.h
-	@$(PRINT) "$(GREEN)Preprocessing: $(BLUE)$@ $(NO_COL)\n"
-	$(V)$(CPP) $(CPPFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) $(BUILD_DIR)/$(CHARMAP) - $@
-$(BUILD_DIR)/text/debug_text.raw.inc.c: text/debug_text.inc.c $(BUILD_DIR)/$(CHARMAP_DEBUG)
-	@$(PRINT) "$(GREEN)Preprocessing: $(BLUE)$@ $(NO_COL)\n"
-	$(V)$(CPP) $(CPPFLAGS) $< -o - -I text/$*/ | $(TEXTCONV) $(BUILD_DIR)/$(CHARMAP_DEBUG) - $@
-
-ifeq ($(EXT_OPTIONS_MENU),1)
-$(BUILD_DIR)/include/text_options_strings.h: include/text_options_strings.h.in
-	$(call print,Encoding:,$<,$@)
-	$(V)$(TEXTCONV) $(BUILD_DIR)/$(CHARMAP) $< $@
-
-ifeq ($(CHEATS_ACTIONS),1)
-$(BUILD_DIR)/include/text_cheats_strings.h: include/text_cheats_strings.h.in
-	$(call print,Encoding:,$<,$@)
-	$(V)$(TEXTCONV) $(BUILD_DIR)/$(CHARMAP) $< $@
-endif
-
-ifeq ($(EXT_DEBUG_MENU),1)
-$(BUILD_DIR)/include/text_debug_strings.h: include/text_debug_strings.h.in
-	$(call print,Encoding:,$<,$@)
-	$(V)$(TEXTCONV) $(BUILD_DIR)/$(CHARMAP) $< $@
-endif
-
-endif
 
 # Level headers
 $(BUILD_DIR)/include/level_headers.h: levels/level_headers.h.in

@@ -8,35 +8,31 @@
 #include "engine/graph_node.h"
 #include "engine/math_util.h"
 #include "file_select.h"
-#include "gfx_dimensions.h"
 #include "game/area.h"
 #include "game/game_init.h"
 #include "game/ingame_menu.h"
 #include "game/object_helpers.h"
 #include "game/object_list_processor.h"
 #include "game/print.h"
-#include "game/rumble_init.h"
 #include "game/save_file.h"
 #include "game/segment2.h"
 #include "game/segment7.h"
 #include "game/spawn_object.h"
+#include "game/rumble_init.h"
+#include "gfx_dimensions.h"
 #include "sm64.h"
-#include "text_strings.h"
+#include <stdio.h> // non-n64
+#include <string.h> // non-n64
 
-#ifdef MOUSE_ACTIONS
-#include "pc/controller/controller_mouse.h"
-#include "pc/configfile.h"
-#endif
+// from hackersm64
+#define o gCurrentObject
 
-#ifdef COMMAND_LINE_OPTIONS
-#include "pc/cliopts.h"
-#endif
-
-#include "eu_translation.h"
-#ifdef VERSION_EU
-#undef LANGUAGE_FUNCTION
-#define LANGUAGE_FUNCTION sLanguageMode
-#endif
+enum CurrSaveFileNum {
+    SAVE_FILE_NUM_A = 0x1,
+    SAVE_FILE_NUM_B,
+    SAVE_FILE_NUM_C,
+    SAVE_FILE_NUM_D,
+};
 
 #ifdef VERSION_CN
 #define FILE_SELECT_PRINT_STRING print_generic_string
@@ -55,23 +51,9 @@
  * special menu messages and phases, button states and button clicked checks.
  */
 
-#ifdef VERSION_US
-// The current sound mode is automatically centered on US and Shindou.
-static s16 sSoundTextX;
-#endif
-
-//! @Bug (UB Array Access) For EU, more buttons were added than the array was extended.
-//! This causes no currently known issues on console (as the other variables are not changed
-//! while this is used) but can cause issues with other compilers.
-#if defined(VERSION_EU) && !defined(AVOID_UB)
-#define NUM_BUTTONS (MENU_BUTTON_OPTION_MAX - 1)
-#else
-#define NUM_BUTTONS MENU_BUTTON_OPTION_MAX
-#endif
-
 // Amount of main menu buttons defined in the code called by spawn_object_rel_with_rot.
 // See file_select.h for the names in MenuButtonTypes.
-static struct Object *sMainMenuButtons[NUM_BUTTONS];
+static struct Object *sMainMenuButtons[MENU_BUTTON_OPTION_MAX];
 
 // Used to defined yes/no fade colors after a file is selected in the erase menu.
 // sYesNoColor[0]: YES | sYesNoColor[1]: NO
@@ -88,9 +70,6 @@ static s8 sScorePage = 0;
 
 // Whether we are on the main menu or one of the submenus.
 static s8 sCurrentMenuLevel = MENU_LAYER_MAIN;
-
-// Used for text opacifying. If it is below 250, it is constantly incremented.
-static u8 sTextBaseAlpha = 0;
 
 // 2D position of the cursor on the screen.
 // sCursorPos[0]: X | sCursorPos[1]: Y
@@ -112,7 +91,7 @@ static s8 sFadeOutText = FALSE;
 static s8 sStatusMessageID = 0;
 
 // Used for text fading. The alpha value of text is calculated as
-// sTextBaseAlpha - sTextFadeAlpha.
+// gDialogTextAlpha - sTextFadeAlpha.
 static u8 sTextFadeAlpha = 0;
 
 // File select timer that keeps counting until it reaches 1000.
@@ -127,9 +106,6 @@ static s8 sSoundMode = 0;
 
 // Active language for EU arrays, values defined similar to sSoundMode
 // 0: English | 1: French | 2: German
-#ifdef VERSION_EU
-static s8 sLanguageMode = LANGUAGE_ENGLISH;
-#endif
 
 // Tracks which button will be pressed in the erase confirmation prompt (yes/no).
 static s8 sEraseYesNoHoverState = MENU_ERASE_HOVER_NONE;
@@ -146,169 +122,29 @@ static s8 sSelectedFileNum = 0;
 // coin high score, 1 for high score across all files.
 static s8 sScoreFileCoinScoreMode = 0;
 
-// In EU, if no save file exists, open the language menu so the user can find it.
-#ifdef VERSION_EU
+// Determines which languages are available for the language selector,
+// since the value of the language enums are always constant.
+#ifdef MULTILANG
+const u8 gDefinedLanguages[] = {
+    LANGUAGE_ENGLISH,
+#ifdef ENABLE_FRENCH
+    LANGUAGE_FRENCH,
+#endif
+#ifdef ENABLE_GERMAN
+    LANGUAGE_GERMAN,
+#endif
+#ifdef ENABLE_JAPANESE
+    LANGUAGE_JAPANESE,
+#endif
+};
+
+// Index of the selected language in the above array.
+static s8 sSelectedLanguageIndex = 0;
+
+// Whether to open the language menu when the game is booted.
 static s8 sOpenLangSettings = FALSE;
-#endif
 
-#ifndef VERSION_EU
-static u8 textReturn[] = { TEXT_RETURN };
-#else
-static u8 textReturn[][8] = {{ TEXT_RETURN }, { TEXT_RETURN_FR }, { TEXT_RETURN_DE }};
-#endif
-
-#ifndef VERSION_EU
-static u8 textViewScore[] = { TEXT_CHECK_SCORE };
-#else
-static u8 textViewScore[][12] = {{ TEXT_CHECK_SCORE }, {TEXT_CHECK_SCORE_FR}, {TEXT_CHECK_SCORE_DE}};
-#endif
-
-#ifndef VERSION_EU
-static u8 textCopyFileButton[] = { TEXT_COPY_FILE_BUTTON };
-#else
-static u8 textCopyFileButton[][15] = {{ TEXT_COPY_FILE }, { TEXT_COPY_FILE_FR }, { TEXT_COPY_FILE_DE }};
-#endif
-
-#ifndef VERSION_EU
-static u8 textEraseFileButton[] = { TEXT_ERASE_FILE_BUTTON };
-#else
-static u8 textEraseFileButton[][16] = { {TEXT_ERASE_FILE}, {TEXT_ERASE_FILE_FR}, {TEXT_ERASE_FILE_DE} };
-#endif
-
-#ifndef VERSION_EU
-static u8 textSoundModes[][8] = { { TEXT_STEREO }, { TEXT_MONO }, { TEXT_HEADSET } };
-#endif
-
-static u8 textMarioA[] = { TEXT_FILE_MARIO_A };
-static u8 textMarioB[] = { TEXT_FILE_MARIO_B };
-static u8 textMarioC[] = { TEXT_FILE_MARIO_C };
-static u8 textMarioD[] = { TEXT_FILE_MARIO_D };
-
-#ifndef VERSION_EU
-static u8 textNew[] = { TEXT_NEW };
-static u8 starIcon[] = { GLYPH_STAR, GLYPH_SPACE };
-static u8 xIcon[] = { GLYPH_MULTIPLY, GLYPH_SPACE };
-#endif
-
-#ifndef VERSION_EU
-static u8 textSelectFile[] = { TEXT_SELECT_FILE };
-#else
-static u8 textSelectFile[][17] = {{ TEXT_SELECT_FILE }, { TEXT_SELECT_FILE_FR }, { TEXT_SELECT_FILE_DE }};
-#endif
-
-#ifndef VERSION_EU
-static u8 textScore[] = { TEXT_SCORE };
-#else
-static u8 textScore[][9] = {{ TEXT_SCORE }, { TEXT_SCORE_FR }, { TEXT_SCORE_DE }};
-#endif
-
-#ifndef VERSION_EU
-static u8 textCopy[] = { TEXT_COPY };
-#else
-static u8 textCopy[][9] = {{ TEXT_COPY }, { TEXT_COPY_FR }, { TEXT_COPY_DE }};
-#endif
-
-#ifndef VERSION_EU
-static u8 textErase[] = { TEXT_ERASE };
-#else
-static u8 textErase[][8] = {{ TEXT_ERASE }, { TEXT_ERASE_FR }, { TEXT_ERASE_DE }};
-#endif
-
-#ifdef VERSION_EU
-static u8 textOption[][9] = {{ TEXT_OPTION }, { TEXT_OPTION_FR }, { TEXT_OPTION_DE } };
-#endif
-
-#ifndef VERSION_EU
-static u8 textCheckFile[] = { TEXT_CHECK_FILE };
-#else
-static u8 textCheckFile[][18] = {{ TEXT_CHECK_FILE }, { TEXT_CHECK_FILE_FR }, { TEXT_CHECK_FILE_DE }};
-#endif
-
-#ifndef VERSION_EU
-static u8 textNoSavedDataExists[] = { TEXT_NO_SAVED_DATA_EXISTS };
-#else
-static u8 textNoSavedDataExists[][30] = {{ TEXT_NO_SAVED_DATA_EXISTS }, { TEXT_NO_SAVED_DATA_EXISTS_FR }, { TEXT_NO_SAVED_DATA_EXISTS_DE }};
-#endif
-
-#ifndef VERSION_EU
-static u8 textCopyFile[] = { TEXT_COPY_FILE };
-#else
-static u8 textCopyFile[][16] = {{ TEXT_COPY_FILE_BUTTON }, { TEXT_COPY_FILE_BUTTON_FR }, { TEXT_COPY_FILE_BUTTON_DE }};
-#endif
-
-#ifndef VERSION_EU
-static u8 textCopyItToWhere[] = { TEXT_COPY_IT_TO_WHERE };
-#else
-static u8 textCopyItToWhere[][18] = {{ TEXT_COPY_IT_TO_WHERE }, { TEXT_COPY_IT_TO_WHERE_FR }, { TEXT_COPY_IT_TO_WHERE_DE }};
-#endif
-
-#if !defined(VERSION_EU)
-static u8 textNoSavedDataExistsCopy[] = { TEXT_NO_SAVED_DATA_EXISTS };
-#endif
-
-#ifndef VERSION_EU
-static u8 textCopyCompleted[] = { TEXT_COPYING_COMPLETED };
-#else
-static u8 textCopyCompleted[][18] = {{ TEXT_COPYING_COMPLETED }, { TEXT_COPYING_COMPLETED_FR }, { TEXT_COPYING_COMPLETED_DE }};
-#endif
-
-#ifndef VERSION_EU
-static u8 textSavedDataExists[] = { TEXT_SAVED_DATA_EXISTS };
-#else
-static u8 textSavedDataExists[][20] = {{ TEXT_SAVED_DATA_EXISTS }, { TEXT_SAVED_DATA_EXISTS_FR }, { TEXT_SAVED_DATA_EXISTS_DE }};
-#endif
-
-#ifndef VERSION_EU
-static u8 textNoFileToCopyFrom[] = { TEXT_NO_FILE_TO_COPY_FROM };
-#else
-static u8 textNoFileToCopyFrom[][21] = {{ TEXT_NO_FILE_TO_COPY_FROM }, { TEXT_NO_FILE_TO_COPY_FROM_FR }, { TEXT_NO_FILE_TO_COPY_FROM_DE }};
-#endif
-
-#ifndef VERSION_EU
-static u8 textYes[] = { TEXT_YES };
-#else
-static u8 textYes[][4] = {{ TEXT_YES }, { TEXT_YES_FR }, { TEXT_YES_DE }};
-#endif
-
-#ifndef VERSION_EU
-static u8 textNo[] = { TEXT_NO };
-#else
-static u8 textNo[][5] = {{ TEXT_NO }, { TEXT_NO_FR }, { TEXT_NO_DE }};
-#endif
-
-#ifdef VERSION_EU
-// In EU, Erase File and Sound Select strings are outside it's print string function
-static u8 textEraseFile[][17] = {
-    { TEXT_ERASE_FILE_BUTTON }, { TEXT_ERASE_FILE_BUTTON_FR }, { TEXT_ERASE_FILE_BUTTON_DE }
-};
-static u8 textSure[][8] = {{ TEXT_SURE }, { TEXT_SURE_FR }, { TEXT_SURE_DE }};
-static u8 textMarioAJustErased[][20] = {
-    { TEXT_FILE_MARIO_A_JUST_ERASED }, { TEXT_FILE_MARIO_A_JUST_ERASED_FR }, { TEXT_FILE_MARIO_A_JUST_ERASED_DE }
-};
-
-static u8 textSoundSelect[][13] = {
-    { TEXT_SOUND_SELECT }, { TEXT_SOUND_SELECT_FR }, { TEXT_SOUND_SELECT_DE }
-};
-
-static u8 textLanguageSelect[][17] = {
-    { TEXT_LANGUAGE_SELECT }, { TEXT_LANGUAGE_SELECT_FR }, { TEXT_LANGUAGE_SELECT_DE }
-};
-
-static u8 textSoundModes[][10] = {
-    { TEXT_STEREO }, { TEXT_MONO }, { TEXT_HEADSET },
-    { TEXT_STEREO_FR }, { TEXT_MONO_FR }, { TEXT_HEADSET_FR },
-    { TEXT_STEREO_DE }, { TEXT_MONO_DE }, { TEXT_HEADSET_DE }
-};
-
-static u8 textLanguage[][9] = {{ TEXT_ENGLISH }, { TEXT_FRENCH }, { TEXT_GERMAN }};
-
-static u8 textMario[] = { TEXT_MARIO };
-static u8 textHiScore[][15] = {{ TEXT_HI_SCORE }, { TEXT_HI_SCORE_FR }, { TEXT_HI_SCORE_DE }};
-static u8 textMyScore[][10] = {{ TEXT_MY_SCORE }, { TEXT_MY_SCORE_FR }, { TEXT_MY_SCORE_DE }};
-
-static u8 textNew[][5] = {{ TEXT_NEW }, { TEXT_NEW_FR }, { TEXT_NEW_DE }};
-static u8 starIcon[] = { GLYPH_STAR, GLYPH_SPACE };
-static u8 xIcon[] = { GLYPH_MULTIPLY, GLYPH_SPACE };
+#define NUM_DEFINED_LANGUAGES ARRAY_COUNT(gDefinedLanguages)
 #endif
 
 /**
@@ -319,9 +155,6 @@ static u8 xIcon[] = { GLYPH_MULTIPLY, GLYPH_SPACE };
 void beh_yellow_background_menu_init(void) {
     gCurrentObject->oFaceAngleYaw = 0x8000;
     gCurrentObject->oMenuButtonScale = 9.0f;
-#ifdef WIDESCREEN
-    gCurrentObject->oAnimState = 1;
-#endif
 }
 
 /**
@@ -337,14 +170,14 @@ void beh_yellow_background_menu_loop(void) {
  * depth = 200.0 for main menu, 22.0 for submenus.
  */
 s32 check_clicked_button(s16 x, s16 y, f32 depth) {
-    f32 a = 52.4213;
-    f32 newX = ((f32) x * 160.0) / (a * depth);
-    f32 newY = ((f32) y * 120.0) / (a * 3 / 4 * depth);
+    f32 a = 52.4213f;
+    f32 newX = ((f32) x * 160.0f) / (a * depth);
+    f32 newY = ((f32) y * 120.0f) / (a * 3 / 4 * depth);
     s16 maxX = newX + 25.0f;
     s16 minX = newX - 25.0f;
     s16 maxY = newY + 21.0f;
     s16 minY = newY - 21.0f;
-    
+
     if (sClickPos[0] < maxX && minX < sClickPos[0] && sClickPos[1] < maxY && minY < sClickPos[1]) {
         return TRUE;
     }
@@ -354,7 +187,7 @@ s32 check_clicked_button(s16 x, s16 y, f32 depth) {
 /**
  * Grow from main menu, used by selecting files and menus.
  */
-static void bhv_menu_button_growing_from_main_menu(struct Object *button) {
+void bhv_menu_button_growing_from_main_menu(struct Object *button) {
     if (button->oMenuButtonTimer < 16) {
         button->oFaceAngleYaw += 0x800;
     }
@@ -364,19 +197,16 @@ static void bhv_menu_button_growing_from_main_menu(struct Object *button) {
     if (button->oMenuButtonTimer >= 8 && button->oMenuButtonTimer < 16) {
         button->oFaceAnglePitch -= 0x800;
     }
-    button->oParentRelativePosX -= button->oMenuButtonOrigPosX / 16.0;
-    button->oParentRelativePosY -= button->oMenuButtonOrigPosY / 16.0;
-    if (button->oPosZ < button->oMenuButtonOrigPosZ + 17800.0) {
-        button->oParentRelativePosZ += 1112.5;
+    button->oParentRelativePosX -= button->oMenuButtonOrigPosX / 16.0f;
+    button->oParentRelativePosY -= button->oMenuButtonOrigPosY / 16.0f;
+    if (button->oPosZ < button->oMenuButtonOrigPosZ + 17800.0f) {
+        button->oParentRelativePosZ += 1112.5f;
     }
     button->oMenuButtonTimer++;
     if (button->oMenuButtonTimer == 16) {
         button->oParentRelativePosX = 0.0f;
         button->oParentRelativePosY = 0.0f;
         button->oMenuButtonState = MENU_BUTTON_STATE_FULLSCREEN;
-#ifdef WIDESCREEN
-        button->oAnimState = 1;
-#endif
         button->oMenuButtonTimer = 0;
     }
 }
@@ -384,7 +214,7 @@ static void bhv_menu_button_growing_from_main_menu(struct Object *button) {
 /**
  * Shrink back to main menu, used to return back while inside menus.
  */
-static void bhv_menu_button_shrinking_to_main_menu(struct Object *button) {
+void bhv_menu_button_shrinking_to_main_menu(struct Object *button) {
     if (button->oMenuButtonTimer < 16) {
         button->oFaceAngleYaw -= 0x800;
     }
@@ -394,16 +224,12 @@ static void bhv_menu_button_shrinking_to_main_menu(struct Object *button) {
     if (button->oMenuButtonTimer >= 8 && button->oMenuButtonTimer < 16) {
         button->oFaceAnglePitch += 0x800;
     }
-    button->oParentRelativePosX += button->oMenuButtonOrigPosX / 16.0;
-    button->oParentRelativePosY += button->oMenuButtonOrigPosY / 16.0;
+    button->oParentRelativePosX += button->oMenuButtonOrigPosX / 16.0f;
+    button->oParentRelativePosY += button->oMenuButtonOrigPosY / 16.0f;
     if (button->oPosZ > button->oMenuButtonOrigPosZ) {
-        button->oParentRelativePosZ -= 1112.5;
+        button->oParentRelativePosZ -= 1112.5f;
     }
     button->oMenuButtonTimer++;
-#ifdef WIDESCREEN
-    button->oAnimState = 0;
-#endif
-
     if (button->oMenuButtonTimer == 16) {
         button->oParentRelativePosX = button->oMenuButtonOrigPosX;
         button->oParentRelativePosY = button->oMenuButtonOrigPosY;
@@ -415,7 +241,7 @@ static void bhv_menu_button_shrinking_to_main_menu(struct Object *button) {
 /**
  * Grow from submenu, used by selecting a file in the score menu.
  */
-static void bhv_menu_button_growing_from_submenu(struct Object *button) {
+void bhv_menu_button_growing_from_submenu(struct Object *button) {
     if (button->oMenuButtonTimer < 16) {
         button->oFaceAngleYaw += 0x800;
     }
@@ -425,9 +251,9 @@ static void bhv_menu_button_growing_from_submenu(struct Object *button) {
     if (button->oMenuButtonTimer >= 8 && button->oMenuButtonTimer < 16) {
         button->oFaceAnglePitch -= 0x800;
     }
-    button->oParentRelativePosX -= button->oMenuButtonOrigPosX / 16.0;
-    button->oParentRelativePosY -= button->oMenuButtonOrigPosY / 16.0;
-    button->oParentRelativePosZ -= 116.25;
+    button->oParentRelativePosX -= button->oMenuButtonOrigPosX / 16.0f;
+    button->oParentRelativePosY -= button->oMenuButtonOrigPosY / 16.0f;
+    button->oParentRelativePosZ -= 116.25f;
     button->oMenuButtonTimer++;
     if (button->oMenuButtonTimer == 16) {
         button->oParentRelativePosX = 0.0f;
@@ -440,7 +266,7 @@ static void bhv_menu_button_growing_from_submenu(struct Object *button) {
 /**
  * Shrink back to submenu, used to return back while inside a score save menu.
  */
-static void bhv_menu_button_shrinking_to_submenu(struct Object *button) {
+void bhv_menu_button_shrinking_to_submenu(struct Object *button) {
     if (button->oMenuButtonTimer < 16) {
         button->oFaceAngleYaw -= 0x800;
     }
@@ -450,10 +276,10 @@ static void bhv_menu_button_shrinking_to_submenu(struct Object *button) {
     if (button->oMenuButtonTimer >= 8 && button->oMenuButtonTimer < 16) {
         button->oFaceAnglePitch += 0x800;
     }
-    button->oParentRelativePosX += button->oMenuButtonOrigPosX / 16.0;
-    button->oParentRelativePosY += button->oMenuButtonOrigPosY / 16.0;
+    button->oParentRelativePosX += button->oMenuButtonOrigPosX / 16.0f;
+    button->oParentRelativePosY += button->oMenuButtonOrigPosY / 16.0f;
     if (button->oPosZ > button->oMenuButtonOrigPosZ) {
-        button->oParentRelativePosZ += 116.25;
+        button->oParentRelativePosZ += 116.25f;
     }
     button->oMenuButtonTimer++;
     if (button->oMenuButtonTimer == 16) {
@@ -468,7 +294,7 @@ static void bhv_menu_button_shrinking_to_submenu(struct Object *button) {
  * A small increase and decrease in size.
  * Used by failed copy/erase/score operations and sound mode select.
  */
-static void bhv_menu_button_zoom_in_out(struct Object *button) {
+void bhv_menu_button_zoom_in_out(struct Object *button) {
     if (sCurrentMenuLevel == MENU_LAYER_MAIN) {
         if (button->oMenuButtonTimer < 4) {
             button->oParentRelativePosZ -= 20.0f;
@@ -487,9 +313,6 @@ static void bhv_menu_button_zoom_in_out(struct Object *button) {
     button->oMenuButtonTimer++;
     if (button->oMenuButtonTimer == 8) {
         button->oMenuButtonState = MENU_BUTTON_STATE_DEFAULT;
-#ifdef WIDESCREEN
-        button->oAnimState = 0;
-#endif
         button->oMenuButtonTimer = 0;
     }
 }
@@ -498,14 +321,11 @@ static void bhv_menu_button_zoom_in_out(struct Object *button) {
  * A small temporary increase in size.
  * Used while selecting a target copy/erase file or yes/no erase confirmation prompt.
  */
-static void bhv_menu_button_zoom_in(struct Object *button) {
-    button->oMenuButtonScale += 0.0022;
+void bhv_menu_button_zoom_in(struct Object *button) {
+    button->oMenuButtonScale += 0.0022f;
     button->oMenuButtonTimer++;
     if (button->oMenuButtonTimer == 10) {
         button->oMenuButtonState = MENU_BUTTON_STATE_DEFAULT;
-#ifdef WIDESCREEN
-        button->oAnimState = 0;
-#endif
         button->oMenuButtonTimer = 0;
     }
 }
@@ -515,14 +335,11 @@ static void bhv_menu_button_zoom_in(struct Object *button) {
  * Used after selecting a target copy/erase file or
  * yes/no erase confirmation prompt to undo the zoom in.
  */
-static void bhv_menu_button_zoom_out(struct Object *button) {
-    button->oMenuButtonScale -= 0.0022;
+void bhv_menu_button_zoom_out(struct Object *button) {
+    button->oMenuButtonScale -= 0.0022f;
     button->oMenuButtonTimer++;
     if (button->oMenuButtonTimer == 10) {
         button->oMenuButtonState = MENU_BUTTON_STATE_DEFAULT;
-#ifdef WIDESCREEN
-        button->oAnimState = 0;
-#endif
         button->oMenuButtonTimer = 0;
     }
 }
@@ -535,9 +352,6 @@ static void bhv_menu_button_zoom_out(struct Object *button) {
 void bhv_menu_button_init(void) {
     gCurrentObject->oMenuButtonOrigPosX = gCurrentObject->oParentRelativePosX;
     gCurrentObject->oMenuButtonOrigPosY = gCurrentObject->oParentRelativePosY;
-#ifdef WIDESCREEN
-    gCurrentObject->oAnimState = 0;
-#endif
 }
 
 /**
@@ -557,7 +371,7 @@ void bhv_menu_button_loop(void) {
             if (sCurrentMenuLevel == MENU_LAYER_SUBMENU) {
                 bhv_menu_button_growing_from_submenu(gCurrentObject); // Only used for score files
             }
-            sTextBaseAlpha = 0;
+            gDialogTextAlpha = 0;
             sCursorClickingTimer = 4;
             break;
         case MENU_BUTTON_STATE_FULLSCREEN: // Menu state
@@ -569,7 +383,7 @@ void bhv_menu_button_loop(void) {
             if (sCurrentMenuLevel == MENU_LAYER_SUBMENU) {
                 bhv_menu_button_shrinking_to_submenu(gCurrentObject); // Only used for score files
             }
-            sTextBaseAlpha = 0;
+            gDialogTextAlpha = 0;
             sCursorClickingTimer = 4;
             break;
         case MENU_BUTTON_STATE_ZOOM_IN_OUT:
@@ -596,7 +410,7 @@ void exit_score_file_to_score_menu(struct Object *scoreFileButton, s8 scoreButto
     if (scoreFileButton->oMenuButtonState == MENU_BUTTON_STATE_FULLSCREEN
         && sCursorClickingTimer == 2) {
         play_sound(SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
         queue_rumble_data(5, 80);
 #endif
         scoreFileButton->oMenuButtonState = MENU_BUTTON_STATE_SHRINKING;
@@ -610,72 +424,66 @@ void exit_score_file_to_score_menu(struct Object *scoreFileButton, s8 scoreButto
     }
 }
 
+static const Vec3s sSaveFileButtonPositions[] = {
+    {  711, 311, -100 }, // SAVE_FILE_A
+    { -166, 311, -100 }, // SAVE_FILE_B
+    {  711,   0, -100 }, // SAVE_FILE_C
+    { -166,   0, -100 }, // SAVE_FILE_D
+};
+
+#define SPAWN_FILE_SELECT_FILE_BUTTON(parent, saveFile)                                                 \
+    spawn_object_rel_with_rot((parent),                                                                 \
+    (save_file_exists(saveFile) ? MODEL_MAIN_MENU_MARIO_SAVE_BUTTON : MODEL_MAIN_MENU_MARIO_NEW_BUTTON),\
+    bhvMenuButton,                                                                                      \
+    sSaveFileButtonPositions[saveFile][0],                                                              \
+    sSaveFileButtonPositions[saveFile][1],                                                              \
+    sSaveFileButtonPositions[saveFile][2],                                                              \
+    0x0, -0x8000, 0x0)
+
+#define MENU_BUTTON_SCALE 0.11111111f
+
 /**
- * Render buttons for the score menu.
+ * Render buttons for the menu.
  * Also check if the save file exists to render a different Mario button.
  */
-void render_score_menu_buttons(struct Object *scoreButton) {
+void render_menu_buttons(s32 selectedButtonID) {
+    struct Object *button = sMainMenuButtons[selectedButtonID];
+    // MENU_BUTTON_SCORE ->  7
+    // MENU_BUTTON_COPY  -> 14
+    // MENU_BUTTON_ERASE -> 21
+    s32 idx = (selectedButtonID - 3) * 7;
+
     // File A
-    if (save_file_exists(SAVE_FILE_A) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_SCORE_FILE_A] =
-            spawn_object_rel_with_rot(scoreButton, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON, bhvMenuButton,
-                                      711, 311, -100, 0, -0x8000, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_SCORE_FILE_A] =
-            spawn_object_rel_with_rot(scoreButton, MODEL_MAIN_MENU_MARIO_NEW_BUTTON, bhvMenuButton, 711,
-                                      311, -100, 0, -0x8000, 0);
-    }
-    sMainMenuButtons[MENU_BUTTON_SCORE_FILE_A]->oMenuButtonScale = 0.11111111f;
+    sMainMenuButtons[idx + 0] = SPAWN_FILE_SELECT_FILE_BUTTON(button, SAVE_FILE_A);
+    sMainMenuButtons[idx + 0]->oMenuButtonScale = MENU_BUTTON_SCALE;
     // File B
-    if (save_file_exists(SAVE_FILE_B) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_SCORE_FILE_B] =
-            spawn_object_rel_with_rot(scoreButton, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON, bhvMenuButton,
-                                      -166, 311, -100, 0, -0x8000, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_SCORE_FILE_B] =
-            spawn_object_rel_with_rot(scoreButton, MODEL_MAIN_MENU_MARIO_NEW_BUTTON, bhvMenuButton,
-                                      -166, 311, -100, 0, -0x8000, 0);
-    }
-    sMainMenuButtons[MENU_BUTTON_SCORE_FILE_B]->oMenuButtonScale = 0.11111111f;
+    sMainMenuButtons[idx + 1] = SPAWN_FILE_SELECT_FILE_BUTTON(button, SAVE_FILE_B);
+    sMainMenuButtons[idx + 1]->oMenuButtonScale = MENU_BUTTON_SCALE;
     // File C
-    if (save_file_exists(SAVE_FILE_C) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_SCORE_FILE_C] = spawn_object_rel_with_rot(
-            scoreButton, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON, bhvMenuButton, 711, 0, -100, 0, -0x8000, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_SCORE_FILE_C] = spawn_object_rel_with_rot(
-            scoreButton, MODEL_MAIN_MENU_MARIO_NEW_BUTTON, bhvMenuButton, 711, 0, -100, 0, -0x8000, 0);
-    }
-    sMainMenuButtons[MENU_BUTTON_SCORE_FILE_C]->oMenuButtonScale = 0.11111111f;
+    sMainMenuButtons[idx + 2] = SPAWN_FILE_SELECT_FILE_BUTTON(button, SAVE_FILE_C);
+    sMainMenuButtons[idx + 2]->oMenuButtonScale = MENU_BUTTON_SCALE;
     // File D
-    if (save_file_exists(SAVE_FILE_D) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_SCORE_FILE_D] =
-            spawn_object_rel_with_rot(scoreButton, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON, bhvMenuButton,
-                                      -166, 0, -100, 0, -0x8000, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_SCORE_FILE_D] = spawn_object_rel_with_rot(
-            scoreButton, MODEL_MAIN_MENU_MARIO_NEW_BUTTON, bhvMenuButton, -166, 0, -100, 0, -0x8000, 0);
-    }
-    sMainMenuButtons[MENU_BUTTON_SCORE_FILE_D]->oMenuButtonScale = 0.11111111f;
+    sMainMenuButtons[idx + 3] = SPAWN_FILE_SELECT_FILE_BUTTON(button, SAVE_FILE_D);
+    sMainMenuButtons[idx + 3]->oMenuButtonScale = MENU_BUTTON_SCALE;
+
     // Return to main menu button
-    sMainMenuButtons[MENU_BUTTON_SCORE_RETURN] = spawn_object_rel_with_rot(
-        scoreButton, MODEL_MAIN_MENU_YELLOW_FILE_BUTTON, bhvMenuButton, 711, -388, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_SCORE_RETURN]->oMenuButtonScale = 0.11111111f;
+    sMainMenuButtons[idx + 4] =
+        spawn_object_rel_with_rot(button, MODEL_MAIN_MENU_YELLOW_FILE_BUTTON,
+                                  bhvMenuButton,  711, -388, -100, 0x0, -0x8000, 0x0);
+    sMainMenuButtons[idx + 4]->oMenuButtonScale = MENU_BUTTON_SCALE;
     // Switch to copy menu button
-    sMainMenuButtons[MENU_BUTTON_SCORE_COPY_FILE] = spawn_object_rel_with_rot(
-        scoreButton, MODEL_MAIN_MENU_BLUE_COPY_BUTTON, bhvMenuButton, 0, -388, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_SCORE_COPY_FILE]->oMenuButtonScale = 0.11111111f;
+    sMainMenuButtons[idx + 5] =
+        spawn_object_rel_with_rot(button, selectedButtonID == MENU_BUTTON_SCORE ? MODEL_MAIN_MENU_BLUE_COPY_BUTTON : MODEL_MAIN_MENU_GREEN_SCORE_BUTTON,
+                                  bhvMenuButton,    0, -388, -100, 0x0, -0x8000, 0x0);
+    sMainMenuButtons[idx + 5]->oMenuButtonScale = MENU_BUTTON_SCALE;
     // Switch to erase menu button
-    sMainMenuButtons[MENU_BUTTON_SCORE_ERASE_FILE] = spawn_object_rel_with_rot(
-        scoreButton, MODEL_MAIN_MENU_RED_ERASE_BUTTON, bhvMenuButton, -711, -388, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_SCORE_ERASE_FILE]->oMenuButtonScale = 0.11111111f;
+    sMainMenuButtons[idx + 6] =
+        spawn_object_rel_with_rot(button, selectedButtonID == MENU_BUTTON_ERASE ? MODEL_MAIN_MENU_BLUE_COPY_BUTTON : MODEL_MAIN_MENU_RED_ERASE_BUTTON,
+                                  bhvMenuButton, -711, -388, -100, 0x0, -0x8000, 0x0);
+    sMainMenuButtons[idx + 6]->oMenuButtonScale = MENU_BUTTON_SCALE;
 }
 
-#ifdef VERSION_EU
-    #define SCORE_TIMER 46
-#else
-    #define SCORE_TIMER 31
-#endif
-
+#define SCORE_TIMER 31
 /**
  * In the score menu, checks if a button was clicked to play a sound, button state and other functions.
  */
@@ -692,7 +500,7 @@ void check_score_menu_clicked_buttons(struct Object *scoreButton) {
                 if (buttonID == MENU_BUTTON_SCORE_RETURN || buttonID == MENU_BUTTON_SCORE_COPY_FILE
                     || buttonID == MENU_BUTTON_SCORE_ERASE_FILE) {
                     play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
                     queue_rumble_data(5, 80);
 #endif
                     sMainMenuButtons[buttonID]->oMenuButtonState = MENU_BUTTON_STATE_ZOOM_IN_OUT;
@@ -703,7 +511,7 @@ void check_score_menu_clicked_buttons(struct Object *scoreButton) {
                         // If clicked in a existing save file, select it too see it's score
                         if (save_file_exists(buttonID - MENU_BUTTON_SCORE_MIN) == TRUE) {
                             play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
                             queue_rumble_data(5, 80);
 #endif
                             sMainMenuButtons[buttonID]->oMenuButtonState = MENU_BUTTON_STATE_GROWING;
@@ -712,7 +520,7 @@ void check_score_menu_clicked_buttons(struct Object *scoreButton) {
                         else {
                             // If clicked in a non-existing save file, play buzz sound
                             play_sound(SOUND_MENU_CAMERA_BUZZ, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
                             queue_rumble_data(5, 80);
 #endif
                             sMainMenuButtons[buttonID]->oMenuButtonState =
@@ -733,69 +541,7 @@ void check_score_menu_clicked_buttons(struct Object *scoreButton) {
 
 #undef SCORE_TIMER
 
-/**
- * Render buttons for the copy menu.
- * Also check if the save file exists to render a different Mario button.
- */
-void render_copy_menu_buttons(struct Object *copyButton) {
-    // File A
-    if (save_file_exists(SAVE_FILE_A) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_COPY_FILE_A] =
-            spawn_object_rel_with_rot(copyButton, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON, bhvMenuButton, 711,
-                                      311, -100, 0, -0x8000, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_COPY_FILE_A] = spawn_object_rel_with_rot(
-            copyButton, MODEL_MAIN_MENU_MARIO_NEW_BUTTON, bhvMenuButton, 711, 311, -100, 0, -0x8000, 0);
-    }
-    sMainMenuButtons[MENU_BUTTON_COPY_FILE_A]->oMenuButtonScale = 0.11111111f;
-    // File B
-    if (save_file_exists(SAVE_FILE_B) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_COPY_FILE_B] =
-            spawn_object_rel_with_rot(copyButton, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON, bhvMenuButton,
-                                      -166, 311, -100, 0, -0x8000, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_COPY_FILE_B] =
-            spawn_object_rel_with_rot(copyButton, MODEL_MAIN_MENU_MARIO_NEW_BUTTON, bhvMenuButton, -166,
-                                      311, -100, 0, -0x8000, 0);
-    }
-    sMainMenuButtons[MENU_BUTTON_COPY_FILE_B]->oMenuButtonScale = 0.11111111f;
-    // File C
-    if (save_file_exists(SAVE_FILE_C) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_COPY_FILE_C] = spawn_object_rel_with_rot(
-            copyButton, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON, bhvMenuButton, 711, 0, -100, 0, -0x8000, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_COPY_FILE_C] = spawn_object_rel_with_rot(
-            copyButton, MODEL_MAIN_MENU_MARIO_NEW_BUTTON, bhvMenuButton, 711, 0, -100, 0, -0x8000, 0);
-    }
-    sMainMenuButtons[MENU_BUTTON_COPY_FILE_C]->oMenuButtonScale = 0.11111111f;
-    // File D
-    if (save_file_exists(SAVE_FILE_D) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_COPY_FILE_D] = spawn_object_rel_with_rot(
-            copyButton, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON, bhvMenuButton, -166, 0, -100, 0, -0x8000, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_COPY_FILE_D] = spawn_object_rel_with_rot(
-            copyButton, MODEL_MAIN_MENU_MARIO_NEW_BUTTON, bhvMenuButton, -166, 0, -100, 0, -0x8000, 0);
-    }
-    sMainMenuButtons[MENU_BUTTON_COPY_FILE_D]->oMenuButtonScale = 0.11111111f;
-    // Return to main menu button
-    sMainMenuButtons[MENU_BUTTON_COPY_RETURN] = spawn_object_rel_with_rot(
-        copyButton, MODEL_MAIN_MENU_YELLOW_FILE_BUTTON, bhvMenuButton, 711, -388, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_COPY_RETURN]->oMenuButtonScale = 0.11111111f;
-    // Switch to scire menu button
-    sMainMenuButtons[MENU_BUTTON_COPY_CHECK_SCORE] = spawn_object_rel_with_rot(
-        copyButton, MODEL_MAIN_MENU_GREEN_SCORE_BUTTON, bhvMenuButton, 0, -388, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_COPY_CHECK_SCORE]->oMenuButtonScale = 0.11111111f;
-    // Switch to erase menu button
-    sMainMenuButtons[MENU_BUTTON_COPY_ERASE_FILE] = spawn_object_rel_with_rot(
-        copyButton, MODEL_MAIN_MENU_RED_ERASE_BUTTON, bhvMenuButton, -711, -388, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_COPY_ERASE_FILE]->oMenuButtonScale = 0.11111111f;
-}
-
-#ifdef VERSION_EU
-    #define BUZZ_TIMER 36
-#else
-    #define BUZZ_TIMER 21
-#endif
+#define BUZZ_TIMER 21
 
 /**
  * Copy Menu phase actions that handles what to do when a file button is clicked.
@@ -809,7 +555,7 @@ void copy_action_file_button(struct Object *copyButton, s32 copyFileButtonID) {
             if (save_file_exists(copyFileButtonID - MENU_BUTTON_COPY_MIN) == TRUE) {
                 // If clicked in a existing save file, ask where it wants to copy
                 play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
                 queue_rumble_data(5, 80);
 #endif
                 sMainMenuButtons[copyFileButtonID]->oMenuButtonState = MENU_BUTTON_STATE_ZOOM_IN;
@@ -820,7 +566,7 @@ void copy_action_file_button(struct Object *copyButton, s32 copyFileButtonID) {
             } else {
                 // If clicked in a non-existing save file, play buzz sound
                 play_sound(SOUND_MENU_CAMERA_BUZZ, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
                 queue_rumble_data(5, 80);
 #endif
                 sMainMenuButtons[copyFileButtonID]->oMenuButtonState = MENU_BUTTON_STATE_ZOOM_IN_OUT;
@@ -835,7 +581,7 @@ void copy_action_file_button(struct Object *copyButton, s32 copyFileButtonID) {
             if (save_file_exists(copyFileButtonID - MENU_BUTTON_COPY_MIN) == FALSE) {
                 // If clicked in a non-existing save file, copy the file
                 play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
                 queue_rumble_data(5, 80);
 #endif
                 copyButton->oMenuButtonActionPhase = COPY_PHASE_COPY_COMPLETE;
@@ -850,11 +596,10 @@ void copy_action_file_button(struct Object *copyButton, s32 copyFileButtonID) {
                 // If clicked in a existing save file, play buzz sound
                 if (copyFileButtonID == MENU_BUTTON_COPY_FILE_A + sSelectedFileIndex) {
                     play_sound(SOUND_MENU_CAMERA_BUZZ, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
-                queue_rumble_data(5, 80);
+#if ENABLE_RUMBLE
+                    queue_rumble_data(5, 80);
 #endif
-                    sMainMenuButtons[MENU_BUTTON_COPY_FILE_A + sSelectedFileIndex]->oMenuButtonState =
-                        MENU_BUTTON_STATE_ZOOM_OUT;
+                    sMainMenuButtons[MENU_BUTTON_COPY_FILE_A + sSelectedFileIndex]->oMenuButtonState = MENU_BUTTON_STATE_ZOOM_OUT;
                     copyButton->oMenuButtonActionPhase = COPY_PHASE_MAIN;
                     sFadeOutText = TRUE;
                     return;
@@ -868,13 +613,7 @@ void copy_action_file_button(struct Object *copyButton, s32 copyFileButtonID) {
     }
 }
 
-#ifdef VERSION_EU
-    #define ACTION_TIMER      41
-    #define MAIN_RETURN_TIMER 36
-#else
-    #define ACTION_TIMER      31
-    #define MAIN_RETURN_TIMER 31
-#endif
+#define ACTION_TIMER 30
 
 /**
  * In the copy menu, checks if a button was clicked to play a sound, button state and other functions.
@@ -893,7 +632,7 @@ void check_copy_menu_clicked_buttons(struct Object *copyButton) {
                     || buttonID == MENU_BUTTON_COPY_ERASE_FILE) {
                     if (copyButton->oMenuButtonActionPhase == COPY_PHASE_MAIN) {
                         play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
                         queue_rumble_data(5, 80);
 #endif
                         sMainMenuButtons[buttonID]->oMenuButtonState = MENU_BUTTON_STATE_ZOOM_IN_OUT;
@@ -914,72 +653,12 @@ void check_copy_menu_clicked_buttons(struct Object *copyButton) {
 
         // After copy is complete, return to main copy phase
         if (copyButton->oMenuButtonActionPhase == COPY_PHASE_COPY_COMPLETE
-            && sMainMenuTimer >= MAIN_RETURN_TIMER) {
+            && sMainMenuTimer > ACTION_TIMER) {
             copyButton->oMenuButtonActionPhase = COPY_PHASE_MAIN;
             sMainMenuButtons[MENU_BUTTON_COPY_MIN + sSelectedFileIndex]->oMenuButtonState =
                 MENU_BUTTON_STATE_ZOOM_OUT;
         }
     }
-}
-
-/**
- * Render buttons for the erase menu.
- * Also check if the save file exists to render a different Mario button.
- */
-void render_erase_menu_buttons(struct Object *eraseButton) {
-    // File A
-    if (save_file_exists(SAVE_FILE_A) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_ERASE_FILE_A] =
-            spawn_object_rel_with_rot(eraseButton, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON, bhvMenuButton,
-                                      711, 311, -100, 0, -0x8000, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_ERASE_FILE_A] =
-            spawn_object_rel_with_rot(eraseButton, MODEL_MAIN_MENU_MARIO_NEW_BUTTON, bhvMenuButton, 711,
-                                      311, -100, 0, -0x8000, 0);
-    }
-    sMainMenuButtons[MENU_BUTTON_ERASE_FILE_A]->oMenuButtonScale = 0.11111111f;
-    // File B
-    if (save_file_exists(SAVE_FILE_B) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_ERASE_FILE_B] =
-            spawn_object_rel_with_rot(eraseButton, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON, bhvMenuButton,
-                                      -166, 311, -100, 0, -0x8000, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_ERASE_FILE_B] =
-            spawn_object_rel_with_rot(eraseButton, MODEL_MAIN_MENU_MARIO_NEW_BUTTON, bhvMenuButton,
-                                      -166, 311, -100, 0, -0x8000, 0);
-    }
-    sMainMenuButtons[MENU_BUTTON_ERASE_FILE_B]->oMenuButtonScale = 0.11111111f;
-    // File C
-    if (save_file_exists(SAVE_FILE_C) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_ERASE_FILE_C] = spawn_object_rel_with_rot(
-            eraseButton, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON, bhvMenuButton, 711, 0, -100, 0, -0x8000, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_ERASE_FILE_C] = spawn_object_rel_with_rot(
-            eraseButton, MODEL_MAIN_MENU_MARIO_NEW_BUTTON, bhvMenuButton, 711, 0, -100, 0, -0x8000, 0);
-    }
-    sMainMenuButtons[MENU_BUTTON_ERASE_FILE_C]->oMenuButtonScale = 0.11111111f;
-    // File D
-    if (save_file_exists(SAVE_FILE_D) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_ERASE_FILE_D] =
-            spawn_object_rel_with_rot(eraseButton, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON, bhvMenuButton,
-                                      -166, 0, -100, 0, -0x8000, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_ERASE_FILE_D] = spawn_object_rel_with_rot(
-            eraseButton, MODEL_MAIN_MENU_MARIO_NEW_BUTTON, bhvMenuButton, -166, 0, -100, 0, -0x8000, 0);
-    }
-    sMainMenuButtons[MENU_BUTTON_ERASE_FILE_D]->oMenuButtonScale = 0.11111111f;
-    // Return to main menu button
-    sMainMenuButtons[MENU_BUTTON_ERASE_RETURN] = spawn_object_rel_with_rot(
-        eraseButton, MODEL_MAIN_MENU_YELLOW_FILE_BUTTON, bhvMenuButton, 711, -388, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_ERASE_RETURN]->oMenuButtonScale = 0.11111111f;
-    // Switch to score menu button
-    sMainMenuButtons[MENU_BUTTON_ERASE_CHECK_SCORE] = spawn_object_rel_with_rot(
-        eraseButton, MODEL_MAIN_MENU_GREEN_SCORE_BUTTON, bhvMenuButton, 0, -388, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_ERASE_CHECK_SCORE]->oMenuButtonScale = 0.11111111f;
-    // Switch to copy menu button
-    sMainMenuButtons[MENU_BUTTON_ERASE_COPY_FILE] = spawn_object_rel_with_rot(
-        eraseButton, MODEL_MAIN_MENU_BLUE_COPY_BUTTON, bhvMenuButton, -711, -388, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_ERASE_COPY_FILE]->oMenuButtonScale = 0.11111111f;
 }
 
 /**
@@ -991,7 +670,7 @@ void erase_action_file_button(struct Object *eraseButton, s32 eraseFileButtonID)
             if (save_file_exists(eraseFileButtonID - MENU_BUTTON_ERASE_MIN) == TRUE) {
                 // If clicked in a existing save file, ask if it wants to delete it
                 play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
                 queue_rumble_data(5, 80);
 #endif
                 sMainMenuButtons[eraseFileButtonID]->oMenuButtonState = MENU_BUTTON_STATE_ZOOM_IN;
@@ -1002,7 +681,7 @@ void erase_action_file_button(struct Object *eraseButton, s32 eraseFileButtonID)
             } else {
                 // If clicked in a non-existing save file, play buzz sound
                 play_sound(SOUND_MENU_CAMERA_BUZZ, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
                 queue_rumble_data(5, 80);
 #endif
                 sMainMenuButtons[eraseFileButtonID]->oMenuButtonState = MENU_BUTTON_STATE_ZOOM_IN_OUT;
@@ -1019,7 +698,7 @@ void erase_action_file_button(struct Object *eraseButton, s32 eraseFileButtonID)
                 // Note: The prompt functions are actually called when the ERASE_MSG_PROMPT
                 // message is displayed with print_erase_menu_prompt
                 play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
                 queue_rumble_data(5, 80);
 #endif
                 sMainMenuButtons[MENU_BUTTON_ERASE_MIN + sSelectedFileIndex]->oMenuButtonState =
@@ -1050,7 +729,7 @@ void check_erase_menu_clicked_buttons(struct Object *eraseButton) {
                     || buttonID == MENU_BUTTON_ERASE_COPY_FILE) {
                     if (eraseButton->oMenuButtonActionPhase == ERASE_PHASE_MAIN) {
                         play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
                         queue_rumble_data(5, 80);
 #endif
                         sMainMenuButtons[buttonID]->oMenuButtonState = MENU_BUTTON_STATE_ZOOM_IN_OUT;
@@ -1069,7 +748,7 @@ void check_erase_menu_clicked_buttons(struct Object *eraseButton) {
         }
         // After erase is complete, return to main erase phase
         if (eraseButton->oMenuButtonActionPhase == ERASE_PHASE_MARIO_ERASED
-            && sMainMenuTimer >= MAIN_RETURN_TIMER) {
+            && sMainMenuTimer > ACTION_TIMER) {
             eraseButton->oMenuButtonActionPhase = ERASE_PHASE_MAIN;
             sMainMenuButtons[MENU_BUTTON_ERASE_MIN + sSelectedFileIndex]->oMenuButtonState =
                 MENU_BUTTON_STATE_ZOOM_OUT;
@@ -1078,9 +757,8 @@ void check_erase_menu_clicked_buttons(struct Object *eraseButton) {
 }
 
 #undef ACTION_TIMER
-#undef MAIN_RETURN_TIMER
 
-#ifdef VERSION_EU
+#ifdef MULTILANG
     #define SOUND_BUTTON_Y 388
 #else
     #define SOUND_BUTTON_Y 0
@@ -1092,42 +770,27 @@ void check_erase_menu_clicked_buttons(struct Object *eraseButton) {
 void render_sound_mode_menu_buttons(struct Object *soundModeButton) {
     // Stereo option button
     sMainMenuButtons[MENU_BUTTON_STEREO] = spawn_object_rel_with_rot(
-        soundModeButton, MODEL_MAIN_MENU_GENERIC_BUTTON, bhvMenuButton, 533, SOUND_BUTTON_Y, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_STEREO]->oMenuButtonScale = 0.11111111f;
+        soundModeButton, MODEL_MAIN_MENU_GENERIC_BUTTON, bhvMenuButton,  533, SOUND_BUTTON_Y, -100, 0x0, -0x8000, 0x0);
+    sMainMenuButtons[MENU_BUTTON_STEREO]->oMenuButtonScale = MENU_BUTTON_SCALE;
     // Mono option button
     sMainMenuButtons[MENU_BUTTON_MONO] = spawn_object_rel_with_rot(
-        soundModeButton, MODEL_MAIN_MENU_GENERIC_BUTTON, bhvMenuButton, 0, SOUND_BUTTON_Y, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_MONO]->oMenuButtonScale = 0.11111111f;
+        soundModeButton, MODEL_MAIN_MENU_GENERIC_BUTTON, bhvMenuButton,    0, SOUND_BUTTON_Y, -100, 0x0, -0x8000, 0x0);
+    sMainMenuButtons[MENU_BUTTON_MONO]->oMenuButtonScale = MENU_BUTTON_SCALE;
     // Headset option button
     sMainMenuButtons[MENU_BUTTON_HEADSET] = spawn_object_rel_with_rot(
-        soundModeButton, MODEL_MAIN_MENU_GENERIC_BUTTON, bhvMenuButton, -533, SOUND_BUTTON_Y, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_HEADSET]->oMenuButtonScale = 0.11111111f;
+        soundModeButton, MODEL_MAIN_MENU_GENERIC_BUTTON, bhvMenuButton, -533, SOUND_BUTTON_Y, -100, 0x0, -0x8000, 0x0);
+    sMainMenuButtons[MENU_BUTTON_HEADSET]->oMenuButtonScale = MENU_BUTTON_SCALE;
 
-#ifdef VERSION_EU
-    // English option button
-    sMainMenuButtons[MENU_BUTTON_LANGUAGE_ENGLISH] = spawn_object_rel_with_rot(
-        soundModeButton, MODEL_MAIN_MENU_GENERIC_BUTTON, bhvMenuButton, 533, -111, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_LANGUAGE_ENGLISH]->oMenuButtonScale = 0.11111111f;
-    // French option button
-    sMainMenuButtons[MENU_BUTTON_LANGUAGE_FRENCH] = spawn_object_rel_with_rot(
-        soundModeButton, MODEL_MAIN_MENU_GENERIC_BUTTON, bhvMenuButton, 0, -111, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_LANGUAGE_FRENCH]->oMenuButtonScale = 0.11111111f;
-    // German option button
-    sMainMenuButtons[MENU_BUTTON_LANGUAGE_GERMAN] = spawn_object_rel_with_rot(
-        soundModeButton, MODEL_MAIN_MENU_GENERIC_BUTTON, bhvMenuButton, -533, -111, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_LANGUAGE_GERMAN]->oMenuButtonScale = 0.11111111f;
-
+#ifdef MULTILANG
     // Return button
-    sMainMenuButtons[MENU_BUTTON_LANGUAGE_RETURN] = spawn_object_rel_with_rot(
-        soundModeButton, MODEL_MAIN_MENU_YELLOW_FILE_BUTTON, bhvMenuButton, 0, -533, -100, 0, -0x8000, 0);
-    sMainMenuButtons[MENU_BUTTON_LANGUAGE_RETURN]->oMenuButtonScale = 0.11111111f;
+    sMainMenuButtons[MENU_BUTTON_OPTION_RETURN] = spawn_object_rel_with_rot(
+        soundModeButton, MODEL_MAIN_MENU_YELLOW_FILE_BUTTON, bhvMenuButton, 0, -533, -100, 0x0, -0x8000, 0x0);
+    sMainMenuButtons[MENU_BUTTON_OPTION_RETURN]->oMenuButtonScale = MENU_BUTTON_SCALE;
 #else
     // Zoom in current selection
     sMainMenuButtons[MENU_BUTTON_OPTION_MIN + sSoundMode]->oMenuButtonState = MENU_BUTTON_STATE_ZOOM_IN;
 #endif
 }
-
-#undef SOUND_BUTTON_Y
 
 /**
  * In the sound mode menu, checks if a button was clicked to change sound mode & button state.
@@ -1147,35 +810,21 @@ void check_sound_mode_menu_clicked_buttons(struct Object *soundModeButton) {
                     || buttonID == MENU_BUTTON_HEADSET) {
                     if (soundModeButton->oMenuButtonActionPhase == SOUND_MODE_PHASE_MAIN) {
                         play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
                         queue_rumble_data(5, 80);
 #endif
                         sMainMenuButtons[buttonID]->oMenuButtonState = MENU_BUTTON_STATE_ZOOM_IN_OUT;
-#ifndef VERSION_EU
-                        // Sound menu buttons don't return to Main Menu in EU
-                        // because they don't have a case in bhv_menu_button_manager_loop
+#ifndef MULTILANG
+                        // Sound menu buttons don't return to Main Menu with multilang enabled
                         sSelectedButtonID = buttonID;
 #endif
                         sSoundMode = buttonID - MENU_BUTTON_OPTION_MIN;
                         save_file_set_sound_mode(sSoundMode);
                     }
                 }
-#ifdef VERSION_EU
-                // If language mode button clicked, select it and change language
-                if (buttonID == MENU_BUTTON_LANGUAGE_ENGLISH || buttonID == MENU_BUTTON_LANGUAGE_FRENCH
-                         || buttonID == MENU_BUTTON_LANGUAGE_GERMAN) {
-                    if (soundModeButton->oMenuButtonActionPhase == SOUND_MODE_PHASE_MAIN) {
-                        play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
-                        queue_rumble_data(5, 80);
-#endif
-                        sMainMenuButtons[buttonID]->oMenuButtonState = MENU_BUTTON_STATE_ZOOM_IN_OUT;
-                        sLanguageMode = buttonID - MENU_BUTTON_LANGUAGE_MIN;
-                        eu_set_language(sLanguageMode);
-                    }
-                }
+#ifdef MULTILANG
                 // If neither of the buttons above are pressed, return to main menu
-                if (buttonID == MENU_BUTTON_LANGUAGE_RETURN) {
+                if (buttonID == MENU_BUTTON_OPTION_RETURN) {
                     play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource);
                     sMainMenuButtons[buttonID]->oMenuButtonState = MENU_BUTTON_STATE_ZOOM_IN_OUT;
                     sSelectedButtonID = buttonID;
@@ -1197,12 +846,27 @@ void load_main_menu_save_file(struct Object *fileButton, s32 fileNum) {
     if (fileButton->oMenuButtonState == MENU_BUTTON_STATE_FULLSCREEN) {
         sSelectedFileNum = fileNum;
     }
+}
 
-#ifdef EXT_DEBUG_MENU
-    if (gPlayer1Controller->buttonDown == (L_CBUTTONS | D_CBUTTONS)) {
-        get_complete_save_file(fileNum);
+/**
+ * Clears a section of sMainMenuButtons.
+ */
+void delete_menu_button_objects(s16 minID, s16 maxID) {
+    for (s16 buttonID = minID; buttonID < maxID; buttonID++) {
+        obj_mark_for_deletion(sMainMenuButtons[buttonID]);
     }
-#endif
+}
+
+/**
+ * Hides buttons of corresponding button menu groups.
+ */
+void hide_submenu_buttons(s16 prevMenuButtonID) {
+    switch (prevMenuButtonID) {
+        case MENU_BUTTON_SCORE:      delete_menu_button_objects(MENU_BUTTON_SCORE_MIN,  MENU_BUTTON_SCORE_MAX ); break;
+        case MENU_BUTTON_COPY:       delete_menu_button_objects(MENU_BUTTON_COPY_MIN,   MENU_BUTTON_COPY_MAX  ); break;
+        case MENU_BUTTON_ERASE:      delete_menu_button_objects(MENU_BUTTON_ERASE_MIN,  MENU_BUTTON_ERASE_MAX ); break;
+        case MENU_BUTTON_SOUND_MODE: delete_menu_button_objects(MENU_BUTTON_OPTION_MIN, MENU_BUTTON_OPTION_MAX); break;
+    }
 }
 
 /**
@@ -1210,7 +874,6 @@ void load_main_menu_save_file(struct Object *fileButton, s32 fileNum) {
  * the return button (or sound mode) as source button.
  */
 void return_to_main_menu(s16 prevMenuButtonID, struct Object *sourceButton) {
-    s32 buttonID;
     // If the source button is in default state and the previous menu in full screen,
     // play zoom out sound and shrink previous menu
     if (sourceButton->oMenuButtonState == MENU_BUTTON_STATE_DEFAULT
@@ -1222,150 +885,62 @@ void return_to_main_menu(s16 prevMenuButtonID, struct Object *sourceButton) {
     // If the previous button is in default state, return back to the main menu
     if (sMainMenuButtons[prevMenuButtonID]->oMenuButtonState == MENU_BUTTON_STATE_DEFAULT) {
         sSelectedButtonID = MENU_BUTTON_NONE;
-        // Hide buttons of corresponding button menu groups
-        if (prevMenuButtonID == MENU_BUTTON_SCORE) {
-            for (buttonID = MENU_BUTTON_SCORE_MIN; buttonID < MENU_BUTTON_SCORE_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
-        }
-        if (prevMenuButtonID == MENU_BUTTON_COPY) {
-            for (buttonID = MENU_BUTTON_COPY_MIN; buttonID < MENU_BUTTON_COPY_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
-        }
-        if (prevMenuButtonID == MENU_BUTTON_ERASE) {
-            for (buttonID = MENU_BUTTON_ERASE_MIN; buttonID < MENU_BUTTON_ERASE_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
-        }
-        if (prevMenuButtonID == MENU_BUTTON_SOUND_MODE) {
-            for (buttonID = MENU_BUTTON_OPTION_MIN; buttonID < MENU_BUTTON_OPTION_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
-        }
+        hide_submenu_buttons(prevMenuButtonID);
     }
 }
 
-/**
- * Loads score menu from the previous menu using "CHECK SCORE" as source button.
- */
-void load_score_menu_from_submenu(s16 prevMenuButtonID, struct Object *sourceButton) {
-    s32 buttonID;
+void load_menu_from_submenu(s16 prevMenuButtonID, s16 selectedButtonID, struct Object *sourceButton) {
     // If the source button is in default state and the previous menu in full screen,
     // play zoom out sound and shrink previous menu
-    if (sourceButton->oMenuButtonState == MENU_BUTTON_STATE_DEFAULT
-        && sMainMenuButtons[prevMenuButtonID]->oMenuButtonState == MENU_BUTTON_STATE_FULLSCREEN) {
+    if ((sourceButton->oMenuButtonState == MENU_BUTTON_STATE_DEFAULT)
+     && (sMainMenuButtons[prevMenuButtonID]->oMenuButtonState == MENU_BUTTON_STATE_FULLSCREEN)) {
         play_sound(SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource);
         sMainMenuButtons[prevMenuButtonID]->oMenuButtonState = MENU_BUTTON_STATE_SHRINKING;
         sCurrentMenuLevel = MENU_LAYER_MAIN;
     }
     // If the previous button is in default state
     if (sMainMenuButtons[prevMenuButtonID]->oMenuButtonState == MENU_BUTTON_STATE_DEFAULT) {
-        // Hide buttons of corresponding button menu groups
-        //! Not possible, this is checking if the score menu was opened from the score menu!
-        if (prevMenuButtonID == MENU_BUTTON_SCORE) {
-            for (buttonID = MENU_BUTTON_SCORE_MIN; buttonID < MENU_BUTTON_SCORE_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
-        }
-        if (prevMenuButtonID == MENU_BUTTON_COPY) {
-            for (buttonID = MENU_BUTTON_COPY_MIN; buttonID < MENU_BUTTON_COPY_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
-        }
-        if (prevMenuButtonID == MENU_BUTTON_ERASE) {
-            for (buttonID = MENU_BUTTON_ERASE_MIN; buttonID < MENU_BUTTON_ERASE_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
+        if (selectedButtonID != prevMenuButtonID) {
+            hide_submenu_buttons(prevMenuButtonID);
         }
         // Play zoom in sound, select score menu and render it's buttons
-        sSelectedButtonID = MENU_BUTTON_SCORE;
+        sSelectedButtonID = selectedButtonID;
         play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
-        sMainMenuButtons[MENU_BUTTON_SCORE]->oMenuButtonState = MENU_BUTTON_STATE_GROWING;
-        render_score_menu_buttons(sMainMenuButtons[MENU_BUTTON_SCORE]);
+        sMainMenuButtons[selectedButtonID]->oMenuButtonState = MENU_BUTTON_STATE_GROWING;
+        render_menu_buttons(selectedButtonID);
     }
 }
 
-/**
- * Loads copy menu from the previous menu using "COPY FILE" as source button.
- */
+// Loads score menu from the previous menu using "CHECK SCORE" as source button.
+void load_score_menu_from_submenu(s16 prevMenuButtonID, struct Object *sourceButton) {
+    load_menu_from_submenu(prevMenuButtonID, MENU_BUTTON_SCORE, sourceButton);
+}
+
+// Loads copy menu from the previous menu using "COPY FILE" as source button.
 void load_copy_menu_from_submenu(s16 prevMenuButtonID, struct Object *sourceButton) {
-    s32 buttonID;
-    // If the source button is in default state and the previous menu in full screen,
-    // play zoom out sound and shrink previous menu
-    if (sourceButton->oMenuButtonState == MENU_BUTTON_STATE_DEFAULT
-        && sMainMenuButtons[prevMenuButtonID]->oMenuButtonState == MENU_BUTTON_STATE_FULLSCREEN) {
-        play_sound(SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource);
-        sMainMenuButtons[prevMenuButtonID]->oMenuButtonState = MENU_BUTTON_STATE_SHRINKING;
-        sCurrentMenuLevel = MENU_LAYER_MAIN;
-    }
-    // If the previous button is in default state
-    if (sMainMenuButtons[prevMenuButtonID]->oMenuButtonState == MENU_BUTTON_STATE_DEFAULT) {
-        // Hide buttons of corresponding button menu groups
-        if (prevMenuButtonID == MENU_BUTTON_SCORE) {
-            for (buttonID = MENU_BUTTON_SCORE_MIN; buttonID < MENU_BUTTON_SCORE_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
-        }
-        //! Not possible, this is checking if the copy menu was opened from the copy menu!
-        if (prevMenuButtonID == MENU_BUTTON_COPY) {
-            for (buttonID = MENU_BUTTON_COPY_MIN; buttonID < MENU_BUTTON_COPY_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
-        }
-        if (prevMenuButtonID == MENU_BUTTON_ERASE) {
-            for (buttonID = MENU_BUTTON_ERASE_MIN; buttonID < MENU_BUTTON_ERASE_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
-        }
-        // Play zoom in sound, select copy menu and render it's buttons
-        sSelectedButtonID = MENU_BUTTON_COPY;
-        play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
-        sMainMenuButtons[MENU_BUTTON_COPY]->oMenuButtonState = MENU_BUTTON_STATE_GROWING;
-        render_copy_menu_buttons(sMainMenuButtons[MENU_BUTTON_COPY]);
-    }
+    load_menu_from_submenu(prevMenuButtonID, MENU_BUTTON_COPY, sourceButton);
 }
 
-/**
- * Loads erase menu from the previous menu using "ERASE FILE" as source button.
- */
+// Loads erase menu from the previous menu using "ERASE FILE" as source button.
 void load_erase_menu_from_submenu(s16 prevMenuButtonID, struct Object *sourceButton) {
-    s32 buttonID;
-    // If the source button is in default state and the previous menu in full screen,
-    // play zoom out sound and shrink previous menu
-    if (sourceButton->oMenuButtonState == MENU_BUTTON_STATE_DEFAULT
-        && sMainMenuButtons[prevMenuButtonID]->oMenuButtonState == MENU_BUTTON_STATE_FULLSCREEN) {
-        play_sound(SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource);
-        sMainMenuButtons[prevMenuButtonID]->oMenuButtonState = MENU_BUTTON_STATE_SHRINKING;
-        sCurrentMenuLevel = MENU_LAYER_MAIN;
-    }
-    // If the previous button is in default state
-    if (sMainMenuButtons[prevMenuButtonID]->oMenuButtonState == MENU_BUTTON_STATE_DEFAULT) {
-        // Hide buttons of corresponding button menu groups
-        if (prevMenuButtonID == MENU_BUTTON_SCORE) {
-            for (buttonID = MENU_BUTTON_SCORE_MIN; buttonID < MENU_BUTTON_SCORE_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
-        }
-        if (prevMenuButtonID == MENU_BUTTON_COPY) {
-            for (buttonID = MENU_BUTTON_COPY_MIN; buttonID < MENU_BUTTON_COPY_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
-        }
-        //! Not possible, this is checking if the erase menu was opened from the erase menu!
-        if (prevMenuButtonID == MENU_BUTTON_ERASE) {
-            for (buttonID = MENU_BUTTON_ERASE_MIN; buttonID < MENU_BUTTON_ERASE_MAX; buttonID++) {
-                obj_mark_for_deletion(sMainMenuButtons[buttonID]);
-            }
-        }
-        // Play zoom in sound, select erase menu and render it's buttons
-        sSelectedButtonID = MENU_BUTTON_ERASE;
-        play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
-        sMainMenuButtons[MENU_BUTTON_ERASE]->oMenuButtonState = MENU_BUTTON_STATE_GROWING;
-        render_erase_menu_buttons(sMainMenuButtons[MENU_BUTTON_ERASE]);
-    }
+    load_menu_from_submenu(prevMenuButtonID, MENU_BUTTON_ERASE, sourceButton);
 }
 
+
+static const Vec3s sSaveFileButtonInitPositions[] = {
+    { -6400, 2800, 0 }, // SAVE_FILE_A
+    {  1500, 2800, 0 }, // SAVE_FILE_B
+    { -6400,    0, 0 }, // SAVE_FILE_C
+    {  1500,    0, 0 }, // SAVE_FILE_D
+};
+
+#define SPAWN_FILE_SELECT_FILE_BUTTON_INIT(saveFile)                                                                                            \
+    spawn_object_rel_with_rot(o, (save_file_exists(saveFile) ? MODEL_MAIN_MENU_MARIO_SAVE_BUTTON_FADE : MODEL_MAIN_MENU_MARIO_NEW_BUTTON_FADE), \
+                              bhvMenuButton,                                                                                                    \
+                              sSaveFileButtonInitPositions[saveFile][0],                                                                        \
+                              sSaveFileButtonInitPositions[saveFile][1],                                                                        \
+                              sSaveFileButtonInitPositions[saveFile][2],                                                                        \
+                              0x0, 0x0, 0x0)
 
 /**
  * Menu Buttons Menu Manager Initial Action
@@ -1375,177 +950,109 @@ void load_erase_menu_from_submenu(s16 prevMenuButtonID, struct Object *sourceBut
  */
 void bhv_menu_button_manager_init(void) {
     // File A
-    if (save_file_exists(SAVE_FILE_A) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_PLAY_FILE_A] =
-            spawn_object_rel_with_rot(gCurrentObject, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON_FADE,
-                                      bhvMenuButton, -6400, 2800, 0, 0, 0, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_PLAY_FILE_A] =
-            spawn_object_rel_with_rot(gCurrentObject, MODEL_MAIN_MENU_MARIO_NEW_BUTTON_FADE,
-                                      bhvMenuButton, -6400, 2800, 0, 0, 0, 0);
-    }
+    sMainMenuButtons[MENU_BUTTON_PLAY_FILE_A] = SPAWN_FILE_SELECT_FILE_BUTTON_INIT(SAVE_FILE_A);
     sMainMenuButtons[MENU_BUTTON_PLAY_FILE_A]->oMenuButtonScale = 1.0f;
     // File B
-    if (save_file_exists(SAVE_FILE_B) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_PLAY_FILE_B] =
-            spawn_object_rel_with_rot(gCurrentObject, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON_FADE,
-                                      bhvMenuButton, 1500, 2800, 0, 0, 0, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_PLAY_FILE_B] =
-            spawn_object_rel_with_rot(gCurrentObject, MODEL_MAIN_MENU_MARIO_NEW_BUTTON_FADE,
-                                      bhvMenuButton, 1500, 2800, 0, 0, 0, 0);
-    }
+    sMainMenuButtons[MENU_BUTTON_PLAY_FILE_B] = SPAWN_FILE_SELECT_FILE_BUTTON_INIT(SAVE_FILE_B);
     sMainMenuButtons[MENU_BUTTON_PLAY_FILE_B]->oMenuButtonScale = 1.0f;
     // File C
-    if (save_file_exists(SAVE_FILE_C) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_PLAY_FILE_C] =
-            spawn_object_rel_with_rot(gCurrentObject, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON_FADE,
-                                      bhvMenuButton, -6400, 0, 0, 0, 0, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_PLAY_FILE_C] = spawn_object_rel_with_rot(
-            gCurrentObject, MODEL_MAIN_MENU_MARIO_NEW_BUTTON_FADE, bhvMenuButton, -6400, 0, 0, 0, 0, 0);
-    }
+    sMainMenuButtons[MENU_BUTTON_PLAY_FILE_C] = SPAWN_FILE_SELECT_FILE_BUTTON_INIT(SAVE_FILE_C);
     sMainMenuButtons[MENU_BUTTON_PLAY_FILE_C]->oMenuButtonScale = 1.0f;
     // File D
-    if (save_file_exists(SAVE_FILE_D) == TRUE) {
-        sMainMenuButtons[MENU_BUTTON_PLAY_FILE_D] = spawn_object_rel_with_rot(
-            gCurrentObject, MODEL_MAIN_MENU_MARIO_SAVE_BUTTON_FADE, bhvMenuButton, 1500, 0, 0, 0, 0, 0);
-    } else {
-        sMainMenuButtons[MENU_BUTTON_PLAY_FILE_D] = spawn_object_rel_with_rot(
-            gCurrentObject, MODEL_MAIN_MENU_MARIO_NEW_BUTTON_FADE, bhvMenuButton, 1500, 0, 0, 0, 0, 0);
-    }
+    sMainMenuButtons[MENU_BUTTON_PLAY_FILE_D] = SPAWN_FILE_SELECT_FILE_BUTTON_INIT(SAVE_FILE_D);
     sMainMenuButtons[MENU_BUTTON_PLAY_FILE_D]->oMenuButtonScale = 1.0f;
     // Score menu button
-    sMainMenuButtons[MENU_BUTTON_SCORE] = spawn_object_rel_with_rot(
-        gCurrentObject, MODEL_MAIN_MENU_GREEN_SCORE_BUTTON, bhvMenuButton, -6400, -3500, 0, 0, 0, 0);
+    sMainMenuButtons[MENU_BUTTON_SCORE] =
+        spawn_object_rel_with_rot(o, MODEL_MAIN_MENU_GREEN_SCORE_BUTTON,
+                                  bhvMenuButton, -6400, -3500, 0, 0x0, 0x0, 0x0);
     sMainMenuButtons[MENU_BUTTON_SCORE]->oMenuButtonScale = 1.0f;
     // Copy menu button
-    sMainMenuButtons[MENU_BUTTON_COPY] = spawn_object_rel_with_rot(
-        gCurrentObject, MODEL_MAIN_MENU_BLUE_COPY_BUTTON, bhvMenuButton, -2134, -3500, 0, 0, 0, 0);
+    sMainMenuButtons[MENU_BUTTON_COPY] =
+        spawn_object_rel_with_rot(o, MODEL_MAIN_MENU_BLUE_COPY_BUTTON,
+                                  bhvMenuButton, -2134, -3500, 0, 0x0, 0x0, 0x0);
     sMainMenuButtons[MENU_BUTTON_COPY]->oMenuButtonScale = 1.0f;
     // Erase menu button
-    sMainMenuButtons[MENU_BUTTON_ERASE] = spawn_object_rel_with_rot(
-        gCurrentObject, MODEL_MAIN_MENU_RED_ERASE_BUTTON, bhvMenuButton, 2134, -3500, 0, 0, 0, 0);
+    sMainMenuButtons[MENU_BUTTON_ERASE] =
+        spawn_object_rel_with_rot(o, MODEL_MAIN_MENU_RED_ERASE_BUTTON,
+                                  bhvMenuButton,  2134, -3500, 0, 0x0, 0x0, 0x0);
     sMainMenuButtons[MENU_BUTTON_ERASE]->oMenuButtonScale = 1.0f;
     // Sound mode menu button (Option Mode in EU)
-    sMainMenuButtons[MENU_BUTTON_SOUND_MODE] = spawn_object_rel_with_rot(
-        gCurrentObject, MODEL_MAIN_MENU_PURPLE_SOUND_BUTTON, bhvMenuButton, 6400, -3500, 0, 0, 0, 0);
+    sMainMenuButtons[MENU_BUTTON_SOUND_MODE] =
+        spawn_object_rel_with_rot(o, MODEL_MAIN_MENU_PURPLE_SOUND_BUTTON,
+                                  bhvMenuButton,  6400, -3500, 0, 0x0, 0x0, 0x0);
     sMainMenuButtons[MENU_BUTTON_SOUND_MODE]->oMenuButtonScale = 1.0f;
 
-    sTextBaseAlpha = 0;
+    gDialogTextAlpha = 0;
 }
-
-#ifdef VERSION_JP
-    #define SAVE_FILE_SOUND SOUND_MENU_STAR_SOUND
-#else
-    #define SAVE_FILE_SOUND SOUND_MENU_STAR_SOUND_OKEY_DOKEY
-#endif
 
 /**
  * In the main menu, check if a button was clicked to play it's button growing state.
  * Also play a sound and/or render buttons depending of the button ID selected.
  */
 void check_main_menu_clicked_buttons(void) {
-#ifdef VERSION_EU
-    if (sMainMenuTimer >= 5) {
-#endif
-        // Sound mode menu is handled separately because the button ID for it
-        // is not grouped with the IDs of the other submenus.
-        if (check_clicked_button(sMainMenuButtons[MENU_BUTTON_SOUND_MODE]->oPosX,
-                                sMainMenuButtons[MENU_BUTTON_SOUND_MODE]->oPosY, 200.0f) == TRUE) {
-            sMainMenuButtons[MENU_BUTTON_SOUND_MODE]->oMenuButtonState = MENU_BUTTON_STATE_GROWING;
-            sSelectedButtonID = MENU_BUTTON_SOUND_MODE;
-        } else {
-            // Main Menu buttons
-            s8 buttonID;
-            // Configure Main Menu button group
-            for (buttonID = MENU_BUTTON_MAIN_MIN; buttonID < MENU_BUTTON_MAIN_MAX; buttonID++) {
-                s16 buttonX = sMainMenuButtons[buttonID]->oPosX;
-                s16 buttonY = sMainMenuButtons[buttonID]->oPosY;
+    // Sound mode menu is handled separately because the button ID for it
+    // is not grouped with the IDs of the other submenus.
+    if (check_clicked_button(sMainMenuButtons[MENU_BUTTON_SOUND_MODE]->oPosX,
+                                sMainMenuButtons[MENU_BUTTON_SOUND_MODE]->oPosY, 200.0f)) {
+        sMainMenuButtons[MENU_BUTTON_SOUND_MODE]->oMenuButtonState = MENU_BUTTON_STATE_GROWING;
+        sSelectedButtonID = MENU_BUTTON_SOUND_MODE;
+    } else {
+        // Main Menu buttons
+        s8 buttonID;
+        // Configure Main Menu button group
+        for (buttonID = MENU_BUTTON_MAIN_MIN; buttonID < MENU_BUTTON_MAIN_MAX; buttonID++) {
+            s16 buttonX = sMainMenuButtons[buttonID]->oPosX;
+            s16 buttonY = sMainMenuButtons[buttonID]->oPosY;
 
-                if (check_clicked_button(buttonX, buttonY, 200.0f) == TRUE) {
-                    // If menu button clicked, select it
-                    sMainMenuButtons[buttonID]->oMenuButtonState = MENU_BUTTON_STATE_GROWING;
-                    sSelectedButtonID = buttonID;
-                    break;
-                }
+            if (check_clicked_button(buttonX, buttonY, 200.0f)) {
+                // If menu button clicked, select it
+                sMainMenuButtons[buttonID]->oMenuButtonState = MENU_BUTTON_STATE_GROWING;
+                sSelectedButtonID = buttonID;
+                break;
             }
         }
-#ifdef VERSION_EU
-        // Open Options Menu if sOpenLangSettings is TRUE (It's TRUE when there's no saves)
-        if (sOpenLangSettings == TRUE) {
-            sMainMenuButtons[MENU_BUTTON_SOUND_MODE]->oMenuButtonState = MENU_BUTTON_STATE_GROWING;
-            sSelectedButtonID = MENU_BUTTON_SOUND_MODE;
-            sOpenLangSettings = FALSE;
-        }
-#endif
+    }
 
-        // Play sound of the save file clicked
-        switch (sSelectedButtonID) {
-            case MENU_BUTTON_PLAY_FILE_A:
-                play_sound(SAVE_FILE_SOUND, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
-                queue_rumble_data(60, 70);
-                queue_rumble_decay(1);
-#endif
-                break;
-            case MENU_BUTTON_PLAY_FILE_B:
-                play_sound(SAVE_FILE_SOUND, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
-                queue_rumble_data(60, 70);
-                queue_rumble_decay(1);
-#endif
-                break;
-            case MENU_BUTTON_PLAY_FILE_C:
-                play_sound(SAVE_FILE_SOUND, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
-                queue_rumble_data(60, 70);
-                queue_rumble_decay(1);
-#endif
-                break;
-            case MENU_BUTTON_PLAY_FILE_D:
-                play_sound(SAVE_FILE_SOUND, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
-                queue_rumble_data(60, 70);
-                queue_rumble_decay(1);
-#endif
-                break;
-            // Play sound of the button clicked and render buttons of that menu.
-            case MENU_BUTTON_SCORE:
-                play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
-                queue_rumble_data(5, 80);
-#endif
-                render_score_menu_buttons(sMainMenuButtons[MENU_BUTTON_SCORE]);
-                break;
-            case MENU_BUTTON_COPY:
-                play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
-                queue_rumble_data(5, 80);
-#endif
-                render_copy_menu_buttons(sMainMenuButtons[MENU_BUTTON_COPY]);
-                break;
-            case MENU_BUTTON_ERASE:
-                play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
-                queue_rumble_data(5, 80);
-#endif
-                render_erase_menu_buttons(sMainMenuButtons[MENU_BUTTON_ERASE]);
-                break;
-            case MENU_BUTTON_SOUND_MODE:
-                play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
-                queue_rumble_data(5, 80);
-#endif
-                render_sound_mode_menu_buttons(sMainMenuButtons[MENU_BUTTON_SOUND_MODE]);
-                break;
-        }
-#ifdef VERSION_EU
+#ifdef MULTILANG
+    // Open Options Menu if sOpenLangSettings is TRUE (It's TRUE when there's no saves)
+    if (sOpenLangSettings && (sMainMenuTimer >= 5)) {
+        sMainMenuButtons[MENU_BUTTON_SOUND_MODE]->oMenuButtonState = MENU_BUTTON_STATE_GROWING;
+        sSelectedButtonID = MENU_BUTTON_SOUND_MODE;
+        sOpenLangSettings = FALSE;
     }
 #endif
-}
 
-#undef SAVE_FILE_SOUND
+    // Play sound of the save file clicked
+    switch (sSelectedButtonID) {
+        case MENU_BUTTON_PLAY_FILE_A:
+        case MENU_BUTTON_PLAY_FILE_B:
+        case MENU_BUTTON_PLAY_FILE_C:
+        case MENU_BUTTON_PLAY_FILE_D:
+            play_sound(SOUND_MENU_STAR_SOUND_OKEY_DOKEY, gGlobalSoundSource);
+#if ENABLE_RUMBLE
+            queue_rumble_data(60, 70);
+            queue_rumble_decay(1);
+#endif
+            break;
+        // Play sound of the button clicked and render buttons of that menu.
+        case MENU_BUTTON_SCORE:
+        case MENU_BUTTON_COPY:
+        case MENU_BUTTON_ERASE:
+            play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
+#if ENABLE_RUMBLE
+            queue_rumble_data(5, 80);
+#endif
+            render_menu_buttons(sSelectedButtonID);
+            break;
+        case MENU_BUTTON_SOUND_MODE:
+            play_sound(SOUND_MENU_CAMERA_ZOOM_IN, gGlobalSoundSource);
+#if ENABLE_RUMBLE
+            queue_rumble_data(5, 80);
+#endif
+            render_sound_mode_menu_buttons(sMainMenuButtons[MENU_BUTTON_SOUND_MODE]);
+            break;
+    }
+}
 
 /**
  * Menu Buttons Menu Manager Loop Action
@@ -1555,116 +1062,54 @@ void check_main_menu_clicked_buttons(void) {
  */
 void bhv_menu_button_manager_loop(void) {
     switch (sSelectedButtonID) {
-        case MENU_BUTTON_NONE:
-            check_main_menu_clicked_buttons();
-            break;
-        case MENU_BUTTON_PLAY_FILE_A:
-            load_main_menu_save_file(sMainMenuButtons[MENU_BUTTON_PLAY_FILE_A], 1);
-            break;
-        case MENU_BUTTON_PLAY_FILE_B:
-            load_main_menu_save_file(sMainMenuButtons[MENU_BUTTON_PLAY_FILE_B], 2);
-            break;
-        case MENU_BUTTON_PLAY_FILE_C:
-            load_main_menu_save_file(sMainMenuButtons[MENU_BUTTON_PLAY_FILE_C], 3);
-            break;
-        case MENU_BUTTON_PLAY_FILE_D:
-            load_main_menu_save_file(sMainMenuButtons[MENU_BUTTON_PLAY_FILE_D], 4);
-            break;
-        case MENU_BUTTON_SCORE:
-            check_score_menu_clicked_buttons(sMainMenuButtons[MENU_BUTTON_SCORE]);
-            break;
-        case MENU_BUTTON_COPY:
-            check_copy_menu_clicked_buttons(sMainMenuButtons[MENU_BUTTON_COPY]);
-            break;
-        case MENU_BUTTON_ERASE:
-            check_erase_menu_clicked_buttons(sMainMenuButtons[MENU_BUTTON_ERASE]);
-            break;
+        case MENU_BUTTON_NONE: check_main_menu_clicked_buttons(); break;
 
-        case MENU_BUTTON_SCORE_FILE_A:
-            exit_score_file_to_score_menu(sMainMenuButtons[MENU_BUTTON_SCORE_FILE_A], MENU_BUTTON_SCORE);
-            break;
-        case MENU_BUTTON_SCORE_FILE_B:
-            exit_score_file_to_score_menu(sMainMenuButtons[MENU_BUTTON_SCORE_FILE_B], MENU_BUTTON_SCORE);
-            break;
-        case MENU_BUTTON_SCORE_FILE_C:
-            exit_score_file_to_score_menu(sMainMenuButtons[MENU_BUTTON_SCORE_FILE_C], MENU_BUTTON_SCORE);
-            break;
-        case MENU_BUTTON_SCORE_FILE_D:
-            exit_score_file_to_score_menu(sMainMenuButtons[MENU_BUTTON_SCORE_FILE_D], MENU_BUTTON_SCORE);
-            break;
-        case MENU_BUTTON_SCORE_RETURN:
-            return_to_main_menu(MENU_BUTTON_SCORE, sMainMenuButtons[MENU_BUTTON_SCORE_RETURN]);
-            break;
-        case MENU_BUTTON_SCORE_COPY_FILE:
-            load_copy_menu_from_submenu(MENU_BUTTON_SCORE,
-                                        sMainMenuButtons[MENU_BUTTON_SCORE_COPY_FILE]);
-            break;
-        case MENU_BUTTON_SCORE_ERASE_FILE:
-            load_erase_menu_from_submenu(MENU_BUTTON_SCORE,
-                                         sMainMenuButtons[MENU_BUTTON_SCORE_ERASE_FILE]);
-            break;
+        case MENU_BUTTON_PLAY_FILE_A: load_main_menu_save_file(sMainMenuButtons[MENU_BUTTON_PLAY_FILE_A], 1); break;
+        case MENU_BUTTON_PLAY_FILE_B: load_main_menu_save_file(sMainMenuButtons[MENU_BUTTON_PLAY_FILE_B], 2); break;
+        case MENU_BUTTON_PLAY_FILE_C: load_main_menu_save_file(sMainMenuButtons[MENU_BUTTON_PLAY_FILE_C], 3); break;
+        case MENU_BUTTON_PLAY_FILE_D: load_main_menu_save_file(sMainMenuButtons[MENU_BUTTON_PLAY_FILE_D], 4); break;
 
-        case MENU_BUTTON_COPY_FILE_A:
-            break;
-        case MENU_BUTTON_COPY_FILE_B:
-            break;
-        case MENU_BUTTON_COPY_FILE_C:
-            break;
-        case MENU_BUTTON_COPY_FILE_D:
-            break;
-        case MENU_BUTTON_COPY_RETURN:
-            return_to_main_menu(MENU_BUTTON_COPY, sMainMenuButtons[MENU_BUTTON_COPY_RETURN]);
-            break;
-        case MENU_BUTTON_COPY_CHECK_SCORE:
-            load_score_menu_from_submenu(MENU_BUTTON_COPY,
-                                         sMainMenuButtons[MENU_BUTTON_COPY_CHECK_SCORE]);
-            break;
-        case MENU_BUTTON_COPY_ERASE_FILE:
-            load_erase_menu_from_submenu(MENU_BUTTON_COPY,
-                                         sMainMenuButtons[MENU_BUTTON_COPY_ERASE_FILE]);
-            break;
+        case MENU_BUTTON_SCORE: check_score_menu_clicked_buttons(sMainMenuButtons[MENU_BUTTON_SCORE]); break;
+        case MENU_BUTTON_COPY:  check_copy_menu_clicked_buttons (sMainMenuButtons[MENU_BUTTON_COPY ]); break;
+        case MENU_BUTTON_ERASE: check_erase_menu_clicked_buttons(sMainMenuButtons[MENU_BUTTON_ERASE]); break;
 
-        case MENU_BUTTON_ERASE_FILE_A:
-            break;
-        case MENU_BUTTON_ERASE_FILE_B:
-            break;
-        case MENU_BUTTON_ERASE_FILE_C:
-            break;
-        case MENU_BUTTON_ERASE_FILE_D:
-            break;
-        case MENU_BUTTON_ERASE_RETURN:
-            return_to_main_menu(MENU_BUTTON_ERASE, sMainMenuButtons[MENU_BUTTON_ERASE_RETURN]);
-            break;
-        case MENU_BUTTON_ERASE_CHECK_SCORE:
-            load_score_menu_from_submenu(MENU_BUTTON_ERASE,
-                                         sMainMenuButtons[MENU_BUTTON_ERASE_CHECK_SCORE]);
-            break;
-        case MENU_BUTTON_ERASE_COPY_FILE:
-            load_copy_menu_from_submenu(MENU_BUTTON_ERASE,
-                                        sMainMenuButtons[MENU_BUTTON_ERASE_COPY_FILE]);
-            break;
+        case MENU_BUTTON_SCORE_FILE_A: exit_score_file_to_score_menu(sMainMenuButtons[MENU_BUTTON_SCORE_FILE_A], MENU_BUTTON_SCORE); break;
+        case MENU_BUTTON_SCORE_FILE_B: exit_score_file_to_score_menu(sMainMenuButtons[MENU_BUTTON_SCORE_FILE_B], MENU_BUTTON_SCORE); break;
+        case MENU_BUTTON_SCORE_FILE_C: exit_score_file_to_score_menu(sMainMenuButtons[MENU_BUTTON_SCORE_FILE_C], MENU_BUTTON_SCORE); break;
+        case MENU_BUTTON_SCORE_FILE_D: exit_score_file_to_score_menu(sMainMenuButtons[MENU_BUTTON_SCORE_FILE_D], MENU_BUTTON_SCORE); break;
 
-        case MENU_BUTTON_SOUND_MODE:
-            check_sound_mode_menu_clicked_buttons(sMainMenuButtons[MENU_BUTTON_SOUND_MODE]);
-            break;
+        case MENU_BUTTON_SCORE_RETURN:     return_to_main_menu         (MENU_BUTTON_SCORE, sMainMenuButtons[MENU_BUTTON_SCORE_RETURN    ]); break;
+        case MENU_BUTTON_SCORE_COPY_FILE:  load_copy_menu_from_submenu (MENU_BUTTON_SCORE, sMainMenuButtons[MENU_BUTTON_SCORE_COPY_FILE ]); break;
+        case MENU_BUTTON_SCORE_ERASE_FILE: load_erase_menu_from_submenu(MENU_BUTTON_SCORE, sMainMenuButtons[MENU_BUTTON_SCORE_ERASE_FILE]); break;
 
+        case MENU_BUTTON_COPY_FILE_A: break;
+        case MENU_BUTTON_COPY_FILE_B: break;
+        case MENU_BUTTON_COPY_FILE_C: break;
+        case MENU_BUTTON_COPY_FILE_D: break;
+
+        case MENU_BUTTON_COPY_RETURN:      return_to_main_menu         (MENU_BUTTON_COPY, sMainMenuButtons[MENU_BUTTON_COPY_RETURN     ]); break;
+        case MENU_BUTTON_COPY_CHECK_SCORE: load_score_menu_from_submenu(MENU_BUTTON_COPY, sMainMenuButtons[MENU_BUTTON_COPY_CHECK_SCORE]); break;
+        case MENU_BUTTON_COPY_ERASE_FILE:  load_erase_menu_from_submenu(MENU_BUTTON_COPY, sMainMenuButtons[MENU_BUTTON_COPY_ERASE_FILE ]); break;
+
+        case MENU_BUTTON_ERASE_FILE_A: break;
+        case MENU_BUTTON_ERASE_FILE_B: break;
+        case MENU_BUTTON_ERASE_FILE_C: break;
+        case MENU_BUTTON_ERASE_FILE_D: break;
+
+        case MENU_BUTTON_ERASE_RETURN:      return_to_main_menu         (MENU_BUTTON_ERASE, sMainMenuButtons[MENU_BUTTON_ERASE_RETURN     ]); break;
+        case MENU_BUTTON_ERASE_CHECK_SCORE: load_score_menu_from_submenu(MENU_BUTTON_ERASE, sMainMenuButtons[MENU_BUTTON_ERASE_CHECK_SCORE]); break;
+        case MENU_BUTTON_ERASE_COPY_FILE:   load_copy_menu_from_submenu (MENU_BUTTON_ERASE, sMainMenuButtons[MENU_BUTTON_ERASE_COPY_FILE  ]); break;
+
+        case MENU_BUTTON_SOUND_MODE: check_sound_mode_menu_clicked_buttons(sMainMenuButtons[MENU_BUTTON_SOUND_MODE]); break;
+
+#ifdef MULTILANG
+        case MENU_BUTTON_OPTION_RETURN: return_to_main_menu(MENU_BUTTON_SOUND_MODE, sMainMenuButtons[MENU_BUTTON_OPTION_RETURN]); break;
+#endif
         // STEREO, MONO and HEADSET buttons are undefined so they can be selected without
         // exiting the Options menu, as a result they added a return button
-#ifdef VERSION_EU
-        case MENU_BUTTON_LANGUAGE_RETURN:
-            return_to_main_menu(MENU_BUTTON_SOUND_MODE, sMainMenuButtons[MENU_BUTTON_LANGUAGE_RETURN]);
-            break;
-#else
-        case MENU_BUTTON_STEREO:
-            return_to_main_menu(MENU_BUTTON_SOUND_MODE, sMainMenuButtons[MENU_BUTTON_STEREO]);
-            break;
-        case MENU_BUTTON_MONO:
-            return_to_main_menu(MENU_BUTTON_SOUND_MODE, sMainMenuButtons[MENU_BUTTON_MONO]);
-            break;
-        case MENU_BUTTON_HEADSET:
-            return_to_main_menu(MENU_BUTTON_SOUND_MODE, sMainMenuButtons[MENU_BUTTON_HEADSET]);
-            break;
-#endif
+        case MENU_BUTTON_STEREO:  return_to_main_menu(MENU_BUTTON_SOUND_MODE, sMainMenuButtons[MENU_BUTTON_STEREO ]); break;
+        case MENU_BUTTON_MONO:    return_to_main_menu(MENU_BUTTON_SOUND_MODE, sMainMenuButtons[MENU_BUTTON_MONO   ]); break;
+        case MENU_BUTTON_HEADSET: return_to_main_menu(MENU_BUTTON_SOUND_MODE, sMainMenuButtons[MENU_BUTTON_HEADSET]); break;
     }
 
     sClickPos[0] = -10000;
@@ -1713,53 +1158,20 @@ void handle_controller_cursor_input(void) {
     if (rawStickY > -2 && rawStickY < 2) {
         rawStickY = 0;
     }
-    #ifdef MOUSE_ACTIONS 
-    else
-    {
-        gMouseHasFreeControl = FALSE;
-    }
-    #endif
     if (rawStickX > -2 && rawStickX < 2) {
         rawStickX = 0;
     }
-    #ifdef MOUSE_ACTIONS 
-    else
-    {
-        gMouseHasFreeControl = FALSE;
-    }
-    #endif
 
     // Move cursor
     sCursorPos[0] += rawStickX / 8;
     sCursorPos[1] += rawStickY / 8;
 
-#ifdef MOUSE_ACTIONS
-    if (sSelectedFileNum != 0)
-        gMouseHasFreeControl = FALSE;
-        
-    if ((gMouseXPos - gOldMouseXPos != 0 || gMouseYPos - gOldMouseYPos != 0) && sSelectedFileNum == 0)  {
-        gMouseHasFreeControl = TRUE;
-    }
-
-    static float screenScale;
-    screenScale = (float) gfx_current_dimensions.height / SCREEN_HEIGHT;
-    if (gMouseHasFreeControl && configMouse) {
-        sCursorPos[0] = ((gMouseXPos - (gfx_current_dimensions.width - (screenScale * 320)) / 2) / screenScale) - 160.0f;
-        sCursorPos[1] = (gMouseYPos / screenScale - 120.0f) * -1;
-    }
-
-    gOldMouseXPos = gMouseXPos;
-    gOldMouseYPos = gMouseYPos;
-
-if (!gMouseHasFreeControl) {
-#endif
-    
     // Stop cursor from going offscreen
-    if (sCursorPos[0] > GFX_DIMENSIONS_FROM_RIGHT_EDGE(188.0f)) {
-        sCursorPos[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(188.0f);
+    if (sCursorPos[0] > 132.0f) {
+        sCursorPos[0] = 132.0f;
     }
-    if (sCursorPos[0] < GFX_DIMENSIONS_FROM_LEFT_EDGE(-132.0f)) {
-        sCursorPos[0] = GFX_DIMENSIONS_FROM_LEFT_EDGE(-132.0f);
+    if (sCursorPos[0] < -132.0f) {
+        sCursorPos[0] = -132.0f;
     }
 
     if (sCursorPos[1] > 90.0f) {
@@ -1768,9 +1180,6 @@ if (!gMouseHasFreeControl) {
     if (sCursorPos[1] < -90.0f) {
         sCursorPos[1] = -90.0f;
     }
-#ifdef MOUSE_ACTIONS
-}
-#endif
 
     if (sCursorClickingTimer == 0) {
         handle_cursor_button_input();
@@ -1786,14 +1195,12 @@ void print_menu_cursor(void) {
     handle_controller_cursor_input();
     create_dl_translation_matrix(MENU_MTX_PUSH, sCursorPos[0] + 160.0f - 5.0, sCursorPos[1] + 120.0f - 25.0, 0.0f);
     // Get the right graphic to use for the cursor.
-    if (sCursorClickingTimer == 0) {
+    if (sCursorClickingTimer == 0)
         // Idle
         gSPDisplayList(gDisplayListHead++, dl_menu_idle_hand);
-    }
-    if (sCursorClickingTimer != 0) {
+    if (sCursorClickingTimer != 0)
         // Grabbing
         gSPDisplayList(gDisplayListHead++, dl_menu_grabbing_hand);
-    }
     gSPPopMatrix(gDisplayListHead++, G_MTX_MODELVIEW);
     if (sCursorClickingTimer != 0) {
         sCursorClickingTimer++; // This is a very strange way to implement a timer? It counts up and
@@ -1805,22 +1212,52 @@ void print_menu_cursor(void) {
 }
 
 /**
- * Prints a hud string depending of the hud table list defined with text fade properties.
+ * Takes a number between 0 and 3 and formats the corresponding file letter A to D into a buffer.
+ * If the language is set to Japanese, the letter is written in full-width digits.
  */
-void print_hud_lut_string_fade(s8 hudLUT, s16 x, s16 y, const u8 *text) {
+void string_format_file_letter(char *buf, char *str, s32 fileIndex) {
+    char letterBuf[4];
+#if JAPANESE_CHARACTERS
+    #ifdef ENABLE_JAPANESE
+    if (gInGameLanguage == LANGUAGE_JAPANESE)
+    #endif
+    {
+        // The UTF-8 encoding of "Ａ" is 0xEF, 0xBC, 0xA1
+        letterBuf[0] = 0xEF;
+        letterBuf[1] = 0xBC;
+        letterBuf[2] = 0xA1 + fileIndex;
+        letterBuf[3] = '\0';
+        sprintf(buf, str, letterBuf);
+        return;
+    }
+#endif
+
+    letterBuf[0] = 'A' + fileIndex;
+    letterBuf[1] = '\0';
+    sprintf(buf, str, letterBuf);
+}
+
+/**
+ * Prints a hud string with text fade properties.
+ */
+void print_hud_lut_string_fade(s16 x, s16 y, char *text, u32 alignment) {
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha - sTextFadeAlpha);
-    print_hud_lut_string(hudLUT, x, y, text);
+    gDialogTextAlpha -= sTextFadeAlpha;
+    set_text_color(255, 255, 255);
+    print_hud_lut_string_aligned(x, y, text, alignment);
+    gDialogTextAlpha += sTextFadeAlpha;
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
 }
 
 /**
  * Prints a generic white string with text fade properties.
  */
-void print_generic_string_fade(s16 x, s16 y, const u8 *text) {
+void print_generic_string_fade(s16 x, s16 y, char *text, u32 alignment) {
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha - sTextFadeAlpha);
-    print_generic_string(x, y, text);
+    gDialogTextAlpha -= sTextFadeAlpha;
+    set_text_color(255, 255, 255);
+    print_generic_string_aligned(x, y, text, alignment);
+    gDialogTextAlpha += sTextFadeAlpha;
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 }
 
@@ -1846,84 +1283,110 @@ s32 update_text_fade_out(void) {
  * Prints the amount of stars of a save file.
  * If a save doesn't exist, print "NEW" instead.
  */
-void print_save_file_star_count(s8 fileIndex, s16 x, s16 y) {
-    u8 starCountText[4];
-    s8 offset = 0;
-    s16 starCount;
+LangArray textNew = DEFINE_LANGUAGE_ARRAY(
+    "NEW",
+    "VIDE",
+    "FREI",
+    "NEW");
 
-    if (save_file_exists(fileIndex) == TRUE) {
-        starCount = save_file_get_total_star_count(fileIndex, COURSE_MIN - 1, COURSE_MAX - 1);
-        // Print star icon
-        print_hud_lut_string(HUD_LUT_GLOBAL, x, y, starIcon);
-        // If star count is less than 100, print x icon and move
-        // the star count text one digit to the right.
+void print_save_file_star_count(s8 fileIndex, s16 x, s16 y) {
+    char starCountText[10];
+
+    if (save_file_exists(fileIndex)) {
+        s16 starCount = save_file_get_total_star_count(fileIndex,
+                                                       COURSE_NUM_TO_INDEX(COURSE_MIN),
+                                                       COURSE_NUM_TO_INDEX(COURSE_MAX));
+
         if (starCount < 100) {
-            print_hud_lut_string(HUD_LUT_GLOBAL, x + 16, y, xIcon);
-            offset = 16;
+            sprintf(starCountText, "★×%d", starCount);
+        } else {
+            sprintf(starCountText, "★%d", starCount);
         }
-        // Print star count
-        int_to_str(starCount, starCountText);
-        print_hud_lut_string(HUD_LUT_GLOBAL, x + (offset + 16), y, starCountText);
+        print_hud_lut_string(x, y, starCountText);
     } else {
         // Print "new" text
-#ifdef VERSION_CN
-        print_hud_lut_string(HUD_LUT_GLOBAL, x - 2, y - 5, LANGUAGE_ARRAY(textNew));
-#else
-        print_hud_lut_string(HUD_LUT_GLOBAL, x, y, LANGUAGE_ARRAY(textNew));
-#endif
+        print_hud_lut_string(x, y, LANG_ARRAY(textNew));
     }
 }
 
-#if defined(VERSION_JP) || defined(VERSION_SH)
-    #define SELECT_FILE_X 96
-    #define SELECT_FILE_Y 35
-    #define SCORE_X 50
-    #define COPY_X 115
-    #define ERASE_X 180
-#ifdef VERSION_JP
-    #define SOUNDMODE_X1 235
-#else
-    #define SOUNDMODE_X1 sSoundTextX
-#endif
-    #define SAVEFILE_X1 92
-    #define SAVEFILE_X2 209
-    #define MARIOTEXT_X1 92
-    #define MARIOTEXT_X2 207
-    #define MARIOTEXT_Y1 65
-    #define MARIOTEXT_Y2 105
-#elif defined(VERSION_US)
-    #define SELECT_FILE_X 93
-    #define SELECT_FILE_Y 35
-    #define SCORE_X 52
-    #define COPY_X 117
-    #define ERASE_X 177
-    #define SOUNDMODE_X1 sSoundTextX
-    #define SAVEFILE_X1 92
-    #define SAVEFILE_X2 209
-    #define MARIOTEXT_X1 92
-    #define MARIOTEXT_X2 207
-    #define MARIOTEXT_Y1 65
-    #define MARIOTEXT_Y2 105
-#elif defined(VERSION_EU)
-    #define SAVEFILE_X1 97
-    #define SAVEFILE_X2 204
-    #define MARIOTEXT_X1 97
-    #define MARIOTEXT_X2 204
-    #define MARIOTEXT_Y1 65
-    #define MARIOTEXT_Y2 105
-#elif defined(VERSION_CN)
-    #define SELECT_FILE_X 106
-    #define SELECT_FILE_Y 25
-    #define SCORE_X 52
-    #define COPY_X 113
-    #define ERASE_X 177
-    #define SOUNDMODE_X1 sSoundTextX
-    #define SAVEFILE_X1 92
-    #define SAVEFILE_X2 209
-    #define MARIOTEXT_X1 92
-    #define MARIOTEXT_X2 207
-    #define MARIOTEXT_Y1 164
-    #define MARIOTEXT_Y2 124
+LangArray textSelectFile = DEFINE_LANGUAGE_ARRAY(
+    "SELECT FILE",
+    "CHOISIR  FICHIER",
+    "WÄHLE SPIEL",
+    "ファイルセレクト");
+
+LangArray textScore = DEFINE_LANGUAGE_ARRAY(
+    "SCORE",
+    "SCORE",
+    "LEISTUNG",
+    "スコア");
+
+LangArray textCopy = DEFINE_LANGUAGE_ARRAY(
+    "COPY",
+    "COPIER",
+    "KOPIEREN",
+    "コピー");
+
+LangArray textErase = DEFINE_LANGUAGE_ARRAY(
+    "ERASE",
+    "EFFACER",
+    "LÖSCHEN",
+    "けす");
+
+LangArray textMarioA = DEFINE_LANGUAGE_ARRAY(
+    "MARIO A",
+    "MARIO A",
+    "MARIO A",
+    "マリオＡ");
+
+LangArray textMarioB = DEFINE_LANGUAGE_ARRAY(
+    "MARIO B",
+    "MARIO B",
+    "MARIO B",
+    "マリオＢ");
+
+LangArray textMarioC = DEFINE_LANGUAGE_ARRAY(
+    "MARIO C",
+    "MARIO C",
+    "MARIO C",
+    "マリオＣ");
+
+LangArray textMarioD = DEFINE_LANGUAGE_ARRAY(
+    "MARIO D",
+    "MARIO D",
+    "MARIO D",
+    "マリオＤ");
+
+LangArray textSoundModeStereo = DEFINE_LANGUAGE_ARRAY(
+    "STEREO",
+    "STÉRÉO",
+    "STEREO",
+    "ステレオ");
+
+LangArray textSoundModeMono = DEFINE_LANGUAGE_ARRAY(
+    "MONO",
+    "MONO",
+    "MONO",
+    "モノラル");
+
+LangArray textSoundModeHeadset = DEFINE_LANGUAGE_ARRAY(
+    "HEADSET",
+    "CASQUE",
+    "PHONES",
+    "ヘッドホン");
+
+LangArray *textSoundModes[] = {
+    &textSoundModeStereo,
+    &textSoundModeMono,
+    &textSoundModeHeadset
+};
+
+#ifdef MULTILANG
+LangArray textOption = DEFINE_LANGUAGE_ARRAY(
+    "OPTION",
+    "OPTION",
+    "OPTIONEN",
+    "オプション");
 #endif
 
 /**
@@ -1934,170 +1397,99 @@ void print_save_file_star_count(s8 fileIndex, s16 x, s16 y) {
  * Same rule applies for score, copy and erase strings.
  */
 void print_main_menu_strings(void) {
-#if defined(VERSION_SH) || defined(VERSION_CN)
-    // The current sound mode is automatically centered on US and Shindou.
-    static s16 sSoundTextX; // TODO: There should be a way to make this match on both US and Shindou.
-#endif
     // Print "SELECT FILE" text
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-#ifndef VERSION_EU
-    print_hud_lut_string(HUD_LUT_DIFF, SELECT_FILE_X, SELECT_FILE_Y, textSelectFile);
-#endif
+    set_text_color(255, 255, 255);
+    print_hud_lut_string_aligned(SCREEN_CENTER_X, 35, LANG_ARRAY(textSelectFile), TEXT_ALIGN_CENTER);
     // Print file star counts
-    print_save_file_star_count(SAVE_FILE_A, SAVEFILE_X1, 78);
-    print_save_file_star_count(SAVE_FILE_B, SAVEFILE_X2, 78);
-    print_save_file_star_count(SAVE_FILE_C, SAVEFILE_X1, 118);
-    print_save_file_star_count(SAVE_FILE_D, SAVEFILE_X2, 118);
+    print_save_file_star_count(SAVE_FILE_A, 92, 78);
+    print_save_file_star_count(SAVE_FILE_B, 209, 78);
+    print_save_file_star_count(SAVE_FILE_C, 92, 118);
+    print_save_file_star_count(SAVE_FILE_D, 209, 118);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
-#ifndef VERSION_EU
     // Print menu names
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-    print_generic_string(SCORE_X, 39, textScore);
-    print_generic_string(COPY_X, 39, textCopy);
-    print_generic_string(ERASE_X, 39, textErase);
-#ifndef VERSION_JP
-    sSoundTextX = get_str_x_pos_from_center(254, textSoundModes[sSoundMode], 10.0f);
+    set_text_color(255, 255, 255);
+    print_generic_string_aligned(67, 39, LANG_ARRAY(textScore), TEXT_ALIGN_CENTER);
+    print_generic_string_aligned(130, 39, LANG_ARRAY(textCopy), TEXT_ALIGN_CENTER);
+    print_generic_string_aligned(191, 39, LANG_ARRAY(textErase), TEXT_ALIGN_CENTER);
+#ifdef MULTILANG
+    print_generic_string_aligned(253, 39, LANG_ARRAY(textOption), TEXT_ALIGN_CENTER);
+#else
+    print_generic_string_aligned(253, 39, LANG_ARRAY(*textSoundModes[sSoundMode]), TEXT_ALIGN_CENTER);
 #endif
-    print_generic_string(SOUNDMODE_X1, 39, textSoundModes[sSoundMode]);
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
-#endif
-
     // Print file names
-    gSPDisplayList(gDisplayListHead++, FILE_SELECT_TEXT_DL_BEGIN);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-    FILE_SELECT_PRINT_STRING(MARIOTEXT_X1, MARIOTEXT_Y1, textMarioA);
-    FILE_SELECT_PRINT_STRING(MARIOTEXT_X2, MARIOTEXT_Y1, textMarioB);
-    FILE_SELECT_PRINT_STRING(MARIOTEXT_X1, MARIOTEXT_Y2, textMarioC);
-    FILE_SELECT_PRINT_STRING(MARIOTEXT_X2, MARIOTEXT_Y2, textMarioD);
-    gSPDisplayList(gDisplayListHead++, FILE_SELECT_TEXT_DL_END);
+    gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
+    set_text_color(255, 255, 255);
+    print_menu_generic_string(92, 65, LANG_ARRAY(textMarioA));
+    print_menu_generic_string(207, 65, LANG_ARRAY(textMarioB));
+    print_menu_generic_string(92, 105, LANG_ARRAY(textMarioC));
+    print_menu_generic_string(207, 105, LANG_ARRAY(textMarioD));
+    gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_end);
 }
 
-#ifdef VERSION_EU
-/**
- * Prints the first part main menu strings that shows on the yellow background menu screen.
- * Has the strings for the 4 buttons below the save buttons that get changed depending of the language.
- * Calls print_main_menu_strings to print the remaining strings.
- */
-void print_main_lang_strings(void) {
-    static s16 centeredX;
+LangArray textCheckFile = DEFINE_LANGUAGE_ARRAY(
+    "CHECK FILE",
+    "VOIR  SCORE",
+    "VON WELCHEM SPIEL",
+    "どのスコアをみる？");
 
-    // Print "SELECT FILE" text
-    gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-    centeredX = get_str_x_pos_from_center_scale(160, textSelectFile[sLanguageMode], 12.0f);
-    print_hud_lut_string(HUD_LUT_GLOBAL, centeredX, 35, textSelectFile[sLanguageMode]);
-    gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
-
-    // Print menu names
-    gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-    centeredX = get_str_x_pos_from_center(76, textScore[sLanguageMode], 10.0f);
-    print_generic_string(centeredX, 39, textScore[sLanguageMode]);
-    centeredX = get_str_x_pos_from_center(131, textCopy[sLanguageMode], 10.0f);
-    print_generic_string(centeredX, 39, textCopy[sLanguageMode]);
-    centeredX = get_str_x_pos_from_center(189, textErase[sLanguageMode], 10.0f);
-    print_generic_string(centeredX, 39, textErase[sLanguageMode]);
-    centeredX = get_str_x_pos_from_center(245, textOption[sLanguageMode], 10.0f);
-    print_generic_string(centeredX, 39, textOption[sLanguageMode]);
-    gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
-
-    print_main_menu_strings();
-}
-#endif
-
-#if defined(VERSION_JP) || defined(VERSION_SH)
-    #define CHECK_FILE_X 90
-    #define CHECK_FILE_Y 35
-    #define NOSAVE_DATA_X1 90
-#elif defined(VERSION_US)
-    #define CHECK_FILE_X 95
-    #define CHECK_FILE_Y 35
-    #define NOSAVE_DATA_X1 99
-#elif defined(VERSION_EU)
-    #define CHECK_FILE_X checkFileX
-    #define CHECK_FILE_Y 35
-    #define NOSAVE_DATA_X1 noSaveDataX
-#elif defined(VERSION_CN)
-    #define CHECK_FILE_X 106
-    #define CHECK_FILE_Y 25
-    #define NOSAVE_DATA_X1 99
-#endif
+LangArray textNoSavedDataExists = DEFINE_LANGUAGE_ARRAY(
+    "NO SAVED DATA EXISTS",
+    "AUCUNE SAUVEGARDE DISPONIBLE",
+    "KEIN SPIEL VORHANDEN",
+    "ファイルにデータがありません");
 
 /**
  * Defines IDs for the top message of the score menu and displays it if the ID is called in messageID.
  */
 void score_menu_display_message(s8 messageID) {
-#ifdef VERSION_EU
-    s16 checkFileX, noSaveDataX;
-#endif
 
     switch (messageID) {
         case SCORE_MSG_CHECK_FILE:
-#ifdef VERSION_EU
-            checkFileX = get_str_x_pos_from_center_scale(160, LANGUAGE_ARRAY(textCheckFile), 12.0f);
-#endif
-            print_hud_lut_string_fade(HUD_LUT_DIFF, CHECK_FILE_X, CHECK_FILE_Y, LANGUAGE_ARRAY(textCheckFile));
+            print_hud_lut_string_fade(SCREEN_CENTER_X, 35, LANG_ARRAY(textCheckFile), TEXT_ALIGN_CENTER);
             break;
         case SCORE_MSG_NOSAVE_DATA:
-#ifdef VERSION_EU
-            noSaveDataX = get_str_x_pos_from_center(160, LANGUAGE_ARRAY(textNoSavedDataExists), 10.0f);
-#endif
-            print_generic_string_fade(NOSAVE_DATA_X1, 190, LANGUAGE_ARRAY(textNoSavedDataExists));
+            print_generic_string_fade(SCREEN_CENTER_X, 190, LANG_ARRAY(textNoSavedDataExists), TEXT_ALIGN_CENTER);
             break;
     }
 }
 
-#if defined(VERSION_JP) || defined(VERSION_SH)
-    #define RETURN_X     45
-    #define COPYFILE_X1  128
-    #define ERASEFILE_X1 228
-    #define SCORE_FILE_Y1 62
-    #define SCORE_FILE_Y2 105
-#elif defined(VERSION_US)
-    #define RETURN_X     44
-    #define COPYFILE_X1  135
-    #define ERASEFILE_X1 231
-    #define SCORE_FILE_Y1 62
-    #define SCORE_FILE_Y2 105
-#elif defined(VERSION_EU)
-    #define RETURN_X     centeredX
-    #define COPYFILE_X1  centeredX
-    #define ERASEFILE_X1 centeredX
-#elif defined(VERSION_CN)
-    #define RETURN_X     44
-    #define COPYFILE_X1  135
-    #define ERASEFILE_X1 231
-    #define SCORE_FILE_Y1 164
-    #define SCORE_FILE_Y2 121
-#endif
+#define SUBMENU_LEFT_BUTTON_X 62
+#define SUBMENU_MIDDLE_BUTTON_X  160
+#define SUBMENU_RIGHT_BUTTON_X 258
 
-#ifdef VERSION_CN
-    #define RETURN_X_OLD 45 // this X wasn't changed in all places
-#else
-    #define RETURN_X_OLD RETURN_X
-#endif
+#define FADEOUT_TIMER 20
 
-#ifdef VERSION_EU
-    #define FADEOUT_TIMER 35
-#else
-    #define FADEOUT_TIMER 20
-#endif
+LangArray textReturn = DEFINE_LANGUAGE_ARRAY(
+    "RETURN",
+    "RETOUR",
+    "ZURÜCK",
+    "もどる");
+
+LangArray textCopyFileButton = DEFINE_LANGUAGE_ARRAY(
+    "COPY FILE",
+    "COPIER",
+    "KOPIEREN",
+    "ファイルコピー");
+
+LangArray textEraseFileButton = DEFINE_LANGUAGE_ARRAY(
+    "ERASE FILE",
+    "EFFACER",
+    "LÖSCHEN",
+    "ファイルけす");
 
 /**
  * Prints score menu strings that shows on the green background menu screen.
  */
 void print_score_menu_strings(void) {
-#ifdef VERSION_EU
-    s16 centeredX;
-#endif
 
     // Update and print the message at the top of the menu.
     if (sMainMenuTimer == FADEOUT_TIMER) {
         sFadeOutText = TRUE;
     }
-    if (update_text_fade_out() == TRUE) {
+    if (update_text_fade_out()) {
         if (sStatusMessageID == SCORE_MSG_CHECK_FILE) {
             sStatusMessageID = SCORE_MSG_NOSAVE_DATA;
         } else {
@@ -2107,129 +1499,87 @@ void print_score_menu_strings(void) {
     // Print messageID called above
     score_menu_display_message(sStatusMessageID);
 
-#ifndef VERSION_EU
     // Print file star counts
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
+    set_text_color(255, 255, 255);
     print_save_file_star_count(SAVE_FILE_A, 90, 76);
     print_save_file_star_count(SAVE_FILE_B, 211, 76);
     print_save_file_star_count(SAVE_FILE_C, 90, 119);
     print_save_file_star_count(SAVE_FILE_D, 211, 119);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
-#endif
 
     // Print menu names
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-#ifdef VERSION_EU
-    centeredX = get_str_x_pos_from_center(69, textReturn[sLanguageMode], 10.0f);
-#endif
-    print_generic_string(RETURN_X, 35, LANGUAGE_ARRAY(textReturn));
-#ifdef VERSION_EU
-    centeredX = get_str_x_pos_from_center(159, textCopyFileButton[sLanguageMode], 10.0f);
-#endif
-    print_generic_string(COPYFILE_X1, 35, LANGUAGE_ARRAY(textCopyFileButton));
-#ifdef VERSION_EU
-    centeredX = get_str_x_pos_from_center(249, textEraseFileButton[sLanguageMode], 10.0f);
-#endif
-    print_generic_string(ERASEFILE_X1, 35, LANGUAGE_ARRAY(textEraseFileButton));
+    set_text_color(255, 255, 255);
+    print_generic_string_aligned(SUBMENU_LEFT_BUTTON_X, 35, LANG_ARRAY(textReturn), TEXT_ALIGN_CENTER);
+    print_generic_string_aligned(SUBMENU_MIDDLE_BUTTON_X, 35, LANG_ARRAY(textCopyFileButton), TEXT_ALIGN_CENTER);
+    print_generic_string_aligned(SUBMENU_RIGHT_BUTTON_X, 35, LANG_ARRAY(textEraseFileButton), TEXT_ALIGN_CENTER);
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 
     // Print file names
-#ifdef VERSION_EU
-    print_main_menu_strings();
-#else
-    gSPDisplayList(gDisplayListHead++, FILE_SELECT_TEXT_DL_BEGIN);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-    FILE_SELECT_PRINT_STRING(89, SCORE_FILE_Y1, textMarioA);
-    FILE_SELECT_PRINT_STRING(211, SCORE_FILE_Y1, textMarioB);
-    FILE_SELECT_PRINT_STRING(89, SCORE_FILE_Y2, textMarioC);
-    FILE_SELECT_PRINT_STRING(211, SCORE_FILE_Y2, textMarioD);
-    gSPDisplayList(gDisplayListHead++, FILE_SELECT_TEXT_DL_END);
-#endif
+    gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
+    set_text_color(255, 255, 255);
+    print_menu_generic_string(89, 62, LANG_ARRAY(textMarioA));
+    print_menu_generic_string(211, 62, LANG_ARRAY(textMarioB));
+    print_menu_generic_string(89, 105, LANG_ARRAY(textMarioC));
+    print_menu_generic_string(211, 105, LANG_ARRAY(textMarioD));
+    gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_end);
 }
 
-#if defined(VERSION_JP) || defined(VERSION_SH)
-    #define NOFILE_COPY_X  90
-    #define COPY_FILE_X    90
-    #define COPYIT_WHERE_X 90
-    #define NOSAVE_DATA_X2 90
-    #define COPYCOMPLETE_X 90
-    #define SAVE_EXISTS_X1 90
-    #define COPY_FILE_Y    35
-#elif defined(VERSION_US)
-    #define NOFILE_COPY_X  119
-    #define COPY_FILE_X    104
-    #define COPYIT_WHERE_X 109
-    #define NOSAVE_DATA_X2 101
-    #define COPYCOMPLETE_X 110
-    #define SAVE_EXISTS_X1 110
-    #define COPY_FILE_Y    35
-#elif defined(VERSION_EU)
-    #define NOFILE_COPY_X  centeredX
-    #define COPY_FILE_X    centeredX
-    #define COPYIT_WHERE_X centeredX
-    #define NOSAVE_DATA_X2 centeredX
-    #define COPYCOMPLETE_X centeredX
-    #define SAVE_EXISTS_X1 centeredX
-    #define COPY_FILE_Y    35
-#elif defined(VERSION_CN)
-    #define NOFILE_COPY_X  119
-    #define COPY_FILE_X    104
-    #define COPYIT_WHERE_X 109
-    #define NOSAVE_DATA_X2 101
-    #define COPYCOMPLETE_X 110
-    #define SAVE_EXISTS_X1 110
-    #define COPY_FILE_Y    25
-#endif
+LangArray textCopyFile = DEFINE_LANGUAGE_ARRAY(
+    "COPY FILE",
+    "COPIER  FICHIER",
+    "SPIEL KOPIEREN",
+    "ファイルコピーする");
+
+LangArray textCopyItToWhere = DEFINE_LANGUAGE_ARRAY(
+    "COPY IT TO WHERE?",
+    "COPIER SUR?",
+    "WOHIN KOPIEREN?",
+    "どこにコピーしますか？");
+
+LangArray textCopyCompleted = DEFINE_LANGUAGE_ARRAY(
+    "COPYING COMPLETED",
+    "COPIE ACHEVEÉ",
+    "SPIEL KOPIERT",
+    "コピーおわりました");
+
+LangArray textSavedDataExists = DEFINE_LANGUAGE_ARRAY(
+    "SAVED DATA EXISTS",
+    "SAVEGARDE EXISTANTE",
+    "BEREITS BELEGT",
+    "ファイルにデータがはいってます");
+
+LangArray textNoFileToCopyFrom = DEFINE_LANGUAGE_ARRAY(
+    "NO EMPTY FILE",
+    "AUCUN FICHIER VIDE",
+    "KEIN PLATZ VORHANDEN",
+    "からのファイルがありません");
 
 /**
  * Defines IDs for the top message of the copy menu and displays it if the ID is called in messageID.
  */
 void copy_menu_display_message(s8 messageID) {
-#ifdef VERSION_EU
-    s16 centeredX;
-#endif
 
     switch (messageID) {
         case COPY_MSG_MAIN_TEXT:
-            if (sAllFilesExist == TRUE) {
-#ifdef VERSION_EU
-                centeredX = get_str_x_pos_from_center(160, textNoFileToCopyFrom[sLanguageMode], 10.0f);
-#endif
-                print_generic_string_fade(NOFILE_COPY_X, 190, LANGUAGE_ARRAY(textNoFileToCopyFrom));
+            if (sAllFilesExist) {
+                print_generic_string_fade(SCREEN_CENTER_X, 190, LANG_ARRAY(textNoFileToCopyFrom), TEXT_ALIGN_CENTER);
             } else {
-#ifdef VERSION_EU
-                centeredX = get_str_x_pos_from_center_scale(160, textCopyFile[sLanguageMode], 12.0f);
-#endif
-                print_hud_lut_string_fade(HUD_LUT_DIFF, COPY_FILE_X, COPY_FILE_Y, LANGUAGE_ARRAY(textCopyFile));
+                print_hud_lut_string_fade(SCREEN_CENTER_X, 35, LANG_ARRAY(textCopyFile), TEXT_ALIGN_CENTER);
             }
             break;
         case COPY_MSG_COPY_WHERE:
-#ifdef VERSION_EU
-            centeredX = get_str_x_pos_from_center(160, textCopyItToWhere[sLanguageMode], 10.0f);
-#endif
-            print_generic_string_fade(COPYIT_WHERE_X, 190, LANGUAGE_ARRAY(textCopyItToWhere));
+            print_generic_string_fade(SCREEN_CENTER_X, 190, LANG_ARRAY(textCopyItToWhere), TEXT_ALIGN_CENTER);
             break;
         case COPY_MSG_NOSAVE_EXISTS:
-#ifdef VERSION_EU
-            centeredX = get_str_x_pos_from_center(160, textNoSavedDataExists[sLanguageMode], 10.0f);
-            print_generic_string_fade(NOSAVE_DATA_X2, 190, textNoSavedDataExists[sLanguageMode]);
-#else
-            print_generic_string_fade(NOSAVE_DATA_X2, 190, textNoSavedDataExistsCopy);
-#endif
+            print_generic_string_fade(SCREEN_CENTER_X, 190, LANG_ARRAY(textNoSavedDataExists), TEXT_ALIGN_CENTER);
             break;
         case COPY_MSG_COPY_COMPLETE:
-#ifdef VERSION_EU
-            centeredX = get_str_x_pos_from_center(160, textCopyCompleted[sLanguageMode], 10.0f);
-#endif
-            print_generic_string_fade(COPYCOMPLETE_X, 190, LANGUAGE_ARRAY(textCopyCompleted));
+            print_generic_string_fade(SCREEN_CENTER_X, 190, LANG_ARRAY(textCopyCompleted), TEXT_ALIGN_CENTER);
             break;
         case COPY_MSG_SAVE_EXISTS:
-#ifdef VERSION_EU
-            centeredX = get_str_x_pos_from_center(160, textSavedDataExists[sLanguageMode], 10.0f);
-#endif
-            print_generic_string_fade(SAVE_EXISTS_X1, 190, LANGUAGE_ARRAY(textSavedDataExists));
+            print_generic_string_fade(SCREEN_CENTER_X, 190, LANG_ARRAY(textSavedDataExists), TEXT_ALIGN_CENTER);
             break;
     }
 }
@@ -2279,153 +1629,78 @@ void copy_menu_update_message(void) {
     }
 }
 
-#if defined(VERSION_JP)
-    #define VIEWSCORE_X1 133
-    #define ERASEFILE_X2 220
-    #define COPY_FILE_Y1 62
-    #define COPY_FILE_Y2 105
-#elif defined(VERSION_US)
-    #define VIEWSCORE_X1 128
-    #define ERASEFILE_X2 230
-    #define COPY_FILE_Y1 62
-    #define COPY_FILE_Y2 105
-#elif defined(VERSION_EU)
-    #define VIEWSCORE_X1 centeredX
-    #define ERASEFILE_X2 centeredX
-#elif defined(VERSION_SH)
-    #define VIEWSCORE_X1 133
-    #define ERASEFILE_X2 230
-    #define COPY_FILE_Y1 62
-    #define COPY_FILE_Y2 105
-#elif defined(VERSION_CN)
-    #define VIEWSCORE_X1 128
-    #define ERASEFILE_X2 230
-    #define COPY_FILE_Y1 164
-    #define COPY_FILE_Y2 121
-#endif
+LangArray textViewScore = DEFINE_LANGUAGE_ARRAY(
+    "CHECK SCORE",
+    "SCORE",
+    "LEISTUNG",
+    "スコアをみる");
 
 /**
  * Prints copy menu strings that shows on the blue background menu screen.
  */
 void print_copy_menu_strings(void) {
-#ifdef VERSION_EU
-    s16 centeredX;
-#endif
 
     // Update and print the message at the top of the menu.
     copy_menu_update_message();
     // Print messageID called inside a copy_menu_update_message case
     copy_menu_display_message(sStatusMessageID);
-#ifndef VERSION_EU
     // Print file star counts
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
+    set_text_color(255, 255, 255);
     print_save_file_star_count(SAVE_FILE_A, 90, 76);
     print_save_file_star_count(SAVE_FILE_B, 211, 76);
     print_save_file_star_count(SAVE_FILE_C, 90, 119);
     print_save_file_star_count(SAVE_FILE_D, 211, 119);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
-#endif
     // Print menu names
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-#ifdef VERSION_EU
-    centeredX = get_str_x_pos_from_center(69, textReturn[sLanguageMode], 10.0f);
-#endif
-    print_generic_string(RETURN_X, 35, LANGUAGE_ARRAY(textReturn));
-#ifdef VERSION_EU
-    centeredX = get_str_x_pos_from_center(159, textViewScore[sLanguageMode], 10.0f);
-#endif
-    print_generic_string(VIEWSCORE_X1, 35, LANGUAGE_ARRAY(textViewScore));
-#ifdef VERSION_EU
-    centeredX = get_str_x_pos_from_center(249, textEraseFileButton[sLanguageMode], 10.0f);
-#endif
-    print_generic_string(ERASEFILE_X2, 35, LANGUAGE_ARRAY(textEraseFileButton));
+    set_text_color(255, 255, 255);
+    print_generic_string_aligned(SUBMENU_LEFT_BUTTON_X, 35, LANG_ARRAY(textReturn), TEXT_ALIGN_CENTER);
+    print_generic_string_aligned(SUBMENU_MIDDLE_BUTTON_X, 35, LANG_ARRAY(textViewScore), TEXT_ALIGN_CENTER);
+    print_generic_string_aligned(SUBMENU_RIGHT_BUTTON_X, 35, LANG_ARRAY(textEraseFileButton), TEXT_ALIGN_CENTER);
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
-
     // Print file names
-#ifdef VERSION_EU
-    print_main_menu_strings();
-#else
-    gSPDisplayList(gDisplayListHead++, FILE_SELECT_TEXT_DL_BEGIN);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-    FILE_SELECT_PRINT_STRING(89, COPY_FILE_Y1, textMarioA);
-    FILE_SELECT_PRINT_STRING(211, COPY_FILE_Y1, textMarioB);
-    FILE_SELECT_PRINT_STRING(89, COPY_FILE_Y2, textMarioC);
-    FILE_SELECT_PRINT_STRING(211, COPY_FILE_Y2, textMarioD);
-    gSPDisplayList(gDisplayListHead++, FILE_SELECT_TEXT_DL_END);
-#endif
+    gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
+    set_text_color(255, 255, 255);
+    print_menu_generic_string(89, 62, LANG_ARRAY(textMarioA));
+    print_menu_generic_string(211, 62, LANG_ARRAY(textMarioB));
+    print_menu_generic_string(89, 105, LANG_ARRAY(textMarioC));
+    print_menu_generic_string(211, 105, LANG_ARRAY(textMarioD));
+    gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_end);
 }
 
-#if defined(VERSION_JP) || defined(VERSION_SH)
-#ifdef VERSION_JP
-    #define CURSOR_X 160.0f
-#else
-    #define CURSOR_X (x + 70)
-#endif
-    #define MENU_ERASE_YES_MIN_X 145
-    #define MENU_ERASE_YES_MAX_X 164
-#elif defined(VERSION_CN)
-    #define CURSOR_X (x + 70)
-    #define MENU_ERASE_YES_MIN_X 144
-    #define MENU_ERASE_YES_MAX_X 173
-#else
-    #define CURSOR_X (x + 70)
-    #define MENU_ERASE_YES_MIN_X 140
-    #define MENU_ERASE_YES_MAX_X 169
-#endif
+LangArray textYes = DEFINE_LANGUAGE_ARRAY(
+    "YES",
+    "OUI",
+    "JA",
+    "はい");
 
-#ifdef VERSION_CN
-    #define MENU_ERASE_YES_NO_MIN_Y 191
-    #define MENU_ERASE_YES_NO_MAX_Y 210
-    #define MENU_ERASE_NO_MIN_X 189
-    #define MENU_ERASE_NO_MAX_X 218
-    #define MENU_ERASE_YES_X_OFFSET 60
-#elif defined(VERSION_SH)
-    #define MENU_ERASE_YES_NO_MIN_Y 191
-    #define MENU_ERASE_YES_NO_MAX_Y 210
-    #define MENU_ERASE_NO_MIN_X 194
-    #define MENU_ERASE_NO_MAX_X 213
-    #define MENU_ERASE_YES_X_OFFSET 56
-#else
-    #define MENU_ERASE_YES_NO_MIN_Y 191
-    #define MENU_ERASE_YES_NO_MAX_Y 210
-    #define MENU_ERASE_NO_MIN_X 189
-    #define MENU_ERASE_NO_MAX_X 218
-    #define MENU_ERASE_YES_X_OFFSET 56
-#endif
+LangArray textNo = DEFINE_LANGUAGE_ARRAY(
+    "NO",
+    "NON",
+    "NEIN",
+    "いいえ");
 
 /**
  * Prints the "YES NO" prompt and checks if one of the prompts are hovered to do it's functions.
  */
 void print_erase_menu_prompt(s16 x, s16 y) {
-    s16 colorTransTimer = gGlobalTimer << 12;
+    s16 colorFade = gGlobalTimer << 12;
 
-    s16 cursorX = sCursorPos[0] + CURSOR_X;
+    s16 cursorX = sCursorPos[0] + x + 70.f;
     s16 cursorY = sCursorPos[1] + 120.0f;
 
-    // TODO: Merge
-    if (cursorX < MENU_ERASE_YES_MAX_X && cursorX >= MENU_ERASE_YES_MIN_X &&
-#ifdef VERSION_CN
-        (u16) (cursorY - MENU_ERASE_YES_NO_MIN_Y) < MENU_ERASE_YES_NO_MAX_Y - MENU_ERASE_YES_NO_MIN_Y
-#else
-        cursorY < MENU_ERASE_YES_NO_MAX_Y && cursorY >= MENU_ERASE_YES_NO_MIN_Y
-#endif
-    ) {
+    if (cursorX < 169 && cursorX >= 140 &&
+        cursorY < 210 && cursorY >= 191) {
         // Fade "YES" string color but keep "NO" gray
-        sYesNoColor[0] = sins(colorTransTimer) * 50.0f + 205.0f;
+        sYesNoColor[0] = sins(colorFade) * 50.0f + 205.0f;
         sYesNoColor[1] = 150;
         sEraseYesNoHoverState = MENU_ERASE_HOVER_YES;
-    } else if (cursorX < MENU_ERASE_NO_MAX_X && cursorX >= MENU_ERASE_NO_MIN_X &&
-#ifdef VERSION_CN
-        (u16) (cursorY - MENU_ERASE_YES_NO_MIN_Y) < MENU_ERASE_YES_NO_MAX_Y - MENU_ERASE_YES_NO_MIN_Y
-#else
-        cursorY < MENU_ERASE_YES_NO_MAX_Y && cursorY >= MENU_ERASE_YES_NO_MIN_Y
-#endif
-    ) {
+    } else if (cursorX < 218 && cursorX >= 189
+        && cursorY < 210 && cursorY >= 191) {
         // Fade "NO" string color but keep "YES" gray
         sYesNoColor[0] = 150;
-        sYesNoColor[1] = sins(colorTransTimer) * 50.0f + 205.0f;
+        sYesNoColor[1] = sins(colorFade) * 50.0f + 205.0f;
         sEraseYesNoHoverState = MENU_ERASE_HOVER_NO;
     } else {
         // Don't fade both strings and keep them gray
@@ -2438,7 +1713,7 @@ void print_erase_menu_prompt(s16 x, s16 y) {
         // ..and is hovering "YES", delete file
         if (sEraseYesNoHoverState == MENU_ERASE_HOVER_YES) {
             play_sound(SOUND_MARIO_WAAAOOOW, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
             queue_rumble_data(5, 80);
 #endif
             sMainMenuButtons[MENU_BUTTON_ERASE]->oMenuButtonActionPhase = ERASE_PHASE_MARIO_ERASED;
@@ -2453,7 +1728,7 @@ void print_erase_menu_prompt(s16 x, s16 y) {
             // ..and is hovering "NO", return back to main phase
         } else if (sEraseYesNoHoverState == MENU_ERASE_HOVER_NO) {
             play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource);
-#ifdef RUMBLE_FEEDBACK
+#if ENABLE_RUMBLE
             queue_rumble_data(5, 80);
 #endif
             sMainMenuButtons[MENU_BUTTON_ERASE_MIN + sSelectedFileIndex]->oMenuButtonState =
@@ -2467,96 +1742,53 @@ void print_erase_menu_prompt(s16 x, s16 y) {
 
     // Print "YES NO" strings
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, sYesNoColor[0], sYesNoColor[0], sYesNoColor[0], sTextBaseAlpha);
-    print_generic_string(x + MENU_ERASE_YES_X_OFFSET, y, LANGUAGE_ARRAY(textYes));
-    gDPSetEnvColor(gDisplayListHead++, sYesNoColor[1], sYesNoColor[1], sYesNoColor[1], sTextBaseAlpha);
-    print_generic_string(x + 98, y, LANGUAGE_ARRAY(textNo));
+    gDPSetEnvColor(gDisplayListHead++, sYesNoColor[0], sYesNoColor[0], sYesNoColor[0], gDialogTextAlpha);
+    print_generic_string(x + 56, y, LANG_ARRAY(textYes));
+    gDPSetEnvColor(gDisplayListHead++, sYesNoColor[1], sYesNoColor[1], sYesNoColor[1], gDialogTextAlpha);
+    print_generic_string(x + 98, y, LANG_ARRAY(textNo));
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 }
 
-// MARIO_ERASED_VAR is the value there the letter "A" is, it works like this:
-//   US and EU   ---    JP
-// M a r i o   A --- マ リ オ Ａ
-// 0 1 2 3 4 5 6 --- 0 1 2 3
-#if defined(VERSION_JP) || defined(VERSION_SH)
-#ifdef VERSION_JP
-    #define ERASE_FILE_X     96
-#else
-    #define ERASE_FILE_X     111
-#endif
-    #define ERASE_FILE_Y     35
-    #define NOSAVE_DATA_X3   90
-    #define MARIO_ERASED_VAR 3
-    #define MARIO_ERASED_X   90
-    #define SAVE_EXISTS_X2   90
-#elif defined(VERSION_US)
-    #define ERASE_FILE_X     98
-    #define ERASE_FILE_Y     35
-    #define NOSAVE_DATA_X3   100
-    #define MARIO_ERASED_VAR 6
-    #define MARIO_ERASED_X   100
-    #define SAVE_EXISTS_X2   100
-#elif defined(VERSION_EU)
-    #define ERASE_FILE_X     centeredX
-    #define ERASE_FILE_Y     35
-    #define NOSAVE_DATA_X3   centeredX
-    #define MARIO_ERASED_VAR 6
-    #define MARIO_ERASED_X   centeredX
-    #define SAVE_EXISTS_X2   centeredX
-#elif defined(VERSION_CN)
-    #define ERASE_FILE_X     106
-    #define ERASE_FILE_Y     25
-    #define NOSAVE_DATA_X3   100
-    #define MARIO_ERASED_VAR 15
-    #define MARIO_ERASED_X   100
-    #define SAVE_EXISTS_X2   100
-#endif
+LangArray textEraseFile = DEFINE_LANGUAGE_ARRAY(
+    "ERASE FILE",
+    "EFFACER  FICHIER",
+    "SPIEL LÖSCHEN",
+    "ファイルけす");
+
+LangArray textSure = DEFINE_LANGUAGE_ARRAY(
+    "SURE?",
+    "OK?",
+    "SICHER?",
+    "ほんと？");
+
+LangArray textMarioXJustErased = DEFINE_LANGUAGE_ARRAY(
+    "MARIO %s JUST ERASED",
+    "MARIO %s EFFACÉ",
+    "MARIO %s GELÖSCHT",
+    "マリオ%sをけしました");
 
 /**
  * Defines IDs for the top message of the erase menu and displays it if the ID is called in messageID.
  */
 void erase_menu_display_message(s8 messageID) {
-#ifdef VERSION_EU
-    s16 centeredX;
-#endif
-
-#ifndef VERSION_EU
-    u8 textEraseFile[] = { TEXT_ERASE_FILE };
-    u8 textSure[] = { TEXT_SURE };
-    u8 textNoSavedDataExists[] = { TEXT_NO_SAVED_DATA_EXISTS };
-    u8 textMarioAJustErased[] = { TEXT_FILE_MARIO_A_JUST_ERASED };
-    u8 textSavedDataExists[] = { TEXT_SAVED_DATA_EXISTS };
-#endif
-
+    char str[50];
     switch (messageID) {
         case ERASE_MSG_MAIN_TEXT:
-#ifdef VERSION_EU
-            centeredX = get_str_x_pos_from_center_scale(160, textEraseFile[sLanguageMode], 12.0f);
-#endif
-            print_hud_lut_string_fade(HUD_LUT_DIFF, ERASE_FILE_X, ERASE_FILE_Y, LANGUAGE_ARRAY(textEraseFile));
+            print_hud_lut_string_fade(SCREEN_CENTER_X, 35, LANG_ARRAY(textEraseFile), TEXT_ALIGN_CENTER);
             break;
         case ERASE_MSG_PROMPT:
-            print_generic_string_fade(90, 190, LANGUAGE_ARRAY(textSure));
+            print_generic_string_fade(90, 190, LANG_ARRAY(textSure), TEXT_ALIGN_LEFT);
             print_erase_menu_prompt(90, 190); // YES NO, has functions for it too
             break;
         case ERASE_MSG_NOSAVE_EXISTS:
-#ifdef VERSION_EU
-            centeredX = get_str_x_pos_from_center(160, textNoSavedDataExists[sLanguageMode], 10.0f);
-#endif
-            print_generic_string_fade(NOSAVE_DATA_X3, 190, LANGUAGE_ARRAY(textNoSavedDataExists));
+            print_generic_string_fade(SCREEN_CENTER_X, 190, LANG_ARRAY(textNoSavedDataExists), TEXT_ALIGN_CENTER);
             break;
         case ERASE_MSG_MARIO_ERASED:
-            LANGUAGE_ARRAY(textMarioAJustErased)[MARIO_ERASED_VAR] = sSelectedFileIndex + 10;
-#ifdef VERSION_EU
-            centeredX = get_str_x_pos_from_center(160, textMarioAJustErased[sLanguageMode], 10.0f);
-#endif
-            print_generic_string_fade(MARIO_ERASED_X, 190, LANGUAGE_ARRAY(textMarioAJustErased));
+            string_format_file_letter(str, LANG_ARRAY(textMarioXJustErased), sSelectedFileIndex);
+            print_generic_string_fade(SCREEN_CENTER_X, 190, str, TEXT_ALIGN_CENTER);
             break;
         case ERASE_MSG_SAVE_EXISTS: // unused
-#ifdef VERSION_EU
-            centeredX = get_str_x_pos_from_center(160, textSavedDataExists[sLanguageMode], 10.0f);
-#endif
-            print_generic_string_fade(SAVE_EXISTS_X2, 190, LANGUAGE_ARRAY(textSavedDataExists));
+            print_generic_string_fade(SCREEN_CENTER_X, 190, LANG_ARRAY(textSavedDataExists), TEXT_ALIGN_CENTER);
             break;
     }
 }
@@ -2603,30 +1835,10 @@ void erase_menu_update_message(void) {
     }
 }
 
-#if defined(VERSION_JP) || defined(VERSION_SH)
-    #define VIEWSCORE_X2 133
-    #define COPYFILE_X2 223
-    #define ERASE_FILE_Y1 62
-    #define ERASE_FILE_Y2 105
-#elif defined(VERSION_CN)
-    #define VIEWSCORE_X2 129
-    #define COPYFILE_X2 228
-    #define ERASE_FILE_Y1 164
-    #define ERASE_FILE_Y2 121
-#else
-    #define VIEWSCORE_X2 127
-    #define COPYFILE_X2 233
-    #define ERASE_FILE_Y1 62
-    #define ERASE_FILE_Y2 105
-#endif
-
 /**
  * Prints erase menu strings that shows on the red background menu screen.
  */
 void print_erase_menu_strings(void) {
-#ifdef VERSION_EU
-    s16 centeredX;
-#endif
 
     // Update and print the message at the top of the menu.
     erase_menu_update_message();
@@ -2634,235 +1846,189 @@ void print_erase_menu_strings(void) {
     // Print messageID called inside a erase_menu_update_message case
     erase_menu_display_message(sStatusMessageID);
 
-#ifndef VERSION_EU
     // Print file star counts
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
+    set_text_color(255, 255, 255);
     print_save_file_star_count(SAVE_FILE_A, 90, 76);
     print_save_file_star_count(SAVE_FILE_B, 211, 76);
     print_save_file_star_count(SAVE_FILE_C, 90, 119);
     print_save_file_star_count(SAVE_FILE_D, 211, 119);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
-#endif
 
     // Print menu names
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-
-#ifdef VERSION_EU
-    centeredX = get_str_x_pos_from_center(69, textReturn[sLanguageMode], 10.0f);
-    print_generic_string(centeredX, 35, textReturn[sLanguageMode]);
-    centeredX = get_str_x_pos_from_center(159, textViewScore[sLanguageMode], 10.0f);
-    print_generic_string(centeredX, 35, textViewScore[sLanguageMode]);
-    centeredX = get_str_x_pos_from_center(249, textCopyFileButton[sLanguageMode], 10.0f);
-    print_generic_string(centeredX, 35, textCopyFileButton[sLanguageMode]);
-#else
-    print_generic_string(RETURN_X_OLD, 35, textReturn);
-    print_generic_string(VIEWSCORE_X2, 35, textViewScore);
-    print_generic_string(COPYFILE_X2, 35, textCopyFileButton);
-#endif
+    set_text_color(255, 255, 255);
+    print_generic_string_aligned(SUBMENU_LEFT_BUTTON_X, 35, LANG_ARRAY(textReturn), TEXT_ALIGN_CENTER);
+    print_generic_string_aligned(SUBMENU_MIDDLE_BUTTON_X, 35, LANG_ARRAY(textViewScore), TEXT_ALIGN_CENTER);
+    print_generic_string_aligned(SUBMENU_RIGHT_BUTTON_X, 35, LANG_ARRAY(textCopyFileButton), TEXT_ALIGN_CENTER);
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 
     // Print file names
-#ifdef VERSION_EU
-    print_main_menu_strings();
-#else
-    gSPDisplayList(gDisplayListHead++, FILE_SELECT_TEXT_DL_BEGIN);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-    FILE_SELECT_PRINT_STRING(89, ERASE_FILE_Y1, textMarioA);
-    FILE_SELECT_PRINT_STRING(211, ERASE_FILE_Y1, textMarioB);
-    FILE_SELECT_PRINT_STRING(89, ERASE_FILE_Y2, textMarioC);
-    FILE_SELECT_PRINT_STRING(211, ERASE_FILE_Y2, textMarioD);
-    gSPDisplayList(gDisplayListHead++, FILE_SELECT_TEXT_DL_END);
-#endif
+    gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
+    set_text_color(255, 255, 255);
+    print_menu_generic_string(89, 62, LANG_ARRAY(textMarioA));
+    print_menu_generic_string(211, 62, LANG_ARRAY(textMarioB));
+    print_menu_generic_string(89, 105, LANG_ARRAY(textMarioC));
+    print_menu_generic_string(211, 105, LANG_ARRAY(textMarioD));
+    gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_end);
 }
 
-#if defined(VERSION_JP) || defined(VERSION_SH)
-    #define SOUND_HUD_X 96
-    #define SOUND_HUD_Y 35
-#elif defined(VERSION_US)
-    #define SOUND_HUD_X 88
-    #define SOUND_HUD_Y 35
-#elif defined(VERSION_CN)
-    #define SOUND_HUD_X 106
-    #define SOUND_HUD_Y 55
+LangArray textSoundSelect = DEFINE_LANGUAGE_ARRAY(
+    "SOUND SELECT",
+    "SELECTION SON",
+    "WÄHLE SOUND",
+    "サウンドセレクト");
+
+#ifdef MULTILANG
+LangArray textLanguageSelect = DEFINE_LANGUAGE_ARRAY(
+    "LANGUAGE SELECT",
+    "SELECTION LANGUE",
+    "WÄHLE SPRACHE",
+    "ランゲージセレクト");
+
+char *textLanguage[] = {
+    "ENGLISH",
+    "FRANÇAIS",
+    "DEUTSCH",
+    "にほんご",
+};
+
+#define SOUND_LABEL_Y 141
+#define LANGUAGE_SELECT_Y 80
+#else
+#define SOUND_LABEL_Y 87
 #endif
+
+#define OPTION_LABEL_SPACING 74
 
 /**
  * Prints sound mode menu strings that shows on the purple background menu screen.
  *
- * In EU, this function acts like "print_option_mode_menu_strings" because of languages.
+ * With multilang, this function acts like "print_option_mode_menu_strings" because of languages.
  */
 void print_sound_mode_menu_strings(void) {
     s32 mode;
-
-#if defined(VERSION_US) || defined(VERSION_SH) || defined(VERSION_CN)
-    s16 textX;
-#elif defined(VERSION_EU)
     s32 textX;
-#endif
-
-#ifndef VERSION_EU
-    u8 textSoundSelect[] = { TEXT_SOUND_SELECT };
-#endif
 
     // Print "SOUND SELECT" text
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
+    set_text_color(255, 255, 255);
 
-#ifdef VERSION_EU
-    print_hud_lut_string(HUD_LUT_DIFF, 47, 32, textSoundSelect[sLanguageMode]);
-    print_hud_lut_string(HUD_LUT_DIFF, 47, 101, textLanguageSelect[sLanguageMode]);
-#else
-    print_hud_lut_string(HUD_LUT_DIFF, SOUND_HUD_X, SOUND_HUD_Y, textSoundSelect);
+    print_hud_lut_string(47, 32, LANG_ARRAY(textSoundSelect));
+#ifdef MULTILANG
+    print_hud_lut_string(47, 110, LANG_ARRAY(textLanguageSelect));
 #endif
 
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
 
-#ifdef VERSION_EU // In EU their X position get increased each string
     // Print sound mode names
-    for (mode = 0, textX = 90; mode < 3; textX += 70, mode++) {
+    for (mode = 0, textX = SCREEN_CENTER_X - OPTION_LABEL_SPACING; mode < 3; textX += OPTION_LABEL_SPACING, mode++) {
         if (mode == sSoundMode) {
-            gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
+            set_text_color(255, 255, 255);
         } else {
-            gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, sTextBaseAlpha);
+            set_text_color(0, 0, 0);
         }
-        print_generic_string(
-            get_str_x_pos_from_center(textX, textSoundModes[sLanguageMode * 3 + mode], 10.0f),
-            141, textSoundModes[sLanguageMode * 3 + mode]);
+        print_generic_string_aligned(textX, SOUND_LABEL_Y, LANG_ARRAY(*textSoundModes[mode]), TEXT_ALIGN_CENTER);
     }
 
-    // In EU, print language mode names
-    for (mode = 0, textX = 90; mode < 3; textX += 70, mode++) {
-        if (mode == sLanguageMode) {
-            gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-        } else {
-            gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, sTextBaseAlpha);
-        }
-        print_generic_string(
-            get_str_x_pos_from_center(textX, textLanguage[mode], 10.0f),
-            72, textLanguage[mode]);
-    }
-#else
-    // Print sound mode names
-    for (mode = 0; mode < 3; mode++) {
-        if (sSoundMode == mode) {
-            gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-        } else {
-            gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, sTextBaseAlpha);
-        }
-        #ifndef VERSION_JP
-            // Mode names are centered correctly on US and Shindou
-            textX = get_str_x_pos_from_center(mode * 74 + 87, textSoundModes[mode], 10.0f);
-            print_generic_string(textX, 87, textSoundModes[mode]);
-        #else
-            print_generic_string(mode * 74 + 67, 87, textSoundModes[mode]);
-        #endif
-    }
-#endif
+#ifdef MULTILANG
+    // Handle changing the selected language
+    if (sCursorClickingTimer == 2) {
+        s16 cursorX = sCursorPos[0] + SCREEN_CENTER_X;
+        s16 cursorY = sCursorPos[1] + SCREEN_CENTER_Y;
 
-#ifdef VERSION_EU
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-    print_generic_string(182, 29, textReturn[sLanguageMode]);
+        s8 oldSelectedLanguageIndex = sSelectedLanguageIndex;
+
+        if (cursorY < LANGUAGE_SELECT_Y + 20 && cursorY >= LANGUAGE_SELECT_Y) {
+            if (cursorX < SCREEN_CENTER_X - 40 && cursorX >= SCREEN_CENTER_X - 60) {
+                sSelectedLanguageIndex--;
+            } else if (cursorX < SCREEN_CENTER_X + 60 && cursorX >= SCREEN_CENTER_X + 40) {
+                sSelectedLanguageIndex++;
+            }
+            // Update language if the language has been changed
+            if (sSelectedLanguageIndex != oldSelectedLanguageIndex) {
+                play_sound(SOUND_MENU_CHANGE_SELECT, gGlobalSoundSource);
+                sSelectedLanguageIndex = (sSelectedLanguageIndex + NUM_DEFINED_LANGUAGES) % NUM_DEFINED_LANGUAGES;
+                multilang_set_language(gDefinedLanguages[sSelectedLanguageIndex]);
+            }
+        }
+    }
+
+    set_text_color(255, 255, 255);
+    // Print current language
+    print_generic_string_aligned(SCREEN_CENTER_X,      LANGUAGE_SELECT_Y, textLanguage[gInGameLanguage], TEXT_ALIGN_CENTER);
+    print_generic_string_aligned(SCREEN_CENTER_X - 50, LANGUAGE_SELECT_Y, "◀", TEXT_ALIGN_CENTER);
+    print_generic_string_aligned(SCREEN_CENTER_X + 50, LANGUAGE_SELECT_Y, "▶", TEXT_ALIGN_CENTER);
+
+    // Print return text
+    print_generic_string(184, 29, LANG_ARRAY(textReturn));
 #endif
 
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 }
 
-#ifndef VERSION_CN
-u8 textStarX[] = { TEXT_STAR_X };
-#endif
-
 /**
  * Prints castle secret stars collected in a score menu save file.
  */
 void print_score_file_castle_secret_stars(s8 fileIndex, s16 x, s16 y) {
-#ifdef VERSION_CN
-    u8 secretStarsText[36];
-    u8 textStarX[] = { TEXT_STAR_X };
-#else
-    u8 secretStarsText[20];
-#endif
-
-    // Print "[star] x"
-    FILE_SELECT_PRINT_STRING(x, y, textStarX);
-
+    char secretStarsText[20];
+    char secretStarsNum[8];
     // Print number of castle secret stars
-    INT_TO_STR_DIFF(save_file_get_total_star_count(fileIndex, COURSE_BONUS_STAGES - 1, COURSE_MAX - 1),
-               secretStarsText);
-
-#ifdef VERSION_EU
-    FILE_SELECT_PRINT_STRING(x + 20, y, secretStarsText);
-#else
-    FILE_SELECT_PRINT_STRING(x + 16, y, secretStarsText);
-#endif
+    format_int_to_string(secretStarsNum, save_file_get_total_star_count(fileIndex,
+                                                                  COURSE_NUM_TO_INDEX(COURSE_BONUS_STAGES),
+                                                                  COURSE_NUM_TO_INDEX(COURSE_MAX)));
+    sprintf(secretStarsText, "★×%s", secretStarsNum);
+    print_menu_generic_string(x, y, secretStarsText);
 }
 
-#if defined(VERSION_JP) || defined(VERSION_SH)
-    #define HISCORE_COIN_ICON_X  0
-    #define HISCORE_COIN_TEXT_X  16
-    #define HISCORE_COIN_NAMES_X 45
-#else
-    #define HISCORE_COIN_ICON_X  18
-    #define HISCORE_COIN_TEXT_X  34
-    #define HISCORE_COIN_NAMES_X 60
-#endif
+LangArray text4Dashes = DEFINE_LANGUAGE_ARRAY(
+    "----",
+    "----",
+    "----",
+    "ーーーー");
+
+LangArray textMarioFace = DEFINE_LANGUAGE_ARRAY(
+    "{}%s",
+    "{}%s",
+    "{}%s",
+    "マリオ%s");
 
 /**
  * Prints course coins collected in a score menu save file.
  */
 void print_score_file_course_coin_score(s8 fileIndex, s16 courseIndex, s16 x, s16 y) {
-#ifdef VERSION_CN
-    u8 coinScoreText[36];
-#else
-    u8 coinScoreText[20];
-#endif
-
+    char str[20];
+    char coinScoreText[10];
     u8 stars = save_file_get_star_flags(fileIndex, courseIndex);
-    u8 textCoinX[] = { TEXT_COIN_X };
-    u8 textStar[] = { TEXT_STAR };
-
-#if defined(VERSION_JP) || defined(VERSION_SH)
-    #define LENGTH 5
-#elif defined(VERSION_CN)
-    #define LENGTH 16
-#else
-    #define LENGTH 8
-#endif
-    u8 fileNames[][LENGTH] = {
-        { TEXT_4DASHES }, // huh?
-        { TEXT_SCORE_MARIO_A }, { TEXT_SCORE_MARIO_B }, { TEXT_SCORE_MARIO_C }, { TEXT_SCORE_MARIO_D },
-    };
-#undef LENGTH
 
     // MYSCORE
     if (sScoreFileCoinScoreMode == 0) {
-        // Print "[coin] x"
-        FILE_SELECT_PRINT_STRING(x + 25, y, textCoinX);
-
         // Print coin score
-        INT_TO_STR_DIFF(save_file_get_course_coin_score(fileIndex, courseIndex), coinScoreText);
-        FILE_SELECT_PRINT_STRING(x + 41, y, coinScoreText);
-
+        format_int_to_string(coinScoreText, save_file_get_course_coin_score(fileIndex, courseIndex));
+        sprintf(str, "✪×%s", coinScoreText);
+        print_menu_generic_string(x + 25, y, str);
         // If collected, print 100 coin star
         if (stars & (1 << 6)) {
-            FILE_SELECT_PRINT_STRING(x + 70, y, textStar);
+            print_menu_generic_string(x + 70, y, "★");
         }
     }
     // HISCORE
     else {
-        // Print "[coin] x"
-        FILE_SELECT_PRINT_STRING(x + HISCORE_COIN_ICON_X, y, textCoinX);
-
+        u16 coinScoreFile;
         // Print coin highscore
-        INT_TO_STR_DIFF((u16) save_file_get_max_coin_score(courseIndex) & 0xFFFF, coinScoreText);
-        FILE_SELECT_PRINT_STRING(x + HISCORE_COIN_TEXT_X, y, coinScoreText);
-
+        format_int_to_string(coinScoreText, (u16) save_file_get_max_coin_score(courseIndex) & 0xFFFF);
+        sprintf(str, "✪×%s", coinScoreText);
+        print_menu_generic_string(x + 18, y, str);
         // Print coin highscore file
-        FILE_SELECT_PRINT_STRING(x + HISCORE_COIN_NAMES_X, y,
-                         fileNames[(save_file_get_max_coin_score(courseIndex) >> 16) & 0xFFFF]);
+        coinScoreFile = (save_file_get_max_coin_score(courseIndex) >> 16) & 0xFFFF;
+        if (coinScoreFile == 0) {
+            print_menu_generic_string(x + 60, y, LANG_ARRAY(text4Dashes));
+        } else {
+            string_format_file_letter(str, LANG_ARRAY(textMarioFace), coinScoreFile - 1);
+            print_menu_generic_string(x + 60, y, str);
+        }
     }
 }
 
@@ -2870,13 +2036,9 @@ void print_score_file_course_coin_score(s8 fileIndex, s16 courseIndex, s16 x, s1
  * Prints stars collected in a score menu save file.
  */
 void print_score_file_star_score(s8 fileIndex, s16 courseIndex, s16 x, s16 y) {
-    s16 i = 0;
-
-#ifdef VERSION_CN
-    u8 starScoreText[36];
-#else
-    u8 starScoreText[19];
-#endif
+    char str[30] = {'\0'};
+    char *entries[6];
+    int i;
 
     u8 stars = save_file_get_star_flags(fileIndex, courseIndex);
     s8 starCount = save_file_get_course_star_count(fileIndex, courseIndex);
@@ -2886,75 +2048,30 @@ void print_score_file_star_score(s8 fileIndex, s16 courseIndex, s16 x, s16 y) {
     }
     // Add 1 star character for every star collected
     for (i = 0; i < starCount; i++) {
-#ifdef VERSION_CN
-        starScoreText[i * 2] = 0x00;
-        starScoreText[i * 2 + 1] = DIALOG_CHAR_STAR_FILLED;
-#else
-        starScoreText[i] = DIALOG_CHAR_STAR_FILLED;
-#endif
+        entries[i] = "★";
     }
-
-    // Terminating byte
-#ifdef VERSION_CN
-    starScoreText[i * 2] = DIALOG_CHAR_TERMINATOR;
-    starScoreText[i * 2 + 1] = DIALOG_CHAR_TERMINATOR;
-#else
-    starScoreText[i] = DIALOG_CHAR_TERMINATOR;
-#endif
-
-    FILE_SELECT_PRINT_STRING(x, y, starScoreText);
+    for (i = starCount; i < 6; i++) {
+        entries[i] = "";
+    }
+    for (i = 0; i < 6; i++) {
+        strcat(str, entries[i]);
+    }
+    print_menu_generic_string(x, y, str);
 }
 
-#if defined(VERSION_JP) || defined(VERSION_SH)
-    #define MARIO_X 28
-    #define MARIO_Y 15
-    #define FILE_LETTER_X 86
-#ifdef VERSION_JP
-    #define LEVEL_NUM_PAD 0
-    #define SECRET_STARS_PAD 0
-#else
-    #define LEVEL_NUM_PAD 5
-    #define SECRET_STARS_PAD 10
-#endif
-    #define LEVEL_NAME_X 23
-    #define STAR_SCORE_X 152
-    #define MYSCORE_X 237
-    #define HISCORE_X 237
-    #define MYSCORE_Y 24
-    #define HISCORE_Y 24
-#elif defined(VERSION_CN)
-    #define MARIO_X 25
-    #define MARIO_Y 9
-    #define FILE_LETTER_X 95
-    #define SECRET_STARS_PAD 6
-    #define LEVEL_NAME_X 26
-    #define STAR_SCORE_X 171
-    #define MYSCORE_X 238
-    #define HISCORE_X 231
-    #define MYSCORE_Y 200
-    #define HISCORE_Y 200
-#else
-    #define MARIO_X 25
-    #define MARIO_Y 15
-    #define FILE_LETTER_X 95
-    #define LEVEL_NUM_PAD 3
-    #define SECRET_STARS_PAD 6
-    #define LEVEL_NAME_X 23
-    #define STAR_SCORE_X 171
-#ifdef VERSION_EU
-    #define MYSCORE_X get_str_x_pos_from_center(257, textMyScore[sLanguageMode], 10.0f)
-    #define HISCORE_X get_str_x_pos_from_center(257, textHiScore[sLanguageMode], 10.0f)
-#else
-    #define MYSCORE_X 238
-    #define HISCORE_X 231
-#endif
-    #define MYSCORE_Y 24
-    #define HISCORE_Y 24
-#endif
+LangArray textScoreMenuMarioX = DEFINE_LANGUAGE_ARRAY(
+    "MARIO %c",
+    "MARIO %c",
+    "MARIO %c",
+    "マリオ %c");
 
-#ifdef VERSION_EU
-#include "game/segment7.h"
-#endif
+LangArray textHiScore = DEFINE_LANGUAGE_ARRAY(
+    "HI SCORE",
+    "MEILLEUR SCORE",
+    "BESTLEISTUNG",
+    "ハイスコア");
+
+extern LangArray textMyScore;
 
 #define PRINT_COURSE_NAME_CN(courseIndex, shift) \
     FILE_SELECT_PRINT_STRING(LEVEL_NAME_X, 14 + 21 * (9 - courseIndex) + shift, \
@@ -2968,133 +2085,50 @@ void print_score_file_star_score(s8 fileIndex, s16 courseIndex, s16 x, s16 y) {
  * Prints save file score strings that shows when a save file is chosen inside the score menu.
  */
 void print_save_file_scores(s8 fileIndex) {
-    u16 courseNum;
-#ifdef VERSION_CN
-    u8 shiftPad[2];
-    u8 pagePad[4];
+    u32 i;
+    char str[20];
+    char fileLetter;
+
+#ifndef MULTILANG
+    const char **levelNameTable = segmented_to_virtual(seg2_course_name_table);
 #else
-    u8 tensDigPad;
-#endif
-#ifndef VERSION_EU
-    u8 textMario[] = { TEXT_MARIO };
-#ifdef VERSION_JP
-    u8 textFileLetter[] = { TEXT_ZERO };
-    void **levelNameTable = segmented_to_virtual(seg2_course_name_table);
-#endif
-    u8 textHiScore[] = { TEXT_HI_SCORE };
-    u8 textMyScore[] = { TEXT_MY_SCORE };
-#ifdef VERSION_CN
-    u8 textArrowL[] = { TEXT_ARROW_L };
-    u8 textRArrow[] = { TEXT_R_ARROW };
-#endif
-#ifndef VERSION_JP
-    u8 textFileLetter[] = { TEXT_ZERO };
-    void **levelNameTable = segmented_to_virtual(seg2_course_name_table);
-#endif
-#else
-    u8 textFileLetter[] = { TEXT_ZERO };
-    void **levelNameTable;
-
-    switch (sLanguageMode) {
-        case LANGUAGE_ENGLISH:
-            levelNameTable = segmented_to_virtual(eu_course_strings_en_table);
-            break;
-        case LANGUAGE_FRENCH:
-            levelNameTable = segmented_to_virtual(eu_course_strings_fr_table);
-            break;
-        case LANGUAGE_GERMAN:
-            levelNameTable = segmented_to_virtual(eu_course_strings_de_table);
-            break;
-    }
-#endif
-
-    textFileLetter[0] = fileIndex + ASCII_TO_DIALOG('A'); // get letter of file selected
-
-#ifdef TARGET_N3DS
-    gDPForceFlush(gDisplayListHead++);
-    gDPSet2d(gDisplayListHead++, 2); // vetoed
+    const char ***levelNameLanguageTable = segmented_to_virtual(course_strings_language_table);
+    const char **levelNameTable = segmented_to_virtual(levelNameLanguageTable[gInGameLanguage]);
 #endif
 
     // Print file name at top
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-    print_hud_lut_string(HUD_LUT_DIFF, GFX_DIMENSIONS_FROM_LEFT_EDGE(MARIO_X), MARIO_Y, textMario);
-    print_hud_lut_string(HUD_LUT_GLOBAL, GFX_DIMENSIONS_FROM_LEFT_EDGE(FILE_LETTER_X), 15, textFileLetter);
+    set_text_color(255, 255, 255);
+    fileLetter = 'A' + fileIndex;
+    sprintf(str, LANG_ARRAY(textScoreMenuMarioX), fileLetter);
+    print_hud_lut_string(25, 15, str);
 
     // Print save file star count at top
-    print_save_file_star_count(fileIndex, GFX_DIMENSIONS_FROM_LEFT_EDGE(124), 15);
+    print_save_file_star_count(fileIndex, 124, 15);
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_end);
     // Print course scores
-    gSPDisplayList(gDisplayListHead++, FILE_SELECT_TEXT_DL_BEGIN);
-    gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
+    gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_begin);
+    set_text_color(255, 255, 255);
 
-    //! Huge print list, for loops exist for a reason!
-#ifdef VERSION_CN
-    if (sScorePage == 0) {
-        PRINT_COURSE_NAME_CN(COURSE_SSL, 0)
-        PRINT_COURSE_NAME_CN(COURSE_LLL, 0)
-        PRINT_COURSE_NAME_CN(COURSE_HMC, 0)
-        PRINT_COURSE_NAME_CN(COURSE_BBH, 0)
-        PRINT_COURSE_NAME_CN(COURSE_CCM, 0)
-        PRINT_COURSE_NAME_CN(COURSE_JRB, 0)
-        PRINT_COURSE_NAME_CN(COURSE_WF, 0)
-        PRINT_COURSE_NAME_CN(COURSE_BOB, 0)
-
-        PRINT_COURSE_SCORES_CN(COURSE_SSL, 0)
-        PRINT_COURSE_SCORES_CN(COURSE_LLL, 0)
-        PRINT_COURSE_SCORES_CN(COURSE_HMC, 0)
-        PRINT_COURSE_SCORES_CN(COURSE_BBH, 0)
-        PRINT_COURSE_SCORES_CN(COURSE_CCM, 0)
-        PRINT_COURSE_SCORES_CN(COURSE_JRB, 0)
-        PRINT_COURSE_SCORES_CN(COURSE_WF, 0)
-        PRINT_COURSE_SCORES_CN(COURSE_BOB, 0)
-    } else if (sScorePage == 1) {
-        // Print castle secret stars text
-        print_generic_string(LEVEL_NAME_X, 23 + 12 * 1,
-                                  segmented_to_virtual(levelNameTable[25]));
-
-        PRINT_COURSE_NAME_CN(COURSE_RR, 168)
-        PRINT_COURSE_NAME_CN(COURSE_TTC, 168)
-        PRINT_COURSE_NAME_CN(COURSE_THI, 168)
-        PRINT_COURSE_NAME_CN(COURSE_TTM, 168)
-        PRINT_COURSE_NAME_CN(COURSE_WDW, 168)
-        PRINT_COURSE_NAME_CN(COURSE_SL, 168)
-        PRINT_COURSE_NAME_CN(COURSE_DDD, 168)
-
-        // Print castle secret stars score
-        print_score_file_castle_secret_stars(fileIndex, STAR_SCORE_X, 23 + 12 * 1);
-
-        PRINT_COURSE_SCORES_CN(COURSE_RR, 168)
-        PRINT_COURSE_SCORES_CN(COURSE_TTC, 168)
-        PRINT_COURSE_SCORES_CN(COURSE_THI, 168)
-        PRINT_COURSE_SCORES_CN(COURSE_TTM, 168)
-        PRINT_COURSE_SCORES_CN(COURSE_WDW, 168)
-        PRINT_COURSE_SCORES_CN(COURSE_SL, 168)
-        PRINT_COURSE_SCORES_CN(COURSE_DDD, 168)
-    }
-#else
-    for (courseNum = COURSE_MIN; courseNum <= COURSE_STAGES_MAX; courseNum++) {
-        courseNum >= 10 ? (tensDigPad = 0) : (tensDigPad = 1);
-
-        FILE_SELECT_PRINT_STRING(GFX_DIMENSIONS_FROM_LEFT_EDGE(LEVEL_NAME_X) + (tensDigPad * LEVEL_NUM_PAD), 
-            23 + 12 * courseNum, segmented_to_virtual(levelNameTable[courseNum - 1]));
-
-        print_score_file_star_score(fileIndex, courseNum - 1, GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - STAR_SCORE_X), 23 + 12 * courseNum); 
-        print_score_file_course_coin_score(fileIndex, courseNum - 1, GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - 213), 23 + 12 * courseNum);
+    for ((i = 0); (i < COURSE_STAGES_MAX); (i++)) {
+        s32 lineY = 35 + (12 * i);
+        format_int_to_string(str, i + 1);
+        print_menu_generic_string(41, lineY, check_number_string_in_course_name(segmented_to_virtual(levelNameTable[i])));
+        print_menu_generic_string_aligned(37, lineY, str, TEXT_ALIGN_RIGHT);
+        print_score_file_star_score(       fileIndex, i, 171, lineY);
+        print_score_file_course_coin_score(fileIndex, i, 213, lineY);
     }
 
     // Print castle secret stars text
-    FILE_SELECT_PRINT_STRING(GFX_DIMENSIONS_FROM_LEFT_EDGE(LEVEL_NAME_X + SECRET_STARS_PAD), 23 + 12 * 16,
-                              segmented_to_virtual(levelNameTable[25]));
+    print_menu_generic_string(41, 215, segmented_to_virtual(levelNameTable[25]));
     // Print castle secret stars score
-    print_score_file_castle_secret_stars(fileIndex, GFX_DIMENSIONS_FROM_RIGHT_EDGE(320 - STAR_SCORE_X), 23 + 12 * 16);
-#endif
+    print_score_file_castle_secret_stars(fileIndex, 171, 215);
 
     // Print current coin score mode
     if (sScoreFileCoinScoreMode == 0) {
-        FILE_SELECT_PRINT_STRING(MYSCORE_X, MYSCORE_Y, LANGUAGE_ARRAY(textMyScore));
+        print_menu_generic_string_aligned(262, 24, LANG_ARRAY(textMyScore), TEXT_ALIGN_CENTER);
     } else {
-        FILE_SELECT_PRINT_STRING(HISCORE_X, HISCORE_Y, LANGUAGE_ARRAY(textHiScore));
+        print_menu_generic_string_aligned(262, 24, LANG_ARRAY(textHiScore), TEXT_ALIGN_CENTER);
     }
 
 #ifdef VERSION_CN
@@ -3105,10 +2139,6 @@ void print_save_file_scores(s8 fileIndex) {
 
     gSPDisplayList(gDisplayListHead++, FILE_SELECT_TEXT_DL_END);
 }
-
-#undef PRINT_COURSE_NAME_CN
-#undef PRINT_COURSE_SCORES_CN
-#undef PRINT_COURSE_NAME_AND_SCORES
 
 #ifdef WIDESCREEN
 /**
@@ -3229,42 +2259,18 @@ void file_select_fit_screen(void) {
  * Prints file select strings depending on the menu selected.
  * Also checks if all saves exists and defines text and main menu timers.
  */
-static void print_file_select_strings(void) {
+void print_file_select_strings(void) {
     create_dl_ortho_matrix();
     switch (sSelectedButtonID) {
-        case MENU_BUTTON_NONE:
-#ifdef VERSION_EU
-            // Ultimately calls print_main_menu_strings, but prints main language strings first.
-            print_main_lang_strings();
-#else
-            print_main_menu_strings();
-#endif
-            break;
-        case MENU_BUTTON_SCORE:
-            print_score_menu_strings();
-            sScoreFileCoinScoreMode = 0;
-            break;
-        case MENU_BUTTON_COPY:
-            print_copy_menu_strings();
-            break;
-        case MENU_BUTTON_ERASE:
-            print_erase_menu_strings();
-            break;
-        case MENU_BUTTON_SCORE_FILE_A:
-            print_save_file_scores(SAVE_FILE_A);
-            break;
-        case MENU_BUTTON_SCORE_FILE_B:
-            print_save_file_scores(SAVE_FILE_B);
-            break;
-        case MENU_BUTTON_SCORE_FILE_C:
-            print_save_file_scores(SAVE_FILE_C);
-            break;
-        case MENU_BUTTON_SCORE_FILE_D:
-            print_save_file_scores(SAVE_FILE_D);
-            break;
-        case MENU_BUTTON_SOUND_MODE:
-            print_sound_mode_menu_strings();
-            break;
+        case MENU_BUTTON_NONE:         print_main_menu_strings();                               break;
+        case MENU_BUTTON_SCORE:        print_score_menu_strings(); sScoreFileCoinScoreMode = 0; break;
+        case MENU_BUTTON_COPY:         print_copy_menu_strings();                               break;
+        case MENU_BUTTON_ERASE:        print_erase_menu_strings();                              break;
+        case MENU_BUTTON_SCORE_FILE_A: print_save_file_scores(SAVE_FILE_A); break;
+        case MENU_BUTTON_SCORE_FILE_B: print_save_file_scores(SAVE_FILE_B); break;
+        case MENU_BUTTON_SCORE_FILE_C: print_save_file_scores(SAVE_FILE_C); break;
+        case MENU_BUTTON_SCORE_FILE_D: print_save_file_scores(SAVE_FILE_D); break;
+        case MENU_BUTTON_SOUND_MODE:   print_sound_mode_menu_strings();     break;
     }
     // If all 4 save file exists, define true to sAllFilesExist to prevent more copies in copy menu
     if (save_file_exists(SAVE_FILE_A) == TRUE && save_file_exists(SAVE_FILE_B) == TRUE &&
@@ -3274,13 +2280,12 @@ static void print_file_select_strings(void) {
         sAllFilesExist = FALSE;
     }
     // Timers for menu alpha text and the main menu itself
-    if (sTextBaseAlpha < 250) {
-        sTextBaseAlpha += 10;
+    if (gDialogTextAlpha < 250) {
+        gDialogTextAlpha += 10;
     }
     if (sMainMenuTimer < 1000) {
         sMainMenuTimer++;
     }
-    
 #ifdef WIDESCREEN
     file_select_fit_screen();
 #endif
@@ -3301,20 +2306,25 @@ static void print_file_select_strings(void) {
  */
 Gfx *geo_file_select_strings_and_menu_cursor(s32 callContext, UNUSED struct GraphNode *node, UNUSED Mat4 mtx) {
     if (callContext == GEO_CONTEXT_RENDER) {
-#ifdef TARGET_N3DS
-        gDPForceFlush(gDisplayListHead++);
-        gDPSet2d(gDisplayListHead++, 1);
-        gDPSetIod(gDisplayListHead++, iodFileSelect);
-#endif
         print_file_select_strings();
         print_menu_cursor();
-#ifdef TARGET_N3DS
-        gDPForceFlush(gDisplayListHead++);
-        gDPSet2d(gDisplayListHead++, 0);
-#endif
     }
     return NULL;
 }
+
+#ifdef MULTILANG
+/**
+ * Determines the array index of the saved language based on which languages are defined.
+ */
+static u8 get_language_index(u8 language) {
+    for (u32 i = 0; i < NUM_DEFINED_LANGUAGES; i++) {
+        if (language == gDefinedLanguages[i]) {
+            return i;
+        }
+    }
+    return LANGUAGE_ENGLISH;
+}
+#endif
 
 /**
  * Initiates file select values after Mario Screen.
@@ -3322,32 +2332,17 @@ Gfx *geo_file_select_strings_and_menu_cursor(s32 callContext, UNUSED struct Grap
  * either completing a course choosing "SAVE & QUIT" or having a game over.
  */
 s32 lvl_init_menu_values_and_cursor_pos(UNUSED s32 arg, UNUSED s32 unused) {
-#ifdef VERSION_EU
-    s8 fileIndex;
-#endif
     sSelectedButtonID = MENU_BUTTON_NONE;
     sCurrentMenuLevel = MENU_LAYER_MAIN;
-    sTextBaseAlpha = 0;
+    gDialogTextAlpha = 0;
     // Place the cursor over the save file that was being played.
     // gCurrSaveFileNum is 1 by default when the game boots, as such
     // the cursor will point on Mario A save file.
     switch (gCurrSaveFileNum) {
-        case 1: // File A
-            sCursorPos[0] = -94.0f;
-            sCursorPos[1] = 46.0f;
-            break;
-        case 2: // File B
-            sCursorPos[0] = 24.0f;
-            sCursorPos[1] = 46.0f;
-            break;
-        case 3: // File C
-            sCursorPos[0] = -94.0f;
-            sCursorPos[1] = 5.0f;
-            break;
-        case 4: // File D
-            sCursorPos[0] = 24.0f;
-            sCursorPos[1] = 5.0f;
-            break;
+        case SAVE_FILE_NUM_A: sCursorPos[0] = -94.0f; sCursorPos[1] = 46.0f; break;
+        case SAVE_FILE_NUM_B: sCursorPos[0] =  24.0f; sCursorPos[1] = 46.0f; break;
+        case SAVE_FILE_NUM_C: sCursorPos[0] = -94.0f; sCursorPos[1] =  5.0f; break;
+        case SAVE_FILE_NUM_D: sCursorPos[0] =  24.0f; sCursorPos[1] =  5.0f; break;
     }
     sClickPos[0] = -10000;
     sClickPos[1] = -10000;
@@ -3360,11 +2355,11 @@ s32 lvl_init_menu_values_and_cursor_pos(UNUSED s32 arg, UNUSED s32 unused) {
     sMainMenuTimer = 0;
     sEraseYesNoHoverState = MENU_ERASE_HOVER_NONE;
     sSoundMode = save_file_get_sound_mode();
-#ifdef VERSION_EU
-    sLanguageMode = eu_get_language();
+#ifdef MULTILANG
+    sSelectedLanguageIndex = get_language_index(gInGameLanguage);
 
-    for (fileIndex = 0; fileIndex <= 3; fileIndex++) {
-        if (save_file_exists(fileIndex) == TRUE) {
+    for (u32 fileNum = 0; fileNum < NUM_SAVE_FILES; fileNum++) {
+        if (save_file_exists(fileNum) == TRUE) {
             sOpenLangSettings = FALSE;
             break;
         } else {
@@ -3372,7 +2367,7 @@ s32 lvl_init_menu_values_and_cursor_pos(UNUSED s32 arg, UNUSED s32 unused) {
         }
     }
 #endif
-
+    gCurrLevelNum = LEVEL_UNKNOWN_1;
     return 0;
 }
 

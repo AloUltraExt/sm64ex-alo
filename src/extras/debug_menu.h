@@ -23,7 +23,7 @@
 #define bool int
 #endif
 
-extern const u8 optDebugMenuStr[][200];
+extern char optDebugMenuStr[][32];
 
 struct DebugOptList {
     bool    ComplexDbgTxt;
