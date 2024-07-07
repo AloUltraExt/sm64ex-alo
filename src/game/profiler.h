@@ -17,14 +17,14 @@ struct ProfilerFrameData {
     // 2: render
     // 3: display lists
     // 4: thread 4 end (0 terminated)
-    /* 0x08 */ OSTime gameTimes[5];
+    /* 0x08 */ OSTime64 gameTimes[5];
     // gfxTimes:
     // 0: processors queued
     // 1: rsp completed
     // 2: rdp completed
-    /* 0x30 */ OSTime gfxTimes[3];
-    /* 0x48 */ OSTime soundTimes[8];
-    /* 0x88 */ OSTime vblankTimes[8];
+    /* 0x30 */ OSTime64 gfxTimes[3];
+    /* 0x48 */ OSTime64 soundTimes[8];
+    /* 0x88 */ OSTime64 vblankTimes[8];
 };
 
 // thread event IDs
