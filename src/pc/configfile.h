@@ -72,6 +72,7 @@ extern ConfigVanillaCam configVanillaCam;
 #ifdef BETTERCAMERA
 typedef struct {
     bool enable;
+    bool legacy;
     bool analog;
 #ifdef MOUSE_ACTIONS
     bool mouse;

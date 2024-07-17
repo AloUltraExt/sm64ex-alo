@@ -56,6 +56,7 @@ s32 gPuppyError = 0;
 // BetterCamera settings
 ConfigPuppyCam configPuppyCam = {
     .enable = TRUE,
+    .legacy = FALSE,
     .analog = FALSE,
 #ifdef MOUSE_ACTIONS
     .mouse = FALSE,
@@ -67,7 +68,7 @@ ConfigPuppyCam configPuppyCam = {
     .sensY = 50,
     .helper = TRUE,
     .opaque = TRUE,
-    .input = 0, // PUPPYCAM_INPUT_TYPE_DOUBLE_TAB
+    .input = 0, // PUPPYCAM_INPUT_DOUBLE_TAB
     .debug = FALSE,
 };
 #endif
@@ -86,6 +87,7 @@ const u8 optsPuppyCamStr[][200] = {
     { TEXT_OPT_PUPPYON },
     // Schemes and Types
     { TEXT_OPT_CAMSCHEME },
+    { TEXT_OPT_CAMLEGACY },
     { TEXT_OPT_CAMANALOG },
     { TEXT_OPT_CAMMOUSE },
     { TEXT_OPT_CAMDEBUG },
@@ -114,28 +116,30 @@ static const u8 *puppycamChoicesInputType[] = {
 
 static struct Option optsPuppyCam[] = {
     DEF_OPT_CHOICE( optsPuppyCamStr[2], &configPuppyCam.input, puppycamChoicesInputType ),
-    DEF_OPT_TOGGLE( optsPuppyCamStr[3], &configPuppyCam.analog ),
+    DEF_OPT_TOGGLE( optsPuppyCamStr[3], &configPuppyCam.legacy ),
+    DEF_OPT_TOGGLE( optsPuppyCamStr[4], &configPuppyCam.analog ),
 #ifdef MOUSE_ACTIONS
-    DEF_OPT_TOGGLE( optsPuppyCamStr[4], &configPuppyCam.mouse ),
+    DEF_OPT_TOGGLE( optsPuppyCamStr[5], &configPuppyCam.mouse ),
 #endif
 #ifdef EXT_DEBUG_MENU
-    DEF_OPT_TOGGLE( optsPuppyCamStr[5], &configPuppyCam.debug ),
+    DEF_OPT_TOGGLE( optsPuppyCamStr[6], &configPuppyCam.debug ),
 #endif
-    DEF_OPT_SCROLL( optsPuppyCamStr[6], &configPuppyCam.sensX, 1, (u16)(PUPPYCAM_SENSITIVITY * 2), 1 ),
-    DEF_OPT_SCROLL( optsPuppyCamStr[7], &configPuppyCam.sensY, 1, (u16)(PUPPYCAM_SENSITIVITY * 2), 1 ),
+    DEF_OPT_SCROLL( optsPuppyCamStr[7], &configPuppyCam.sensX, 1, (u16)(PUPPYCAM_SENSITIVITY * 2), 1 ),
+    DEF_OPT_SCROLL( optsPuppyCamStr[8], &configPuppyCam.sensY, 1, (u16)(PUPPYCAM_SENSITIVITY * 2), 1 ),
 #ifdef MOUSE_ACTIONS
-    DEF_OPT_SCROLL( optsPuppyCamStr[8], &configPuppyCam.mouseSpeed, 1, PUPPYCAM_MOUSE_SPEED, 1 ),
+    DEF_OPT_SCROLL( optsPuppyCamStr[9], &configPuppyCam.mouseSpeed, 1, PUPPYCAM_MOUSE_SPEED, 1 ),
 #endif
-    DEF_OPT_TOGGLE( optsPuppyCamStr[9], &configPuppyCam.invertX ),
-    DEF_OPT_TOGGLE(optsPuppyCamStr[10], &configPuppyCam.invertY ),
-    DEF_OPT_TOGGLE(optsPuppyCamStr[11], &configPuppyCam.helper ),
-    DEF_OPT_TOGGLE(optsPuppyCamStr[12], &configPuppyCam.opaque ),
+    DEF_OPT_TOGGLE(optsPuppyCamStr[10], &configPuppyCam.invertX ),
+    DEF_OPT_TOGGLE(optsPuppyCamStr[11], &configPuppyCam.invertY ),
+    DEF_OPT_TOGGLE(optsPuppyCamStr[12], &configPuppyCam.helper ),
+    DEF_OPT_TOGGLE(optsPuppyCamStr[13], &configPuppyCam.opaque ),
 };
 
 struct SubMenu menuPuppyCam = DEF_SUBMENU( optsPuppyCamStr[0], optsPuppyCam );
 
 void puppycam_default_config(void) {
     gPuppyCam.enabled = configPuppyCam.enable;
+    gPuppyCam.options.legacyMode = configPuppyCam.legacy;
     gPuppyCam.options.analogue = configPuppyCam.analog;
     gPuppyCam.options.inputType = configPuppyCam.input;
 #ifdef MOUSE_ACTIONS
@@ -373,6 +377,7 @@ void puppycam_init(void) {
     gPuppyCam.intendedFlags = PUPPYCAM_BEHAVIOUR_DEFAULT;
     gPuppyCam.flags                 = gPuppyCam.intendedFlags;
     gPuppyCam.zoom                  = gPuppyCam.zoomPoints[1];
+    gPuppyCam.zoomSet               = 1;
     gPuppyCam.zoomTarget            = gPuppyCam.zoom;
     gPuppyCam.yaw                   = gMarioState->faceAngle[1] + 0x8000;
     gPuppyCam.yawTarget             = gPuppyCam.yaw;
@@ -419,13 +424,36 @@ void puppycam_input_pitch(void) {
     }
 }
 
+void puppycam_input_zoom(void) {
+    if (!gPuppyCam.options.legacyMode) return;
+
+    // Update zoom if it doesn't match with the zoom target point
+    if (gPuppyCam.zoomTarget != gPuppyCam.zoomPoints[gPuppyCam.zoomSet]) {
+        gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[gPuppyCam.zoomSet];
+    }
+
+    // Handles R button zooming.
+    if ((gPlayer1Controller->buttonPressed & R_TRIG) && (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_ZOOM_CHANGE)) {
+        gPuppyCam.zoomSet++;
+
+        if (gPuppyCam.zoomSet >= 3) {
+            gPuppyCam.zoomSet = 0;
+        }
+        gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[gPuppyCam.zoomSet];
+        play_sound(SOUND_MENU_CLICK_CHANGE_VIEW, gGlobalSoundSource);
+    }
+}
+
 void puppycam_input_centre(void) {
     if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE) {
         return;
     }
     s32 inputDefault;
-    if (gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC) {
-        inputDefault = gPlayer1Controller->buttonPressed & L_TRIG || gPlayer1Controller->buttonPressed & R_TRIG;
+    if (gPuppyCam.options.inputType != PUPPYCAM_INPUT_CLASSIC_STYLE) {
+        inputDefault = gPlayer1Controller->buttonPressed & L_TRIG;
+        if (!gPuppyCam.options.legacyMode) {
+            inputDefault |= gPlayer1Controller->buttonPressed & R_TRIG;
+        }
     } else {
         inputDefault = gPlayer1Controller->buttonPressed & R_TRIG;
     }
@@ -513,6 +541,7 @@ static void puppycam_input_hold_preset3(f32 ivX) {
     } else {
         if ((gPlayer1Controller->buttonPressed & L_TRIG) && (gPuppyCam.yawTarget % 0x2000)) {
             gPuppyCam.yawTarget += 0x2000 - (gPuppyCam.yawTarget % 0x2000);
+            play_sound(SOUND_MENU_CLICK_CHANGE_VIEW, gGlobalSoundSource);
         }
 
         if (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_OUT) {
@@ -596,7 +625,7 @@ static void puppycam_input_hold(void) {
 #endif
 
     // Analogue Camera stuff. If it fails to find an input, then it just sets stickmag to 100, which after calculations means the value goes unchanged.
-    if (gPuppyCam.options.analogue && gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC) {
+    if (gPuppyCam.options.analogue && gPuppyCam.options.inputType != PUPPYCAM_INPUT_CLASSIC_STYLE) {
         stickMag[0] = gPuppyCam.stick2[0] * 1.25f;
         stickMag[1] = gPuppyCam.stick2[1] * 1.25f;
     }
@@ -606,24 +635,26 @@ static void puppycam_input_hold(void) {
         return;
     }
 
-    if ((!gPuppyCam.options.analogue || gPuppyCam.options.inputType == PUPPYCAM_INPUT_TYPE_CLASSIC) && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE)) {
+    if ((!gPuppyCam.options.analogue || gPuppyCam.options.inputType == PUPPYCAM_INPUT_CLASSIC_STYLE) && !(gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE)) {
         switch (gPuppyCam.options.inputType) {
             default:
-            case PUPPYCAM_INPUT_TYPE_DOUBLE_TAP:   puppycam_input_hold_preset1(ivX); puppycam_input_pitch(); puppycam_input_centre(); break;
-            case PUPPYCAM_INPUT_TYPE_SINGLE_PRESS: puppycam_input_hold_preset2(ivX); puppycam_input_pitch(); puppycam_input_centre(); break;
-            case PUPPYCAM_INPUT_TYPE_CLASSIC:      puppycam_input_hold_preset3(ivX);                         puppycam_input_centre(); break;
+            case PUPPYCAM_INPUT_DOUBLE_TAP:    puppycam_input_hold_preset1(ivX); puppycam_input_pitch(); puppycam_input_zoom(); puppycam_input_centre(); break;
+            case PUPPYCAM_INPUT_SINGLE_PRESS:  puppycam_input_hold_preset2(ivX); puppycam_input_pitch(); puppycam_input_zoom(); puppycam_input_centre(); break;
+            case PUPPYCAM_INPUT_CLASSIC_STYLE: puppycam_input_hold_preset3(ivX);                                                puppycam_input_centre(); break;
         }
     } else {
         puppycam_input_hold_preset1(ivX);
         puppycam_input_pitch();
+        puppycam_input_zoom();
         puppycam_input_centre();
     }
 
-    if (gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC) {
+    if (gPuppyCam.options.inputType != PUPPYCAM_INPUT_CLASSIC_STYLE) {
         gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ZOOMED_MED;
-        gPuppyCam.mode3Flags &= ~PUPPYCAM_MODE3_ZOOMED_IN;
-        gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[1];
-        gPuppyCam.mode3Flags &= ~PUPPYCAM_MODE3_ENTER_FIRST_PERSON;
+        gPuppyCam.mode3Flags &= ~(PUPPYCAM_MODE3_ZOOMED_IN | PUPPYCAM_MODE3_ENTER_FIRST_PERSON);
+        if (!gPuppyCam.options.legacyMode) {
+            gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[1];
+        }
     }
 
     gPuppyCam.framesSinceC[0]++;
@@ -739,7 +770,7 @@ static void puppycam_input_mouse(void) {
             gPuppyCam.yawTarget -= ivX * gMouseXPos * gPuppyCam.options.mouseSpeed;
             gPuppyCam.pitchTarget += ivY * gMouseYPos * gPuppyCam.options.mouseSpeed;
             // We allow free movement even on classic but after 15 frames of no mouse movement camera gets snapped.
-            if (gPuppyCam.options.inputType == PUPPYCAM_INPUT_TYPE_CLASSIC && gPuppyCam.framesSinceMouse == 15) {
+            if (gPuppyCam.options.inputType == PUPPYCAM_INPUT_CLASSIC_STYLE && gPuppyCam.framesSinceMouse == 15) {
                 if (!(gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_IN)) {
                     play_sound(SOUND_MENU_CLICK_CHANGE_VIEW, gGlobalSoundSource);
                     if (gPuppyCam.yawTarget % 0x1000) {
@@ -819,7 +850,7 @@ static void puppycam_view_panning(void) {
     f32 slideSpeed = 1.0f;
 
     f32 panMulti = CLAMP(gPuppyCam.zoom / (f32)gPuppyCam.zoomPoints[2], 0.f, 1.f);
-    if (gPuppyCam.options.inputType == PUPPYCAM_INPUT_TYPE_CLASSIC) {
+    if (gPuppyCam.options.inputType == PUPPYCAM_INPUT_CLASSIC_STYLE) {
         panMulti /= 2.0f;
     }
 
@@ -984,7 +1015,7 @@ void puppycam_projection_behaviours(void) {
           || gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_TURN_HELPER)
           && !(gPuppyCam.flags & (PUPPYCAM_BEHAVIOUR_INPUT_8DIR | PUPPYCAM_BEHAVIOUR_INPUT_4DIR))
           && gMarioState->vel[1] == 0.0f
-          && gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC
+          && gPuppyCam.options.inputType != PUPPYCAM_INPUT_CLASSIC_STYLE
          ) || gMarioState->action == ACT_SHOT_FROM_CANNON
            || gMarioState->action == ACT_FLYING) { // Holy hell this is getting spicy.
             // With turn aggression enabled, or if Mario's sliding, adjust the camera view behind mario.
@@ -1028,12 +1059,16 @@ void puppycam_projection_behaviours(void) {
             gPuppyCam.zoom = approach_f32_asymptotic(gPuppyCam.zoom, gPuppyCam.zoomPoints[0], 0.01f);
         } else if ((gMarioState->action & ACT_FLAG_SWIMMING_OR_FLYING && gMarioState->waterLevel - 100 - gMarioState->pos[1] > 5) || gMarioState->action == ACT_FLYING) {
             // When moving underwater or flying, the camera will zoom in on Mario.
-            gPuppyCam.zoom = approach_f32_asymptotic(gPuppyCam.zoom, 500, 0.2f);
+            if (gPuppyCam.options.legacyMode) {
+                gPuppyCam.zoom = approach_f32_asymptotic(gPuppyCam.zoom, MAX(gPuppyCam.zoomTarget / 1.5f, gPuppyCam.zoomPoints[0]), 0.2f);
+           } else {
+                gPuppyCam.zoom = approach_f32_asymptotic(gPuppyCam.zoom, 500, 0.2f);
+           }
         } else {
-            if (gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC) {
-                gPuppyCam.zoom = approach_f32_asymptotic(gPuppyCam.zoom, 500 + CLAMP((0x4000 - gPuppyCam.pitch)/10, 0, 1250), 0.35f);
-            } else {
+            if (gPuppyCam.options.inputType == PUPPYCAM_INPUT_CLASSIC_STYLE || gPuppyCam.options.legacyMode) {
                 gPuppyCam.zoom = approach_f32_asymptotic(gPuppyCam.zoom, gPuppyCam.zoomTarget, 0.15f);
+            } else {
+                gPuppyCam.zoom = approach_f32_asymptotic(gPuppyCam.zoom, 500 + CLAMP((0x4000 - gPuppyCam.pitch)/10, 0, 1250), 0.35f);
             }
         }
         // Attempts at automatic adjustment that only apply when moving or jumping.
@@ -1492,23 +1527,39 @@ void puppycam_hud(void) {
     // Arrow Icons
     u8 *cUpTexture = (*ogCameraLUT)[GLYPH_CAM_ARROW_UP];
     u8 *cDownTexture = (*ogCameraLUT)[GLYPH_CAM_ARROW_DOWN];
+    s32 xPos = x + 4;
+    s32 yPosUp = y - 8;
+    s32 yPosDown = y + 16;
 
-    if (gPuppyCam.options.inputType != PUPPYCAM_INPUT_TYPE_CLASSIC) {
-        if (gPuppyCam.pitchAcceleration > 0.0f) {
-            render_hud_small_tex_lut(x + 4, gPuppyCam.options.invertY ? y - 8 : y + 16, gPuppyCam.options.invertY ? cUpTexture : cDownTexture);
-        }
-        if (gPuppyCam.pitchAcceleration < 0.0f) {
-            render_hud_small_tex_lut(x + 4, gPuppyCam.options.invertY ? y + 16 : y - 8, gPuppyCam.options.invertY ? cDownTexture : cUpTexture);
+    if (gPuppyCam.options.inputType != PUPPYCAM_INPUT_CLASSIC_STYLE) {
+        if (gPuppyCam.options.legacyMode) {
+            switch (gPuppyCam.zoomSet) {
+                case 0:
+                    render_hud_small_tex_lut(xPos, yPosUp, cUpTexture);
+                    break;
+                case 1:
+                    break;
+                case 2:
+                    render_hud_small_tex_lut(xPos, yPosDown, cDownTexture);
+                    break;
+            }
+        } else {
+            if (gPuppyCam.pitchAcceleration > 0.0f) {
+                render_hud_small_tex_lut(xPos, gPuppyCam.options.invertY ? yPosUp : yPosDown, gPuppyCam.options.invertY ? cUpTexture : cDownTexture);
+            }
+            if (gPuppyCam.pitchAcceleration < 0.0f) {
+                render_hud_small_tex_lut(xPos, gPuppyCam.options.invertY ? yPosDown : yPosUp, gPuppyCam.options.invertY ? cDownTexture : cUpTexture);
+            }
         }
     } else {
         switch (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_GROUP) {
             case PUPPYCAM_MODE3_ZOOMED_IN:
-                render_hud_small_tex_lut(x + 4, y - 8, cUpTexture);
+                render_hud_small_tex_lut(xPos, yPosUp, cUpTexture);
                 break;
             case PUPPYCAM_MODE3_ZOOMED_MED:
                 break;
             case PUPPYCAM_MODE3_ZOOMED_OUT:
-                render_hud_small_tex_lut(x + 4, y + 16, cDownTexture);
+                render_hud_small_tex_lut(xPos, yPosDown, cDownTexture);
                 break;
         }
     }
@@ -1526,7 +1577,7 @@ void puppycam_mario_inputs(struct MarioState *m) {
 
     // Ensure Puppycam is enabled and check for mode classic flags to enter first person.
     if (gPuppyCam.enabled && (gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ENTER_FIRST_PERSON)
-        && (gPuppyCam.options.inputType == PUPPYCAM_INPUT_TYPE_CLASSIC)) {
+        && (gPuppyCam.options.inputType == PUPPYCAM_INPUT_CLASSIC_STYLE)) {
         m->input |= INPUT_FIRST_PERSON;
     }
 
@@ -1534,7 +1585,7 @@ void puppycam_mario_inputs(struct MarioState *m) {
     if (!gPuppyCam.enabled && gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_IN) {
         gPuppyCam.mode3Flags |= PUPPYCAM_MODE3_ZOOMED_MED;
         gPuppyCam.mode3Flags &= ~(PUPPYCAM_MODE3_ZOOMED_IN | PUPPYCAM_MODE3_ENTER_FIRST_PERSON);
-        gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[1];
+        if (!gPuppyCam.options.legacyMode) gPuppyCam.zoomTarget = gPuppyCam.zoomPoints[1];
     }
 }
 

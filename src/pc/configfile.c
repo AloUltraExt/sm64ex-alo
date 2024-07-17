@@ -117,6 +117,7 @@ ConfigVanillaCam configVanillaCam = {
 // PuppyCam 2 settings
 ConfigPuppyCam configPuppyCam = {
     .enable = true,
+    .legacy = false,
     .analog = false,
 #ifdef MOUSE_ACTIONS
     .mouse = false,
@@ -186,7 +187,8 @@ static const struct ConfigOption options[] = {
     {.name = "vanillacam_parallel_col", .type = CONFIG_TYPE_BOOL, .boolValue = &configVanillaCam.parallelCol},
 #endif
 #ifdef BETTERCAMERA
-    {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.enable},  
+    {.name = "bettercam_enable",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.enable},
+    {.name = "bettercam_legacy",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.legacy},
     {.name = "bettercam_analog",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.analog},
     #ifdef MOUSE_ACTIONS
     {.name = "bettercam_mouse_look",  .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.mouse},

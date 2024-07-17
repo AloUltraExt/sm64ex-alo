@@ -40,10 +40,10 @@ enum PuppyVolumeShapes {
     PUPPYVOLUME_SHAPE_CYLINDER,
 };
 
-enum PuppyCamInputTypes {
-    PUPPYCAM_INPUT_TYPE_DOUBLE_TAP,
-    PUPPYCAM_INPUT_TYPE_SINGLE_PRESS,
-    PUPPYCAM_INPUT_TYPE_CLASSIC
+enum PuppyCamInputs {
+    PUPPYCAM_INPUT_DOUBLE_TAP,
+    PUPPYCAM_INPUT_SINGLE_PRESS,
+    PUPPYCAM_INPUT_CLASSIC_STYLE
 };
 
 #include "include/command_macros_base.h"
@@ -67,6 +67,7 @@ struct gPuppyOptions
 {
     // Schemes and Types
     s16 inputType;              // Sets camera input control type (Single tap, Double Tap and Classic).
+    s16 legacyMode;             // Sets Puppycam 1 camera mode, allowing fixed zoom sets.
     s16 analogue;               // Sets analogue camera (Uses right stick on PC but on N64 uses stick on a second controller).
 #ifdef MOUSE_ACTIONS
     s16 mouse;                  // Sets camera mouse control if the target supports it.
@@ -94,6 +95,7 @@ struct gPuppyStruct
     s16 pitchTarget;            // Vertical Direction that pitch tries to be.
     f32 pitchAcceleration;      // Vertical Direction that sets pitchTarget.
     s16 zoom;                   // How far the camera is currently zoomed out
+    u8  zoomSet;                // The current setting of which zoompoint to set the target to in legacy mode.
     s16 zoomTarget;             // The value that zoom tries to be.
     s16 zoomPoints[3];          // An array containing distances.
     s16 targetFloorHeight;      // Mario's current floor height
