@@ -49,7 +49,7 @@ extern "C" {
 /*
  * Structure for time value
  */
-typedef u64	OSTime;
+typedef u64	OSTime64;
 
 /*
  * Structure for interval timer
@@ -57,8 +57,8 @@ typedef u64	OSTime;
 typedef struct OSTimer_s {
 	struct OSTimer_s	*next;	/* point to next timer in list */
 	struct OSTimer_s	*prev;	/* point to previous timer in list */
-	OSTime			interval;	/* duration set by user */
-	OSTime			value;		/* time remaining before */
+	OSTime64			interval;	/* duration set by user */
+	OSTime64			value;		/* time remaining before */
 						/* timer fires           */
 	OSMesgQueue		*mq;		/* Message Queue */
 	OSMesg			msg;		/* Message to send */
@@ -98,9 +98,9 @@ typedef struct OSTimer_s {
 
 /* Timer interface */
 
-extern OSTime		osGetTime(void);
-extern void		osSetTime(OSTime);
-extern u32		osSetTimer(OSTimer *, OSTime, OSTime, OSMesgQueue *, OSMesg);
+extern OSTime64	osGetTime(void);
+extern void		osSetTime(OSTime64);
+extern u32		osSetTimer(OSTimer *, OSTime64, OSTime64, OSMesgQueue *, OSMesg);
 extern int		osStopTimer(OSTimer *);
 
 

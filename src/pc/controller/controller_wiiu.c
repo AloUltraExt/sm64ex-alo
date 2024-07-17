@@ -135,8 +135,8 @@ static void read_wpad(OSContPad* pad) {
     bool gamepadRightStickNotSet = pad->ext_stick_x == 0 && pad->ext_stick_y == 0;
 
     if (status.extensionType == WPAD_EXT_NUNCHUK || status.extensionType == WPAD_EXT_MPLUS_NUNCHUK) {
-        uint32_t ext = status.nunchuck.hold;
-        stick = status.nunchuck.stick;
+        uint32_t ext = status.nunchuk.hold;
+        stick = status.nunchuk.stick;
         rStick = (KPADVec2D) {0.0, 0.0};
 
         if (wm & WPAD_BUTTON_A) pad->button |= A_BUTTON;
