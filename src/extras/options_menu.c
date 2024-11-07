@@ -140,6 +140,16 @@ static const u8 optBindStr[][SIZEOPTC(32)] = {
     { TEXT_OPT_DEADZONE },
     { TEXT_OPT_RUMBLE },
 };
+
+#ifdef TOUCH_CONTROLS
+extern struct SubMenu menuTouch;
+
+static const u8 optTouchStr[][SIZEOPTC(32)] = {
+    { TEXT_TOUCH_CONTROLS },
+    { TEXT_TOUCH_AUTOHIDE },
+};
+#endif
+
 #endif
 
 #ifndef TARGET_N64
@@ -197,6 +207,9 @@ static struct Option optsCamera[] = {
 
 #if !defined(TARGET_N64) && !defined(TARGET_PORT_CONSOLE)
 static struct Option optsControls[] = {
+#ifdef TOUCH_CONTROLS
+    DEF_OPT_SUBMENU( optTouchStr[0], &menuTouch ),
+#endif
     DEF_OPT_BIND( optBindStr[ 2], configKeyA ),
     DEF_OPT_BIND( optBindStr[ 3], configKeyB ),
     DEF_OPT_BIND( optBindStr[ 4], configKeyStart ),
@@ -222,6 +235,15 @@ static struct Option optsControls[] = {
     DEF_OPT_SCROLL( optBindStr[21], &configRumbleStrength, 0, 100, 1),
 #endif
 };
+
+#ifdef TOUCH_CONTROLS
+static struct Option optsTouch[] = {
+    DEF_OPT_TOGGLE( optTouchStr[1], &configAutohideTouch ),
+};
+
+struct SubMenu menuTouch = DEF_SUBMENU( optTouchStr[0], optsTouch );
+#endif
+
 #endif
 
 #ifndef TARGET_N64

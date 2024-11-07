@@ -13,5 +13,8 @@ void touch_up(struct TouchEvent* event);
 
 extern struct ControllerAPI controller_touchscreen;
 
+extern int gTouchControlsInUse;
+extern int gTouchAnalogCamera;
+
 #endif
 #endif

@@ -3552,6 +3552,17 @@ struct IntTypes<kInt24> { typedef int32_t SignedType; typedef uint32_t UnsignedT
 template <>
 struct IntTypes<kInt32> { typedef int32_t SignedType; typedef uint32_t UnsignedType; };
 
+namespace compat
+{
+	template<typename Arg, typename R>
+	class unary_function
+	{
+	public:
+		using argument_type = Arg;
+		using result_type = R;
+	};
+}
+
 template <FormatCode Format>
 struct signConverter
 {
@@ -3562,17 +3573,13 @@ struct signConverter
 	static const int kMaxSignedValue = (((1 << (kScaleBits - 1)) - 1) << 1) + 1;
 	static const int kMinSignedValue = -kMaxSignedValue - 1;
 
-	struct signedToUnsigned
+	struct signedToUnsigned : public compat::unary_function<SignedType, UnsignedType>
  	{
-		typedef SignedType argument_type;
-		typedef UnsignedType result_type;
 		UnsignedType operator()(SignedType x) { return x - kMinSignedValue; }
 	};
 
-	struct unsignedToSigned
+	struct unsignedToSigned : public compat::unary_function<SignedType, UnsignedType>
  	{
-		typedef SignedType argument_type;
-		typedef UnsignedType result_type;
 		SignedType operator()(UnsignedType x) { return x + kMinSignedValue; }
 	};
 };
@@ -3764,10 +3771,8 @@ private:
 };
 
 template <typename Arg, typename Result>
-struct intToFloat
+struct intToFloat : public compat::unary_function<Arg, Result>
 {
-	typedef Arg argument_type;
-	typedef Result result_type;
 	Result operator()(Arg x) const { return x; }
 };
 
@@ -3832,18 +3837,14 @@ private:
 };
 
 template <typename Arg, typename Result, unsigned shift>
-struct lshift
+struct lshift : public compat::unary_function<Arg, Result>
 {
-	typedef Arg argument_type;
-	typedef Result result_type;
 	Result operator()(const Arg &x) const { return x << shift; }
 };
 
 template <typename Arg, typename Result, unsigned shift>
-struct rshift
+struct rshift : public compat::unary_function<Arg, Result>
 {
-	typedef Arg argument_type;
-	typedef Result result_type;
 	Result operator()(const Arg &x) const { return x >> shift; }
 };
 
@@ -3938,10 +3939,8 @@ private:
 };
 
 template <typename Arg, typename Result>
-struct floatToFloat
+struct floatToFloat : public compat::unary_function<Arg, Result>
 {
-	typedef Arg argument_type;
-	typedef Result result_type;
 	Result operator()(Arg x) const { return x; }
 };
 
@@ -8064,7 +8063,7 @@ static char s_tmpSampleBuf[2048];
 std::string AudioFormat::description() const
 {
 	std::string d;
-              
+
 	/* sampleRate, channelCount */
 	snprintf(s_tmpSampleBuf, sizeof(s_tmpSampleBuf), "{ %7.2f Hz %d ch ", sampleRate, channelCount);
 	d += s_tmpSampleBuf;

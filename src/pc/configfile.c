@@ -89,6 +89,10 @@ unsigned int configKeyStickRight[MAX_BINDS] = { 0x014D,   VK_INVALID, VK_INVALID
 unsigned int configStickDeadzone = 16; // 16*DEADZONE_STEP=4960 (the original default deadzone)
 unsigned int configRumbleStrength = 50;
 
+#ifdef TOUCH_CONTROLS
+bool configAutohideTouch = false;
+#endif
+
 #ifdef EXTERNAL_DATA
 bool configPrecacheRes = true;
 #endif
@@ -202,6 +206,9 @@ static const struct ConfigOption options[] = {
     {.name = "bettercam_opaque",     .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.opaque},
     {.name = "bettercam_inputtype",  .type = CONFIG_TYPE_UINT, .uintValue = &configPuppyCam.input},
     {.name = "bettercam_debug",      .type = CONFIG_TYPE_BOOL, .boolValue = &configPuppyCam.debug},
+#endif
+#ifdef TOUCH_CONTROLS
+    {.name = "touch_autohide",       .type = CONFIG_TYPE_BOOL, .boolValue = &configAutohideTouch},
 #endif
 };
 

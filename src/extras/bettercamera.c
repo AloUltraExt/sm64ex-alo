@@ -31,6 +31,9 @@
 #ifdef MOUSE_ACTIONS
 #include "pc/controller/controller_mouse.h"
 #endif
+#ifdef TOUCH_CONTROLS
+#include "pc/controller/controller_touchscreen.h"
+#endif
 
 #include "bettercamera.h"
 #include "puppycam/angles.inc.c"
@@ -1163,6 +1166,10 @@ static void puppycam_vanilla_actions(void) {
 //}
 
 static void puppycam_analogue_stick(void) {
+#ifdef TOUCH_CONTROLS
+    gTouchAnalogCamera = gPuppyCam.options.analogue ? TRUE : FALSE;
+#endif
+
     if (!gPuppyCam.options.analogue)
         return;
 

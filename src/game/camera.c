@@ -33,6 +33,10 @@
 #include "extras/bettercamera.h"
 #endif
 
+#ifdef TOUCH_CONTROLS
+#include "pc/controller/controller_touchscreen.h"
+#endif
+
 #define CBUTTON_MASK (U_CBUTTONS | D_CBUTTONS | L_CBUTTONS | R_CBUTTONS)
 
 /**
@@ -3422,6 +3426,9 @@ void update_camera(struct Camera *c) {
     update_lakitu(c);
 
 #ifdef BETTERCAMERA
+#ifdef TOUCH_CONTROLS
+    gTouchAnalogCamera = FALSE;
+#endif
     }
     puppycam_default_config(); // load bettercam settings from config vars
 

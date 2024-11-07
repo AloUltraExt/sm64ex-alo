@@ -25,7 +25,7 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex) with additional featur
  ### Clone the repository:
 
  ```sh
- git clone https://github.com/AloXado320/sm64ex-alo
+ git clone https://github.com/AloUltraExt/sm64ex-alo
  cd sm64ex-alo
  ```
  
@@ -33,7 +33,7 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex) with additional featur
  
  ```sh
  git config core.fileMode false
- chmod -R 777 .
+ chmod -R 775 .
  ```
  
  ### Copy baserom(s) for asset extraction:
@@ -78,7 +78,7 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex) with additional featur
 
   #### Install build dependencies
   ```sh
-  pkg install git wget make python getconf zip apksigner clang binutils
+  pkg install git wget make python getconf zip apksigner clang binutils which libglvnd-dev
   ```
 
   #### Copy in your baserom:
@@ -101,9 +101,11 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex) with additional featur
   make -j4
   ```
 
- #### Install apk:
+ #### Copying and Installing apk:
+ 
+ Do this to move the apk to the root of your storage then open it using a file manager.
   ```sh
-  xdg-open build/us_android/sm64.us.f3dex2e.apk
+  cp build/us_android/sm64.us.f3dex2e.apk /sdcard/sm64.us.f3dex2e.apk
   ```
  
 </details>

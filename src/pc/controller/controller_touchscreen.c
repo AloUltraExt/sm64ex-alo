@@ -12,6 +12,7 @@
 #include "game/segment2.h"
 #include "gfx_dimensions.h"
 #include "pc/gfx/gfx_pc.h"
+#include "../configfile.h"
 
 #include "controller_api.h"
 #include "controller_touchscreen.h"
@@ -41,7 +42,7 @@ struct ControlElement {
     struct Position (*GetPos)();
     u8 touchID; //0 = not being touched, 1-255 = Finger being used
     //Joystick
-    int joyX, joyY;
+    int joyX, joyY, isJoyAnalog;
     //Button
     int buttonID;
     char character;
@@ -56,13 +57,20 @@ static int ControlElementsLength = sizeof(ControlElementsDefault)/sizeof(struct 
 #define TRIGGER_DETECT(size) (((pos.x + size / 2 > CORRECT_TOUCH_X(event->x)) && (pos.x - size / 2 < CORRECT_TOUCH_X(event->x))) &&\
                               ((pos.y + size / 2 > CORRECT_TOUCH_Y(event->y)) && (pos.y - size / 2 < CORRECT_TOUCH_Y(event->y))))
 
+#define C_BUTTONS_TOUCH_DETECT(x) (x == U_CBUTTONS || x == D_CBUTTONS || x == L_CBUTTONS || x == R_CBUTTONS) 
+
+int gTouchControlsInUse;
+int gTouchAnalogCamera = FALSE;
+
 void touch_down(struct TouchEvent* event) {
+    gTouchControlsInUse = TRUE;
     struct Position pos;
     for(int i = 0; i < ControlElementsLength; i++) {
         if (ControlElements[i].touchID == 0) {
             pos = ControlElements[i].GetPos();
             switch (ControlElements[i].type) {
                 case Joystick:
+                    if (ControlElements[i].isJoyAnalog && !gTouchAnalogCamera) break;
                     if (TRIGGER_DETECT(JOYSTICK_SIZE)) {
                         ControlElements[i].touchID = event->touchID;
                         ControlElements[i].joyX = CORRECT_TOUCH_X(event->x) - pos.x;
@@ -70,6 +78,7 @@ void touch_down(struct TouchEvent* event) {
                     }
                     break;
                 case Button:
+                    if (C_BUTTONS_TOUCH_DETECT(ControlElements[i].buttonID) && gTouchAnalogCamera) break;
                     if (TRIGGER_DETECT(120)) {
                         ControlElements[i].touchID = event->touchID;
                     }
@@ -87,6 +96,7 @@ void touch_motion(struct TouchEvent* event) {
             pos = ControlElements[i].GetPos();
                 switch (ControlElements[i].type) {
                     case Joystick:
+                        if (ControlElements[i].isJoyAnalog && !gTouchAnalogCamera) break;
                         ; //workaround
                         s32 x,y;
                         x = CORRECT_TOUCH_X(event->x) - pos.x;
@@ -104,6 +114,7 @@ void touch_motion(struct TouchEvent* event) {
                         ControlElements[i].joyY = y;
                         break;
                     case Button:
+                        if (C_BUTTONS_TOUCH_DETECT(ControlElements[i].buttonID) && gTouchAnalogCamera) break;
                         if (ControlElements[i].slideTouch && !TRIGGER_DETECT(120)) {
                             ControlElements[i].slideTouch = 0;
                             ControlElements[i].touchID = 0;
@@ -116,6 +127,7 @@ void touch_motion(struct TouchEvent* event) {
                 case Joystick:
                     break;
                 case Button:
+                    if (C_BUTTONS_TOUCH_DETECT(ControlElements[i].buttonID) && gTouchAnalogCamera) break;
                     if (TRIGGER_DETECT(120)) {
                         ControlElements[i].slideTouch = 1;
                         ControlElements[i].touchID = event->touchID;
@@ -130,6 +142,7 @@ static void handle_touch_up(int i) {//seperated for when the layout changes
     ControlElements[i].touchID = 0;
     switch (ControlElements[i].type) {
         case Joystick:
+            if (ControlElements[i].isJoyAnalog && !gTouchAnalogCamera) break;
             ControlElements[i].joyX = 0;
             ControlElements[i].joyY = 0;
             break;
@@ -182,6 +195,7 @@ static void DrawSprite(s32 x, s32 y, int scaling) {
 }
 
 void render_touch_controls(void) {
+    if (!gTouchControlsInUse && configAutohideTouch) return;
     Mtx *mtx;
 
     mtx = alloc_display_list(sizeof(*mtx));
@@ -200,11 +214,13 @@ void render_touch_controls(void) {
         select_button_texture(0);
         switch (ControlElements[i].type) {
             case Joystick:
+                if (ControlElements[i].isJoyAnalog && !gTouchAnalogCamera) break;
                 pos = ControlElements[i].GetPos();
                 DrawSprite(pos.x, pos.y, 3);
                 DrawSprite(pos.x + 4 + ControlElements[i].joyX, pos.y + 4 + ControlElements[i].joyY, 2);
                 break;
             case Button:
+                if (C_BUTTONS_TOUCH_DETECT(ControlElements[i].buttonID) && gTouchAnalogCamera) break;
                 if (ControlElements[i].touchID)
                     select_button_texture(1);
                 pos = ControlElements[i].GetPos();
@@ -226,11 +242,17 @@ static void touchscreen_read(OSContPad *pad) {
         switch (ControlElements[i].type) {
             case Joystick:
                 if (ControlElements[i].joyX || ControlElements[i].joyY) {
-                    pad->stick_x = (ControlElements[i].joyX + JOYSTICK_SIZE/2) * 255 / JOYSTICK_SIZE - 128;
-                    pad->stick_y = (-ControlElements[i].joyY + JOYSTICK_SIZE/2) * 255 / JOYSTICK_SIZE - 128; //inverted for some reason
+                    if (ControlElements[i].isJoyAnalog && gTouchAnalogCamera) {
+                        pad->ext_stick_x = (ControlElements[i].joyX + JOYSTICK_SIZE/2) * 255 / JOYSTICK_SIZE - 128;
+                        pad->ext_stick_y = (-ControlElements[i].joyY + JOYSTICK_SIZE/2) * 255 / JOYSTICK_SIZE - 128; //inverted for some reason
+                    } else {
+                        pad->stick_x = (ControlElements[i].joyX + JOYSTICK_SIZE/2) * 255 / JOYSTICK_SIZE - 128;
+                        pad->stick_y = (-ControlElements[i].joyY + JOYSTICK_SIZE/2) * 255 / JOYSTICK_SIZE - 128; //inverted for some reason
+                    }
                 }
                 break;
             case Button:
+                if (C_BUTTONS_TOUCH_DETECT(ControlElements[i].buttonID) && gTouchAnalogCamera) break;
                 if (ControlElements[i].touchID) {
                     pad->button |= ControlElements[i].buttonID;
                 }

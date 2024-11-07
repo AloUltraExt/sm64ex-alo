@@ -69,12 +69,13 @@ extern f32 gSineTable[];
 #define RAD_PER_DEG (M_PI / 180.0f)
 #define DEG_PER_RAD (180.0f / M_PI)
 
-#define angle_to_degrees(x) (f32)((Angle)(x) * 360.0f / (f32)0x10000)
-#define degrees_to_angle(x) (Angle)((f32)(x) * (f32)0x10000 / 360.0f)
-#define angle_to_radians(x) (f32)((Angle)(x) * M_PI / (f32)0x8000)
-#define radians_to_angle(x) (Angle)((f32)(x) * (f32)0x8000 / M_PI)
-#define degrees_to_radians(x) (f32)((f32)(x) * M_PI / 180.0f)
-#define radians_to_degrees(x) (f32)((f32)(x) * 180.0f / M_PI)
+// Extra int casts for macros converting to angle to ensure clang ARM64 properly returns these values
+#define angle_to_degrees(x)  ((f32)(((Angle)(x) / 65536.0f) * 360.0f))
+#define degrees_to_angle(x)  ((Angle)((int)(((f32)(x) * 0x10000) / 360)))
+#define angle_to_radians(x)  ((f32)(((Angle)(x) * M_PI) / 0x8000))
+#define radians_to_angle(x)  ((Angle)((int)(((f32)(x) / M_PI) * 0x8000)))
+#define degrees_to_radians(x) ((f32)((f32)(x) * RAD_PER_DEG))
+#define radians_to_degrees(x) ((f32)((f32)(x) * DEG_PER_RAD))
 
 /**
  * Converts an angle in degrees to sm64's s16 angle units. For example, DEGREES(90) == 0x4000

@@ -259,12 +259,13 @@ void main_func(void) {
     //Move old stuff to new path
     const char *basedir = SDL_AndroidGetExternalStoragePath();
     char gamedir[SYS_MAX_PATH];
+    struct stat st;
     #ifdef COMMAND_LINE_OPTIONS
     snprintf(gamedir, sizeof(gamedir), "%s/%s", basedir, gCLIOpts.GameDir[0] ? gCLIOpts.GameDir : FS_BASEDIR);
     #else
     snprintf(gamedir, sizeof(gamedir), "%s/%s", basedir, FS_BASEDIR);
     #endif
-    if (stat(gamedir, NULL) == -1) {
+    if (stat(gamedir, &st) == -1) {
         mkdir(gamedir, 0770);
     }
     move_to_new_dir("sound");

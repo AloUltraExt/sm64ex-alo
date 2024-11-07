@@ -37,8 +37,10 @@ void bhv_piranha_plant_bubble_loop(void) {
 
     cur_obj_set_pos_relative(parent, 0, 72.0f, 180.0f);
 
-#if defined(__clang__) // Hack: This fixes weird crash in clang (TARGET_ANDROID)
-    if (animFrame == -1) animFrame = 0;
+// This fixes a crash on clang ARM64, where the animFrame could go negative
+// due to an undefined behavior while calculating it's coss() value
+#if defined(__clang__)
+    if (animFrame < 0) animFrame = 0;
 #endif
 
     switch (o->oAction) {
