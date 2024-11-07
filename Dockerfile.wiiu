@@ -1,0 +1,7 @@
+FROM devkitpro/devkitppc:20240702
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential
+
+WORKDIR sm64ex-alo

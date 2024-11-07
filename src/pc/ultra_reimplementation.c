@@ -77,7 +77,7 @@ void osViSetSpecialFeatures(UNUSED u32 func) {
 void osViSwapBuffer(UNUSED void *vaddr) {
 }
 
-OSTime osGetTime(void) {
+OSTime64 osGetTime(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (unsigned long)tv.tv_sec * 1000000 + tv.tv_usec;

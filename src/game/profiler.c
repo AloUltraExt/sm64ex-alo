@@ -59,7 +59,7 @@ void profiler_log_vblank_time(void) {
 }
 
 // draw the specified profiler given the information passed.
-void draw_profiler_bar(OSTime clockBase, OSTime clockStart, OSTime clockEnd, s16 posY, u16 color) {
+void draw_profiler_bar(OSTime64 clockBase, OSTime64 clockStart, OSTime64 clockEnd, s16 posY, u16 color) {
     s64 durationStart, durationEnd;
     s32 rectX1, rectX2;
 
@@ -139,7 +139,7 @@ void draw_reference_profiler_bars(void) {
 void draw_profiler_mode_1(void) {
     s32 i;
     struct ProfilerFrameData *profiler;
-    OSTime clockBase;
+    OSTime64 clockBase;
 
     // the profiler logs 2 frames of data: last frame and current frame. Indexes are used
     // to keep track of the current frame, so the index is xor'd to retrieve the last frame's
