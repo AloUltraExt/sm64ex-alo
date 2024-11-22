@@ -11,6 +11,7 @@
 #include <windowsx.h> // GET_X_LPARAM(), GET_Y_LPARAM()
 #include <wrl/client.h>
 #include <dxgi1_3.h>
+#include <dxgi1_4.h>
 #include <versionhelpers.h>
 
 #include <shellscalingapi.h>
@@ -59,9 +60,10 @@ using namespace Microsoft::WRL; // For ComPtr
 
 static struct {
     HWND h_wnd;
-    bool showing_error;
     uint32_t current_width, current_height;
     std::string window_title;
+
+    bool is_running = true;
 
     HMODULE dxgi_module;
     HRESULT (__stdcall *CreateDXGIFactory1)(REFIID riid, void **factory);
@@ -72,6 +74,7 @@ static struct {
     RECT last_window_rect;
     bool is_full_screen, last_maximized_state;
 
+    bool dxgi1_4;
     ComPtr<IDXGIFactory2> factory;
     ComPtr<IDXGISwapChain1> swap_chain;
     HANDLE waitable_object;
@@ -275,16 +278,12 @@ static LRESULT CALLBACK gfx_dxgi_wnd_proc(HWND h_wnd, UINT message, WPARAM w_par
                 configWindow.y = GET_Y_LPARAM(l_param);
             }
             break;
-        case WM_DESTROY:
-            game_exit();
-            break;
-        case WM_PAINT:
-            if (dxgi.showing_error) {
-                return DefWindowProcW(h_wnd, message, w_param, l_param);
-            } else {
-                if (dxgi.run_one_game_iter != nullptr) {
-                    dxgi.run_one_game_iter();
-                }
+        case WM_CLOSE:
+            dxgi.is_running = false;
+        case WM_ENDSESSION:
+            // This hopefully gives the game a chance to shut down, before windows kills it.
+            if (w_param == TRUE) {
+                dxgi.is_running = false;
             }
             break;
         case WM_ACTIVATEAPP:
@@ -313,6 +312,7 @@ static LRESULT CALLBACK gfx_dxgi_wnd_proc(HWND h_wnd, UINT message, WPARAM w_par
     if (configWindow.reset) {
         dxgi.last_maximized_state = false;
         configWindow.fullscreen = false;
+        configWindow.exiting_fullscreen = true;
         configWindow.settings_changed = true;
         if (gfx_dxgi_is_window_maximized()) {
             ShowWindow(dxgi.h_wnd, SW_RESTORE);
@@ -395,10 +395,8 @@ static void gfx_dxgi_set_keyboard_callbacks(bool (*on_key_down)(int scancode), b
 static void gfx_dxgi_main_loop(void (*run_one_game_iter)(void)) {
     dxgi.run_one_game_iter = run_one_game_iter;
 
-    MSG msg;
-    while (GetMessage(&msg, nullptr, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+    while (dxgi.is_running) {
+        dxgi.run_one_game_iter();
     }
 }
 
@@ -408,11 +406,19 @@ static void gfx_dxgi_get_dimensions(uint32_t *width, uint32_t *height) {
 }
 
 static void gfx_dxgi_handle_events(void) {
-    /*MSG msg;
+    MSG msg;
     while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+        if (msg.message == WM_QUIT) {
+            dxgi.is_running = false;
+            break;
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-    }*/
+    }
+
+    if (dxgi.is_running == false) {
+        game_exit();
+    }
 }
 
 static uint64_t qpc_to_us(uint64_t qpc) {
@@ -540,10 +546,10 @@ static bool gfx_dxgi_start_frame(void) {
 static void gfx_dxgi_swap_buffers_begin(void) {
     //dxgi.length_in_vsync_frames = 1;
     ThrowIfFailed(dxgi.swap_chain->Present(dxgi.length_in_vsync_frames, 0));
-    UINT this_present_id;
+    /*UINT this_present_id;
     if (dxgi.swap_chain->GetLastPresentCount(&this_present_id) == S_OK) {
         dxgi.pending_frame_stats.insert(std::make_pair(this_present_id, dxgi.length_in_vsync_frames));
-    }
+    }*/
     dxgi.dropped_frame = false;
 }
 
@@ -564,7 +570,7 @@ static void gfx_dxgi_swap_buffers_end(void) {
 
     QueryPerformanceCounter(&t2);
 
-    dxgi.sync_interval_means_frames_to_wait = dxgi.pending_frame_stats.rbegin()->first == stats.PresentCount;
+    //dxgi.sync_interval_means_frames_to_wait = dxgi.pending_frame_stats.rbegin()->first == stats.PresentCount;
 
     //printf("done %llu gpu:%d wait:%d freed:%llu frame:%u %u monitor:%u t:%llu\n", (unsigned long long)(t0.QuadPart - dxgi.qpc_init), (int)(t1.QuadPart - t0.QuadPart), (int)(t2.QuadPart - t0.QuadPart), (unsigned long long)(t2.QuadPart - dxgi.qpc_init), dxgi.pending_frame_stats.rbegin()->first, stats.PresentCount, stats.SyncRefreshCount, (unsigned long long)(stats.SyncQPCTime.QuadPart - dxgi.qpc_init));
 }
@@ -580,6 +586,13 @@ void gfx_dxgi_create_factory_and_device(bool debug, int d3d_version, bool (*crea
         ThrowIfFailed(dxgi.CreateDXGIFactory2(debug ? DXGI_CREATE_FACTORY_DEBUG : 0, __uuidof(IDXGIFactory2), &dxgi.factory));
     } else {
         ThrowIfFailed(dxgi.CreateDXGIFactory1(__uuidof(IDXGIFactory2), &dxgi.factory));
+    }
+
+    {
+        ComPtr<IDXGIFactory4> factory4;
+        if (dxgi.factory->QueryInterface(__uuidof(IDXGIFactory4), &factory4) == S_OK) {
+            dxgi.dxgi1_4 = true;
+        }
     }
 
     ComPtr<IDXGIAdapter1> adapter;
@@ -612,7 +625,9 @@ ComPtr<IDXGISwapChain1> gfx_dxgi_create_swap_chain(IUnknown *device) {
     swap_chain_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swap_chain_desc.Scaling = win8 ? DXGI_SCALING_NONE : DXGI_SCALING_STRETCH;
-    swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // Apparently this was backported to Win 7 Platform Update
+    swap_chain_desc.SwapEffect = dxgi.dxgi1_4 ?
+        DXGI_SWAP_EFFECT_FLIP_DISCARD : // Introduced in DXGI 1.4 and Windows 10
+        DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // Apparently flip sequential was also backported to Win 7 Platform Update
     swap_chain_desc.Flags = dxgi_13 ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0;
     swap_chain_desc.SampleDesc.Count = 1;
 
@@ -647,6 +662,7 @@ HWND gfx_dxgi_get_h_wnd(void) {
 }
 
 void gfx_dxgi_shutdown(void) {
+    //dxgi.is_running = false;
 }
 
 void ThrowIfFailed(HRESULT res) {
@@ -660,7 +676,6 @@ void ThrowIfFailed(HRESULT res, HWND h_wnd, const char *message) {
     if (FAILED(res)) {
         char full_message[256];
         sprintf(full_message, "%s\n\nHRESULT: 0x%08X", message, res);
-        dxgi.showing_error = true;
         MessageBox(h_wnd, full_message, "Error", MB_OK | MB_ICONERROR);
         throw res;
     }
