@@ -38,15 +38,6 @@ enum {
     MAX_AXES,
 };
 
-#ifdef MOUSE_ACTIONS
-int gMouseXPos;
-int gMouseYPos;
-int gOldMouseXPos;
-int gOldMouseYPos;
-int gMouseHasFreeControl;
-int gMouseHasCenterControl;
-#endif
-
 static bool init_ok;
 static SDL_Joystick *sdl_joy;
 
@@ -128,9 +119,17 @@ static void controller_sdl_init(void) {
                 joy_axis_binds[i] = -1;
     }
 
+#ifdef MOUSE_ACTIONS
+    if (mouse_has_center_control && sCurrPlayMode != 2) {
+        controller_mouse_enter_relative();
+    }
+    controller_mouse_leave_relative();
+#endif
+
     controller_sdl_bind();
 
     init_ok = true;
+    mouse_init_ok = true;
 }
 
 static inline void update_button(const int i, const bool new) {
@@ -147,39 +146,27 @@ static inline int16_t get_axis(const int i) {
 }
 
 #ifdef MOUSE_ACTIONS
-void set_cursor_visibility(bool newVisibility) {
-    if (last_cursor_status != newVisibility) {
-        SDL_ShowCursor(newVisibility ? SDL_DISABLE : SDL_ENABLE);
-        last_cursor_status = newVisibility;
-    }
-}
-
 static void mouse_control_handler(OSContPad *pad) {
-    u32 mouse;
-
-    if (configMouse) {
-        set_cursor_visibility(gMouseHasFreeControl || configWindow.fullscreen);
-
-        if (gMouseHasCenterControl && sCurrPlayMode != 2) {
-            SDL_WM_GrabInput(SDL_GRAB_ON);
-            mouse = SDL_GetRelativeMouseState(&gMouseXPos, &gMouseYPos);
-        } else {
-            SDL_WM_GrabInput(SDL_GRAB_OFF);
-            mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
-        }
-    } else {
-        set_cursor_visibility(false);
-        SDL_WM_GrabInput(SDL_GRAB_OFF);
-        mouse = SDL_GetMouseState(&gMouseXPos, &gMouseYPos);
+    if (!configMouse) {
+        return;
     }
+    
+    if (mouse_has_center_control && sCurrPlayMode != 2) {
+        controller_mouse_enter_relative();
+    } else {
+        controller_mouse_leave_relative();
+    }
+
+    u32 mouse_prev = mouse_buttons;
+    controller_mouse_read_relative();
+    u32 mouse = mouse_buttons;
 
     for (u32 i = 0; i < num_mouse_binds; ++i)
         if (mouse & SDL_BUTTON(mouse_binds[i][0]))
             pad->button |= mouse_binds[i][1];
 
     // remember buttons that changed from 0 to 1
-    last_mouse = (mouse_buttons ^ mouse) & mouse;
-    mouse_buttons = mouse;
+    last_mouse = (mouse_prev ^ mouse) & mouse;
 }
 #endif
 
@@ -307,6 +294,7 @@ static void controller_sdl_shutdown(void) {
     }
 
     init_ok = false;
+    mouse_init_ok = false;
 }
 
 struct ControllerAPI controller_sdl = {

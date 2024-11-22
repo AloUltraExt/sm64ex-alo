@@ -819,10 +819,10 @@ s32 act_in_cannon(struct MarioState *m) {
             marioObj->oMarioCannonInputYaw -= (s16)(m->controller->stickX * 10.0f);
 #ifdef MOUSE_ACTIONS
             if (configMouse) {
-                gMouseHasCenterControl = TRUE;
+                mouse_has_center_control = TRUE;
 
-                m->faceAngle[0] -= (s16)(gMouseYPos * 10.0f);
-                marioObj->oMarioCannonInputYaw -= (s16)(gMouseXPos * 10.0f);
+                m->faceAngle[0] -= (s16)(mouse_y * 10.0f);
+                marioObj->oMarioCannonInputYaw -= (s16)(mouse_x * 10.0f);
             }
 #endif
 
@@ -856,7 +856,7 @@ s32 act_in_cannon(struct MarioState *m) {
                 m->marioObj->header.gfx.node.flags |= GRAPH_RENDER_ACTIVE;
 
 #ifdef MOUSE_ACTIONS
-                gMouseHasCenterControl = FALSE;
+                mouse_has_center_control = FALSE;
 #endif
 
                 set_mario_action(m, ACT_SHOT_FROM_CANNON, 0);

@@ -1709,23 +1709,25 @@ void handle_controller_cursor_input(void) {
     s16 rawStickX = gPlayer1Controller->rawStickX;
     s16 rawStickY = gPlayer1Controller->rawStickY;
 
+#ifdef MOUSE_ACTIONS 
+    controller_mouse_read_window();
+#endif
+
     // Handle deadzone
     if (rawStickY > -2 && rawStickY < 2) {
         rawStickY = 0;
     }
     #ifdef MOUSE_ACTIONS 
-    else
-    {
-        gMouseHasFreeControl = FALSE;
+    else {
+        mouse_has_current_control = FALSE;
     }
     #endif
     if (rawStickX > -2 && rawStickX < 2) {
         rawStickX = 0;
     }
     #ifdef MOUSE_ACTIONS 
-    else
-    {
-        gMouseHasFreeControl = FALSE;
+    else {
+        mouse_has_current_control = FALSE;
     }
     #endif
 
@@ -1734,26 +1736,12 @@ void handle_controller_cursor_input(void) {
     sCursorPos[1] += rawStickY / 8;
 
 #ifdef MOUSE_ACTIONS
-    if (sSelectedFileNum != 0)
-        gMouseHasFreeControl = FALSE;
-        
-    if ((gMouseXPos - gOldMouseXPos != 0 || gMouseYPos - gOldMouseYPos != 0) && sSelectedFileNum == 0)  {
-        gMouseHasFreeControl = TRUE;
-    }
-
-    static float screenScale;
-    screenScale = (float) gfx_current_dimensions.height / SCREEN_HEIGHT;
-    if (gMouseHasFreeControl && configMouse) {
-        sCursorPos[0] = ((gMouseXPos - (gfx_current_dimensions.width - (screenScale * 320)) / 2) / screenScale) - 160.0f;
-        sCursorPos[1] = (gMouseYPos / screenScale - 120.0f) * -1;
-    }
-
-    gOldMouseXPos = gMouseXPos;
-    gOldMouseYPos = gMouseYPos;
-
-if (!gMouseHasFreeControl) {
+    float screenScale = (float) gfx_current_dimensions.height / SCREEN_HEIGHT;
+    f32 mousePosX = (((mouse_window_x - (gfx_current_dimensions.width - (screenScale * 320)) / 2) / screenScale) - 160.0f);
+    f32 mousePosY = ((mouse_window_y / screenScale - 120.0f) * -1);
+if (!controller_mouse_set_position(&sCursorPos[0], &sCursorPos[1], mousePosX, mousePosY, sSelectedFileNum == 0, FALSE))
 #endif
-    
+    {
     // Stop cursor from going offscreen
     if (sCursorPos[0] > GFX_DIMENSIONS_FROM_RIGHT_EDGE(188.0f)) {
         sCursorPos[0] = GFX_DIMENSIONS_FROM_RIGHT_EDGE(188.0f);
@@ -1768,9 +1756,7 @@ if (!gMouseHasFreeControl) {
     if (sCursorPos[1] < -90.0f) {
         sCursorPos[1] = -90.0f;
     }
-#ifdef MOUSE_ACTIONS
-}
-#endif
+    }
 
     if (sCursorClickingTimer == 0) {
         handle_cursor_button_input();

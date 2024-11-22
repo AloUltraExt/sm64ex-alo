@@ -762,16 +762,16 @@ static void puppycam_input_mouse(void) {
     f32 ivY = ((gPuppyCam.options.invertY * 2) - 1) * (gPuppyCam.options.sensitivityY / PUPPYCAM_SENSITIVITY);
 
     if (configMouse && gPuppyCam.options.mouse) {
-        gMouseHasCenterControl = TRUE;
+        mouse_has_center_control = TRUE;
 
         if (gPuppyCam.flags & PUPPYCAM_BEHAVIOUR_FREE) {
             if (gPlayer1Controller->buttonDown & A_BUTTON) {
-                gPuppyCam.yawTarget -= ivX * gMouseXPos * (gPuppyCam.options.mouseSpeed * 1.5);
-                gPuppyCam.pitchTarget += ivY * gMouseYPos * (gPuppyCam.options.mouseSpeed * 1.5);
+                gPuppyCam.yawTarget -= ivX * mouse_x * (gPuppyCam.options.mouseSpeed * 1.5);
+                gPuppyCam.pitchTarget += ivY * mouse_y * (gPuppyCam.options.mouseSpeed * 1.5);
             }
         } else {
-            gPuppyCam.yawTarget -= ivX * gMouseXPos * gPuppyCam.options.mouseSpeed;
-            gPuppyCam.pitchTarget += ivY * gMouseYPos * gPuppyCam.options.mouseSpeed;
+            gPuppyCam.yawTarget -= ivX * mouse_x * gPuppyCam.options.mouseSpeed;
+            gPuppyCam.pitchTarget += ivY * mouse_y * gPuppyCam.options.mouseSpeed;
             // We allow free movement even on classic but after 15 frames of no mouse movement camera gets snapped.
             if (gPuppyCam.options.inputType == PUPPYCAM_INPUT_CLASSIC_STYLE && gPuppyCam.framesSinceMouse == 15) {
                 if (!(gPuppyCam.mode3Flags & PUPPYCAM_MODE3_ZOOMED_IN)) {
@@ -784,7 +784,7 @@ static void puppycam_input_mouse(void) {
         }
 
         // Increase timer when mouse is on idle, resets when mouse gets moved on any direction.
-        if (gMouseXPos + gMouseYPos != 0) {
+        if (mouse_x + mouse_y != 0) {
             gPuppyCam.framesSinceMouse = 0;
         } else {
             if (gPuppyCam.framesSinceMouse <= 20) {
@@ -792,7 +792,7 @@ static void puppycam_input_mouse(void) {
             }
         }
     } else {
-        gMouseHasCenterControl = FALSE;
+        mouse_has_center_control = FALSE;
         gPuppyCam.framesSinceMouse = 20;
     }
 }

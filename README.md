@@ -6,7 +6,7 @@ Fork of [sm64pc/sm64ex](https://github.com/sm64pc/sm64ex) with additional featur
  * Based of the latest refresh (since sm64ex is stuck on 12)
  * Puppycam 2 (sm64ex still has Puppycam 1)
  * Quality of life fixes and features (QOL_FIXES=1 and QOL_FEATURES=1 respectively)
- * Mouse support for desktop targets (MOUSE_ACTIONS=1) (SDL1/SDL2 only, DirectX Mouse not implemented yet)
+ * Mouse support for desktop targets (MOUSE_ACTIONS=1)
  * Simple debug options menu (EXT_DEBUG_MENU=1)
  * Kaze's more objects patch (PORT_MOP_OBJS=1)
  

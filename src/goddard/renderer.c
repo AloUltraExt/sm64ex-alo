@@ -2532,40 +2532,32 @@ void parse_p1_controller(void) {
         sDebugViews[sCurrDebugViewIndex - 1]->flags |= VIEW_UPDATE;
     }
 
+#ifdef MOUSE_ACTIONS 
+    controller_mouse_read_window();
+#endif
+
     // deadzone checks
     if (ABS(gdctrl->stickX) >= 6) {
         gdctrl->csrX += gdctrl->stickX * 0.1;
 #ifdef MOUSE_ACTIONS
-        gMouseHasFreeControl = FALSE;
+        mouse_has_current_control = FALSE;
 #endif
     }
 
     if (ABS(gdctrl->stickY) >= 6) {
         gdctrl->csrY -= gdctrl->stickY * 0.1;
 #ifdef MOUSE_ACTIONS 
-        gMouseHasFreeControl = FALSE;
+        mouse_has_current_control = FALSE;
 #endif
     }
 
 #ifdef MOUSE_ACTIONS
-    if (!(sHandView->flags & VIEW_UPDATE))
-        gMouseHasFreeControl = FALSE;
-
-    if ((gMouseXPos - gOldMouseXPos != 0 || gMouseYPos - gOldMouseYPos != 0) && (sHandView->flags & VIEW_UPDATE)) {
-        gMouseHasFreeControl = TRUE;
-    }
-
-    float screenScale = (float) gfx_current_dimensions.height / (float)SCREEN_HEIGHT;
-    if (configMouse && gMouseHasFreeControl) {
-        gdctrl->csrX = (gMouseXPos - (gfx_current_dimensions.width - (screenScale * (float)SCREEN_WIDTH))/ 2)/ screenScale;
-        gdctrl->csrY = gMouseYPos / screenScale;
-    }
-
-    gOldMouseXPos = gMouseXPos;
-    gOldMouseYPos = gMouseYPos;
-
-if (!gMouseHasFreeControl) {
+    float screenScale = (float) gfx_current_dimensions.height / SCREEN_HEIGHT;
+    f32 mousePosX = (f32) ((mouse_window_x - (gfx_current_dimensions.width - (screenScale * (float)SCREEN_WIDTH))/ 2)/ screenScale);
+    f32 mousePosY = (f32) (mouse_window_y / screenScale);
+if (!controller_mouse_set_position(&gdctrl->csrX, &gdctrl->csrY, mousePosX, mousePosY, (sHandView->flags & VIEW_UPDATE), TRUE))
 #endif
+    {
     // clamp cursor position within screen view bounds
     if (gdctrl->csrX < sScreenView->parent->upperLeft.x + GFX_DIMENSIONS_FROM_LEFT_EDGE(16.0f)) {
         gdctrl->csrX = sScreenView->parent->upperLeft.x + GFX_DIMENSIONS_FROM_LEFT_EDGE(16.0f);
@@ -2586,10 +2578,7 @@ if (!gMouseHasFreeControl) {
     for (i = 0; i < sizeof(OSContPad); i++) {
         ((u8 *) prevInputs)[i] = ((u8 *) currInputs)[i];
     }
-#ifdef MOUSE_ACTIONS
-    
-}
-#endif
+    }
 }
 
 void stub_renderer_4(f32 arg0) {
