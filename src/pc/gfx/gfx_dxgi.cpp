@@ -8,6 +8,7 @@
 #include <string>
 
 #include <windows.h>
+#include <windowsx.h> // GET_X_LPARAM(), GET_Y_LPARAM()
 #include <wrl/client.h>
 #include <dxgi1_3.h>
 #include <versionhelpers.h>
@@ -146,19 +147,28 @@ static void run_as_dpi_aware(Fun f) {
     }
 }
 
+static bool gfx_dxgi_is_window_maximized(void) {
+    WINDOWPLACEMENT window_placement;
+    window_placement.length = sizeof(WINDOWPLACEMENT);
+    GetWindowPlacement(dxgi.h_wnd, &window_placement);
+    return window_placement.showCmd == SW_SHOWMAXIMIZED;
+}
+
 static void toggle_borderless_window_full_screen(bool enable) {
     // Windows 7 + flip mode + waitable object can't go to exclusive fullscreen,
     // so do borderless instead. If DWM is enabled, this means we get one monitor
     // sync interval of latency extra. On Win 10 however (maybe Win 8 too), due to
     // "fullscreen optimizations" the latency is eliminated.
 
-    if (enable == dxgi.is_full_screen) {
+    /*if (enable == dxgi.is_full_screen) {
         return;
-    }
+    }*/
 
     if (!enable) {
-        RECT r = dxgi.last_window_rect;
+        dxgi.is_full_screen = false;  // Call this early so last_maximized_state works
+        configWindow.exiting_fullscreen = true; // To ensure no WM value actions are overwritten
 
+        RECT r = dxgi.last_window_rect;
         // Set in window mode with the last saved position and size
         SetWindowLongPtr(dxgi.h_wnd, GWL_STYLE, WS_VISIBLE | WS_OVERLAPPEDWINDOW);
 
@@ -169,23 +179,18 @@ static void toggle_borderless_window_full_screen(bool enable) {
             SetWindowPos(dxgi.h_wnd, NULL, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_FRAMECHANGED);
             ShowWindow(dxgi.h_wnd, SW_RESTORE);
         }
-
-        ShowCursor(TRUE);
-
-        dxgi.is_full_screen = false;
+        configWindow.exiting_fullscreen = false;
+        //ShowCursor(TRUE);
     } else {
-        // Save if window is maximized or not
-        WINDOWPLACEMENT window_placement;
-        window_placement.length = sizeof(WINDOWPLACEMENT);
-        GetWindowPlacement(dxgi.h_wnd, &window_placement);
-        dxgi.last_maximized_state = window_placement.showCmd == SW_SHOWMAXIMIZED;
+        dxgi.is_full_screen = true; // Call this early so it doesn't get called twice
 
-        // Save window position and size if the window is not maximized
-        GetWindowRect(dxgi.h_wnd, &dxgi.last_window_rect);
-        configWindow.x = dxgi.last_window_rect.left;
-        configWindow.y = dxgi.last_window_rect.top;
-        configWindow.w = dxgi.last_window_rect.right - dxgi.last_window_rect.left;
-        configWindow.h = dxgi.last_window_rect.bottom - dxgi.last_window_rect.top;
+        // Save if window is maximized or not
+        dxgi.last_maximized_state = gfx_dxgi_is_window_maximized();
+
+        // Save last window position if the window is not maximized
+        if (!dxgi.last_maximized_state) {
+            GetWindowRect(dxgi.h_wnd, &dxgi.last_window_rect);
+        }
 
         // Get in which monitor the window is
         HMONITOR h_monitor = MonitorFromWindow(dxgi.h_wnd, MONITOR_DEFAULTTONEAREST);
@@ -200,23 +205,35 @@ static void toggle_borderless_window_full_screen(bool enable) {
         SetWindowLongPtr(dxgi.h_wnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
         SetWindowPos(dxgi.h_wnd, HWND_TOP, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_FRAMECHANGED);
 
-        ShowCursor(FALSE);
-
-        dxgi.is_full_screen = true;
+        //ShowCursor(FALSE);
     }
 }
 
-static void update_screen_settings(void) {
+// Only called on window init and reset defaults
+static void gfx_dxgi_set_screen_position(void) {
+    if (dxgi.is_full_screen) {
+        return;
+    }
+
+    const int screen_width = GetSystemMetrics(SM_CXSCREEN);
+    const int screen_height = GetSystemMetrics(SM_CYSCREEN);
+    const int xpos = (configWindow.x == WAPI_WIN_CENTERPOS) ? (screen_width - configWindow.w) * 0.5 : configWindow.x;
+    const int ypos = (configWindow.y == WAPI_WIN_CENTERPOS) ? (screen_height - configWindow.h) * 0.5 : configWindow.y;
+    RECT wr = { xpos, ypos, xpos + (int)configWindow.w, ypos + (int)configWindow.h };
+    AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
+    SetWindowPos(dxgi.h_wnd, NULL, wr.left, wr.top, wr.right - wr.left, wr.bottom - wr.top, SWP_NOACTIVATE | SWP_NOZORDER);
+
+}
+
+static void gfx_dxgi_set_fullscreen(void) {
     if (configWindow.fullscreen != dxgi.is_full_screen)
-        toggle_borderless_window_full_screen(configWindow.fullscreen);
-    if (!dxgi.is_full_screen) {
-        const int screen_width = GetSystemMetrics(SM_CXSCREEN);
-        const int screen_height = GetSystemMetrics(SM_CYSCREEN);
-        const int xpos = (configWindow.x == WAPI_WIN_CENTERPOS) ? (screen_width - configWindow.w) * 0.5 : configWindow.x;
-        const int ypos = (configWindow.y == WAPI_WIN_CENTERPOS) ? (screen_height - configWindow.h) * 0.5 : configWindow.y;
-        RECT wr = { xpos, ypos, xpos + (int)configWindow.w, ypos + (int)configWindow.h };
-        AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
-        SetWindowPos(dxgi.h_wnd, NULL, wr.left, wr.top, wr.right - wr.left, wr.bottom - wr.top, SWP_NOACTIVATE | SWP_NOZORDER);
+        configWindow.fullscreen == dxgi.is_full_screen;
+    if (configWindow.fullscreen == dxgi.is_full_screen)
+        return;
+    if (configWindow.fullscreen) {
+        toggle_borderless_window_full_screen(true);
+    } else {
+        toggle_borderless_window_full_screen(false);
     }
 }
 
@@ -228,7 +245,7 @@ static void gfx_dxgi_on_resize(void) {
         ThrowIfFailed(dxgi.swap_chain->GetDesc1(&desc1));
         dxgi.current_width = desc1.Width;
         dxgi.current_height = desc1.Height;
-        if (!dxgi.is_full_screen) {
+        if (!dxgi.is_full_screen && !gfx_dxgi_is_window_maximized() && !configWindow.exiting_fullscreen) {
             configWindow.w = dxgi.current_width;
             configWindow.h = dxgi.current_height;
         }
@@ -252,6 +269,11 @@ static LRESULT CALLBACK gfx_dxgi_wnd_proc(HWND h_wnd, UINT message, WPARAM w_par
     switch (message) {
         case WM_SIZE:
             gfx_dxgi_on_resize();
+        case WM_MOVE:
+            if (!dxgi.is_full_screen && !gfx_dxgi_is_window_maximized() && !configWindow.exiting_fullscreen) {
+                configWindow.x = GET_X_LPARAM(l_param);
+                configWindow.y = GET_Y_LPARAM(l_param);
+            }
             break;
         case WM_DESTROY:
             game_exit();
@@ -278,7 +300,8 @@ static LRESULT CALLBACK gfx_dxgi_wnd_proc(HWND h_wnd, UINT message, WPARAM w_par
             break;
         case WM_SYSKEYDOWN:
             if ((w_param == VK_RETURN) && ((l_param & 1 << 30) == 0)) {
-                toggle_borderless_window_full_screen(!dxgi.is_full_screen);
+                configWindow.fullscreen = !configWindow.fullscreen;
+                configWindow.settings_changed = true;
                 break;
             } else {
                 return DefWindowProcW(h_wnd, message, w_param, l_param);
@@ -289,18 +312,22 @@ static LRESULT CALLBACK gfx_dxgi_wnd_proc(HWND h_wnd, UINT message, WPARAM w_par
 
     if (configWindow.reset) {
         dxgi.last_maximized_state = false;
-        configWindow.reset = false;
+        configWindow.fullscreen = false;
+        configWindow.settings_changed = true;
+        if (gfx_dxgi_is_window_maximized()) {
+            ShowWindow(dxgi.h_wnd, SW_RESTORE);
+        }
         configWindow.x = WAPI_WIN_CENTERPOS;
         configWindow.y = WAPI_WIN_CENTERPOS;
         configWindow.w = DESIRED_SCREEN_WIDTH;
         configWindow.h = DESIRED_SCREEN_HEIGHT;
-        configWindow.fullscreen = false;
-        configWindow.settings_changed = true;
+        gfx_dxgi_set_screen_position();
+        configWindow.reset = false;
     }
 
     if (configWindow.settings_changed) {
+        gfx_dxgi_set_fullscreen();
         configWindow.settings_changed = false;
-        update_screen_settings();
     }
 
     return 0;
@@ -351,10 +378,12 @@ static void gfx_dxgi_init(const char *window_title) {
 
     load_dxgi_library();
 
+    gfx_dxgi_set_screen_position();
+
     ShowWindow(dxgi.h_wnd, SW_SHOW);
     UpdateWindow(dxgi.h_wnd);
 
-    update_screen_settings();
+    gfx_dxgi_set_fullscreen();
 }
 
 static void gfx_dxgi_set_keyboard_callbacks(bool (*on_key_down)(int scancode), bool (*on_key_up)(int scancode), void (*on_all_keys_up)(void)) {
