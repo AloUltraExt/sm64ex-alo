@@ -48,6 +48,7 @@
 #ifdef TARGET_SWITCH
 #include "controller/controller_switch.h"
 #include "nx_main.h"
+#include <switch.h>
 #endif
 
 #include "fs/fs.h"
