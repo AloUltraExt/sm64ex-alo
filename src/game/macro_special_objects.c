@@ -91,7 +91,7 @@ struct LoadedMacroObject {
 UNUSED static void spawn_macro_coin_unknown(const BehaviorScript *behavior, struct LoadedMacroObject objInfo) {
     struct Object *coin;
     ModelID16 model = bhvYellowCoin == behavior ? MODEL_YELLOW_COIN : MODEL_NONE;
- 
+
     coin = spawn_object_abs_with_rot(&sMacroObjectDefaultParent, 0, model, behavior,
                                      objInfo.pos[0], objInfo.pos[1], objInfo.pos[2],
                                      0, convert_rotation(objInfo.yaw), 0);
@@ -134,9 +134,11 @@ void spawn_macro_objects(s16 areaIndex, s16 *macroObjList) {
             macroObject.params = (macroObject.params & 0xFF00) + (preset.param & 0x00FF);
         }
 
-        // Spawn the object, originally this had respawn code but
-        // since that was redone it's not necessary anymore.
-        newObj = spawn_object_abs_with_rot(
+        // If object has been killed, prevent it from respawning
+        u8 respawnInfoParam = *(u8 *)(macroObjList - 1);
+        if (respawnInfoParam != RESPAWN_INFO_DONT_RESPAWN) {
+            // Spawn the new macro object.
+            newObj = spawn_object_abs_with_rot(
                      &sMacroObjectDefaultParent,        // Parent object
                      0,                                 // Unused
                      preset.model,                      // Model ID
@@ -149,9 +151,13 @@ void spawn_macro_objects(s16 areaIndex, s16 *macroObjList) {
                      0                                  // Z-rotation
                  );
 
-        newObj->oBhvParams = ((macroObject.params & 0x00FF) << 16);
-        newObj->oBhvParams2ndByte = macroObject.params & 0x00FF;
-        newObj->parentObj = newObj;
+            newObj->oBhvParams = ((macroObject.params & 0x00FF) << 16) + (macroObject.params & 0xFF00);
+            newObj->oBhvParams2ndByte = macroObject.params & 0x00FF;
+            // Change pointers so it still uses respawn values that were originally stored in behavior params
+            newObj->respawnInfo = respawnInfoParam;
+            newObj->respawnInfoPointer = (u8 *)(macroObjList - 1);
+            newObj->parentObj = newObj;
+        }
     }
 }
 

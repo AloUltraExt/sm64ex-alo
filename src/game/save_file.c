@@ -720,6 +720,10 @@ void save_file_set_sound_mode(u16 mode) {
 }
 
 u16 save_file_get_sound_mode(void) {
+    // Check if the sound is in range, in case we loaded a shifted save file
+    if (gSaveBuffer.menuData[0].soundMode > 2) {
+        save_file_set_sound_mode(0); // Reset it to stereo if not
+    }
     return gSaveBuffer.menuData[0].soundMode;
 }
 
@@ -748,9 +752,9 @@ void eu_set_language(u16 language) {
 }
 
 u16 eu_get_language(void) {
-    // check if the language is in range, in case we loaded a US save with garbage padding or something
+    // Check if the language is in range, in case we loaded a non-eu save with garbage values or a shifted save
     if (gSaveBuffer.menuData[0].language >= LANGUAGE_MAX) {
-        eu_set_language(LANGUAGE_ENGLISH); // reset it to english if not
+        eu_set_language(LANGUAGE_ENGLISH); // Reset it to english if not
     }
     return gSaveBuffer.menuData[0].language;
 }

@@ -354,8 +354,8 @@ static void uint_to_hex(u32 num, u8 *dst) {
     dst[4] = DIALOG_CHAR_TERMINATOR;
 }
 
-static void optmenu_draw_text(s16 x, s16 y, const u8 str[], u8 col) {
-    u8 textX = get_str_x_pos_from_center(x, (u8 *) str, 10.0f);
+static void optmenu_draw_text(s16 x, s16 y, const u8 *str, u8 col) {
+    const u8 textX = get_str_x_pos_from_center(x, (u8 *) str, 10.0f);
     gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
     print_generic_string(textX + 1, y - 1, str);
     if (col == 0) {
