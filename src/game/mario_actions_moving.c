@@ -486,8 +486,13 @@ void update_walking_speed(struct MarioState *m) {
         m->forwardVel += 1.1f;
     } else if (m->forwardVel <= targetSpeed) {
 #if FIX_INITIAL_WALKING_SPEED
-        if (m->forwardVel <= 8.0f && !mario_floor_is_slope(m)) {
-            m->forwardVel = MIN(m->intendedMag, 8.0f);
+        // When starting a walk, make a few checks and set Mario's speed to 8 on the first frame.
+        // This ensures Mario's speed is set consistently when starting a walk.
+        // We use m->actionTimer since it's set to 0 on the first frame of walking.
+        // Disable walking speed fix on vanilla demos to prevent major desyncs as well.
+        if (gCurrDemoInput == NULL && m->forwardVel <= 8.0f && m->actionTimer == 0 && !mario_floor_is_steep(m)) {
+            // Same fix as melee dashback, 8.9 vel on first frame, 5.0 when holding an object.
+            m->forwardVel = MIN(m->intendedMag, m->heldObj != NULL ? 4.0f : 8.0f);
         }
 #endif
         m->forwardVel += 1.1f - m->forwardVel / 43.0f;

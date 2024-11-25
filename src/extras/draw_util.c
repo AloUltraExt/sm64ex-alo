@@ -273,7 +273,7 @@ static void allocate_quad_vertices(Gfx *dlHead, u16 w, u16 h) {
 /******************
  * MISC RENDERING *
  ******************/
- 
+
 /**
  * Like print_generic_string but uses ASCII, then it transform it to hex.
  */
@@ -293,7 +293,7 @@ void print_generic_string_ascii(s16 x, s16 y, const char *str) {
  */
 void print_generic_string_detail(s16 x, s16 y, u8 *str, u8 r, u8 g, u8 b, u8 a, s8 hasShadow, s8 shadowPad) {
     if (hasShadow) {
-        gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
+        gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, a);
         print_generic_string(x + shadowPad, y - shadowPad, str);
     }
 
@@ -307,7 +307,7 @@ void print_generic_string_detail(s16 x, s16 y, u8 *str, u8 r, u8 g, u8 b, u8 a, 
  */
 void print_generic_string_ascii_detail(s16 x, s16 y, const char *str, u8 r, u8 g, u8 b, u8 a, s8 hasShadow, s8 shadowPad) {
     if (hasShadow) {
-        gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, 255);
+        gDPSetEnvColor(gDisplayListHead++, 0, 0, 0, a);
         print_generic_string_ascii(x + shadowPad, y - shadowPad, str);
     }
 
@@ -363,7 +363,7 @@ void print_solid_color_quad(s16 x1, s16 y1, s16 x2, s16 y2, u8 r, u8 g, u8 b, u8
  * How to render a texture rectangle:
  * First call this display list:
    gSPDisplayList(gDisplayListHead++, dl_texture_rect_ex_start);
- * 
+ *
  * Then call any print texture rectangle function depending of the texture type.
  *
  * After the texrect is render, call this display list to end if desired:
@@ -431,12 +431,12 @@ void print_texture_rectangle_ci(u8 *palette, u8 fmtPal, u8 *texture, u8 sizTex, 
  * Then you set its position using create_dl_translation_matrix, like this:
    create_dl_translation_matrix(MENU_MTX_PUSH, x, y, 0.0f);
  * The x and y values can be used for positioning.
- 
+
  * Optionally you can set its rotation and scale values as well:
  * For rotation:
    create_dl_rotation_matrix(MENU_MTX_NOPUSH, r, 0, 0, 1.0f);
  * Here you only need to change the r value due to this being a 2D plane.
- 
+
  * For scale:
    create_dl_scale_matrix(MENU_MTX_NOPUSH, x, y, 1.0f);
  * The x and y values can be used for scaling.
@@ -445,11 +445,11 @@ void print_texture_rectangle_ci(u8 *palette, u8 fmtPal, u8 *texture, u8 sizTex, 
  *
  * After the texrect is render, call this display list to end if desired:
    gSPDisplayList(gDisplayListHead++, dl_tri_quad_ex_end);
-   
+
  * And finally to render it to the screen, call this:
    gSPPopMatrix(gDisplayListHead++, G_MTX_MODELVIEW);
  */
- 
+
 /**
  * Prints a texture quadrangle (for RGBA16 and RGBA32) textures.
  */
