@@ -1,3 +1,6 @@
+//Improved Mouse controls with DirectX support by sm64coopdx team.
+#ifdef MOUSE_ACTIONS
+
 #include "controller_mouse.h"
 #include "../configfile.h"
 
@@ -36,6 +39,7 @@ u32 mouse_window_buttons_held_on_focus;
 bool mouse_dxgi_prev_focus;
 
 static u32 controller_mouse_dxgi_button_state(u32* mouse_held, bool has_focus) {
+    // TODO: Test extra mouse buttons if possible (VK_XBUTTON1, VK_XBUTTON2).
     u32 mouse =
         ((GetKeyState(VK_LBUTTON) < 0) ? (1 << 0) : 0) |
         ((GetKeyState(VK_MBUTTON) < 0) ? (1 << 1) : 0) |
@@ -78,22 +82,22 @@ void controller_mouse_set_visible(void) {
 }
 
 int controller_mouse_set_position(void *cursorX, void *cursorY, f32 mPosX, f32 mPosY, int hasControlCondition, int isInteger) {
-    // Disable control is mouse config is off
+    // Disable control is mouse config is off.
     if (!configMouse) {
         return FALSE;
     }
 
-    // Disable mouse control if condition isn't met 
+    // Disable mouse control if condition isn't met.
     if (!hasControlCondition) {
         mouse_has_current_control = FALSE;
     }
 
-    // Check if the mouse moved and update control status if condition is met
+    // Check if the mouse moved and update control status if condition is met.
     if ((mouse_window_x - mouse_prev_window_x != 0 || mouse_window_y - mouse_prev_window_y != 0) && hasControlCondition) {
         mouse_has_current_control = TRUE;
     }
 
-    // Scale calculations and cursor position update if the mouse has control
+    // Scale calculations and cursor position update if the mouse has control.
     if (configMouse && mouse_has_current_control) {
         float posX = mPosX;
         float posY = mPosY;
@@ -108,7 +112,7 @@ int controller_mouse_set_position(void *cursorX, void *cursorY, f32 mPosX, f32 m
         }
     }
 
-    // Make the controller mouse visible and update the previous mouse position
+    // Make the controller mouse visible and update the previous mouse position.
     controller_mouse_set_visible();
     mouse_prev_window_x = mouse_window_x;
     mouse_prev_window_y = mouse_window_y;
@@ -147,6 +151,7 @@ void controller_mouse_read_relative(void) {
         &mouse_relative_buttons_held_on_focus,
         GetFocus() == game_window);
 
+    // Force mouse position to be on the center of the window.
     if (mouse_relative_enabled) {
         static POINT p0;
         POINT p1;
@@ -157,7 +162,7 @@ void controller_mouse_read_relative(void) {
 
             p0.x = rect.left + (rect.right - rect.left) / 2;
             p0.y = rect.top + (rect.bottom - rect.top) / 2;
-            ClipCursor(&rect); // Prevents visible mouse if you move it too fast 
+            ClipCursor(&rect); // Prevents visible mouse if you move it too fast.
             SetCursorPos(p0.x, p0.y);
         }
     } else {
@@ -198,3 +203,4 @@ void controller_mouse_leave_relative(void) {
 #endif
     }
 }
+#endif
