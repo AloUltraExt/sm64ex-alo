@@ -105,13 +105,6 @@ static void gfx_gx2_window_exit_callback(void)
     _Exit(-1);
 }
 
-typedef enum _GX2AspectRatio
-{
-    GX2_ASPECT_RATIO_4_TO_3,
-    GX2_ASPECT_RATIO_16_TO_9
-}
-GX2AspectRatio;
-
 extern "C" GX2AspectRatio GX2GetSystemTVAspectRatio(void);
 
 static bool gfx_gx2_window_foreground_acquire_callback(void)
@@ -140,13 +133,13 @@ static bool gfx_gx2_window_foreground_acquire_callback(void)
         case GX2_TV_SCAN_MODE_576I:
         case GX2_TV_SCAN_MODE_480I:
         case GX2_TV_SCAN_MODE_480P:
-            if (tv_aspect_ratio == GX2_ASPECT_RATIO_4_TO_3)
+            if (tv_aspect_ratio == GX2_ASPECT_RATIO_4_3)
             {
                 g_window_width = 640;
                 g_window_height = 480;
                 tv_render_mode = GX2_TV_RENDER_MODE_STANDARD_480P;
             }
-            else // if (tv_aspect_ratio == GX2_ASPECT_RATIO_16_TO_9)
+            else // if (tv_aspect_ratio == GX2_ASPECT_RATIO_16_9)
             {
                 g_window_width = 854;
                 g_window_height = 480;
