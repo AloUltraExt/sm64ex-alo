@@ -3,17 +3,18 @@
 #include "PR/gbi.h"
 
 // CUSTOM OTR COMMANDS
+// ALONOTE: Not used standalone
 #define G_SETTIMG_OTR 0x20
-#define G_SETFB 0x21
-#define G_RESETFB 0x22
-#define G_SETTIMG_FB 0x23
 #define G_DL_OTR 0x31
 #define G_VTX_OTR 0x32
 #define G_MARKER 0x33
-#define G_INVALTEXCACHE 0x34
 #define G_BRANCH_Z_OTR 0x35
 #define G_MTX_OTR 0x36
-#define G_SETOVERRIDECOLOR 0x41
+
+#define G_SETFB 0x21
+#define G_RESETFB 0x22
+#define G_SETTIMG_FB 0x23
+#define G_INVALTEXCACHE 0x34
 //#define G_TEXRECT_WIDE 0x37
 //#define G_FILLWIDERECT 0x38
 
@@ -38,13 +39,3 @@
     }
 
 #define gsDPSetGrayscaleColor(pkt, r, g, b, lerp) DPRGBColor(pkt, G_SETINTENSITY, r, g, b, lerp)
-
-#define gDPSetOverrideColor(pkt, m, l, r, g, b, a)              \
-_DW({                                   \
-    Gfx *_g = (Gfx *)(pkt);                     \
-                                    \
-    _g->words.w0 =  (_SHIFTL(G_SETOVERRIDECOLOR, 24, 8) |       \
-             _SHIFTL(m, 8, 8) | _SHIFTL(l, 0, 8));      \
-    _g->words.w1 =  (_SHIFTL(r, 24, 8) | _SHIFTL(g, 16, 8) |    \
-             _SHIFTL(b, 8, 8) | _SHIFTL(a, 0, 8));      \
-})

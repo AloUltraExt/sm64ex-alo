@@ -14,6 +14,7 @@
 #include <vector>
 #include <list>
 
+// ALONOTE: OTR and Imgui functionally was commented out to make this work standalone                   
 #include <string>
 #include <iostream>
 
@@ -138,7 +139,8 @@ static struct RSP {
 
     struct LoadedVertex loaded_vertices[MAX_VERTICES + 4];
 
-// these were removed alongside G_RDPHALF commands in f3dv2, perhaps due to OOT incompatibility?
+// ALONOTE: These were removed alongside G_RDPHALF commands in f3dv2, perhaps due to OOT incompatibility?
+// Required to make HUD render, would it be possible to remove this while not breaking HUD?
     uint8_t saved_opcode;
     uint8_t saved_tile;
     uint16_t saved_uls, saved_ult;
@@ -180,7 +182,7 @@ static struct RDP {
     bool grayscale;
 
     uint8_t prim_lod_fraction;
-    struct RGBA env_color, prim_color, fog_color, fill_color, grayscale_color, override_color;
+    struct RGBA env_color, prim_color, fog_color, fill_color, grayscale_color;
     struct XYWidthHeight viewport, scissor;
     bool viewport_or_scissor_changed;
     void* z_buf_address;
@@ -941,7 +943,8 @@ static void gfx_matrix_mul(float res[4][4], const float a[4][4], const float b[4
 static void gfx_sp_matrix(uint8_t parameters, const int32_t* addr) {
     float matrix[4][4];
 
-#if 0
+// ALOTODO: Used for interpolation, not really sure how to use it
+#if 0 
     if (auto it = current_mtx_replacements->find((Mtx*)addr); it != current_mtx_replacements->end()) {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
@@ -1252,7 +1255,7 @@ static void gfx_sp_tri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx, bo
     bool texture_edge = (rdp.other_mode_l & CVG_X_ALPHA) == CVG_X_ALPHA;
     bool use_noise = (rdp.other_mode_l & (3U << G_MDSFT_ALPHACOMPARE)) == G_AC_DITHER;
     bool use_2cyc = (rdp.other_mode_h & (3U << G_MDSFT_CYCLETYPE)) == G_CYC_2CYCLE;
-    // TODO Alo: This use_alpha check was taken from aglab2 fork, works in SM64, needs testing in OOT
+    // ALOTODO: This use_alpha check was taken from aglab2 fork, works in SM64, needs testing in OOT
     bool use_alpha = use_2cyc ? ((rdp.other_mode_l & (G_BL_A_MEM << 16)) == 0) : ((rdp.other_mode_l & (G_BL_A_MEM << 18)) == 0);
     bool alpha_threshold = (rdp.other_mode_l & (3U << G_MDSFT_ALPHACOMPARE)) == G_AC_THRESHOLD;
     bool invisible =
@@ -1290,71 +1293,6 @@ static void gfx_sp_tri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx, bo
 
     if (!use_alpha) {
         cc_id &= ~((0xfff << 16) | ((uint64_t)0xfff << 44));
-    }
-
-    if (rdp.override_color.a > 0) {
-        rdp.prim_color = rdp.override_color;
-        // rdp.fog_color = { 0 };
-        // rdp.fill_color = { 0 };
-        // rdp.env_color = { 0 };
-
-        uint64_t new_cc_id = (cc_id >> CC_SHADER_OPT_POS) << CC_SHADER_OPT_POS;
-
-        new_cc_id &= ~((uint64_t)SHADER_OPT_FOG << CC_SHADER_OPT_POS);
-        use_fog = false;
-
-        if (use_alpha) {
-            new_cc_id |= (uint64_t)SHADER_OPT_TEXTURE_EDGE << CC_SHADER_OPT_POS;
-            //new_cc_id &= ~((uint64_t)SHADER_OPT_NOISE << CC_SHADER_OPT_POS); //needed?
-        }
-
-        //NOTE: temporary while experimenting with draw settings
-        for (int i = 0; i < 2; i++) {
-            uint32_t rgb_a = (cc_id >> (i * 28)) & 0xf;
-            uint32_t rgb_b = (cc_id >> (i * 28 + 4)) & 0xf;
-            uint32_t rgb_c = (cc_id >> (i * 28 + 8)) & 0x1f;
-            uint32_t rgb_d = (cc_id >> (i * 28 + 13)) & 7;
-            uint32_t alpha_a = (cc_id >> (i * 28 + 16)) & 7;
-            uint32_t alpha_b = (cc_id >> (i * 28 + 16 + 3)) & 7;
-            uint32_t alpha_c = (cc_id >> (i * 28 + 16 + 6)) & 7;
-            uint32_t alpha_d = (cc_id >> (i * 28 + 16 + 9)) & 7;
-
-            //rgb_a = (rgb_a == G_CCMUX_TEXEL0 || rgb_a == G_CCMUX_TEXEL1 ||
-            //    rgb_a == G_CCMUX_TEXEL0_ALPHA || rgb_a == G_CCMUX_TEXEL1_ALPHA) ? G_CCMUX_0 : rgb_a;
-            //rgb_b = (rgb_b == G_CCMUX_TEXEL0 || rgb_b == G_CCMUX_TEXEL1 ||
-            //    rgb_b == G_CCMUX_TEXEL0_ALPHA || rgb_b == G_CCMUX_TEXEL1_ALPHA) ? G_CCMUX_0 : rgb_b;
-            //rgb_c = (rgb_c == G_CCMUX_TEXEL0 || rgb_c == G_CCMUX_TEXEL1 ||
-            //    rgb_c == G_CCMUX_TEXEL0_ALPHA || rgb_c == G_CCMUX_TEXEL1_ALPHA) ? G_CCMUX_0 : rgb_c;
-            //rgb_d = (rgb_d == G_CCMUX_TEXEL0 || rgb_d == G_CCMUX_TEXEL1 ||
-            //    rgb_d == G_CCMUX_TEXEL0_ALPHA || rgb_d == G_CCMUX_TEXEL1_ALPHA) ? G_CCMUX_0 : rgb_d;
-
-            rgb_a = G_CCMUX_PRIMITIVE;
-            rgb_b = G_CCMUX_PRIMITIVE;
-            rgb_c = G_CCMUX_PRIMITIVE;
-            rgb_d = G_CCMUX_PRIMITIVE;
-
-            //alpha_a = (alpha_a == G_ACMUX_TEXEL0 || alpha_a == G_ACMUX_TEXEL1) ? G_ACMUX_0 : alpha_a;
-            //alpha_b = (alpha_b == G_ACMUX_TEXEL0 || alpha_b == G_ACMUX_TEXEL1) ? G_ACMUX_0 : alpha_b;
-            //alpha_c = (alpha_c == G_ACMUX_TEXEL0 || alpha_c == G_ACMUX_TEXEL1) ? G_ACMUX_0 : alpha_c;
-            //alpha_d = (alpha_d == G_ACMUX_TEXEL0 || alpha_d == G_ACMUX_TEXEL1) ? G_ACMUX_0 : alpha_d;
-
-            //alpha_a = G_ACMUX_PRIMITIVE;
-            //alpha_b = G_ACMUX_PRIMITIVE;
-            //alpha_c = G_ACMUX_PRIMITIVE;
-            //alpha_d = G_ACMUX_PRIMITIVE;
-
-            new_cc_id |= (uint64_t)(rgb_a & 0xf) << (i * 28);
-            new_cc_id |= (uint64_t)(rgb_b & 0xf) << (i * 28 + 4);
-            new_cc_id |= (uint64_t)(rgb_c & 0x1f) << (i * 28 + 8);
-            new_cc_id |= (uint64_t)(rgb_d & 7) << (i * 28 + 13);
-            new_cc_id |= (uint64_t)(alpha_a & 7) << (i * 28 + 16);
-            new_cc_id |= (uint64_t)(alpha_b & 7) << (i * 28 + 16 + 3);
-            new_cc_id |= (uint64_t)(alpha_c & 7) << (i * 28 + 16 + 6);
-            new_cc_id |= (uint64_t)(alpha_d & 7) << (i * 28 + 16 + 9);
-        }
-
-
-        cc_id = new_cc_id;
     }
 
     ColorCombiner* comb = gfx_lookup_or_create_color_combiner(cc_id);
@@ -1571,7 +1509,7 @@ static void gfx_sp_tri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx, bo
                         break;
                     }
                     case G_CCMUX_LOD_FRACTION: {
-                        // Todo Alo: Doesn't work, stays at Bowser
+                        // ALOTODO: Some times it doesn't work depending of Window API? Still a hack nonetheless
                         if (rdp.other_mode_h & G_TL_LOD) {
                             // "Hack" that works for Bowser - Peach painting
                             float distance_frac = (v1->w - 3000.0f) / 3000.0f;
@@ -1979,13 +1917,6 @@ static void gfx_dp_set_fog_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     rdp.fog_color.g = g;
     rdp.fog_color.b = b;
     rdp.fog_color.a = a;
-}
-
-static void gfx_dp_set_override_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-    rdp.override_color.r = r;
-    rdp.override_color.g = g;
-    rdp.override_color.b = b;
-    rdp.override_color.a = a;
 }
 
 static void gfx_dp_set_fill_color(uint32_t packed_color) {
@@ -2555,7 +2486,7 @@ static void gfx_run_dl(Gfx* cmd) {
                 gfx_sp_set_other_mode(C0(8, 8) + 32, C0(0, 8), (uint64_t)cmd->words.w1 << 32);
 #endif
                 break;
-// G_RDPHALF_CONT, G_RDPHALF_2 and G_RDPHALF_1 were removed from f3dv2, perhaps due to OOT incompatibility?
+// ALOTODO: G_RDPHALF_CONT, G_RDPHALF_2 and G_RDPHALF_1 were removed from f3dv2, perhaps due to OOT incompatibility?. See struct comment above
 #ifdef F3D_OLD
             case (uint8_t)G_RDPHALF_2:
 #else
@@ -2719,9 +2650,6 @@ static void gfx_run_dl(Gfx* cmd) {
             case G_SETENVCOLOR:
                 gfx_dp_set_env_color(C1(24, 8), C1(16, 8), C1(8, 8), C1(0, 8));
                 break;
-            case G_SETOVERRIDECOLOR:
-                gfx_dp_set_override_color(C1(24, 8), C1(16, 8), C1(8, 8), C1(0, 8));
-                break;
             case G_SETPRIMCOLOR:
                 gfx_dp_set_prim_color(C0(8, 8), C0(0, 8), C1(24, 8), C1(16, 8), C1(8, 8), C1(0, 8));
                 break;
@@ -2742,6 +2670,7 @@ static void gfx_run_dl(Gfx* cmd) {
                 break;
             // G_SETPRIMCOLOR, G_CCMUX_PRIMITIVE, G_ACMUX_PRIMITIVE, is used by Goddard
             // G_CCMUX_TEXEL1, LOD_FRACTION is used in Bowser room 1
+            // ALOTOO: Fix this up to match LUS without breaking HUD
             case G_TEXRECT:
             case G_TEXRECTFLIP: {
                 rsp.saved_opcode = opcode;
@@ -2933,7 +2862,6 @@ void gfx_run(Gfx* commands) {
         return;
     }
     dropped_frame = false;
-    rdp.override_color.a = 0;
 
     //if (!has_drawn_imgui_menu) {
     //    SohImGui::DrawMainMenuAndCalculateGameSize();
@@ -3056,13 +2984,4 @@ uint16_t gfx_get_pixel_depth(float x, float y) {
     get_pixel_depth_pending.clear();
 
     return get_pixel_depth_cached.find(make_pair(x, y))->second;
-}
-
-void gfx_get_fb_dimensions(int fb, uint32_t *width, uint32_t *height) {
-    *width = framebuffers[fb].applied_width;
-    *height = framebuffers[fb].applied_height;
-}
-
-void gfx_read_pixels(int fb, uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t type, void* data) {
-    return gfx_rapi->read_pixels(fb, x, y, width, height, type, data);
 }
