@@ -2808,7 +2808,12 @@ void gfx_init(struct GfxWindowManagerAPI* wapi, struct GfxRenderingAPI* rapi, co
               bool start_in_fullscreen, uint32_t width, uint32_t height) {
     gfx_wapi = wapi;
     gfx_rapi = rapi;
+#ifdef LEGACY_GFX_WIDOW_API
+    gfx_wapi->init(game_name);
+#else
     gfx_wapi->init(game_name, start_in_fullscreen, width, height);
+#endif
+
     gfx_rapi->init();
 #if ENABLE_FRAMEBUFFER
     gfx_rapi->update_framebuffer_parameters(0, width, height, 1, false, true, true, true);
@@ -2987,6 +2992,7 @@ void gfx_end_frame(void) {
     }
 }
 
+#ifndef LEGACY_GFX_WIDOW_API
 void gfx_set_target_fps(int fps) {
     gfx_wapi->set_target_fps(fps);
 }
@@ -2998,6 +3004,7 @@ void gfx_set_maximum_frame_latency(int latency) {
 float gfx_get_detected_hz(void) {
     return gfx_wapi->get_detected_hz();
 }
+#endif
 
 int gfx_create_framebuffer(uint32_t width, uint32_t height) {
     uint32_t orig_width = width, orig_height = height;

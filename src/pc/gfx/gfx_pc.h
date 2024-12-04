@@ -25,10 +25,7 @@ typedef union {
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
-// SoH uses ImGui to render using framebuffers
-#define ENABLE_FRAMEBUFFER 1
-// Without the requisite above nothing renders, so make extra changes to render directly to the screen
-#define RENDER_TO_SCREEN 1
+#include "gfx_defines.h"
 
 extern uintptr_t gfxFramebuffer;
 
@@ -99,10 +96,12 @@ struct GfxRenderingAPI* gfx_get_current_rendering_api(void);
 void gfx_start_frame(void);
 //void gfx_run(Gfx* commands, const std::unordered_map<Mtx*, MtxF>& mtx_replacements);
 void gfx_run(Gfx* commands);
-void gfx_end_frame(void); 
+void gfx_end_frame(void);
+#ifndef LEGACY_GFX_WIDOW_API
 void gfx_set_target_fps(int);
 void gfx_set_maximum_frame_latency(int latency);
 float gfx_get_detected_hz(void);
+#endif
 void gfx_texture_cache_clear();
 #ifdef __cplusplus
 extern "C" int gfx_create_framebuffer(uint32_t width, uint32_t height);

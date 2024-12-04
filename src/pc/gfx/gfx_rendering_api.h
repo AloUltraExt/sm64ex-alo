@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <set>
 
+#include "gfx_defines.h"
+
 struct ShaderProgram;
 
 struct GfxClipParameters {
