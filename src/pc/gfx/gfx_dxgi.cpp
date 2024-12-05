@@ -1,4 +1,4 @@
-#if 0
+#ifdef WAPI_DXGI
 
 #include <stdint.h>
 #include <math.h>
@@ -78,6 +78,8 @@ static struct {
     ComPtr<IDXGIFactory2> factory;
     ComPtr<IDXGISwapChain1> swap_chain;
     HANDLE waitable_object;
+    ComPtr<IUnknown> swap_chain_device; // D3D11 Device or D3D12 Command Queue
+    std::function<void()> before_destroy_swap_chain_fn;
     uint64_t qpc_init, qpc_freq;
     uint64_t frame_timestamp; // in units of 1/FRAME_INTERVAL_US_DENOMINATOR microseconds
     std::map<UINT, DXGI_FRAME_STATISTICS> frame_stats;
@@ -265,21 +267,6 @@ static void gfx_dxgi_set_fullscreen(void) {
     }
 }
 
-static void gfx_dxgi_on_resize(void) {
-    if (dxgi.swap_chain.Get() != nullptr) {
-        gfx_get_current_rendering_api()->on_resize();
-
-        DXGI_SWAP_CHAIN_DESC1 desc1;
-        ThrowIfFailed(dxgi.swap_chain->GetDesc1(&desc1));
-        dxgi.current_width = desc1.Width;
-        dxgi.current_height = desc1.Height;
-        if (!dxgi.is_full_screen && !gfx_dxgi_is_window_maximized() && !configWindow.exiting_fullscreen) {
-            configWindow.w = dxgi.current_width;
-            configWindow.h = dxgi.current_height;
-        }
-    }
-}
-
 static void onkeydown(WPARAM w_param, LPARAM l_param) {
     int key = ((l_param >> 16) & 0x1ff);
     if (dxgi.on_key_down != nullptr) {
@@ -296,7 +283,12 @@ static void onkeyup(WPARAM w_param, LPARAM l_param) {
 static LRESULT CALLBACK gfx_dxgi_wnd_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM l_param) {
     switch (message) {
         case WM_SIZE:
-            gfx_dxgi_on_resize();
+            dxgi.current_width = (uint32_t)(l_param & 0xffff);
+            dxgi.current_height = (uint32_t)(l_param >> 16);
+            if (!dxgi.is_full_screen && !gfx_dxgi_is_window_maximized() && !configWindow.exiting_fullscreen) {
+                configWindow.w = dxgi.current_width;
+                configWindow.h = dxgi.current_height;
+            }
         case WM_MOVE:
             if (!dxgi.is_full_screen && !gfx_dxgi_is_window_maximized() && !configWindow.exiting_fullscreen) {
                 configWindow.x = GET_X_LPARAM(l_param);
@@ -639,12 +631,12 @@ void gfx_dxgi_create_factory_and_device(bool debug, int d3d_version, bool (*crea
     SetWindowTextW(dxgi.h_wnd, w_title);
 }
 
-ComPtr<IDXGISwapChain1> gfx_dxgi_create_swap_chain(IUnknown *device) {
+void gfx_dxgi_create_swap_chain(IUnknown* device, std::function<void()>&& before_destroy_fn) {
     bool win8 = IsWindows8OrGreater(); // DXGI_SCALING_NONE is only supported on Win8 and beyond
     bool dxgi_13 = dxgi.CreateDXGIFactory2 != nullptr; // DXGI 1.3 introduced waitable object
 
     DXGI_SWAP_CHAIN_DESC1 swap_chain_desc = {};
-    swap_chain_desc.BufferCount = 2;
+    swap_chain_desc.BufferCount = 3;
     swap_chain_desc.Width = 0;
     swap_chain_desc.Height = 0;
     swap_chain_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -679,7 +671,9 @@ ComPtr<IDXGISwapChain1> gfx_dxgi_create_swap_chain(IUnknown *device) {
     dxgi.current_width = swap_chain_desc.Width;
     dxgi.current_height = swap_chain_desc.Height;
 
-    return dxgi.swap_chain;
+    // ALOTODO: This does nothing, added to make updated DX11 render work
+    dxgi.swap_chain_device = device;
+    dxgi.before_destroy_swap_chain_fn = std::move(before_destroy_fn);
 }
 
 extern "C" HWND gfx_dxgi_get_h_wnd(void) {
@@ -688,6 +682,10 @@ extern "C" HWND gfx_dxgi_get_h_wnd(void) {
 
 void gfx_dxgi_shutdown(void) {
     //dxgi.is_running = false;
+}
+
+IDXGISwapChain1* gfx_dxgi_get_swap_chain() {
+    return dxgi.swap_chain.Get();
 }
 
 void ThrowIfFailed(HRESULT res) {

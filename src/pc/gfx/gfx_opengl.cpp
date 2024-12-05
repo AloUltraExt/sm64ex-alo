@@ -1,5 +1,5 @@
 //#include "core/Window.h"
-#if 1
+#ifdef RAPI_GL
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -52,6 +52,7 @@
 #ifndef _LANGUAGE_C
 #define _LANGUAGE_C
 #endif
+//#include "libultraship/libultra/gbi.h"
 #include <PR/gbi.h>
 
 #if defined(__APPLE__) || defined(USE_OPENGLES)

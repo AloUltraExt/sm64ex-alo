@@ -30,7 +30,7 @@
 /* Private macro to wrap other macros in do {...} while (0) */
 #define _DW(macro) do {macro} while (0)
 
-#define gsSPGrayscale(pkt, state)                      \
+#define gSPGrayscale(pkt, state)                       \
     {                                                  \
         Gfx* _g = (Gfx*)(pkt);                         \
                                                        \
@@ -38,4 +38,8 @@
         _g->words.w1 = state;                          \
     }
 
-#define gsDPSetGrayscaleColor(pkt, r, g, b, lerp) DPRGBColor(pkt, G_SETINTENSITY, r, g, b, lerp)
+#define gsSPGrayscale(state) \
+    { (_SHIFTL(G_SETGRAYSCALE, 24, 8)), (state) }
+
+#define gDPSetGrayscaleColor(pkt, r, g, b, lerp) DPRGBColor(pkt, G_SETINTENSITY, r, g, b, lerp)
+#define gsDPSetGrayscaleColor(r, g, b, a) sDPRGBColor(G_SETINTENSITY, r, g, b, a)

@@ -27,7 +27,7 @@ struct GfxWindowManagerAPI {
 #endif
     //void (*set_fullscreen_changed_callback)(void (*on_fullscreen_changed)(bool is_now_fullscreen)); // config fullscreen replaces it
     //void (*set_fullscreen)(bool enable); // config fullscreen replaces it
-    //void (*show_cursor)(bool hide); // controller_mouse.c takes care of it
+    //void (*set_cursor_visibility)(bool visible); // controller_mouse.c takes care of it
     void (*main_loop)(void (*run_one_game_iter)(void));
     void (*get_dimensions)(uint32_t* width, uint32_t* height);
     void (*handle_events)(void);

@@ -10,6 +10,9 @@
 #include <cstddef>
 #endif
 
+//#include "libultraship/libultra/gbi.h"
+//#include "libultraship/libultra/types.h"
+
 #include <PR/ultratypes.h>
 #include <PR/gbi.h>
 
