@@ -2747,16 +2747,13 @@ void gfx_init(struct GfxWindowManagerAPI* wapi, struct GfxRenderingAPI* rapi, co
 #if ENABLE_FRAMEBUFFER
     gfx_rapi->update_framebuffer_parameters(0, width, height, 1, false, true, true, true);
 #endif
-#if defined(__APPLE__) || 1
-    gfx_current_dimensions.internal_mul = 1;
-#else
-    gfx_current_dimensions.internal_mul = CVar_GetFloat("gInternalResolution", 1);
-#endif
-#if 1
-    gfx_msaa_level = 1;
-#else
-    gfx_msaa_level = CVar_GetS32("gMSAAValue", 1);
-#endif
+//#if defined(__APPLE__)
+    gfx_current_dimensions.internal_mul = 1; // ALOTODO: This does nothing
+//#else
+    //gfx_current_dimensions.internal_mul = CVar_GetFloat("gInternalResolution", 1);
+//#endif
+    //gfx_msaa_level = CVar_GetS32("gMSAAValue", 1);
+    gfx_msaa_level = 1; // ALONOTE: MSAA works if ENABLE_FRAMEBUFFER is set
 #ifndef __WIIU__ // Wii U overrides dimentions in gfx_wapi->init to match framebuffer size
     gfx_current_dimensions.width = width;
     gfx_current_dimensions.height = height;
@@ -2788,11 +2785,18 @@ struct GfxRenderingAPI* gfx_get_current_rendering_api(void) {
 
 void gfx_start_frame(void) {
     gfx_wapi->handle_events();
-#if ENABLE_FRAMEBUFFER && !RENDER_TO_SCREEN
+#if ENABLE_FRAMEBUFFER
     gfx_wapi->get_dimensions(&gfx_current_window_dimensions.width, &gfx_current_window_dimensions.height);
+    
+    // ALONOTE: These needs to be properly separated to make it work with resolution scale
+    // gfx_current_dimensions and gfx_current_game_window_viewport = Game dimensions
+    // gfx_current_window_dimensions = Window dimensions
+    gfx_current_dimensions.width = gfx_current_game_window_viewport.width = gfx_current_window_dimensions.width;
+    gfx_current_dimensions.height = gfx_current_game_window_viewport.height = gfx_current_window_dimensions.height;
 #else
     gfx_wapi->get_dimensions(&gfx_current_dimensions.width, &gfx_current_dimensions.height);
 #endif
+
     //SohImGui::DrawMainMenuAndCalculateGameSize();
     //has_drawn_imgui_menu = true;
     if (gfx_current_dimensions.height == 0) {
@@ -2869,7 +2873,7 @@ void gfx_run(Gfx* commands) {
 
     //current_mtx_replacements = &mtx_replacements;
 
-#if ENABLE_FRAMEBUFFER && RENDER_TO_SCREEN
+#if !ENABLE_FRAMEBUFFER
     game_renders_to_framebuffer = false;
 #endif
 
