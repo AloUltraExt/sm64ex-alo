@@ -49,10 +49,10 @@ ConfigWindow configWindow       = {
     .reset = false,
     .settings_changed = false,
 #else
-    .x = WAPI_WIN_CENTERPOS,
-    .y = WAPI_WIN_CENTERPOS,
-    .w = DESIRED_SCREEN_WIDTH,
-    .h = DESIRED_SCREEN_HEIGHT,
+    .x = 640, // TODO
+    .y = 360,
+    .w = 640,
+    .h = 360,
     .vsync = false,
     .reset = false,
     .fullscreen = false,

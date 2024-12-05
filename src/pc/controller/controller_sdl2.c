@@ -127,7 +127,7 @@ static void controller_sdl_init(void) {
     controller_sdl_bind();
 
     init_ok = true;
-    mouse_init_ok = true;
+    //mouse_init_ok = true;
 }
 
 static SDL_Haptic *controller_sdl_init_haptics(const int joy) {
@@ -339,7 +339,7 @@ static void controller_sdl_shutdown(void) {
 
     haptics_enabled = false;
     init_ok = false;
-    mouse_init_ok = false;
+    //mouse_init_ok = false;
 }
 
 struct ControllerAPI controller_sdl = {

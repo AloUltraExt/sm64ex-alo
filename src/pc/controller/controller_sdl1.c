@@ -129,7 +129,7 @@ static void controller_sdl_init(void) {
     controller_sdl_bind();
 
     init_ok = true;
-    mouse_init_ok = true;
+    //mouse_init_ok = true;
 }
 
 static inline void update_button(const int i, const bool new) {
@@ -294,7 +294,7 @@ static void controller_sdl_shutdown(void) {
     }
 
     init_ok = false;
-    mouse_init_ok = false;
+    //mouse_init_ok = false;
 }
 
 struct ControllerAPI controller_sdl = {

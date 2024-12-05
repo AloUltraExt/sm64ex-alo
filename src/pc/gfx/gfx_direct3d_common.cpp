@@ -5,62 +5,29 @@
 #include "gfx_direct3d_common.h"
 #include "gfx_cc.h"
 
-void get_cc_features(uint32_t shader_id, CCFeatures *cc_features) {
-    for (int i = 0; i < 4; i++) {
-        cc_features->c[0][i] = (shader_id >> (i * 3)) & 7;
-        cc_features->c[1][i] = (shader_id >> (12 + i * 3)) & 7;
-    }
-
-    cc_features->opt_alpha = (shader_id & SHADER_OPT_ALPHA) != 0;
-    cc_features->opt_fog = (shader_id & SHADER_OPT_FOG) != 0;
-    cc_features->opt_texture_edge = (shader_id & SHADER_OPT_TEXTURE_EDGE) != 0;
-    cc_features->opt_noise = (shader_id & SHADER_OPT_NOISE) != 0;
-
-    cc_features->used_textures[0] = false;
-    cc_features->used_textures[1] = false;
-    cc_features->num_inputs = 0;
-
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 4; j++) {
-            if (cc_features->c[i][j] >= SHADER_INPUT_1 && cc_features->c[i][j] <= SHADER_INPUT_4) {
-                if (cc_features->c[i][j] > cc_features->num_inputs) {
-                    cc_features->num_inputs = cc_features->c[i][j];
-                }
-            }
-            if (cc_features->c[i][j] == SHADER_TEXEL0 || cc_features->c[i][j] == SHADER_TEXEL0A) {
-                cc_features->used_textures[0] = true;
-            }
-            if (cc_features->c[i][j] == SHADER_TEXEL1) {
-                cc_features->used_textures[1] = true;
-            }
-        }
-    }
-
-    cc_features->do_single[0] = cc_features->c[0][2] == 0;
-    cc_features->do_single[1] = cc_features->c[1][2] == 0;
-    cc_features->do_multiply[0] = cc_features->c[0][1] == 0 && cc_features->c[0][3] == 0;
-    cc_features->do_multiply[1] = cc_features->c[1][1] == 0 && cc_features->c[1][3] == 0;
-    cc_features->do_mix[0] = cc_features->c[0][1] == cc_features->c[0][3];
-    cc_features->do_mix[1] = cc_features->c[1][1] == cc_features->c[1][3];
-    cc_features->color_alpha_same = (shader_id & 0xfff) == ((shader_id >> 12) & 0xfff);
+static void append_str(char* buf, size_t* len, const char* str) {
+    while (*str != '\0')
+        buf[(*len)++] = *str++;
 }
 
-static void append_str(char *buf, size_t *len, const char *str) {
-    while (*str != '\0') buf[(*len)++] = *str++;
-}
-
-static void append_line(char *buf, size_t *len, const char *str) {
-    while (*str != '\0') buf[(*len)++] = *str++;
+static void append_line(char* buf, size_t* len, const char* str) {
+    while (*str != '\0')
+        buf[(*len)++] = *str++;
     buf[(*len)++] = '\r';
     buf[(*len)++] = '\n';
 }
 
-static const char *shader_item_to_str(uint32_t item, bool with_alpha, bool only_alpha, bool inputs_have_alpha, bool hint_single_element) {
+#define RAND_NOISE "((random(float3(floor(screenSpace.xy * noise_scale), noise_frame)) + 1.0) / 2.0)"
+
+static const char* shader_item_to_str(uint32_t item, bool with_alpha, bool only_alpha, bool inputs_have_alpha,
+                                      bool hint_single_element) {
     if (!only_alpha) {
         switch (item) {
             default:
             case SHADER_0:
                 return with_alpha ? "float4(0.0, 0.0, 0.0, 0.0)" : "float3(0.0, 0.0, 0.0)";
+            case SHADER_1:
+                return with_alpha ? "float4(1.0, 1.0, 1.0, 1.0)" : "float3(1.0, 1.0, 1.0)";
             case SHADER_INPUT_1:
                 return with_alpha || !inputs_have_alpha ? "input.input1" : "input.input1.rgb";
             case SHADER_INPUT_2:
@@ -72,15 +39,28 @@ static const char *shader_item_to_str(uint32_t item, bool with_alpha, bool only_
             case SHADER_TEXEL0:
                 return with_alpha ? "texVal0" : "texVal0.rgb";
             case SHADER_TEXEL0A:
-                return hint_single_element ? "texVal0.a" : (with_alpha ? "float4(texVal0.a, texVal0.a, texVal0.a, texVal0.a)" : "float3(texVal0.a, texVal0.a, texVal0.a)");
+                return hint_single_element ? "texVal0.a"
+                                           : (with_alpha ? "float4(texVal0.a, texVal0.a, texVal0.a, texVal0.a)"
+                                                         : "float3(texVal0.a, texVal0.a, texVal0.a)");
+            case SHADER_TEXEL1A:
+                return hint_single_element ? "texVal1.a"
+                                           : (with_alpha ? "float4(texVal1.a, texVal1.a, texVal1.a, texVal1.a)"
+                                                         : "float3(texVal1.a, texVal1.a, texVal1.a)");
             case SHADER_TEXEL1:
                 return with_alpha ? "texVal1" : "texVal1.rgb";
+            case SHADER_COMBINED:
+                return with_alpha ? "texel" : "texel.rgb";
+            case SHADER_NOISE:
+                return with_alpha ? "float4(" RAND_NOISE ", " RAND_NOISE ", " RAND_NOISE ", " RAND_NOISE ")"
+                                  : "float3(" RAND_NOISE ", " RAND_NOISE ", " RAND_NOISE ")";
         }
     } else {
         switch (item) {
             default:
             case SHADER_0:
                 return "0.0";
+            case SHADER_1:
+                return "1.0";
             case SHADER_INPUT_1:
                 return "input.input1.a";
             case SHADER_INPUT_2:
@@ -93,13 +73,22 @@ static const char *shader_item_to_str(uint32_t item, bool with_alpha, bool only_
                 return "texVal0.a";
             case SHADER_TEXEL0A:
                 return "texVal0.a";
+            case SHADER_TEXEL1A:
+                return "texVal1.a";
             case SHADER_TEXEL1:
                 return "texVal1.a";
+            case SHADER_COMBINED:
+                return "texel.a";
+            case SHADER_NOISE:
+                return RAND_NOISE;
         }
     }
 }
 
-static void append_formula(char *buf, size_t *len, const uint8_t c[2][4], bool do_single, bool do_multiply, bool do_mix, bool with_alpha, bool only_alpha, bool opt_alpha) {
+#undef RAND_NOISE
+
+static void append_formula(char* buf, size_t* len, const uint8_t c[2][4], bool do_single, bool do_multiply, bool do_mix,
+                           bool with_alpha, bool only_alpha, bool opt_alpha) {
     if (do_single) {
         append_str(buf, len, shader_item_to_str(c[only_alpha][3], with_alpha, only_alpha, opt_alpha, false));
     } else if (do_multiply) {
@@ -126,17 +115,17 @@ static void append_formula(char *buf, size_t *len, const uint8_t c[2][4], bool d
     }
 }
 
-void gfx_direct3d_common_build_shader(char buf[4096], size_t& len, size_t& num_floats, const CCFeatures& cc_features, bool include_root_signature, bool three_point_filtering) {
+void gfx_direct3d_common_build_shader(char buf[4096], size_t& len, size_t& num_floats, const CCFeatures& cc_features,
+                                      bool include_root_signature, bool three_point_filtering) {
     len = 0;
     num_floats = 4;
 
     // Pixel shader input struct
 
     if (include_root_signature) {
-        append_str(buf, &len, "#define RS \"RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | DENY_VERTEX_SHADER_ROOT_ACCESS)");
-        if (cc_features.opt_alpha && cc_features.opt_noise) {
-            append_str(buf, &len, ",CBV(b0, visibility = SHADER_VISIBILITY_PIXEL)");
-        }
+        append_str(buf, &len,
+                   "#define RS \"RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | DENY_VERTEX_SHADER_ROOT_ACCESS)");
+        append_str(buf, &len, ",CBV(b0, visibility = SHADER_VISIBILITY_PIXEL)");
         if (cc_features.used_textures[0]) {
             append_str(buf, &len, ",DescriptorTable(SRV(t0), visibility = SHADER_VISIBILITY_PIXEL)");
             append_str(buf, &len, ",DescriptorTable(Sampler(s0), visibility = SHADER_VISIBILITY_PIXEL)");
@@ -150,15 +139,25 @@ void gfx_direct3d_common_build_shader(char buf[4096], size_t& len, size_t& num_f
 
     append_line(buf, &len, "struct PSInput {");
     append_line(buf, &len, "    float4 position : SV_POSITION;");
-    if (cc_features.used_textures[0] || cc_features.used_textures[1]) {
-        append_line(buf, &len, "    float2 uv : TEXCOORD;");
-        num_floats += 2;
-    }
-    if (cc_features.opt_alpha && cc_features.opt_noise) {
-        append_line(buf, &len, "    float4 screenPos : TEXCOORD1;");
+    for (int i = 0; i < 2; i++) {
+        if (cc_features.used_textures[i]) {
+            len += sprintf(buf + len, "    float2 uv%d : TEXCOORD%d;\r\n", i, i);
+            num_floats += 2;
+            for (int j = 0; j < 2; j++) {
+                if (cc_features.clamp[i][j]) {
+                    len += sprintf(buf + len, "    float texClamp%s%d : TEXCLAMP%s%d;\r\n", j == 0 ? "S" : "T", i,
+                                   j == 0 ? "S" : "T", i);
+                    num_floats += 1;
+                }
+            }
+        }
     }
     if (cc_features.opt_fog) {
         append_line(buf, &len, "    float4 fog : FOG;");
+        num_floats += 4;
+    }
+    if (cc_features.opt_grayscale) {
+        append_line(buf, &len, "    float4 grayscale : GRAYSCALE;");
         num_floats += 4;
     }
     for (int i = 0; i < cc_features.num_inputs; i++) {
@@ -180,17 +179,15 @@ void gfx_direct3d_common_build_shader(char buf[4096], size_t& len, size_t& num_f
 
     // Constant buffer and random function
 
-    if (cc_features.opt_alpha && cc_features.opt_noise) {
-        append_line(buf, &len, "cbuffer PerFrameCB : register(b0) {");
-        append_line(buf, &len, "    uint noise_frame;");
-        append_line(buf, &len, "    float2 noise_scale;");
-        append_line(buf, &len, "}");
+    append_line(buf, &len, "cbuffer PerFrameCB : register(b0) {");
+    append_line(buf, &len, "    uint noise_frame;");
+    append_line(buf, &len, "    float noise_scale;");
+    append_line(buf, &len, "}");
 
-        append_line(buf, &len, "float random(in float3 value) {");
-        append_line(buf, &len, "    float random = dot(value, float3(12.9898, 78.233, 37.719));");
-        append_line(buf, &len, "    return frac(sin(random) * 143758.5453);");
-        append_line(buf, &len, "}");
-    }
+    append_line(buf, &len, "float random(in float3 value) {");
+    append_line(buf, &len, "    float random = dot(value, float3(12.9898, 78.233, 37.719));");
+    append_line(buf, &len, "    return frac(sin(random) * 143758.5453);");
+    append_line(buf, &len, "}");
 
     // 3 point texture filtering
     // Original author: ArthurCarvalho
@@ -204,13 +201,21 @@ void gfx_direct3d_common_build_shader(char buf[4096], size_t& len, size_t& num_f
         append_line(buf, &len, "        bool linear_filtering;");
         append_line(buf, &len, "    } textures[2];");
         append_line(buf, &len, "}");
-        append_line(buf, &len, "#define TEX_OFFSET(tex, tSampler, texCoord, off, texSize) tex.Sample(tSampler, texCoord - off / texSize)");
-        append_line(buf, &len, "float4 tex2D3PointFilter(in Texture2D tex, in SamplerState tSampler, in float2 texCoord, in float2 texSize) {");
+        append_line(
+            buf, &len,
+            "#define TEX_OFFSET(tex, tSampler, texCoord, off, texSize) tex.Sample(tSampler, texCoord - off / texSize)");
+        append_line(buf, &len,
+                    "float4 tex2D3PointFilter(in Texture2D tex, in SamplerState tSampler, in float2 texCoord, in "
+                    "float2 texSize) {");
         append_line(buf, &len, "    float2 offset = frac(texCoord * texSize - float2(0.5, 0.5));");
         append_line(buf, &len, "    offset -= step(1.0, offset.x + offset.y);");
         append_line(buf, &len, "    float4 c0 = TEX_OFFSET(tex, tSampler, texCoord, offset, texSize);");
-        append_line(buf, &len, "    float4 c1 = TEX_OFFSET(tex, tSampler, texCoord, float2(offset.x - sign(offset.x), offset.y), texSize);");
-        append_line(buf, &len, "    float4 c2 = TEX_OFFSET(tex, tSampler, texCoord, float2(offset.x, offset.y - sign(offset.y)), texSize);");
+        append_line(buf, &len,
+                    "    float4 c1 = TEX_OFFSET(tex, tSampler, texCoord, float2(offset.x - sign(offset.x), offset.y), "
+                    "texSize);");
+        append_line(buf, &len,
+                    "    float4 c2 = TEX_OFFSET(tex, tSampler, texCoord, float2(offset.x, offset.y - sign(offset.y)), "
+                    "texSize);");
         append_line(buf, &len, "    return c0 + abs(offset.x)*(c1-c0) + abs(offset.y)*(c2-c0);");
         append_line(buf, &len, "}");
     }
@@ -218,11 +223,22 @@ void gfx_direct3d_common_build_shader(char buf[4096], size_t& len, size_t& num_f
     // Vertex shader
 
     append_str(buf, &len, "PSInput VSMain(float4 position : POSITION");
-    if (cc_features.used_textures[0] || cc_features.used_textures[1]) {
-        append_str(buf, &len, ", float2 uv : TEXCOORD");
+    for (int i = 0; i < 2; i++) {
+        if (cc_features.used_textures[i]) {
+            len += sprintf(buf + len, ", float2 uv%d : TEXCOORD%d", i, i);
+            for (int j = 0; j < 2; j++) {
+                if (cc_features.clamp[i][j]) {
+                    len += sprintf(buf + len, ", float texClamp%s%d : TEXCLAMP%s%d", j == 0 ? "S" : "T", i,
+                                   j == 0 ? "S" : "T", i);
+                }
+            }
+        }
     }
     if (cc_features.opt_fog) {
         append_str(buf, &len, ", float4 fog : FOG");
+    }
+    if (cc_features.opt_grayscale) {
+        append_str(buf, &len, ", float4 grayscale : GRAYSCALE");
     }
     for (int i = 0; i < cc_features.num_inputs; i++) {
         len += sprintf(buf + len, ", float%d input%d : INPUT%d", cc_features.opt_alpha ? 4 : 3, i + 1, i);
@@ -230,14 +246,23 @@ void gfx_direct3d_common_build_shader(char buf[4096], size_t& len, size_t& num_f
     append_line(buf, &len, ") {");
     append_line(buf, &len, "    PSInput result;");
     append_line(buf, &len, "    result.position = position;");
-    if (cc_features.opt_alpha && cc_features.opt_noise) {
-        append_line(buf, &len, "    result.screenPos = position;");
+    for (int i = 0; i < 2; i++) {
+        if (cc_features.used_textures[i]) {
+            len += sprintf(buf + len, "    result.uv%d = uv%d;\r\n", i, i);
+            for (int j = 0; j < 2; j++) {
+                if (cc_features.clamp[i][j]) {
+                    len += sprintf(buf + len, "    result.texClamp%s%d = texClamp%s%d;\r\n", j == 0 ? "S" : "T", i,
+                                   j == 0 ? "S" : "T", i);
+                }
+            }
+        }
     }
-    if (cc_features.used_textures[0] || cc_features.used_textures[1]) {
-        append_line(buf, &len, "    result.uv = uv;");
-    }
+
     if (cc_features.opt_fog) {
         append_line(buf, &len, "    result.fog = fog;");
+    }
+    if (cc_features.opt_grayscale) {
+        append_line(buf, &len, "    result.grayscale = grayscale;");
     }
     for (int i = 0; i < cc_features.num_inputs; i++) {
         len += sprintf(buf + len, "    result.input%d = input%d;\r\n", i + 1, i + 1);
@@ -249,45 +274,81 @@ void gfx_direct3d_common_build_shader(char buf[4096], size_t& len, size_t& num_f
     if (include_root_signature) {
         append_line(buf, &len, "[RootSignature(RS)]");
     }
-    append_line(buf, &len, "float4 PSMain(PSInput input) : SV_TARGET {");
-    if (cc_features.used_textures[0]) {
-        if (three_point_filtering) {
-            append_line(buf, &len, "    float4 texVal0;");
-            append_line(buf, &len, "    if (textures[0].linear_filtering)");
-            append_line(buf, &len, "        texVal0 = tex2D3PointFilter(g_texture0, g_sampler0, input.uv, float2(textures[0].width, textures[0].height));");
-            append_line(buf, &len, "    else");
-            append_line(buf, &len, "        texVal0 = g_texture0.Sample(g_sampler0, input.uv);");
-        } else {
-            append_line(buf, &len, "    float4 texVal0 = g_texture0.Sample(g_sampler0, input.uv);");
-        }
-    }
-    if (cc_features.used_textures[1]) {
-        if (three_point_filtering) {
-            append_line(buf, &len, "    float4 texVal1;");
-            append_line(buf, &len, "    if (textures[1].linear_filtering)");
-            append_line(buf, &len, "        texVal1 = tex2D3PointFilter(g_texture1, g_sampler1, input.uv, float2(textures[1].width, textures[1].height));");
-            append_line(buf, &len, "    else");
-            append_line(buf, &len, "        texVal1 = g_texture1.Sample(g_sampler1, input.uv);");
-        } else {
-            append_line(buf, &len, "    float4 texVal1 = g_texture1.Sample(g_sampler1, input.uv);");
+    append_line(buf, &len, "float4 PSMain(PSInput input, float4 screenSpace : SV_Position) : SV_TARGET {");
+
+    // Reference approach to color wrapping as per GLideN64
+    // Return wrapped value of x in interval [low, high)
+    // Mod implementation of GLSL sourced from https://registry.khronos.org/OpenGL-Refpages/gl4/html/mod.xhtml
+    append_line(buf, &len, "#define MOD(x, y) ((x) - (y) * floor((x)/(y)))");
+    append_line(buf, &len, "#define WRAP(x, low, high) MOD((x)-(low), (high)-(low)) + (low)");
+
+    for (int i = 0; i < 2; i++) {
+        if (cc_features.used_textures[i]) {
+            len += sprintf(buf + len, "    float2 tc%d = input.uv%d;\r\n", i, i);
+            bool s = cc_features.clamp[i][0], t = cc_features.clamp[i][1];
+            if (!s && !t) {
+            } else {
+                len += sprintf(buf + len, "    int2 texSize%d;\r\n", i);
+                len += sprintf(buf + len, "    g_texture%d.GetDimensions(texSize%d.x, texSize%d.y);\r\n", i, i, i);
+                if (s && t) {
+                    len += sprintf(
+                        buf + len,
+                        "    tc%d = clamp(tc%d, 0.5 / texSize%d, float2(input.texClampS%d, input.texClampT%d));\r\n", i,
+                        i, i, i, i);
+                } else if (s) {
+                    len += sprintf(buf + len,
+                                   "    tc%d = float2(clamp(tc%d.x, 0.5 / texSize%d.x, input.texClampS%d), tc%d.y);\n",
+                                   i, i, i, i, i);
+                } else {
+                    len += sprintf(buf + len,
+                                   "    tc%d = float2(tc%d.x, clamp(tc%d.y, 0.5 / texSize%d.y, input.texClampT%d));\n",
+                                   i, i, i, i, i);
+                }
+            }
+            if (three_point_filtering) {
+                len += sprintf(buf + len, "    float4 texVal%d;\r\n", i);
+                len += sprintf(buf + len, "    if (textures[%d].linear_filtering)\r\n", i);
+                len += sprintf(buf + len,
+                               "        texVal%d = tex2D3PointFilter(g_texture%d, g_sampler%d, tc%d, "
+                               "float2(textures[%d].width, textures[%d].height));\r\n",
+                               i, i, i, i, i, i);
+                len += sprintf(buf + len, "    else\r\n");
+                len += sprintf(buf + len, "        texVal%d = g_texture%d.Sample(g_sampler%d, tc%d);\r\n", i, i, i, i);
+            } else {
+                len +=
+                    sprintf(buf + len, "    float4 texVal%d = g_texture%d.Sample(g_sampler%d, tc%d);\r\n", i, i, i, i);
+            }
         }
     }
 
-    append_str(buf, &len, cc_features.opt_alpha ? "    float4 texel = " : "    float3 texel = ");
-    if (!cc_features.color_alpha_same && cc_features.opt_alpha) {
-        append_str(buf, &len, "float4(");
-        append_formula(buf, &len, cc_features.c, cc_features.do_single[0], cc_features.do_multiply[0], cc_features.do_mix[0], false, false, true);
-        append_str(buf, &len, ", ");
-        append_formula(buf, &len, cc_features.c, cc_features.do_single[1], cc_features.do_multiply[1], cc_features.do_mix[1], true, true, true);
-        append_str(buf, &len, ")");
-    } else {
-        append_formula(buf, &len, cc_features.c, cc_features.do_single[0], cc_features.do_multiply[0], cc_features.do_mix[0], cc_features.opt_alpha, false, cc_features.opt_alpha);
+    append_str(buf, &len, cc_features.opt_alpha ? "    float4 texel;" : "    float3 texel;");
+    for (int c = 0; c < (cc_features.opt_2cyc ? 2 : 1); c++) {
+        append_str(buf, &len, "texel = ");
+        if (!cc_features.color_alpha_same[c] && cc_features.opt_alpha) {
+            append_str(buf, &len, "float4(");
+            append_formula(buf, &len, cc_features.c[c], cc_features.do_single[c][0], cc_features.do_multiply[c][0],
+                           cc_features.do_mix[c][0], false, false, true);
+            append_str(buf, &len, ", ");
+            append_formula(buf, &len, cc_features.c[c], cc_features.do_single[c][1], cc_features.do_multiply[c][1],
+                           cc_features.do_mix[c][1], true, true, true);
+            append_str(buf, &len, ")");
+        } else {
+            append_formula(buf, &len, cc_features.c[c], cc_features.do_single[c][0], cc_features.do_multiply[c][0],
+                           cc_features.do_mix[c][0], cc_features.opt_alpha, false, cc_features.opt_alpha);
+        }
+        append_line(buf, &len, ";");
+
+        if (c == 0) {
+            append_str(buf, &len, "texel = WRAP(texel, -1.01, 1.01);");
+        }
     }
-    append_line(buf, &len, ";");
 
     if (cc_features.opt_texture_edge && cc_features.opt_alpha) {
-        append_line(buf, &len, "    if (texel.a > 0.3) texel.a = 1.0; else discard;");
+        append_line(buf, &len, "    if (texel.a > 0.19) texel.a = 1.0; else discard;");
     }
+
+    append_str(buf, &len, "texel = WRAP(texel, -0.51, 1.51);");
+    append_str(buf, &len, "texel = clamp(texel, 0.0, 1.0);");
     // TODO discard if alpha is 0?
     if (cc_features.opt_fog) {
         if (cc_features.opt_alpha) {
@@ -297,12 +358,25 @@ void gfx_direct3d_common_build_shader(char buf[4096], size_t& len, size_t& num_f
         }
     }
 
+    if (cc_features.opt_grayscale) {
+        append_line(buf, &len, "float intensity = (texel.r + texel.g + texel.b) / 3.0;");
+        append_line(buf, &len, "float3 new_texel = input.grayscale.rgb * intensity;");
+        append_line(buf, &len, "texel.rgb = lerp(texel.rgb, new_texel, input.grayscale.a);");
+    }
+
     if (cc_features.opt_alpha && cc_features.opt_noise) {
-        append_line(buf, &len, "    float2 coords = (input.screenPos.xy / input.screenPos.w) * noise_scale;");
-        append_line(buf, &len, "    texel.a *= round(saturate(random(float3(floor(coords), noise_frame)) + texel.a - 0.5));");
+        append_line(buf, &len, "    float2 coords = screenSpace.xy * noise_scale;");
+        append_line(buf, &len,
+                    "    texel.a *= round(saturate(random(float3(floor(coords), noise_frame)) + texel.a - 0.5));");
     }
 
     if (cc_features.opt_alpha) {
+        if (cc_features.opt_alpha_threshold) {
+            append_line(buf, &len, "    if (texel.a < 8.0 / 256.0) discard;");
+        }
+        if (cc_features.opt_invisible) {
+            append_line(buf, &len, "    texel.a = 0.0;");
+        }
         append_line(buf, &len, "    return texel;");
     } else {
         append_line(buf, &len, "    return float4(texel, 1.0);");
