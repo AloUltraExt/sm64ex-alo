@@ -129,7 +129,9 @@ static void controller_sdl_init(void) {
     controller_sdl_bind();
 
     init_ok = true;
+#ifdef MOUSE_ACTIONS
     mouse_init_ok = true;
+#endif
 }
 
 static inline void update_button(const int i, const bool new) {
@@ -150,7 +152,7 @@ static void mouse_control_handler(OSContPad *pad) {
     if (!configMouse) {
         return;
     }
-    
+
     if (mouse_has_center_control && sCurrPlayMode != 2) {
         controller_mouse_enter_relative();
     } else {
@@ -246,22 +248,20 @@ static void controller_sdl_read(OSContPad *pad) {
     magnitude_sq = (uint32_t)(rightx * rightx) + (uint32_t)(righty * righty);
     stickDeadzoneActual = configStickDeadzone * DEADZONE_STEP;
     if (magnitude_sq > (uint32_t)(stickDeadzoneActual * stickDeadzoneActual)) {
-        #if 0 // not used but leaving just in case
-        pad->ext_stick_x = rightx / 0x100;
-        int stick_y = -righty / 0x100;
-        pad->ext_stick_y = stick_y == 128 ? 127 : stick_y;
-        #else
         // Game expects stick coordinates within -80..80
         // 32768 / 409 = ~80
         pad->ext_stick_x = rightx / 409;
         pad->ext_stick_y = -righty / 409;
-        #endif
     }
 }
 
-static void controller_sdl_rumble_play(f32 strength, f32 length) { }
+static void controller_sdl_rumble_play(f32 strength, f32 length) {
+    // Not supported on SDL1
+}
 
-static void controller_sdl_rumble_stop(void) { }
+static void controller_sdl_rumble_stop(void) {
+    // Not supported on SDL1
+}
 
 static u32 controller_sdl_rawkey(void) {
     if (last_joybutton != VK_INVALID) {
@@ -294,7 +294,9 @@ static void controller_sdl_shutdown(void) {
     }
 
     init_ok = false;
+#ifdef MOUSE_ACTIONS
     mouse_init_ok = false;
+#endif
 }
 
 struct ControllerAPI controller_sdl = {
