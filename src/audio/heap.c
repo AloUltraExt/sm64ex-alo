@@ -1104,17 +1104,16 @@ void audio_reset_session(void)
     s32 temporaryMem;
     s32 totalMem;
     s32 wantMisc;
-#if defined(VERSION_JP) || defined(VERSION_US)
-    s32 frames;
-    s32 remainingDmas;
-#else
+#if defined(VERSION_EU) || defined(VERSION_SH) || defined(VERSION_CN)
     struct SynthesisReverb *reverb;
     struct ReverbSettingsEU *reverbSettings;
 #endif
     eu_stubbed_printf_1("Heap Reconstruct Start %x\n", gAudioResetPresetIdToLoad);
 
+    // TODO: Cleanup audio so this block of code is no longer necessary
 #if defined(VERSION_JP) || defined(VERSION_US)
     if (gAudioLoadLock != AUDIO_LOCK_UNINITIALIZED) {
+        s32 frames;
         decrease_reverb_gain();
         for (i = 0; i < gMaxSimultaneousNotes; i++) {
             if (gNotes[i].enabled && gNotes[i].adsr.state != ADSR_STATE_DISABLED) {
@@ -1155,13 +1154,15 @@ void audio_reset_session(void)
         gAudioLoadLock = AUDIO_LOCK_LOADING;
         wait_for_audio_frames(3);
 
-        remainingDmas = gCurrAudioFrameDmaCount;
+    #ifdef TARGET_N64
+        s32 remainingDmas = gCurrAudioFrameDmaCount;
         while (remainingDmas > 0) {
             for (i = 0; i < gCurrAudioFrameDmaCount; i++) {
                 if (osRecvMesg(&gCurrAudioFrameDmaQueue, NULL, OS_MESG_NOBLOCK) == 0)
                     remainingDmas--;
             }
         }
+    #endif
         gCurrAudioFrameDmaCount = 0;
 
         for (j = 0; j < NUMAIBUFFERS; j++) {

@@ -814,16 +814,13 @@ static TerrainData sDynamicVertices[600];
  */
 void load_object_collision_model(void) {
     struct Object* obj = gCurrentObject;
-
     TerrainData *collisionData = obj->collisionData;
-
 #if AUTO_COLLISION_DISTANCE
     f32 sqrLateralDist;
     vec3f_get_lateral_dist_squared(&obj->oPosX, &gMarioObject->oPosX, &sqrLateralDist);
-
     f32 verticalMarioDiff = (gMarioObject->oPosY - obj->oPosY);
-
     f32 colDist;
+
     if (collisionData == NULL) {
         // No collision data, so no collision distance.
         colDist = 0.0f;
@@ -836,9 +833,15 @@ void load_object_collision_model(void) {
         colDist = obj->oCollisionDistance;
     }
 #else
+    f32 marioDist = obj->oDistanceToMario;
+    // On an object's first frame, the distance is set to F32_MAX.
+    // If the distance hasn't been updated, update it now.
+    if (marioDist == F32_MAX) {
+        marioDist = dist_between_objects(obj, gMarioObject);
+    }
+
     f32 colDist = obj->oCollisionDistance;
 #endif
-
     f32 drawDist = obj->oDrawingDistance;
 
     // ex-alo change
@@ -855,16 +858,12 @@ void load_object_collision_model(void) {
         drawDist = colDist;
     }
 
-    f32 marioDist = obj->oDistanceToMario;
-
-    int isInit = (marioDist == F32_MAX);
-
 #if AUTO_COLLISION_DISTANCE
     // A value higher than 500.0f causes crashes with surfaces
     s32 inColRadius = (
            (sqrLateralDist < sqr(colDist))
         && (verticalMarioDiff > 0 || verticalMarioDiff > -colDist)
-        && (verticalMarioDiff < 0 || verticalMarioDiff < (colDist + 500.0f))
+        && (verticalMarioDiff < 0 || verticalMarioDiff < (colDist + 2000.0f))
     );
 #else
     s32 inColRadius = (marioDist < colDist);
@@ -882,11 +881,14 @@ void load_object_collision_model(void) {
         }
     }
 
+#if AUTO_COLLISION_DISTANCE
+    f32 marioDist = obj->oDistanceToMario;
     // On an object's first frame, the distance is set to F32_MAX.
     // If the distance hasn't been updated, update it now.
-    if (isInit) {
+    if (marioDist == F32_MAX) {
         marioDist = dist_between_objects(obj, gMarioObject);
     }
+#endif
 
 #ifndef NODRAWINGDISTANCE
     if (marioDist < drawDist) {
