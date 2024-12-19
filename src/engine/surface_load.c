@@ -187,16 +187,12 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
         list = &gStaticSurfacePartition[cellZ][cellX][listIndex];
     }
 
-#if !NO_SURFACE_PRIORITY_REORDER || WATER_SURFACES
-#if WATER_SURFACES
-    if (listIndex == SPATIAL_PARTITION_WATER)
-#endif
+    //! (Surface Cucking) Surfaces are sorted by the height of their first vertex.
+    //  Since vertices aren't ordered by height, this causes many lower triangles
+    //  to be sorted higher. This worsens surface cucking since many functions
+    //  only use the first triangle in surface order that fits, missing higher surfaces.
+    //  upperY would be a better sort method, set with optimizations enabled.
     {
-        //! (Surface Cucking) Surfaces are sorted by the height of their first vertex.
-        //  Since vertices aren't ordered by height, this causes many lower triangles
-        //  to be sorted higher. This worsens surface cucking since many functions
-        //  only use the first triangle in surface order that fits, missing higher surfaces.
-        //  upperY would be a better sort method, set with optimizations enabled.
         s32 surfacePriority = SURFACE_SORT(surface) * sortDir;
         s32 priority;
         // Loop until we find the appropriate place for the surface in the list.
@@ -210,7 +206,7 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
             list = list->next;
         }
     }
-#endif
+
     newNode->next = list->next;
     list->next = newNode;
 }
@@ -774,19 +770,17 @@ void load_object_surfaces(TerrainData **data, TerrainData *vertexData, u32 dynam
 #if AUTO_COLLISION_DISTANCE
 // From Kaze
 static f32 get_optimal_collision_distance(struct Object *obj) {
-    f32 thisVertDist, maxDist = 0.0f;
-    Vec3f thisVertPos, scale;
+    register f32 thisVertDist, maxDist = 0.0f;
+    Vec3f thisVertPos;
     TerrainData *collisionData = obj->collisionData;
     collisionData++;
-    u32 vertsLeft = *(collisionData)++;
-
-    vec3_copy(scale, obj->header.gfx.scale);
+    register u32 vertsLeft = *(collisionData)++;
 
     // Loop through the collision vertices to find the vertex
     // with the furthest distance from the model's origin.
     while (vertsLeft) {
         // Apply scale to the position
-        vec3_prod(thisVertPos, collisionData, scale);
+        vec3_prod(thisVertPos, collisionData, obj->header.gfx.scale);
 
         // Get the distance to the model's origin.
         thisVertDist = vec3_sumsq(thisVertPos);
@@ -859,7 +853,6 @@ void load_object_collision_model(void) {
     }
 
 #if AUTO_COLLISION_DISTANCE
-    // A value higher than 500.0f causes crashes with surfaces
     s32 inColRadius = (
            (sqrLateralDist < sqr(colDist))
         && (verticalMarioDiff > 0 || verticalMarioDiff > -colDist)
