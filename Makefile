@@ -162,6 +162,10 @@ ifeq ($(TARGET_PORT_CONSOLE),1)
   CPP_ASSEMBLY := 1
 endif
 
+ifeq ($(TARGET_WEB),1)
+  CPP_ASSEMBLY := 1
+endif
+
 # Custom Defines
 include defines.mk
 
@@ -805,14 +809,16 @@ ifeq ($(TARGET_N64),1)
 # detect prefix for MIPS toolchain
 ifneq ($(call find-command,mips64-elf-ld),)
   CROSS := mips64-elf-
-# else ifneq ($(call find-command,mips-n64-ld),)
-#   CROSS := mips-n64-
+else ifneq ($(call find-command,mips-n64-ld),)
+  CROSS := mips-n64-
 else ifneq ($(call find-command,mips64-ld),)
   CROSS := mips64-
 else ifneq ($(call find-command,mips-linux-gnu-ld),)
   CROSS := mips-linux-gnu-
 else ifneq ($(call find-command,mips64-linux-gnu-ld),)
   CROSS := mips64-linux-gnu-
+else ifneq ($(call find-command,mips64-none-elf-ld),)
+  CROSS := mips64-none-elf-
 else ifneq ($(call find-command,mips-ld),)
   CROSS := mips-
 else

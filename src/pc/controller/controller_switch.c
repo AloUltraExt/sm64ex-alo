@@ -1,8 +1,8 @@
 #ifdef CAPI_SWITCH
 
-#include <switch.h>
 #include <stdlib.h>
 #include <ultra64.h>
+#include <switch.h>
 
 #include <sm64.h>
 #include "../../game/level_update.h"
