@@ -13,7 +13,7 @@
 #if PLATFORM_DISPLACEMENT_2
 #include "extras/redone/platform_displacement.inc.c"
 #else
-struct Object *gMarioPlatform = NULL;
+struct Object *sMarioPlatform = NULL;
 
 /**
  * Determine if Mario is standing on a platform object, meaning that he is
@@ -50,16 +50,16 @@ void update_mario_platform(void) {
 
     switch (awayFromFloor) {
         case 1:
-            gMarioPlatform = NULL;
+            sMarioPlatform = NULL;
             gMarioObject->platform = NULL;
             break;
 
         case 0:
             if (floor != NULL && floor->object != NULL) {
-                gMarioPlatform = floor->object;
+                sMarioPlatform = floor->object;
                 gMarioObject->platform = floor->object;
             } else {
-                gMarioPlatform = NULL;
+                sMarioPlatform = NULL;
                 gMarioObject->platform = NULL;
             }
             break;
@@ -168,13 +168,11 @@ void apply_platform_displacement(u32 isMario, struct Object *platform) {
  * If Mario's platform is not null, apply platform displacement.
  */
 void apply_mario_platform_displacement(void) {
-    struct Object *platform = gMarioPlatform;
+    struct Object *platform = sMarioPlatform;
 
-    if (!(gTimeStopState & TIME_STOP_ACTIVE) && gMarioObject != NULL && platform != NULL
-#if FIX_CAMERA_CUTSCENE_MOVING_PLATFORMS
-    && !(gMarioStates[0].action & ACT_FLAG_INTANGIBLE)
-#endif
-    ) {
+    // ex-alo change
+    // Intangible check to fix Mario going out of camera view on moving platforms during cutscenes
+    if (!(gTimeStopState & TIME_STOP_ACTIVE) && gMarioObject != NULL && platform != NULL && !(gMarioStates[0].action & ACT_FLAG_INTANGIBLE)) {
         apply_platform_displacement(TRUE, platform);
     }
 }
@@ -184,7 +182,7 @@ void apply_mario_platform_displacement(void) {
  * Set Mario's platform to NULL.
  */
 void clear_mario_platform(void) {
-    gMarioPlatform = NULL;
+    sMarioPlatform = NULL;
 }
 #endif
 #endif

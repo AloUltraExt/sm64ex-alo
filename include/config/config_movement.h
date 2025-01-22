@@ -28,9 +28,6 @@
 /// Fixes slideVel position being slightly off/asymmetric.
 #define FIX_SLIDE_VEL_UPDATE_SLIDING (0 || QOL_FIXES)
 
-/// Fixes cutscenes where Mario goes out of camera view on moving platforms (PD2 already has this).
-#define FIX_CAMERA_CUTSCENE_MOVING_PLATFORMS (0 || QOL_FIXES)
-
 /// Fixes find_floor_slope so it handles OOB slopes.
 #define FIX_FLOOR_SLOPE_OOB (0 || QOL_FIXES || COLLISION_FIXES)
 
