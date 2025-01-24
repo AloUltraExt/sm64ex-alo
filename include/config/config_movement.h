@@ -28,9 +28,6 @@
 /// Fixes slideVel position being slightly off/asymmetric.
 #define FIX_SLIDE_VEL_UPDATE_SLIDING (0 || QOL_FIXES)
 
-/// Fixes find_floor_slope so it handles OOB slopes.
-#define FIX_FLOOR_SLOPE_OOB (0 || QOL_FIXES || COLLISION_FIXES)
-
 /// Fixes water upwarp, enables with collision fixes due to water surfaces.
 #define FIX_WATER_PLUNGE_UPWARP (0 || QOL_FIXES || COLLISION_FIXES)
 
@@ -64,7 +61,7 @@
 // Allows Mario to grab a ledge after a triple jump and a rollout.
 #define LEDGE_GRAB_MORE_ACTIONS (0 || QOL_FEATURES)
 
-// Allows Mario to walking after a dive at lower speed and a rollout.
+// Allows Mario to walk kick after a dive at lower speed and a rollout.
 #define WALL_KICK_MORE_ACTIONS (0 || QOL_FEATURES)
 
 // Allows Mario to still held an object while twirling.
@@ -75,6 +72,9 @@
 
 /// Makes rollout possible on a dive slide while going forward.
 #define DIVE_SLIDE_ROLLOUT (0 || QOL_FEATURES)
+
+// Disables bonking on sloped ceilings by separating the handling of ceiling interactions and wall interactions.
+#define DISABLE_CEILING_BONKS (0 || QOL_FEATURES)
 
 /*******************
  * ACTION SETTINGS *

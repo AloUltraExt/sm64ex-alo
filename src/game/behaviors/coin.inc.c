@@ -146,8 +146,8 @@ void bhv_coin_formation_spawn_loop(void) {
             // Get initial coin floor height
             cur_obj_update_floor_height();
             // Rise the coin y position if is below it's height, and update it's floor height again
-            if (find_floor_height(o->oPosX, o->oPosY + FIND_SURFACE_BUFFER, o->oPosZ) > o->oFloorHeight) {
-                o->oPosY += FIND_SURFACE_BUFFER;
+            if (find_floor_height(o->oPosX, o->oPosY + FIND_FLOOR_BUFFER, o->oPosZ) > o->oFloorHeight) {
+                o->oPosY += FIND_FLOOR_BUFFER;
                 cur_obj_update_floor_height();
             }
             // Delete if the coin is out of bounds

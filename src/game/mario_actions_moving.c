@@ -585,7 +585,6 @@ s32 begin_braking_action(struct MarioState *m) {
 
 void anim_and_audio_for_walk(struct MarioState *m) {
     s32 val14;
-    struct Object *marioObj = m->marioObj;
     s32 val0C = TRUE;
     s16 targetPitch = 0;
     f32 val04;
@@ -669,9 +668,9 @@ void anim_and_audio_for_walk(struct MarioState *m) {
         }
     }
 
-    marioObj->oMarioWalkingPitch =
-        (s16) approach_s32(marioObj->oMarioWalkingPitch, targetPitch, 0x800, 0x800);
-    marioObj->header.gfx.angle[0] = marioObj->oMarioWalkingPitch;
+    m->marioObj->oMarioWalkingPitch =
+        (s16) approach_s32(m->marioObj->oMarioWalkingPitch, targetPitch, 0x800, 0x800);
+    m->marioObj->header.gfx.angle[0] = m->marioObj->oMarioWalkingPitch;
 }
 
 void anim_and_audio_for_hold_walk(struct MarioState *m) {
@@ -732,8 +731,7 @@ void anim_and_audio_for_hold_walk(struct MarioState *m) {
 }
 
 void anim_and_audio_for_heavy_walk(struct MarioState *m) {
-    s32 val04 = (s32)(m->intendedMag * 0x10000);
-    set_mario_anim_with_accel(m, MARIO_ANIM_WALK_WITH_HEAVY_OBJ, val04);
+    set_mario_anim_with_accel(m, MARIO_ANIM_WALK_WITH_HEAVY_OBJ, (s32)(m->intendedMag * 0x10000));
     play_step_sound(m, 26, 79);
 }
 

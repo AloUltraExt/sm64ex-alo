@@ -13,17 +13,9 @@
 #define FLOOR_LOWER_LIMIT           -11000
 #define FLOOR_LOWER_LIMIT_MISC      (FLOOR_LOWER_LIMIT + 1000)
 
-// The maximum collision radius when checking for walls. Vanilla is 200.
-#if CELL_BUFFER_FIX
-#define MAX_COLLISION_RADIUS 600
-#else
-#define MAX_COLLISION_RADIUS 200
-#endif
-
-#define FIND_SURFACE_BUFFER 78
-
-#define FIND_FLOOR_BUFFER   FIND_SURFACE_BUFFER
 #if !COLLISION_IMPROVEMENTS
+#define FIND_SURFACE_BUFFER 78
+#define FIND_FLOOR_BUFFER   FIND_SURFACE_BUFFER
 #define FIND_CEIL_BUFFER    FIND_SURFACE_BUFFER
 #endif
 
@@ -57,13 +49,56 @@ struct WallCollisionData {
     /*0x18*/ struct Surface *walls[MAX_REFERENCED_WALLS];
 };
 
-s32 is_outside_level_bounds(s32 xPos, s32 zPos);
-s32 get_cell_coord(s32 coord);
-f32 get_surface_height_at_pos(f32 xPos, f32 zPos, struct Surface *surf);
+/**************************************************
+ *                     GENERAL                    *
+ **************************************************/
+
+/**
+ * Checks whether the coords are within level boundaries laterally.
+ */
+ALWAYS_INLINE s32 is_outside_level_bounds(s32 xPos, s32 zPos) {
+    return ((xPos <= -LEVEL_BOUNDARY_MAX)
+         || (xPos >=  LEVEL_BOUNDARY_MAX)
+         || (zPos <= -LEVEL_BOUNDARY_MAX)
+         || (zPos >=  LEVEL_BOUNDARY_MAX));
+}
+
+/**
+ * Converts a single coordinate value into the corresponding cell coordinate value on the same axis.
+ */
+ALWAYS_INLINE s32 get_cell_coord(s32 coord) {
+    return (((coord + LEVEL_BOUNDARY_MAX) / CELL_SIZE) % NUM_CELLS);
+}
+
+/**
+ * Gets the height of a point at 'xPos' and 'zPos' coplanar to the triangle of 'surf'.
+ */
+ALWAYS_INLINE f32 get_surface_height_at_location(f32 xPos, f32 zPos, struct Surface *surf) {
+    f32 nx = surf->normal.x;
+    f32 ny = surf->normal.y;
+    f32 nz = surf->normal.z;
+    f32 oo = surf->originOffset;
+    return -((xPos * nx) + (zPos * nz) + oo) / ny;
+}
+
 s32 f32_find_wall_collision(f32 *xPtr, f32 *yPtr, f32 *zPtr, f32 offsetY, f32 radius);
 s32 find_wall_collisions(struct WallCollisionData *colData);
+struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 radius);
+void resolve_and_return_wall_collisions_data(Vec3f pos, f32 offset, f32 radius, struct WallCollisionData *collisionData);
 f32 find_ceil(f32 posX, f32 posY, f32 posZ, struct Surface **pceil);
-f32 obj_find_floor_height(struct Object *obj);
+
+/**
+ * Finds the ceiling from a vec3f horizontally and a height with the ceil buffer plus 2 
+ *(78 + 2 on vanilla, 0 + 2 with exposed ceilings fix).
+ */
+ALWAYS_INLINE f32 find_mario_ceil(Vec3f pos, f32 height, struct Surface **ceil) {
+#if EXPOSED_CEILINGS_FIX
+    return find_ceil(pos[0], MAX(height, pos[1]) + FIND_CEIL_BUFFER + 2.0f, pos[2], ceil);
+#else
+    return find_ceil(pos[0], height + FIND_CEIL_BUFFER + 2.0f, pos[2], ceil);
+#endif
+}
+
 f32 find_floor_height(f32 x, f32 y, f32 z);
 f32 find_static_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
 f32 find_dynamic_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);

@@ -102,7 +102,7 @@ s32 set_pole_position(struct MarioState *m, f32 offsetY) {
 
     // Prevent Mario from climbing into a ceiling.
     struct Surface *ceil;
-    f32 ceilHeight = vec3f_find_ceil(m->pos, m->pos[1], &ceil);
+    f32 ceilHeight = find_mario_ceil(m->pos, m->pos[1], &ceil);
     if (m->pos[1] > ceilHeight - 160.0f) {
         m->pos[1] = ceilHeight - 160.0f;
         marioObj->oMarioPolePos = m->pos[1] - poleObj->oPosY;
@@ -343,7 +343,7 @@ s32 perform_hanging_step(struct MarioState *m, Vec3f nextPos) {
 
     m->wall = resolve_and_return_wall_collisions(nextPos, 50.0f, 50.0f);
     floorHeight = find_floor(nextPos[0], nextPos[1], nextPos[2], &floor);
-    ceilHeight = vec3f_find_ceil(nextPos, floorHeight, &ceil);
+    ceilHeight = find_mario_ceil(nextPos, floorHeight, &ceil);
 
     if (floor == NULL) {
         return HANG_HIT_CEIL_OR_OOB;

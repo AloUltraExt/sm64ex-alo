@@ -2772,7 +2772,7 @@ ModelID32 obj_get_model(struct Object *obj) {
 }
 
 s32 mario_is_close_to_a_ceiling(void) {   
-    if (gMarioStates[0].pos[1] + 160.0f + FIND_SURFACE_BUFFER >= gMarioStates[0].ceilHeight) {
+    if (gMarioStates[0].pos[1] + 160.0f + FIND_CEIL_BUFFER + 2.0f > gMarioStates[0].ceilHeight) {
         return TRUE;
     }
 

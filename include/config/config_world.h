@@ -7,15 +7,25 @@
 /*****************************
  * CUSTOM SURF VALUES CONFIG *
  *****************************/
- 
-// Minimum Y normal for floors (vanilla is 0.01f)
-#define NORMAL_FLOOR_THRESHOLD  0.02f
 
-// Minimum Y normal for ceilings (vanilla is -0.01f, -0.2f is recommended)
-#define NORMAL_CEIL_THRESHOLD  -0.2f
+// Minimum Y normal for floors (vanilla is 0.01f)
+#define NORMAL_FLOOR_THRESHOLD  0.035f
+
+// Minimum Y normal for ceilings (vanilla is -0.01)
+#define NORMAL_CEIL_THRESHOLD  -0.02f
 
 // Maximum number of walls to check (vanilla is 4, higher is recommended)
 #define MAX_REFERENCED_WALLS    16
+
+#endif
+
+#if COLLISION_IMPROVEMENTS
+
+// Floor buffer value, used on every floor check (vanilla is 78)
+#define FIND_FLOOR_BUFFER   78
+
+// Ceil buffer value, used on ceil check (stubbed) (vanilla is 78)
+#define FIND_CEIL_BUFFER    0
 
 #endif
 

@@ -305,9 +305,7 @@ static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
 #endif
 
     f32 floorHeight = find_floor(nextPos[0], nextPos[1], nextPos[2], &floor);
-    f32 ceilHeight = vec3f_find_ceil(nextPos, floorHeight, &ceil);
-
-    f32 waterLevel = find_water_level(nextPos[0], nextPos[2]);
+    f32 ceilHeight = find_mario_ceil(nextPos, floorHeight, &ceil);
 
 #if !BETTER_RESOLVE_WALL_COLLISION
     m->wall = upperWall;
@@ -317,11 +315,11 @@ static s32 perform_ground_quarter_step(struct MarioState *m, Vec3f nextPos) {
         return GROUND_STEP_HIT_WALL_STOP_QSTEPS;
     }
 
-    if ((m->action & ACT_FLAG_RIDING_SHELL) && floorHeight < waterLevel) {
-        floorHeight = waterLevel;
+    // ex-alo change
+    // Negative originOffset and direct use of Mario's water level
+    if ((m->action & ACT_FLAG_RIDING_SHELL) && floorHeight < m->waterLevel) {
+        floorHeight = m->waterLevel;
         floor = &gWaterSurfacePseudoFloor;
-        // ex-alo change
-        // make floorHeight originOffset negative
         floor->originOffset = -floorHeight;
     }
 
@@ -641,9 +639,6 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
     Vec3f nextPos;
     struct Surface *ceil;
     struct Surface *floor;
-    f32 ceilHeight;
-    f32 floorHeight;
-    f32 waterLevel;
 
     vec3f_copy(nextPos, intendedPos);
 
@@ -655,10 +650,8 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
     lowerWall = resolve_and_return_wall_collisions(nextPos, 30.0f, 50.0f);
 #endif
 
-    floorHeight = find_floor(nextPos[0], nextPos[1], nextPos[2], &floor);
-    ceilHeight = vec3f_find_ceil(nextPos, floorHeight, &ceil);
-
-    waterLevel = find_water_level(nextPos[0], nextPos[2]);
+    f32 floorHeight = find_floor(nextPos[0], nextPos[1], nextPos[2], &floor);
+    f32 ceilHeight = find_mario_ceil(nextPos, floorHeight, &ceil);
 
 #if !BETTER_RESOLVE_WALL_COLLISION
     m->wall = NULL;
@@ -676,11 +669,11 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
         return AIR_STEP_HIT_WALL;
     }
 
-    if ((m->action & ACT_FLAG_RIDING_SHELL) && floorHeight < waterLevel) {
-        floorHeight = waterLevel;
+    // ex-alo change
+    // Negative originOffset and direct use of Mario's water level
+    if ((m->action & ACT_FLAG_RIDING_SHELL) && floorHeight < m->waterLevel) {
+        floorHeight = m->waterLevel;
         floor = &gWaterSurfacePseudoFloor;
-        // ex-alo change
-        // make floorHeight originOffset negative
         floor->originOffset = -floorHeight;
     }
 
@@ -742,7 +735,7 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
         vec3f_copy(m->pos, nextPos);
         m->floor       = floor;
         m->floorHeight = floorHeight;
-#if BETTER_RESOLVE_WALL_COLLISION
+#if DISABLE_CEILING_BONKS
         return AIR_STEP_HIT_CEILING;
 #else
         return AIR_STEP_NONE;
@@ -774,7 +767,7 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
         }
 
         m->pos[1] = nextPos[1];
-#if BETTER_RESOLVE_WALL_COLLISION
+#if DISABLE_CEILING_BONKS
         return AIR_STEP_HIT_CEILING;
 #else
         return AIR_STEP_HIT_WALL;

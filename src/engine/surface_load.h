@@ -8,9 +8,6 @@
 #include "config/config_world.h"
 
 #if !EXTENDED_BOUNDS
-#define SURFACE_POOL_SIZE       2300
-#define SURFACE_NODE_POOL_SIZE  7000
-
 #define NUM_CELLS   16
 #endif
 

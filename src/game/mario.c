@@ -532,73 +532,6 @@ u32 mario_get_terrain_sound_addend(struct MarioState *m) {
 }
 
 /**
- * Collides with walls and returns the most recent wall.
- */
-struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 radius) {
-    struct WallCollisionData collisionData;
-    struct Surface *wall = NULL;
-#if BETTER_RESOLVE_WALL_COLLISION
-    int i = 0;
-#endif
-
-    collisionData.x = pos[0];
-    collisionData.y = pos[1];
-    collisionData.z = pos[2];
-    collisionData.radius = radius;
-    collisionData.offsetY = offset;
-
-    if (find_wall_collisions(&collisionData)) {
-#if BETTER_RESOLVE_WALL_COLLISION
-        for (i = 0; i < collisionData.numWalls; i++) {
-            wall = collisionData.walls[i];
-        }
-#else
-        wall = collisionData.walls[collisionData.numWalls - 1];
-#endif
-    }
-
-    pos[0] = collisionData.x;
-    pos[1] = collisionData.y;
-    pos[2] = collisionData.z;
-
-#if BETTER_RESOLVE_WALL_COLLISION
-    // Returns the wall the actor is closest to facing
-#else
-    // This only returns the most recent wall and can also return NULL
-    // there are no wall collisions.
-#endif
-    return wall;
-}
-
-#if BETTER_RESOLVE_WALL_COLLISION
-void resolve_and_return_wall_collisions_data(Vec3f pos, f32 offset, f32 radius, struct WallCollisionData *collisionData) {
-    collisionData->x = pos[0];
-    collisionData->y = pos[1];
-    collisionData->z = pos[2];
-    collisionData->radius = radius;
-    collisionData->offsetY = offset;
-
-	find_wall_collisions(collisionData);
-
-    pos[0] = collisionData->x;
-    pos[1] = collisionData->y;
-    pos[2] = collisionData->z;
-}
-#endif
-
-/**
- * Finds the ceiling from a vec3f horizontally and a height 
- * (with 80 vertical buffer, 3 with exposed ceilings fix).
- */
-f32 vec3f_find_ceil(Vec3f pos, f32 height, struct Surface **ceil) {
-#if EXPOSED_CEILINGS_FIX
-    return find_ceil(pos[0], MAX(height, pos[1]) + 3.0f, pos[2], ceil);
-#else
-    return find_ceil(pos[0], height + 80.0f, pos[2], ceil);
-#endif
-}
-
-/**
  * Determines if Mario is facing "downhill."
  */
 s32 mario_facing_downhill(struct MarioState *m, s32 turnYaw) {
@@ -739,16 +672,15 @@ f32 find_floor_height_relative_polar(struct MarioState *m, s16 angleFromMario, f
     return floorY;
 }
 
-#if FIX_FLOOR_SLOPE_OOB
-#define CHECK(set)    set
-#else
-#define CHECK(set)
-#endif
-
 /**
  * Returns the slope of the floor based off points around Mario.
  */
 s16 find_floor_slope(struct MarioState *m, s16 yawOffset) {
+#if BETTER_FIND_FLOOR_SLOPE
+    return -coss((m->faceAngle[1] + yawOffset) - atan2s(m->floor->normal.z, m->floor->normal.x))
+           * atan2s(m->floor->normal.y, sqrtf(m->floor->normal.x * m->floor->normal.x
+                                              + m->floor->normal.z * m->floor->normal.z));
+#else
     struct Surface *floor = m->floor;
     f32 forwardFloorY, backwardFloorY;
     f32 forwardYDelta, backwardYDelta;
@@ -757,23 +689,12 @@ s16 find_floor_slope(struct MarioState *m, s16 yawOffset) {
     f32 x = sins(m->faceAngle[1] + yawOffset) * 5.0f;
     f32 z = coss(m->faceAngle[1] + yawOffset) * 5.0f;
 
-#if FAST_FLOOR_ALIGN
-    if (absf(m->forwardVel) > FAST_FLOOR_ALIGN_VALUE) {
-        forwardFloorY  = get_surface_height_at_pos((m->pos[0] + x), (m->pos[2] + z), floor);
-        backwardFloorY = get_surface_height_at_pos((m->pos[0] - x), (m->pos[2] - z), floor);
-    } else
-#endif
-    {
-        forwardFloorY = find_floor(m->pos[0] + x, m->pos[1] + 100.0f, m->pos[2] + z, &floor);
-        CHECK(if (floor == NULL) forwardFloorY = m->floorHeight); // handle OOB slopes
-        backwardFloorY = find_floor(m->pos[0] - x, m->pos[1] + 100.0f, m->pos[2] - z, &floor);
-        CHECK(if (floor == NULL) backwardFloorY = m->floorHeight); // handle OOB slopes
-    }
+    forwardFloorY  = find_floor(m->pos[0] + x, m->pos[1] + 100.0f, m->pos[2] + z, &floor);
+    backwardFloorY = find_floor(m->pos[0] - x, m->pos[1] + 100.0f, m->pos[2] - z, &floor);
 
     //! If Mario is near OOB, these floorY's can sometimes be -11000.
     //  This will cause these to be off and give improper slopes.
-    //  FIX_FLOOR_SLOPE_OOB fixes it
-    forwardYDelta = forwardFloorY - m->pos[1];
+    forwardYDelta  = forwardFloorY - m->pos[1];
     backwardYDelta = m->pos[1] - backwardFloorY;
 
     if (forwardYDelta * forwardYDelta < backwardYDelta * backwardYDelta) {
@@ -783,6 +704,7 @@ s16 find_floor_slope(struct MarioState *m, s16 yawOffset) {
     }
 
     return result;
+#endif
 }
 
 #undef CHECK
@@ -1309,7 +1231,7 @@ void squish_mario_model(struct MarioState *m) {
             cheats_mario_size(m);
 #else
             vec3f_set(m->marioObj->header.gfx.scale, 1.0f, 1.0f, 1.0f);
-#endif      
+#endif
         }
         // If timer is less than 16, rubber-band Mario's size scale up and down.
         else if (m->squishTimer <= 16) {
@@ -1432,7 +1354,7 @@ void update_mario_geometry_inputs(struct MarioState *m) {
         m->floorHeight = find_floor(m->pos[0], m->pos[1], m->pos[2], &m->floor);
     }
 
-    m->ceilHeight = vec3f_find_ceil(m->pos, m->floorHeight, &m->ceil);
+    m->ceilHeight = find_mario_ceil(m->pos, m->floorHeight, &m->ceil);
     gasLevel = find_poison_gas_level(m->pos[0], m->pos[2]);
     m->waterLevel = find_water_level(m->pos[0], m->pos[2]);
 
@@ -1801,7 +1723,7 @@ void set_wind_floor_properties(struct MarioState *m) {
         }
     }
 }
-        
+
 /**
  * An unused and possibly a debug function. Z + another button input
  * sets Mario with a different cap.

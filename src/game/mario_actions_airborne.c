@@ -847,7 +847,7 @@ s32 act_dive(struct MarioState *m) {
             }
 #if WALL_KICK_MORE_ACTIONS
             else {
-                return hit_or_wall_kick_on_wall(m, 0.0f);
+                hit_or_wall_kick_on_wall(m, 0.0f);
             }
 #endif
             break;
@@ -1460,7 +1460,7 @@ s32 act_forward_rollout(struct MarioState *m) {
 
         case AIR_STEP_HIT_WALL:
 #if WALL_KICK_MORE_ACTIONS
-            return hit_or_wall_kick_on_wall(m, 16.0f);
+            hit_or_wall_kick_on_wall(m, 16.0f);
 #else
             mario_set_forward_vel(m, 0.0f);
 #endif
@@ -2121,7 +2121,7 @@ s32 act_special_triple_jump(struct MarioState *m) {
         
 #if SPECIAL_TRIPLE_JUMP_AIR_STEPS
         case AIR_STEP_HIT_WALL:
-            return hit_or_wall_kick_on_wall(m, 0.0f);
+            hit_or_wall_kick_on_wall(m, 0.0f);
             break;
 
         case AIR_STEP_GRABBED_LEDGE:

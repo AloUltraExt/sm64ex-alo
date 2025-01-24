@@ -1694,7 +1694,7 @@ s32 update_boss_fight_camera(struct Camera *c, Vec3f focus, Vec3f pos) {
     if (floor != NULL) {
         // ex-alo change
         // Simplify this to a surface function
-        pos[1] = 300.f + get_surface_height_at_pos(pos[0], pos[2], floor);
+        pos[1] = 300.f + get_surface_height_at_location(pos[0], pos[2], floor);
 #if FIX_CAMERA_BOSS_FIGHT_POS
         pos[1] += 125.f;
 #else
@@ -6826,12 +6826,12 @@ s32 rotate_camera_around_walls(struct Camera *c, Vec3f cPos, s16 *avoidYaw, s16 
 #if !CORRECT_ROTATE_CAMERA_AROUND_WALLS
         //  Increase the coarse check radius
         //! @bug Increases to 250.f, but the max collision radius is 200.f
-        camera_approach_f32_symmetric_bool(&radius, MAX_COLLISION_RADIUS + 50.0f, 30.0f);
+        camera_approach_f32_symmetric_bool(&radius, CAMERA_NUM_ROT_WALL_RADIUS + 50.0f, 30.0f);
 #else
         // Increase the check radius the closer we get to the camera.
         radius += (100.0f / CAMERA_NUM_OBSTRUCTION_CHECKS);
-        if (radius > MAX_COLLISION_RADIUS) {
-            radius = MAX_COLLISION_RADIUS;
+        if (radius > CAMERA_NUM_ROT_WALL_RADIUS) {
+            radius = CAMERA_NUM_ROT_WALL_RADIUS;
         }
 #endif
         // Coarse check found a wall
@@ -6862,7 +6862,7 @@ s32 rotate_camera_around_walls(struct Camera *c, Vec3f cPos, s16 *avoidYaw, s16 
             colData.z = sMarioCamState->pos[2] + (marioToCamera[2] * checkDist);
             colData.radius = fineRadius;
             // Increase the fine check radius
-            camera_approach_f32_symmetric_bool(&fineRadius, MAX_COLLISION_RADIUS, 20.0f);
+            camera_approach_f32_symmetric_bool(&fineRadius, CAMERA_NUM_ROT_WALL_RADIUS, 20.0f);
 #endif
 
 #if !CORRECT_ROTATE_CAMERA_AROUND_WALLS

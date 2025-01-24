@@ -642,7 +642,7 @@ s32 act_debug_free_move(struct MarioState *m) {
 
 #ifdef EXT_DEBUG_MENU
     struct Surface *ceil;
-    f32 ceilHeight = vec3f_find_ceil(pos, floorHeight, &ceil);
+    f32 ceilHeight = find_mario_ceil(pos, floorHeight, &ceil);
 
     if (floor != NULL && (DebugOpt.FreeMoveActFlags & ACT_DEBUG_STATE_CHECK_FLOOR)) {
         if (pos[1] < floorHeight) pos[1] = floorHeight;

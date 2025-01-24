@@ -134,6 +134,14 @@ static void clear_static_surfaces(void) {
 #else
 #define SURFACE_SORT(surf) surf->vertex1[1]
 #endif
+
+// If the surface is not fully flat, we threat it as a floor
+// Extra checks were added to find_wall_collisions to re-add wall properties
+#if ABNORMAL_WALLS_AS_FLOORS
+#define NORMAL_FLOOR_VALUE 0.0f
+#else
+#define NORMAL_FLOOR_VALUE NORMAL_FLOOR_THRESHOLD
+#endif
 /**
  * Add a surface to the correct cell list of surfaces.
  * @param dynamic Determines whether the surface is static or dynamic.
@@ -147,7 +155,7 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
     s32 sortDir = 1; // highest to lowest, then insertion order (water and floors)
     s32 listIndex;
 
-    if (surface->normal.y > NORMAL_FLOOR_THRESHOLD) {
+    if (surface->normal.y > NORMAL_FLOOR_VALUE) {
         listIndex = SPATIAL_PARTITION_FLOORS;
 #if WATER_SURFACES
     } else if (SURFACE_IS_NEW_WATER(surface->type)) {
@@ -160,7 +168,7 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
         listIndex = SPATIAL_PARTITION_WALLS;
         sortDir = 0; // insertion order
 
-#if !BETTER_FIND_WALL_COLLISION
+#if !ROUNDED_WALL_CORNERS
         if (surface->normal.x < -0.707 || surface->normal.x > 0.707) {
             surface->flags |= SURFACE_FLAG_X_PROJECTION;
         }
@@ -212,6 +220,7 @@ static void add_surface_to_cell(s32 dynamic, s32 cellX, s32 cellZ, struct Surfac
 }
 
 #undef SURFACE_SORT
+#undef NORMAL_FLOOR_VALUE
 
 /**
  * Every level is split into 16 * 16 cells of surfaces (to limit computing
@@ -344,7 +353,6 @@ static struct Surface *read_surface_data(TerrainData *vertexData, TerrainData **
     min_max_3s(v[0][1], v[1][1], v[2][1], &min, &max);
     surface->lowerY = (min - SURFACE_VERTICAL_BUFFER);
     surface->upperY = (max + SURFACE_VERTICAL_BUFFER);
-
     return surface;
 }
 

@@ -28,6 +28,9 @@
 /// The number of steps between Mario and the camera to check for walls obstructing Mario. Vanilla is 8.
 #define CAMERA_NUM_OBSTRUCTION_CHECKS   8
 
+/// The number of radius between Mario and the camera to rotate around walls. Vanilla is 200.
+#define CAMERA_NUM_ROT_WALL_RADIUS      200
+
 /*********************
  * CUTSCENE SETTINGS *
  *********************/
