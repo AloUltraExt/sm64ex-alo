@@ -867,6 +867,12 @@ static u32 set_mario_action_airborne(struct MarioState *m, u32 action, u32 actio
             if ((m->forwardVel *= 1.5f) > 48.0f) {
                 m->forwardVel = 48.0f;
             }
+
+#ifdef CHEATS_ACTIONS
+            if (Cheats.EnableCheats && Cheats.SuperSpeed) {
+                m->forwardVel *= CHEATS_SUPER_SPEED_MODIFIER;
+            }
+#endif
             break;
 
         case ACT_SLIDE_KICK:

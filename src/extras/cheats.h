@@ -22,6 +22,8 @@
 #define bool int
 #endif
 
+#define CHEATS_SUPER_SPEED_MODIFIER 1.3f
+
 extern const u8 optCheatMenuStr[][200];
 
 struct CheatListWalkOn {

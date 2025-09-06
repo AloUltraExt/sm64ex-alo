@@ -202,7 +202,7 @@ void cheats_mario_action(struct MarioState *m) {
 
         cheats_infinite_lives(m);
 
-        cheats_super_speed(m);
+        //cheats_super_speed(m);
 
         cheats_invincible_player(m);
     }

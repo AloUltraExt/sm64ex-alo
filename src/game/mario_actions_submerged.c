@@ -16,6 +16,9 @@
 #include "behavior_data.h"
 #include "level_table.h"
 #include "rumble_init.h"
+#ifdef CHEATS_ACTIONS
+#include "extras/cheats.h"
+#endif
 
 #define MIN_SWIM_STRENGTH 160
 #define MIN_SWIM_SPEED 16.0f
@@ -231,6 +234,12 @@ static void stationary_slow_down(struct MarioState *m) {
 static void update_swimming_speed(struct MarioState *m, f32 decelThreshold) {
     f32 buoyancy = get_buoyancy(m);
     f32 maxSpeed = 28.0f;
+
+#ifdef CHEATS_ACTIONS
+    if (Cheats.EnableCheats) {
+        maxSpeed *= CHEATS_SUPER_SPEED_MODIFIER;
+    }
+#endif
 
     if (m->action & ACT_FLAG_STATIONARY) {
         m->forwardVel -= 2.0f;
@@ -542,6 +551,13 @@ static s32 act_breaststroke(struct MarioState *m) {
     if (m->actionTimer >= 9) {
         m->forwardVel += 1.5f;
     }
+
+#ifdef CHEATS_ACTIONS
+    if (Cheats.EnableCheats && Cheats.SuperSpeed) {
+        m->forwardVel *= CHEATS_SUPER_SPEED_MODIFIER;
+        sSwimStrength *= CHEATS_SUPER_SPEED_MODIFIER;
+    }
+#endif
 
     if (m->actionTimer >= 2) {
         if (m->actionTimer < 6 && (m->input & INPUT_A_PRESSED)) {
