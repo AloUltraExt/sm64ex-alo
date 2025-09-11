@@ -93,8 +93,8 @@ unsigned int configRumbleStrength = 50;
 bool configAutohideTouch = false;
 #endif
 
-#ifdef EXTERNAL_DATA
-bool configPrecacheRes = true;
+#if defined(EXTERNAL_DATA) && !defined(TARGET_PORT_CONSOLE)
+bool configPrecacheRes = false;
 #endif
 
 #ifdef MOUSE_ACTIONS
@@ -174,9 +174,9 @@ static const struct ConfigOption options[] = {
     {.name = "stick_deadzone",       .type = CONFIG_TYPE_UINT, .uintValue = &configStickDeadzone},
     {.name = "rumble_strength",      .type = CONFIG_TYPE_UINT, .uintValue = &configRumbleStrength},
 #endif
-    #ifdef EXTERNAL_DATA
+#if defined(EXTERNAL_DATA) && !defined(TARGET_PORT_CONSOLE)
     {.name = "precache",             .type = CONFIG_TYPE_BOOL, .boolValue = &configPrecacheRes},
-    #endif
+#endif
     #ifdef MOUSE_ACTIONS
     {.name = "mouse_enable",         .type = CONFIG_TYPE_BOOL, .boolValue = &configMouse},
     #endif

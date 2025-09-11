@@ -777,6 +777,8 @@ ifeq ($(TARGET_SWITCH),1)
 endif
 
 C_DEFINES := $(foreach d,$(DEFINES),-D$(d))
+C_DEFINES += $(CUSTOM_C_DEFINES)
+
 DEF_INC_CFLAGS := $(foreach i,$(INCLUDE_DIRS),-I $(i)) $(C_DEFINES)
 
 # Set C Preprocessor flags
@@ -786,7 +788,7 @@ else ifeq ($(COMPILER_TYPE),clang)
   CPPFLAGS := -E -P -x c -Wno-trigraphs
 endif
 
-CPPFLAGS += $(DEF_INC_CFLAGS) $(CUSTOM_C_DEFINES)
+CPPFLAGS += $(DEF_INC_CFLAGS)
 
 ASMDEFINES := $(VER_DEFINES) $(GRU_DEFINES) $(ULTRA_VER_DEF)
 
@@ -857,6 +859,7 @@ ifeq ($(CPP_ASSEMBLY),1)
   ASFLAGS := -march=vr4300 -mabi=32 $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(ASMDEFINES),--defsym $(d))
 else
   ASMFLAGS := -G 0 $(DEF_INC_CFLAGS) -w -nostdinc -c -march=vr4300 -mfix4300 -mno-abicalls -DMIPSEB -D_LANGUAGE_ASSEMBLY -D_MIPS_SIM=1 -D_MIPS_SZLONG=32
+  ASMFLAGS += $(CUSTOM_C_DEFINES)
 endif
 
 RSPASMFLAGS := $(foreach d,$(ASMDEFINES),-definelabel $(subst =, ,$(d)))
@@ -864,9 +867,6 @@ RSPASMFLAGS := $(foreach d,$(ASMDEFINES),-definelabel $(subst =, ,$(d)))
 OBJCOPYFLAGS := --pad-to=0x800000 --gap-fill=0xFF
 SYMBOL_LINKING_FLAGS := --no-check-sections $(addprefix -R ,$(SEG_FILES))
 LDFLAGS := -T $(BUILD_DIR)/$(LD_SCRIPT) -Map $(BUILD_DIR)/sm64.$(VERSION).map $(SYMBOL_LINKING_FLAGS)
-
-CFLAGS += $(CUSTOM_C_DEFINES)
-ASMFLAGS += $(CUSTOM_C_DEFINES)
 
 else # TARGET_N64
 
@@ -1087,10 +1087,8 @@ ifeq ($(CPP_ASSEMBLY),1)
   endif
 else
   ASMFLAGS := $(DEF_INC_CFLAGS) -D_LANGUAGE_ASSEMBLY
+  ASMFLAGS += $(CUSTOM_C_DEFINES)
 endif
-
-CFLAGS += $(CUSTOM_C_DEFINES)
-ASMFLAGS += $(CUSTOM_C_DEFINES)
 
 # Load external textures
 ifeq ($(EXTERNAL_DATA),1)
@@ -1250,7 +1248,6 @@ endif
 
 ifeq ($(EXTERNAL_DATA),1)
 BASEPACK_PATH := $(BUILD_DIR)/$(BASEDIR)/$(BASEPACK)
-BASEPACK_LST := $(BUILD_DIR)/basepack.lst
 
 # depend on resources as well
 all: $(BASEPACK_PATH)
@@ -1258,32 +1255,10 @@ all: $(BASEPACK_PATH)
 # phony target for building resources
 res: $(BASEPACK_PATH)
 
-# prepares the basepack.lst
-$(BASEPACK_LST): $(EXE_DEPEND)
-	@$(PRINT) "$(GREEN)Generating external data list: $(BLUE)$@ $(NO_COL)\n"
-	@mkdir -p $(BUILD_DIR)/$(BASEDIR)
-	@echo "$(BUILD_DIR)/sound/bank_sets sound/bank_sets" > $(BASEPACK_LST)
-	@echo "$(BUILD_DIR)/sound/sequences.bin sound/sequences.bin" >> $(BASEPACK_LST)
-	@echo "$(BUILD_DIR)/sound/sound_data.ctl sound/sound_data.ctl" >> $(BASEPACK_LST)
-	@echo "$(BUILD_DIR)/sound/sound_data.tbl sound/sound_data.tbl" >> $(BASEPACK_LST)
-  ifeq ($(VERSION),sh)
-	@echo "$(BUILD_DIR)/sound/sequences_header sound/sequences_header" >> $(BASEPACK_LST)
-	@echo "$(BUILD_DIR)/sound/ctl_header sound/ctl_header" >> $(BASEPACK_LST)
-	@echo "$(BUILD_DIR)/sound/tbl_header sound/tbl_header" >> $(BASEPACK_LST)
-  endif
-	@$(foreach f, $(wildcard $(SKYTILE_DIR)/*), echo $(f) gfx/$(f:$(BUILD_DIR)/%=%) >> $(BASEPACK_LST);)
-	@find actors -name \*.png -exec echo "{} gfx/{}" >> $(BASEPACK_LST) \;
-	@find levels -name \*.png -exec echo "{} gfx/{}" >> $(BASEPACK_LST) \;
-	@find textures -name \*.png -exec echo "{} gfx/{}" >> $(BASEPACK_LST) \;
-  ifeq ($(PORT_MOP_OBJS),1)
-	@find src/extras/mop/actors -name \*.png -exec echo "{} gfx/{}" >> $(BASEPACK_LST) \;
-  endif
-
-# prepares the resource ZIP with base data
-$(BASEPACK_PATH): $(BASEPACK_LST)
-	$(call print,Zipping from list:,$<,$@)
-	$(V)$(PYTHON) $(TOOLS_DIR)/mkzip.py $(BASEPACK_LST) $(BASEPACK_PATH)
-
+# Combined generation and packing
+$(BASEPACK_PATH): $(EXE_DEPEND)
+	@$(PRINT) "$(GREEN)Packing external data list: $(BLUE)$@ $(NO_COL)\n"
+	$(V)$(PYTHON) pack_extdata.py --build-dir "$(BUILD_DIR)" --skytile-dir "$(SKYTILE_DIR)" --output "$@" $(C_DEFINES) > /dev/null
 endif
 
 clean:
@@ -1453,6 +1428,15 @@ $(BUILD_DIR)/%: %.png
 $(BUILD_DIR)/%.inc.c: $(BUILD_DIR)/% %.png
 	$(call print,Converting:,$<,$@)
 	$(V)hexdump -v -e '1/1 "0x%X,"' $< > $@
+    
+# Store crash screen textures so they render even without any texture data
+$(BUILD_DIR)/$(TEXTURE_DIR)/crash_screen_pc/%.inc.c: $(TEXTURE_DIR)/crash_screen_pc/%.png
+	$(call print,Converting crash textures:,$<,$@)
+	$(V)$(N64GRAPHICS) -s $(TEXTURE_ENCODING) -i $@ -g $< -f $(lastword $(subst ., ,$(basename $<)))
+
+$(BUILD_DIR)/$(TEXTURE_DIR)/crash_screen_pc/%: $(TEXTURE_DIR)/crash_screen_pc/%.png
+	$(call print,Converting crash textures:,$<,$@)
+	$(V)$(N64GRAPHICS) -s raw -i $@ -g $< -f $(lastword $(subst ., ,$@))
 else
 $(BUILD_DIR)/%: %.png
 	$(call print,Converting:,$<,$@)

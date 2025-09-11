@@ -395,7 +395,7 @@ void main_func(void) {
 
     inited = true;
 
-#ifdef EXTERNAL_DATA
+#if defined(EXTERNAL_DATA) && !defined(TARGET_PORT_CONSOLE)
     // precache data if needed
     if (configPrecacheRes) {
         fprintf(stdout, "precaching data\n");
