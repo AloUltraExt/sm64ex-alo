@@ -34,8 +34,8 @@ struct WiiUKeymap {
 #define SE(dir) VPAD_STICK_R_EMULATION_##dir, WPAD_CLASSIC_STICK_R_EMULATION_##dir, WPAD_PRO_STICK_R_EMULATION_##dir
 
 struct WiiUKeymap map[] = {
-    { B_BUTTON, VB(B) | VB(Y), CB(B) | CB(Y), PB(B) | PB(Y) },
-    { A_BUTTON, VB(A) | VB(X), CB(A) | CB(X), PB(A) | PB(X) },
+    { B_BUTTON, VB(B) | VB(X), CB(B) | CB(Y), PB(B) | PB(Y) },
+    { A_BUTTON, VB(A) | VB(Y), CB(A) | CB(X), PB(A) | PB(X) },
     { START_BUTTON, VB(PLUS), CB(PLUS), PB(PLUS) },
     { Z_TRIG, VB(ZL) | VB(ZR), CB(ZL) | CB(ZR), PT(ZL) | PT(ZR) },
     { L_TRIG, VB(L), CB(L), PT(L) },

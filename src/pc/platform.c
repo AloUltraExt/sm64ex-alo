@@ -98,19 +98,39 @@ void sys_fatal(const char *fmt, ...) {
 #ifdef TARGET_WII_U
 
 static bool mounted = false;
+static char wiiu_app_path[SYS_MAX_PATH] = "";
+
+void sys_wiiu_set_app_path(const char *argv0) {
+    if (!argv0 || !argv0[0]) return;
+    strncpy(wiiu_app_path, argv0, sizeof(wiiu_app_path) - 1);
+    // strip filename to get the containing directory
+    char *slash = strrchr(wiiu_app_path, '/');
+    if (slash) *slash = '\0';
+    else wiiu_app_path[0] = '\0';
+}
 
 const char *sys_user_path(void) {
+    static char path[SYS_MAX_PATH] = "";
     static bool mounted_set = false;
     if (!mounted_set) {
         mounted = WHBMountSdCard();
         mounted_set = true;
+        if (mounted) {
+            const char *sd = WHBGetSdCardMountPath();
+            // use argv[0]-derived path if it's on the SD card (Aroma provides this)
+            if (wiiu_app_path[0] && !strncmp(wiiu_app_path, sd, strlen(sd))) {
+                strncpy(path, wiiu_app_path, sizeof(path) - 1);
+            } else {
+                // fallback for launchers that don't provide argv: create hierarchy
+                char tmp[SYS_MAX_PATH];
+                snprintf(tmp,  sizeof(tmp),  "%s/wiiu",           sd); fs_sys_mkdir(tmp);
+                snprintf(tmp,  sizeof(tmp),  "%s/wiiu/apps",      sd); fs_sys_mkdir(tmp);
+                snprintf(path, sizeof(path), "%s/wiiu/apps/sm64ex-alo", sd);
+                fs_sys_mkdir(path);
+            }
+        }
     }
-
-    if (mounted) {
-        return WHBGetSdCardMountPath();;
-    } else {
-        return "";
-    }
+    return path;
 }
 
 const char *sys_exe_path(void) {
