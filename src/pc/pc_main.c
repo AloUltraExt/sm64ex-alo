@@ -432,7 +432,12 @@ void main_func(void) {
 }
 
 #ifdef TARGET_PORT_CONSOLE
-int main(UNUSED int argc, UNUSED char *argv[]) {
+int main(int argc, char *argv[]) {
+#ifdef TARGET_WII_U
+    sys_wiiu_set_app_path(argc > 0 ? argv[0] : NULL);
+#else
+    (void)argc; (void)argv;
+#endif
 #ifdef TARGET_SWITCH
     enableBoostMode();
     initNX();
