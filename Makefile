@@ -347,8 +347,6 @@ ifeq ($(TARGET_RPI),1) # Define RPi to change SDL2 title & GLES2 hints
   DEFINES += TARGET_RPI=1 USE_GLES=1
 else ifeq ($(TARGET_ANDROID),1)
   DEFINES += TARGET_ANDROID=1 USE_GLES=1
-else ifeq ($(OSX_BUILD),1) # Modify GFX & SDL2 for OSX GL
-  DEFINES += OSX_BUILD=1
 else ifeq ($(TARGET_WEB),1)
   DEFINES += TARGET_WEB=1 USE_GLES=1
 else ifeq ($(TARGET_WII_U),1)
@@ -357,6 +355,8 @@ else ifeq ($(TARGET_N3DS),1)
   DEFINES += TARGET_N3DS=1
 else ifeq ($(TARGET_SWITCH),1)
   DEFINES += TARGET_SWITCH=1 USE_GLES=1
+else ifeq ($(OSX_BUILD),1) # Modify GFX & SDL2 for OSX GL (native macOS builds only)
+  DEFINES += OSX_BUILD=1
 endif
 
 # OpenGL defines
@@ -1189,7 +1189,7 @@ EMULATOR = mupen64plus
 EMU_FLAGS =
 LOADER = loader64
 LOADER_FLAGS = -vwf
-SHA1SUM = sha1sum
+SHA1SUM = $(if $(shell which sha1sum 2>/dev/null),sha1sum,shasum)
 PRINT = printf
 
 ifeq ($(COLOR),1)
