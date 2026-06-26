@@ -447,6 +447,15 @@ void save_file_load_all(void) {
 #ifdef SWAP_ENDIAN_SAVE_FILE
     if (save_file_need_bswap(&gSaveBuffer)) {
         save_file_bswap(&gSaveBuffer);
+        // Write back in native endianness immediately. Without this, a partial
+        // save (e.g. file slots updated but menuData skipped because no coin
+        // score was beaten) leaves mixed-endianness data on disk. The next load
+        // then double-bswaps the already-native file slots, invalidating their
+        // magic numbers and causing the slot to be erased.
+        for (file = 0; file < NUM_SAVE_FILES; file++) {
+            write_eeprom_savefile(file, 0, 2);
+        }
+        write_eeprom_menudata(0, 2);
     }
 #endif
 
